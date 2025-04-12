@@ -1,16 +1,12 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { User } from '@supabase/supabase-js';
+import { getProfile, Profile } from '@/lib/supabase';
 
 // Define types for our user and app state
-export type User = {
-  id: string;
-  name: string;
+export type AppUser = Profile & {
   email: string;
-  profilePic: string;
-  age: number;
-  gender: string;
-  interests: string[];
-  bio: string;
   location?: {
     lat: number;
     lng: number;
@@ -47,10 +43,10 @@ export type Chat = {
 type AppContextType = {
   isAuthenticated: boolean;
   setIsAuthenticated: (value: boolean) => void;
-  currentUser: User | null;
-  setCurrentUser: (user: User | null) => void;
-  nearbyUsers: User[];
-  setNearbyUsers: (users: User[]) => void;
+  currentUser: AppUser | null;
+  setCurrentUser: (user: AppUser | null) => void;
+  nearbyUsers: AppUser[];
+  setNearbyUsers: (users: AppUser[]) => void;
   radiusInKm: number;
   setRadiusInKm: (radius: number) => void;
   friendRequests: FriendRequest[];
@@ -61,19 +57,82 @@ type AppContextType = {
   setSelectedChat: (chat: Chat | null) => void;
   showSidebar: boolean;
   setShowSidebar: (show: boolean) => void;
+  supabaseUser: User | null;
+  loading: boolean;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [nearbyUsers, setNearbyUsers] = useState<User[]>([]);
+  const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
+  const [nearbyUsers, setNearbyUsers] = useState<AppUser[]>([]);
   const [radiusInKm, setRadiusInKm] = useState(5);
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  // Auth state listener
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        setLoading(true);
+        const user = session?.user || null;
+        setSupabaseUser(user);
+        setIsAuthenticated(!!user);
+        
+        if (user) {
+          // Use setTimeout to prevent deadlocks
+          setTimeout(async () => {
+            try {
+              const profile = await getProfile(user.id);
+              if (profile) {
+                setCurrentUser({
+                  ...profile,
+                  email: user.email || '',
+                });
+              }
+            } catch (error) {
+              console.error('Error fetching profile:', error);
+            } finally {
+              setLoading(false);
+            }
+          }, 0);
+        } else {
+          setCurrentUser(null);
+          setLoading(false);
+        }
+      }
+    );
+
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      const user = session?.user || null;
+      setSupabaseUser(user);
+      setIsAuthenticated(!!user);
+      
+      if (user) {
+        getProfile(user.id).then((profile) => {
+          if (profile) {
+            setCurrentUser({
+              ...profile,
+              email: user.email || '',
+            });
+          }
+          setLoading(false);
+        });
+      } else {
+        setLoading(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   // Demo data for the MVP
   useEffect(() => {
@@ -216,6 +275,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedChat,
         showSidebar,
         setShowSidebar,
+        supabaseUser,
+        loading,
       }}
     >
       {children}

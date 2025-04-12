@@ -7,19 +7,35 @@ import { useToast } from "@/components/ui/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { LogOut, User, Edit, Camera } from 'lucide-react';
+import { signOut } from '@/lib/supabase';
 
 const ProfilePage: React.FC = () => {
   const { currentUser, setCurrentUser, setIsAuthenticated } = useAppContext();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
 
-  const handleLogout = () => {
-    toast({
-      title: "Logged out",
-      description: "You have been logged out successfully",
-    });
-    setIsAuthenticated(false);
-    setCurrentUser(null);
+  const handleLogout = async () => {
+    try {
+      const { error } = await signOut();
+      
+      if (error) {
+        throw error;
+      }
+      
+      toast({
+        title: "Logged out",
+        description: "You have been logged out successfully",
+      });
+      setIsAuthenticated(false);
+      setCurrentUser(null);
+    } catch (error: any) {
+      toast({
+        title: "Error logging out",
+        description: error.message || "An error occurred while logging out",
+        variant: "destructive",
+      });
+      console.error('Error logging out:', error);
+    }
   };
 
   if (!currentUser) return null;
@@ -33,7 +49,7 @@ const ProfilePage: React.FC = () => {
           <div className="flex flex-col items-center">
             <div className="relative">
               <Avatar className="h-32 w-32 border-4 border-white bg-white">
-                <AvatarImage src={currentUser.profilePic} alt={currentUser.name} />
+                <AvatarImage src={currentUser.profile_pic || ''} alt={currentUser.name} />
                 <AvatarFallback>
                   <User className="h-20 w-20" />
                 </AvatarFallback>

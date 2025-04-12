@@ -1,138 +1,156 @@
+
 import React, { useState } from 'react';
+import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
-import { Mail, GithubIcon } from 'lucide-react';
+import { signUp } from '@/lib/supabase';
 import { useAppContext } from '@/context/AppContext';
 
-const SignUpForm: React.FC<{ onToggleForm: () => void, onContinue: () => void }> = ({ onToggleForm, onContinue }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
+type SignUpFormValues = {
+  name: string;
+  email: string;
+  password: string;
+};
+
+interface SignUpFormProps {
+  onToggleForm: () => void;
+  onContinue: () => void;
+}
+
+const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => {
   const [isLoading, setIsLoading] = useState(false);
-  const { setIsAuthenticated, setCurrentUser } = useAppContext();
   const { toast } = useToast();
+  const { setIsAuthenticated } = useAppContext();
 
-  const handleSignUp = (e: React.FormEvent) => {
-    e.preventDefault();
+  const form = useForm<SignUpFormValues>({
+    defaultValues: {
+      name: '',
+      email: '',
+      password: '',
+    },
+  });
+
+  const onSubmit = async (values: SignUpFormValues) => {
     setIsLoading(true);
-
-    // For demo, simulate signup process
-    setTimeout(() => {
-      setIsAuthenticated(true);
-      setCurrentUser({
-        id: 'current',
-        name: name || 'New User',
-        email: email,
-        profilePic: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YXZhdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60',
-        age: 0, // Will be set in profile creation
-        gender: '', // Will be set in profile creation
-        interests: [], // Will be set in profile creation
-        bio: '', // Will be set in profile creation
-      });
+    try {
+      const { data, error } = await signUp(
+        values.email,
+        values.password,
+        values.name
+      );
       
+      if (error) {
+        throw error;
+      }
+      
+      if (data?.user) {
+        setIsAuthenticated(true);
+        toast({
+          title: "Account created!",
+          description: "Your account has been successfully created.",
+        });
+        onContinue();
+      }
+    } catch (error: any) {
       toast({
-        title: "Account created!",
-        description: "Let's set up your profile next",
+        title: "Sign up failed",
+        description: error.message || "An error occurred during sign up.",
+        variant: "destructive",
       });
-      
+      console.error('Sign up error:', error);
+    } finally {
       setIsLoading(false);
-      onContinue(); // Move to profile setup
-    }, 1000);
-  };
-
-  const handleGoogleSignUp = () => {
-    toast({
-      title: "Google Sign Up",
-      description: "This feature would connect to Google Auth in a real app",
-    });
-    
-    // For demo
-    setTimeout(() => {
-      setIsAuthenticated(true);
-      setCurrentUser({
-        id: 'current',
-        name: 'Google User',
-        email: 'google@example.com',
-        profilePic: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YXZhdGFyfGVufDB8fDB8fHww&auto=format&fit=crop&w=800&q=60',
-        age: 0,
-        gender: '',
-        interests: [],
-        bio: '',
-      });
-      onContinue(); // Move to profile setup
-    }, 1000);
+    }
   };
 
   return (
-    <Card className="w-full max-w-md mx-auto shadow-lg border animate-fade-in">
-      <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold">Create an Account</CardTitle>
-        <CardDescription>
-          Sign up to start finding friends nearby
+    <Card className="w-full max-w-md shadow-md border">
+      <CardHeader className="space-y-1">
+        <CardTitle className="text-2xl font-bold text-center">Create an Account</CardTitle>
+        <CardDescription className="text-center">
+          Enter your details to create a new account
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
-        <form onSubmit={handleSignUp} className="space-y-4">
-          <div className="space-y-2">
-            <Input
-              placeholder="Full Name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
+      <CardContent>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="John Doe" 
+                      {...field} 
+                      disabled={isLoading}
+                      required
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="space-y-2">
-            <Input
-              type="email"
-              placeholder="Email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="email@example.com" 
+                      {...field} 
+                      type="email"
+                      autoComplete="email"
+                      disabled={isLoading}
+                      required
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <div className="space-y-2">
-            <Input
-              type="password"
-              placeholder="Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="••••••••" 
+                      type="password" 
+                      {...field}
+                      autoComplete="new-password"
+                      disabled={isLoading}
+                      required
+                      minLength={6}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
-          <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creating Account..." : "Create Account"}
-          </Button>
-        </form>
-
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t border-gray-300" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-white px-2 text-gray-500">Or continue with</span>
-          </div>
-        </div>
-
-        <Button 
-          variant="outline" 
-          type="button" 
-          className="w-full" 
-          onClick={handleGoogleSignUp}
-        >
-          <GithubIcon className="mr-2 h-4 w-4" />
-          Google
-        </Button>
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? "Creating Account..." : "Create Account"}
+            </Button>
+          </form>
+        </Form>
       </CardContent>
-      <CardFooter>
-        <div className="text-center text-sm text-gray-500 w-full">
+      <CardFooter className="flex flex-col space-y-4">
+        <div className="text-sm text-center text-gray-500">
           Already have an account?{" "}
-          <button 
-            onClick={onToggleForm} 
-            className="text-primary hover:underline"
+          <button
+            onClick={onToggleForm}
+            className="text-primary underline font-medium hover:text-primary/80"
+            disabled={isLoading}
           >
-            Sign in
+            Sign In
           </button>
         </div>
       </CardFooter>

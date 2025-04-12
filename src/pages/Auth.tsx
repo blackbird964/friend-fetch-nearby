@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import LoginForm from '@/components/auth/LoginForm';
 import SignUpForm from '@/components/auth/SignUpForm';
 import ProfileSetupForm from '@/components/auth/ProfileSetupForm';
@@ -8,7 +8,16 @@ import { Navigate } from 'react-router-dom';
 
 const Auth: React.FC = () => {
   const [formState, setFormState] = useState<'login' | 'signup' | 'profile'>('login');
-  const { isAuthenticated, currentUser } = useAppContext();
+  const { isAuthenticated, currentUser, loading } = useAppContext();
+
+  // If loading, show nothing (to prevent flash)
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   // If already authenticated and has full profile, redirect to home
   if (isAuthenticated && currentUser?.age) {

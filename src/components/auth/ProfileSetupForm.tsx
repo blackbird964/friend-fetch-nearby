@@ -3,12 +3,13 @@ import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { X } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
+import { updateProfile } from '@/lib/supabase';
 
 const INTERESTS = [
   'Art', 'Books', 'Cooking', 'Fitness', 'Gaming', 'Hiking', 
@@ -17,7 +18,7 @@ const INTERESTS = [
 ];
 
 const ProfileSetupForm: React.FC = () => {
-  const { currentUser, setCurrentUser } = useAppContext();
+  const { currentUser, supabaseUser, setCurrentUser } = useAppContext();
   const [age, setAge] = useState<string>('');
   const [gender, setGender] = useState<string>('');
   const [bio, setBio] = useState<string>('');
@@ -37,29 +38,56 @@ const ProfileSetupForm: React.FC = () => {
     setInterests(interests.filter((i) => i !== interest));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
-    if (!currentUser) return;
+    if (!supabaseUser) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to update your profile",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
 
-    // Update the current user profile
-    setTimeout(() => {
-      setCurrentUser({
-        ...currentUser,
-        age: parseInt(age) || 0,
+    try {
+      const profileData = {
+        id: supabaseUser.id,
+        age: parseInt(age) || null,
         gender,
         bio,
         interests,
-      });
+      };
 
+      const { data, error } = await updateProfile(profileData);
+      
+      if (error) {
+        throw error;
+      }
+      
+      if (data) {
+        setCurrentUser({
+          ...currentUser!,
+          ...data,
+        });
+
+        toast({
+          title: "Profile updated!",
+          description: "Your profile has been successfully created",
+        });
+      }
+    } catch (error: any) {
       toast({
-        title: "Profile updated!",
-        description: "Your profile has been successfully created",
+        title: "Error updating profile",
+        description: error.message || "An error occurred while updating your profile",
+        variant: "destructive",
       });
-
+      console.error('Error updating profile:', error);
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
