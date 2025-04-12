@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import { useAppContext } from '@/context/AppContext';
-import { Google, Mail } from 'lucide-react';
+import { Mail, GithubIcon } from 'lucide-react';
 
 const LoginForm: React.FC<{ onToggleForm: () => void }> = ({ onToggleForm }) => {
   const [email, setEmail] = useState('');
@@ -120,7 +120,7 @@ const LoginForm: React.FC<{ onToggleForm: () => void }> = ({ onToggleForm }) => 
           className="w-full" 
           onClick={handleGoogleLogin}
         >
-          <Google className="mr-2 h-4 w-4" />
+          <GithubIcon className="mr-2 h-4 w-4" />
           Google
         </Button>
       </CardContent>
