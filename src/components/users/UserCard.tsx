@@ -1,75 +1,56 @@
 
 import React from 'react';
-import { User } from '@/context/AppContext';
 import { Badge } from "@/components/ui/badge";
+import { useAppContext, AppUser } from '@/context/AppContext';
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { MapPin } from 'lucide-react';
+import { User } from 'lucide-react';
 
 interface UserCardProps {
-  user: User;
+  user: AppUser;
   minimal?: boolean;
+  onClick?: () => void;
 }
 
-const UserCard: React.FC<UserCardProps> = ({ user, minimal = false }) => {
-  if (minimal) {
-    return (
-      <div className="flex items-center space-x-3">
-        <Avatar className="h-12 w-12 border">
-          <AvatarImage src={user.profilePic} alt={user.name} />
-          <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
-        </Avatar>
-        <div>
-          <h3 className="font-semibold text-lg">{user.name}</h3>
-          <div className="flex flex-wrap gap-1 mt-1">
-            {user.interests.slice(0, 3).map((interest) => (
-              <Badge key={interest} variant="secondary" className="text-xs">
-                {interest}
-              </Badge>
-            ))}
-            {user.interests.length > 3 && (
-              <Badge variant="outline" className="text-xs">
-                +{user.interests.length - 3}
-              </Badge>
+const UserCard: React.FC<UserCardProps> = ({ user, minimal = false, onClick }) => {
+  return (
+    <Card 
+      className={`${onClick ? 'cursor-pointer hover:bg-gray-50' : ''} ${minimal ? '' : 'shadow-md'}`}
+      onClick={onClick}
+    >
+      <CardContent className={`${minimal ? 'p-3' : 'p-4'}`}>
+        <div className="flex items-center space-x-3">
+          <Avatar className={minimal ? 'h-10 w-10' : 'h-12 w-12'}>
+            <AvatarImage src={user.profile_pic || ''} alt={user.name || 'User'} />
+            <AvatarFallback>
+              <User className={minimal ? 'h-5 w-5' : 'h-6 w-6'} />
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <h3 className={`${minimal ? 'text-sm' : 'text-base'} font-medium`}>{user.name}</h3>
+            <div className="flex items-center mt-1">
+              <span className="text-xs text-gray-500 mr-2">
+                {user.age} • {user.gender}
+              </span>
+            </div>
+            
+            {!minimal && user.bio && (
+              <p className="text-sm text-gray-600 mt-2 line-clamp-2">{user.bio}</p>
+            )}
+            
+            {!minimal && user.interests && user.interests.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-2">
+                {user.interests.slice(0, 3).map((interest) => (
+                  <Badge key={interest} variant="secondary" className="text-xs">
+                    {interest}
+                  </Badge>
+                ))}
+                {user.interests.length > 3 && (
+                  <span className="text-xs text-gray-500">+{user.interests.length - 3}</span>
+                )}
+              </div>
             )}
           </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <Card className="overflow-hidden transition-all hover:shadow-md">
-      <div className="relative h-48">
-        <img
-          src={user.profilePic}
-          alt={user.name}
-          className="w-full h-full object-cover"
-        />
-      </div>
-      <CardContent className="p-4">
-        <div className="flex justify-between items-start mb-2">
-          <h3 className="font-semibold text-lg">{user.name}</h3>
-          <div className="flex items-center text-sm text-gray-500">
-            <MapPin className="h-3 w-3 mr-1" />
-            <span>Nearby</span>
-          </div>
-        </div>
-        
-        <div className="flex items-center space-x-2 text-sm text-gray-500 mb-3">
-          <span>{user.age} years</span>
-          <span>•</span>
-          <span>{user.gender}</span>
-        </div>
-        
-        <p className="text-sm text-gray-600 mb-3 line-clamp-2">{user.bio}</p>
-        
-        <div className="flex flex-wrap gap-1 mt-1">
-          {user.interests.map((interest) => (
-            <Badge key={interest} variant="secondary" className="text-xs">
-              {interest}
-            </Badge>
-          ))}
         </div>
       </CardContent>
     </Card>

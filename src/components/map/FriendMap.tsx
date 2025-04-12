@@ -37,7 +37,7 @@ const FriendMap: React.FC = () => {
       id: `fr${Date.now()}`,
       receiverId: user.id,
       receiverName: user.name,
-      receiverProfilePic: user.profilePic,
+      receiverProfilePic: user.profile_pic,
       duration: selectedDuration,
       status: 'sent',
       timestamp: Date.now(),
@@ -95,8 +95,8 @@ const FriendMap: React.FC = () => {
                   <div className="relative">
                     <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-lg">
                       <img 
-                        src={user.profilePic} 
-                        alt={user.name} 
+                        src={user.profile_pic || ''} 
+                        alt={user.name || 'User'} 
                         className="w-full h-full object-cover"
                       />
                     </div>

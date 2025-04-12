@@ -68,10 +68,13 @@ const ProfileSetupForm: React.FC = () => {
       }
       
       if (data) {
-        setCurrentUser({
+        const updatedUser = {
           ...currentUser!,
           ...data,
-        });
+          email: currentUser?.email || '',
+        };
+        
+        setCurrentUser(updatedUser);
 
         toast({
           title: "Profile updated!",

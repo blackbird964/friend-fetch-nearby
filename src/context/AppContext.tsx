@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -15,11 +14,14 @@ export type AppUser = Profile & {
 
 export type FriendRequest = {
   id: string;
-  senderId: string;
-  senderName: string;
-  senderProfilePic: string;
+  senderId?: string;
+  senderName?: string;
+  senderProfilePic?: string;
+  receiverId?: string;
+  receiverName?: string;
+  receiverProfilePic?: string;
   duration: number;
-  status: 'pending' | 'accepted' | 'rejected';
+  status: 'pending' | 'accepted' | 'rejected' | 'sent';
   timestamp: number;
 };
 
@@ -143,7 +145,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           id: '1',
           name: 'Sarah J.',
           email: 'sarah@example.com',
-          profilePic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
+          profile_pic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
           age: 28,
           gender: 'Female',
           interests: ['Hiking', 'Photography', 'Coffee'],
@@ -154,7 +156,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           id: '2',
           name: 'David L.',
           email: 'david@example.com',
-          profilePic: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
+          profile_pic: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
           age: 32,
           gender: 'Male',
           interests: ['Gaming', 'Tech', 'Movies'],
@@ -165,7 +167,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           id: '3',
           name: 'Emma R.',
           email: 'emma@example.com',
-          profilePic: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
+          profile_pic: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
           age: 25,
           gender: 'Female',
           interests: ['Yoga', 'Reading', 'Travel'],
@@ -176,7 +178,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           id: '4',
           name: 'Michael K.',
           email: 'michael@example.com',
-          profilePic: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHBlb3BsZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
+          profile_pic: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHBlb3BsZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
           age: 30,
           gender: 'Male',
           interests: ['Music', 'Cooking', 'Sports'],
