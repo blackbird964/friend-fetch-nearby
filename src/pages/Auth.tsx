@@ -8,7 +8,7 @@ import { Navigate } from 'react-router-dom';
 
 const Auth: React.FC = () => {
   const [formState, setFormState] = useState<'login' | 'signup' | 'profile'>('login');
-  const { isAuthenticated, currentUser, loading } = useAppContext();
+  const { isAuthenticated, currentUser, loading, supabaseUser } = useAppContext();
 
   // If loading, show nothing (to prevent flash)
   if (loading) {
@@ -25,7 +25,7 @@ const Auth: React.FC = () => {
   }
 
   // If authenticated but needs to complete profile
-  if (isAuthenticated && !currentUser?.age) {
+  if (isAuthenticated && !currentUser?.age && supabaseUser) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
         <ProfileSetupForm />
