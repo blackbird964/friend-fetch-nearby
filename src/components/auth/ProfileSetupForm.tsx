@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -26,6 +26,16 @@ const ProfileSetupForm: React.FC = () => {
   const [currentInterest, setCurrentInterest] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  // Populate form with existing data if available
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.age) setAge(currentUser.age.toString());
+      if (currentUser.gender) setGender(currentUser.gender);
+      if (currentUser.bio) setBio(currentUser.bio);
+      if (currentUser.interests) setInterests(currentUser.interests);
+    }
+  }, [currentUser]);
 
   const handleAddInterest = () => {
     if (currentInterest && !interests.includes(currentInterest)) {
