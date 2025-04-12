@@ -68,10 +68,24 @@ const ProfileSetupForm: React.FC = () => {
       }
       
       if (data) {
+        // Create a properly formatted AppUser object
         const updatedUser = {
           ...currentUser!,
-          ...data,
+          id: data.id,
+          name: data.name || '',
+          bio: data.bio || '',
+          age: data.age || null,
+          gender: data.gender || '',
+          interests: data.interests || [],
+          profile_pic: data.profile_pic || null,
           email: currentUser?.email || '',
+          // Only add the location property if it exists in the data
+          ...(data.location ? {
+            location: {
+              lat: typeof data.location === 'object' ? (data.location as any).lat || 0 : 0,
+              lng: typeof data.location === 'object' ? (data.location as any).lng || 0 : 0
+            }
+          } : {})
         };
         
         setCurrentUser(updatedUser);
