@@ -1,0 +1,71 @@
+
+import React, { useEffect } from 'react';
+import { useAppContext } from '@/context/AppContext';
+import ChatList from '@/components/chat/ChatList';
+import ChatWindow from '@/components/chat/ChatWindow';
+import FriendRequestList from '@/components/users/FriendRequestList';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Bell } from 'lucide-react';
+
+const ChatPage: React.FC = () => {
+  const { friendRequests, selectedChat, setSelectedChat } = useAppContext();
+  
+  const pendingRequests = friendRequests.filter(r => r.status === 'pending').length;
+
+  // Clear selected chat when navigating away or on mobile devices
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768 && selectedChat) {
+        setSelectedChat(null);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [selectedChat, setSelectedChat]);
+
+  // Force clear selected chat on page load for mobile
+  useEffect(() => {
+    if (window.innerWidth < 768) {
+      setSelectedChat(null);
+    }
+  }, [setSelectedChat]);
+
+  return (
+    <div className="container mx-auto px-4 py-6 mb-20 max-w-3xl">
+      <h1 className="text-2xl font-bold mb-6">Messages</h1>
+      
+      {pendingRequests > 0 && (
+        <Card className="mb-6">
+          <CardHeader className="pb-3">
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-xl flex items-center">
+                <Bell className="mr-2 h-5 w-5 text-primary" />
+                Friend Requests
+              </CardTitle>
+              <span className="bg-primary text-white text-sm font-medium py-1 px-2 rounded-full">
+                {pendingRequests} new
+              </span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <FriendRequestList />
+          </CardContent>
+        </Card>
+      )}
+      
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-250px)]">
+        <div className={`md:col-span-1 ${selectedChat ? 'hidden md:block' : 'block'}`}>
+          <ChatList />
+        </div>
+        <div className={`md:col-span-2 ${selectedChat ? 'block' : 'hidden md:block'}`}>
+          <div className="border rounded-lg h-full overflow-hidden">
+            <ChatWindow />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ChatPage;

@@ -1,0 +1,48 @@
+
+import React, { useState } from 'react';
+import LoginForm from '@/components/auth/LoginForm';
+import SignUpForm from '@/components/auth/SignUpForm';
+import ProfileSetupForm from '@/components/auth/ProfileSetupForm';
+import { useAppContext } from '@/context/AppContext';
+import { Navigate } from 'react-router-dom';
+
+const Auth: React.FC = () => {
+  const [formState, setFormState] = useState<'login' | 'signup' | 'profile'>('login');
+  const { isAuthenticated, currentUser } = useAppContext();
+
+  // If already authenticated and has full profile, redirect to home
+  if (isAuthenticated && currentUser?.age) {
+    return <Navigate to="/home" replace />;
+  }
+
+  // If authenticated but needs to complete profile
+  if (isAuthenticated && !currentUser?.age) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+        <ProfileSetupForm />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
+      <div className="w-full max-w-md mb-8 text-center">
+        <h1 className="text-3xl font-bold text-primary mb-2">FriendFetch</h1>
+        <p className="text-gray-600">Find friends nearby, right now.</p>
+      </div>
+
+      {formState === 'login' ? (
+        <LoginForm onToggleForm={() => setFormState('signup')} />
+      ) : formState === 'signup' ? (
+        <SignUpForm 
+          onToggleForm={() => setFormState('login')} 
+          onContinue={() => setFormState('profile')}
+        />
+      ) : (
+        <ProfileSetupForm />
+      )}
+    </div>
+  );
+};
+
+export default Auth;
