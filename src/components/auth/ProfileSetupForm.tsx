@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { X } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { updateProfile } from '@/lib/supabase';
+import { useNavigate } from 'react-router-dom';
 
 const INTERESTS = [
   'Art', 'Books', 'Cooking', 'Fitness', 'Gaming', 'Hiking', 
@@ -18,7 +19,7 @@ const INTERESTS = [
 ];
 
 const ProfileSetupForm: React.FC = () => {
-  const { currentUser, supabaseUser, setCurrentUser } = useAppContext();
+  const { currentUser, supabaseUser, setCurrentUser, isAuthenticated } = useAppContext();
   const [age, setAge] = useState<string>('');
   const [gender, setGender] = useState<string>('');
   const [bio, setBio] = useState<string>('');
@@ -26,6 +27,12 @@ const ProfileSetupForm: React.FC = () => {
   const [currentInterest, setCurrentInterest] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  // Debug auth state
+  useEffect(() => {
+    console.log("ProfileSetupForm auth state:", { isAuthenticated, supabaseUser });
+  }, [isAuthenticated, supabaseUser]);
 
   // Populate form with existing data if available
   useEffect(() => {
@@ -52,8 +59,9 @@ const ProfileSetupForm: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Verify user is logged in
-    if (!supabaseUser || !supabaseUser.id) {
+    // Double-check authentication
+    if (!isAuthenticated || !supabaseUser || !supabaseUser.id) {
+      console.error("Auth state during submit:", { isAuthenticated, supabaseUser });
       toast({
         title: "Error",
         description: "You must be logged in to update your profile",
@@ -73,6 +81,7 @@ const ProfileSetupForm: React.FC = () => {
         interests,
       };
 
+      console.log("Updating profile with data:", profileData);
       const { data, error } = await updateProfile(profileData);
       
       if (error) {
@@ -80,6 +89,7 @@ const ProfileSetupForm: React.FC = () => {
       }
       
       if (data) {
+        console.log("Profile updated successfully:", data);
         // Create a properly formatted AppUser object
         const updatedUser = {
           id: data.id,
@@ -99,14 +109,17 @@ const ProfileSetupForm: React.FC = () => {
           title: "Profile updated!",
           description: "Your profile has been successfully created",
         });
+        
+        // Navigate to home after successful profile setup
+        navigate('/home');
       }
     } catch (error: any) {
+      console.error('Error updating profile:', error);
       toast({
         title: "Error updating profile",
         description: error.message || "An error occurred while updating your profile",
         variant: "destructive",
       });
-      console.error('Error updating profile:', error);
     } finally {
       setIsLoading(false);
     }

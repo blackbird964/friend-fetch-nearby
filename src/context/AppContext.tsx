@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -60,6 +61,7 @@ type AppContextType = {
   showSidebar: boolean;
   setShowSidebar: (show: boolean) => void;
   supabaseUser: User | null;
+  setSupabaseUser: (user: User | null) => void;
   loading: boolean;
 };
 
@@ -278,6 +280,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         showSidebar,
         setShowSidebar,
         supabaseUser,
+        setSupabaseUser,
         loading,
       }}
     >

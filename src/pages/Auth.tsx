@@ -12,8 +12,14 @@ const Auth: React.FC = () => {
 
   // Debug auth state
   useEffect(() => {
-    console.log("Auth state:", { isAuthenticated, loading, supabaseUser, currentUser });
-  }, [isAuthenticated, loading, supabaseUser, currentUser]);
+    console.log("Auth page state:", { 
+      isAuthenticated, 
+      loading, 
+      supabaseUser: supabaseUser ? `User ID: ${supabaseUser.id}` : null, 
+      currentUser: currentUser ? `Has profile: ${!!currentUser.age}` : null,
+      formState
+    });
+  }, [isAuthenticated, loading, supabaseUser, currentUser, formState]);
 
   // If loading, show loading indicator
   if (loading) {
@@ -47,13 +53,11 @@ const Auth: React.FC = () => {
 
       {formState === 'login' ? (
         <LoginForm onToggleForm={() => setFormState('signup')} />
-      ) : formState === 'signup' ? (
+      ) : (
         <SignUpForm 
           onToggleForm={() => setFormState('login')} 
           onContinue={() => setFormState('profile')}
         />
-      ) : (
-        <ProfileSetupForm />
       )}
     </div>
   );
