@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import LoginForm from '@/components/auth/LoginForm';
 import SignUpForm from '@/components/auth/SignUpForm';
 import ProfileSetupForm from '@/components/auth/ProfileSetupForm';
@@ -10,7 +10,12 @@ const Auth: React.FC = () => {
   const [formState, setFormState] = useState<'login' | 'signup' | 'profile'>('login');
   const { isAuthenticated, currentUser, loading, supabaseUser } = useAppContext();
 
-  // If loading, show nothing (to prevent flash)
+  // Debug auth state
+  useEffect(() => {
+    console.log("Auth state:", { isAuthenticated, loading, supabaseUser, currentUser });
+  }, [isAuthenticated, loading, supabaseUser, currentUser]);
+
+  // If loading, show loading indicator
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
@@ -25,7 +30,7 @@ const Auth: React.FC = () => {
   }
 
   // If authenticated but needs to complete profile
-  if (isAuthenticated && !currentUser?.age && supabaseUser) {
+  if (isAuthenticated && supabaseUser) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
         <ProfileSetupForm />

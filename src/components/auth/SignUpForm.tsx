@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { signUp } from '@/lib/supabase';
 import { useAppContext } from '@/context/AppContext';
 
@@ -36,6 +36,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
   const onSubmit = async (values: SignUpFormValues) => {
     setIsLoading(true);
     try {
+      console.log("Attempting signup with:", values.email);
       const { data, error } = await signUp(
         values.email,
         values.password,
@@ -47,6 +48,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
       }
       
       if (data?.user) {
+        console.log("Signup successful, user:", data.user);
         setIsAuthenticated(true);
         toast({
           title: "Account created!",
@@ -55,12 +57,12 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
         onContinue();
       }
     } catch (error: any) {
+      console.error('Sign up error:', error);
       toast({
         title: "Sign up failed",
         description: error.message || "An error occurred during sign up.",
         variant: "destructive",
       });
-      console.error('Sign up error:', error);
     } finally {
       setIsLoading(false);
     }

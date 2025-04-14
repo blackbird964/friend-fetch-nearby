@@ -52,7 +52,8 @@ const ProfileSetupForm: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    if (!supabaseUser) {
+    // Verify user is logged in
+    if (!supabaseUser || !supabaseUser.id) {
       toast({
         title: "Error",
         description: "You must be logged in to update your profile",
@@ -63,6 +64,7 @@ const ProfileSetupForm: React.FC = () => {
     }
 
     try {
+      // Prepare profile data with authenticated user id
       const profileData = {
         id: supabaseUser.id,
         age: parseInt(age) || null,
@@ -87,9 +89,8 @@ const ProfileSetupForm: React.FC = () => {
           gender: data.gender || '',
           interests: data.interests || [],
           profile_pic: data.profile_pic || null,
-          email: currentUser?.email || supabaseUser.email || '',
-          // Only add location if it exists in the data or currentUser
-          location: currentUser?.location || undefined
+          email: supabaseUser.email || '',
+          location: currentUser?.location
         };
         
         setCurrentUser(updatedUser);
