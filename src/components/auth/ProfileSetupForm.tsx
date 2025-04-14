@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { X } from 'lucide-react';
@@ -80,7 +80,6 @@ const ProfileSetupForm: React.FC = () => {
       if (data) {
         // Create a properly formatted AppUser object
         const updatedUser = {
-          ...currentUser!,
           id: data.id,
           name: data.name || '',
           bio: data.bio || '',
@@ -88,14 +87,9 @@ const ProfileSetupForm: React.FC = () => {
           gender: data.gender || '',
           interests: data.interests || [],
           profile_pic: data.profile_pic || null,
-          email: currentUser?.email || '',
-          // Only add the location property if it exists in the data
-          ...(data.location ? {
-            location: {
-              lat: typeof data.location === 'object' ? (data.location as any).lat || 0 : 0,
-              lng: typeof data.location === 'object' ? (data.location as any).lng || 0 : 0
-            }
-          } : {})
+          email: currentUser?.email || supabaseUser.email || '',
+          // Only add location if it exists in the data or currentUser
+          location: currentUser?.location || undefined
         };
         
         setCurrentUser(updatedUser);
