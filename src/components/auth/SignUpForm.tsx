@@ -49,6 +49,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
       
       if (data?.user) {
         console.log("Signup successful, user:", data.user);
+        
         // Set both authentication status and user data
         setIsAuthenticated(true);
         setSupabaseUser(data.user);
@@ -57,6 +58,8 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
           title: "Account created!",
           description: "Your account has been successfully created.",
         });
+        
+        // After successful signup, transition to profile setup
         onContinue();
       }
     } catch (error: any) {

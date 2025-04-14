@@ -60,6 +60,43 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   return data as Profile;
 }
 
+export async function createOrUpdateProfile(profile: Partial<Profile> & { id: string }) {
+  // First check if profile exists
+  const { data: existingProfile, error: checkError } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', profile.id)
+    .maybeSingle();
+  
+  if (checkError) {
+    console.error('Error checking profile existence:', checkError);
+    return { data: null, error: checkError };
+  }
+  
+  // If profile doesn't exist, create it
+  if (!existingProfile) {
+    console.log('Profile does not exist, creating new profile:', profile);
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert([profile])
+      .select()
+      .single();
+    
+    return { data, error };
+  }
+  
+  // If profile exists, update it
+  console.log('Profile exists, updating profile:', profile);
+  const { data, error } = await supabase
+    .from('profiles')
+    .update(profile)
+    .eq('id', profile.id)
+    .select()
+    .single();
+  
+  return { data, error };
+}
+
 export async function updateProfile(profile: Partial<Profile> & { id: string }) {
   const { data, error } = await supabase
     .from('profiles')

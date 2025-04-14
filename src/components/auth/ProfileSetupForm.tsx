@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { X } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
-import { updateProfile } from '@/lib/supabase';
+import { createOrUpdateProfile } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 
 const INTERESTS = [
@@ -72,17 +72,21 @@ const ProfileSetupForm: React.FC = () => {
     }
 
     try {
+      // Get user name from supabaseUser metadata
+      const userName = supabaseUser.user_metadata?.name || '';
+      
       // Prepare profile data with authenticated user id
       const profileData = {
         id: supabaseUser.id,
+        name: userName,
         age: parseInt(age) || null,
         gender,
         bio,
         interests,
       };
 
-      console.log("Updating profile with data:", profileData);
-      const { data, error } = await updateProfile(profileData);
+      console.log("Creating or updating profile with data:", profileData);
+      const { data, error } = await createOrUpdateProfile(profileData);
       
       if (error) {
         throw error;
