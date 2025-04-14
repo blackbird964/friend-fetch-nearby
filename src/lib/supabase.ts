@@ -2,6 +2,8 @@
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 
+export { supabase };
+
 export type Profile = {
   id: string;
   name: string;
@@ -50,7 +52,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
     .from('profiles')
     .select('*')
     .eq('id', userId)
-    .single();
+    .maybeSingle();
   
   if (error || !data) {
     console.error('Error fetching profile:', error);
@@ -61,6 +63,8 @@ export async function getProfile(userId: string): Promise<Profile | null> {
 }
 
 export async function createOrUpdateProfile(profile: Partial<Profile> & { id: string }) {
+  console.log("Profile data being sent to Supabase:", profile);
+  
   // First check if profile exists
   const { data: existingProfile, error: checkError } = await supabase
     .from('profiles')

@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { X } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
-import { createOrUpdateProfile } from '@/lib/supabase';
+import { createOrUpdateProfile, supabase } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 
 const INTERESTS = [
@@ -19,7 +19,7 @@ const INTERESTS = [
 ];
 
 const ProfileSetupForm: React.FC = () => {
-  const { currentUser, supabaseUser, setCurrentUser, isAuthenticated } = useAppContext();
+  const { currentUser, supabaseUser, setCurrentUser } = useAppContext();
   const [age, setAge] = useState<string>('');
   const [gender, setGender] = useState<string>('');
   const [bio, setBio] = useState<string>('');
@@ -31,8 +31,16 @@ const ProfileSetupForm: React.FC = () => {
 
   // Debug auth state
   useEffect(() => {
-    console.log("ProfileSetupForm auth state:", { isAuthenticated, supabaseUser });
-  }, [isAuthenticated, supabaseUser]);
+    console.log("ProfileSetupForm auth state:", { supabaseUser });
+    
+    // Double-check authentication status
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      console.log("Current session data:", data);
+    };
+    
+    checkAuth();
+  }, [supabaseUser]);
 
   // Populate form with existing data if available
   useEffect(() => {
@@ -59,25 +67,23 @@ const ProfileSetupForm: React.FC = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Double-check authentication
-    if (!isAuthenticated || !supabaseUser || !supabaseUser.id) {
-      console.error("Auth state during submit:", { isAuthenticated, supabaseUser });
-      toast({
-        title: "Error",
-        description: "You must be logged in to update your profile",
-        variant: "destructive",
-      });
-      setIsLoading(false);
-      return;
-    }
-
     try {
-      // Get user name from supabaseUser metadata
-      const userName = supabaseUser.user_metadata?.name || '';
+      // Verify authentication and get current session
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (!sessionData.session || !sessionData.session.user) {
+        throw new Error("You must be logged in to update your profile");
+      }
+      
+      const user = sessionData.session.user;
+      console.log("Authenticated user from session:", user);
+      
+      // Get user name from user metadata
+      const userName = user.user_metadata?.name || '';
       
       // Prepare profile data with authenticated user id
       const profileData = {
-        id: supabaseUser.id,
+        id: user.id,
         name: userName,
         age: parseInt(age) || null,
         gender,
@@ -94,7 +100,7 @@ const ProfileSetupForm: React.FC = () => {
       
       if (data) {
         console.log("Profile updated successfully:", data);
-        // Create a properly formatted AppUser object
+        // Create a properly formatted user object
         const updatedUser = {
           id: data.id,
           name: data.name || '',
@@ -103,7 +109,7 @@ const ProfileSetupForm: React.FC = () => {
           gender: data.gender || '',
           interests: data.interests || [],
           profile_pic: data.profile_pic || null,
-          email: supabaseUser.email || '',
+          email: user.email || '',
           location: currentUser?.location
         };
         

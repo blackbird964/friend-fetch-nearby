@@ -5,10 +5,24 @@ import SignUpForm from '@/components/auth/SignUpForm';
 import ProfileSetupForm from '@/components/auth/ProfileSetupForm';
 import { useAppContext } from '@/context/AppContext';
 import { Navigate } from 'react-router-dom';
+import { supabase } from '@/lib/supabase';
 
 const Auth: React.FC = () => {
   const [formState, setFormState] = useState<'login' | 'signup' | 'profile'>('login');
-  const { isAuthenticated, currentUser, loading, supabaseUser } = useAppContext();
+  const { isAuthenticated, currentUser, loading, supabaseUser, setIsAuthenticated, setSupabaseUser } = useAppContext();
+
+  // Check authentication on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        setIsAuthenticated(true);
+        setSupabaseUser(data.session.user);
+      }
+    };
+    
+    checkAuth();
+  }, [setIsAuthenticated, setSupabaseUser]);
 
   // Debug auth state
   useEffect(() => {
