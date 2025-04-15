@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,28 +25,22 @@ const ProfileSetupForm: React.FC = () => {
   const [interests, setInterests] = useState<string[]>([]);
   const [currentInterest, setCurrentInterest] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
-  const [session, setSession] = useState<any>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Get current session
-  useEffect(() => {
-    const getSession = async () => {
-      const { data } = await supabase.auth.getSession();
-      console.log("ProfileSetupForm current session:", data.session);
-      setSession(data.session);
-    };
-    
-    getSession();
-  }, []);
-
   // Debug auth state
   useEffect(() => {
-    console.log("ProfileSetupForm auth state:", { 
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      console.log("Current session in ProfileSetupForm:", data.session);
+    };
+    
+    checkSession();
+    console.log("ProfileSetupForm user state:", { 
       supabaseUser,
-      session,
+      currentUser
     });
-  }, [supabaseUser, session]);
+  }, [supabaseUser, currentUser]);
 
   // Populate form with existing data if available
   useEffect(() => {
@@ -75,40 +68,35 @@ const ProfileSetupForm: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Refresh the session before proceeding
+      // Get the current session
       const { data: sessionData } = await supabase.auth.getSession();
       
       if (!sessionData.session || !sessionData.session.user) {
-        // Try to refresh the session
-        const { data: refreshData } = await supabase.auth.refreshSession();
-        if (!refreshData.session) {
-          throw new Error("You must be logged in to update your profile");
+        // Attempt to refresh the session
+        const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+        
+        if (refreshError || !refreshData.session) {
+          console.error("Session refresh error:", refreshError);
+          throw new Error("Authentication required. Please log in again.");
         }
+        
         console.log("Refreshed session:", refreshData.session);
-        setSession(refreshData.session);
-      } else {
-        setSession(sessionData.session);
       }
       
-      // Wait a bit to ensure the session is properly set
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Use the latest session user
-      const user = session?.user || supabaseUser;
-      
-      if (!user) {
-        throw new Error("Authentication required. Please log in again.");
+      // Get the latest session after potential refresh
+      const { data: latestSession } = await supabase.auth.getSession();
+      if (!latestSession.session || !latestSession.session.user) {
+        throw new Error("Unable to authenticate. Please log in again.");
       }
       
+      // Use the authenticated user from the session
+      const user = latestSession.session.user;
       console.log("Using user for profile update:", user);
       
-      // Get user name from user metadata
-      const userName = user.user_metadata?.name || '';
-      
-      // Prepare profile data with authenticated user id
+      // Prepare profile data
       const profileData = {
         id: user.id,
-        name: userName,
+        name: user.user_metadata?.name || '',
         age: parseInt(age) || null,
         gender,
         bio,
@@ -119,6 +107,7 @@ const ProfileSetupForm: React.FC = () => {
       const { data, error } = await createOrUpdateProfile(profileData);
       
       if (error) {
+        console.error("Profile update error:", error);
         throw error;
       }
       

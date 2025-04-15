@@ -15,14 +15,35 @@ const Auth: React.FC = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
-      console.log("Initial session check:", data.session);
+      console.log("Initial session check in Auth:", data.session);
+      
       if (data.session) {
         setIsAuthenticated(true);
         setSupabaseUser(data.session.user);
+      } else {
+        // Reset authentication state if no session
+        setIsAuthenticated(false);
+        setSupabaseUser(null);
       }
     };
     
     checkAuth();
+    
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state changed in Auth component:", event, session);
+      if (session) {
+        setIsAuthenticated(true);
+        setSupabaseUser(session.user);
+      } else {
+        setIsAuthenticated(false);
+        setSupabaseUser(null);
+      }
+    });
+    
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [setIsAuthenticated, setSupabaseUser]);
 
   // Debug auth state
@@ -59,6 +80,7 @@ const Auth: React.FC = () => {
     );
   }
 
+  // Not authenticated, show login/signup forms
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
       <div className="w-full max-w-md mb-8 text-center">

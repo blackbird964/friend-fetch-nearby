@@ -72,13 +72,17 @@ export async function createOrUpdateProfile(profile: Partial<Profile> & { id: st
   
   try {
     // Get the current session first to ensure we're authenticated
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
+    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError || !sessionData.session) {
+      console.error("Session error:", sessionError);
       return { 
         data: null, 
-        error: new Error('Not authenticated. Please log in again.') 
+        error: new Error('Authentication required. Please log in before updating your profile.') 
       };
     }
+    
+    console.log("Session found for profile update:", sessionData.session.user.id);
     
     // First check if profile exists
     const { data: existingProfile, error: checkError } = await supabase
@@ -94,24 +98,44 @@ export async function createOrUpdateProfile(profile: Partial<Profile> & { id: st
     
     // If profile doesn't exist, create it
     if (!existingProfile) {
-      console.log('Profile does not exist, creating new profile:', profile);
+      console.log('Creating new profile:', profile);
       const { data, error } = await supabase
         .from('profiles')
         .insert([profile])
         .select()
         .single();
       
+      if (error) {
+        console.error("Error inserting profile:", error);
+        if (error.message.includes('violates row-level security')) {
+          return { 
+            data: null,
+            error: new Error('Permission denied: You can only update your own profile.')
+          };
+        }
+      }
+      
       return { data, error };
     }
     
     // If profile exists, update it
-    console.log('Profile exists, updating profile:', profile);
+    console.log('Updating existing profile:', profile);
     const { data, error } = await supabase
       .from('profiles')
       .update(profile)
       .eq('id', profile.id)
       .select()
       .single();
+    
+    if (error) {
+      console.error("Error updating profile:", error);
+      if (error.message.includes('violates row-level security')) {
+        return { 
+          data: null,
+          error: new Error('Permission denied: You can only update your own profile.')
+        };
+      }
+    }
     
     return { data, error };
   } catch (error) {
