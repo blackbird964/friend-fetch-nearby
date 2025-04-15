@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { LogOut, User, Edit, Camera } from 'lucide-react';
 import { signOut } from '@/lib/supabase';
+import EditProfileForm from './EditProfileForm';
 
 const ProfilePage: React.FC = () => {
   const { currentUser, setCurrentUser, setIsAuthenticated } = useAppContext();
@@ -39,6 +40,12 @@ const ProfilePage: React.FC = () => {
   };
 
   if (!currentUser) return null;
+
+  if (isEditing) {
+    return (
+      <EditProfileForm onCancel={() => setIsEditing(false)} />
+    );
+  }
 
   return (
     <div className="space-y-4">
@@ -125,7 +132,6 @@ const ProfilePage: React.FC = () => {
             <span className="text-sm font-medium text-gray-500">Email:</span>
             <p>{currentUser.email}</p>
           </div>
-          {/* Additional account details would go here */}
         </CardContent>
       </Card>
     </div>
