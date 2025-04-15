@@ -53,13 +53,14 @@ export async function getSession() {
 }
 
 export async function getProfile(userId: string): Promise<Profile | null> {
+  console.log("Fetching profile for user:", userId);
   const { data, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', userId)
     .maybeSingle();
   
-  if (error || !data) {
+  if (error) {
     console.error('Error fetching profile:', error);
     return null;
   }
@@ -68,90 +69,10 @@ export async function getProfile(userId: string): Promise<Profile | null> {
 }
 
 export async function createOrUpdateProfile(profile: Partial<Profile> & { id: string }) {
-  console.log("Profile data being sent to Supabase:", profile);
-  
-  try {
-    // Get the current session first to ensure we're authenticated
-    const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError || !sessionData.session) {
-      console.error("Session error:", sessionError);
-      return { 
-        data: null, 
-        error: new Error('Authentication required. Please log in before updating your profile.') 
-      };
-    }
-    
-    console.log("Session found for profile update:", sessionData.session.user.id);
-    
-    // First check if profile exists
-    const { data: existingProfile, error: checkError } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', profile.id)
-      .maybeSingle();
-    
-    if (checkError) {
-      console.error('Error checking profile existence:', checkError);
-      return { data: null, error: checkError };
-    }
-    
-    // If profile doesn't exist, create it
-    if (!existingProfile) {
-      console.log('Creating new profile:', profile);
-      const { data, error } = await supabase
-        .from('profiles')
-        .insert([profile])
-        .select()
-        .single();
-      
-      if (error) {
-        console.error("Error inserting profile:", error);
-        if (error.message.includes('violates row-level security')) {
-          return { 
-            data: null,
-            error: new Error('Permission denied: You can only update your own profile.')
-          };
-        }
-      }
-      
-      return { data, error };
-    }
-    
-    // If profile exists, update it
-    console.log('Updating existing profile:', profile);
-    const { data, error } = await supabase
-      .from('profiles')
-      .update(profile)
-      .eq('id', profile.id)
-      .select()
-      .single();
-    
-    if (error) {
-      console.error("Error updating profile:", error);
-      if (error.message.includes('violates row-level security')) {
-        return { 
-          data: null,
-          error: new Error('Permission denied: You can only update your own profile.')
-        };
-      }
-    }
-    
-    return { data, error };
-  } catch (error) {
-    console.error('Unexpected error in createOrUpdateProfile:', error);
-    return { 
-      data: null, 
-      error: error instanceof Error ? error : new Error('Unknown error occurred') 
-    };
-  }
-}
-
-export async function updateProfile(profile: Partial<Profile> & { id: string }) {
+  console.log("Creating/updating profile:", profile);
   const { data, error } = await supabase
     .from('profiles')
-    .update(profile)
-    .eq('id', profile.id)
+    .upsert(profile)
     .select()
     .single();
   

@@ -2,16 +2,14 @@
 import React, { useState, useEffect } from 'react';
 import LoginForm from '@/components/auth/LoginForm';
 import SignUpForm from '@/components/auth/SignUpForm';
-import ProfileSetupForm from '@/components/auth/ProfileSetupForm';
 import { useAppContext } from '@/context/AppContext';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 
 const Auth: React.FC = () => {
-  const [formState, setFormState] = useState<'login' | 'signup' | 'profile'>('login');
-  const { isAuthenticated, currentUser, loading, supabaseUser, setIsAuthenticated, setSupabaseUser } = useAppContext();
+  const [formState, setFormState] = useState<'login' | 'signup'>('login');
+  const { isAuthenticated, loading, setIsAuthenticated, setSupabaseUser } = useAppContext();
 
-  // Check authentication on mount
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
@@ -20,18 +18,13 @@ const Auth: React.FC = () => {
       if (data.session) {
         setIsAuthenticated(true);
         setSupabaseUser(data.session.user);
-      } else {
-        // Reset authentication state if no session
-        setIsAuthenticated(false);
-        setSupabaseUser(null);
       }
     };
     
     checkAuth();
     
-    // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed in Auth component:", event, session);
+      console.log("Auth state changed:", event, session);
       if (session) {
         setIsAuthenticated(true);
         setSupabaseUser(session.user);
@@ -46,18 +39,6 @@ const Auth: React.FC = () => {
     };
   }, [setIsAuthenticated, setSupabaseUser]);
 
-  // Debug auth state
-  useEffect(() => {
-    console.log("Auth page state:", { 
-      isAuthenticated, 
-      loading, 
-      supabaseUser: supabaseUser ? `User ID: ${supabaseUser.id}` : null, 
-      currentUser: currentUser ? `Has profile: ${!!currentUser.age}` : null,
-      formState
-    });
-  }, [isAuthenticated, loading, supabaseUser, currentUser, formState]);
-
-  // If loading, show loading indicator
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
@@ -66,21 +47,10 @@ const Auth: React.FC = () => {
     );
   }
 
-  // If already authenticated and has full profile, redirect to home
-  if (isAuthenticated && currentUser?.age) {
+  if (isAuthenticated) {
     return <Navigate to="/home" replace />;
   }
 
-  // If authenticated but needs to complete profile
-  if (isAuthenticated && supabaseUser) {
-    return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
-        <ProfileSetupForm />
-      </div>
-    );
-  }
-
-  // Not authenticated, show login/signup forms
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
       <div className="w-full max-w-md mb-8 text-center">
@@ -91,10 +61,7 @@ const Auth: React.FC = () => {
       {formState === 'login' ? (
         <LoginForm onToggleForm={() => setFormState('signup')} />
       ) : (
-        <SignUpForm 
-          onToggleForm={() => setFormState('login')} 
-          onContinue={() => setFormState('profile')}
-        />
+        <SignUpForm onToggleForm={() => setFormState('login')} />
       )}
     </div>
   );
