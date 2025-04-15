@@ -26,21 +26,28 @@ const ProfileSetupForm: React.FC = () => {
   const [interests, setInterests] = useState<string[]>([]);
   const [currentInterest, setCurrentInterest] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [session, setSession] = useState<any>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  // Debug auth state
+  // Get current session
   useEffect(() => {
-    console.log("ProfileSetupForm auth state:", { supabaseUser });
-    
-    // Double-check authentication status
-    const checkAuth = async () => {
+    const getSession = async () => {
       const { data } = await supabase.auth.getSession();
-      console.log("Current session data:", data);
+      console.log("ProfileSetupForm current session:", data.session);
+      setSession(data.session);
     };
     
-    checkAuth();
-  }, [supabaseUser]);
+    getSession();
+  }, []);
+
+  // Debug auth state
+  useEffect(() => {
+    console.log("ProfileSetupForm auth state:", { 
+      supabaseUser,
+      session,
+    });
+  }, [supabaseUser, session]);
 
   // Populate form with existing data if available
   useEffect(() => {
@@ -68,15 +75,32 @@ const ProfileSetupForm: React.FC = () => {
     setIsLoading(true);
 
     try {
-      // Verify authentication and get current session
+      // Refresh the session before proceeding
       const { data: sessionData } = await supabase.auth.getSession();
       
       if (!sessionData.session || !sessionData.session.user) {
-        throw new Error("You must be logged in to update your profile");
+        // Try to refresh the session
+        const { data: refreshData } = await supabase.auth.refreshSession();
+        if (!refreshData.session) {
+          throw new Error("You must be logged in to update your profile");
+        }
+        console.log("Refreshed session:", refreshData.session);
+        setSession(refreshData.session);
+      } else {
+        setSession(sessionData.session);
       }
       
-      const user = sessionData.session.user;
-      console.log("Authenticated user from session:", user);
+      // Wait a bit to ensure the session is properly set
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Use the latest session user
+      const user = session?.user || supabaseUser;
+      
+      if (!user) {
+        throw new Error("Authentication required. Please log in again.");
+      }
+      
+      console.log("Using user for profile update:", user);
       
       // Get user name from user metadata
       const userName = user.user_metadata?.name || '';

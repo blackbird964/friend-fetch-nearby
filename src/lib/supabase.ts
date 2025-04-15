@@ -47,6 +47,11 @@ export async function getCurrentUser() {
   return data?.user;
 }
 
+export async function getSession() {
+  const { data } = await supabase.auth.getSession();
+  return data?.session;
+}
+
 export async function getProfile(userId: string): Promise<Profile | null> {
   const { data, error } = await supabase
     .from('profiles')
@@ -65,40 +70,57 @@ export async function getProfile(userId: string): Promise<Profile | null> {
 export async function createOrUpdateProfile(profile: Partial<Profile> & { id: string }) {
   console.log("Profile data being sent to Supabase:", profile);
   
-  // First check if profile exists
-  const { data: existingProfile, error: checkError } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', profile.id)
-    .maybeSingle();
-  
-  if (checkError) {
-    console.error('Error checking profile existence:', checkError);
-    return { data: null, error: checkError };
-  }
-  
-  // If profile doesn't exist, create it
-  if (!existingProfile) {
-    console.log('Profile does not exist, creating new profile:', profile);
+  try {
+    // Get the current session first to ensure we're authenticated
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      return { 
+        data: null, 
+        error: new Error('Not authenticated. Please log in again.') 
+      };
+    }
+    
+    // First check if profile exists
+    const { data: existingProfile, error: checkError } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', profile.id)
+      .maybeSingle();
+    
+    if (checkError) {
+      console.error('Error checking profile existence:', checkError);
+      return { data: null, error: checkError };
+    }
+    
+    // If profile doesn't exist, create it
+    if (!existingProfile) {
+      console.log('Profile does not exist, creating new profile:', profile);
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert([profile])
+        .select()
+        .single();
+      
+      return { data, error };
+    }
+    
+    // If profile exists, update it
+    console.log('Profile exists, updating profile:', profile);
     const { data, error } = await supabase
       .from('profiles')
-      .insert([profile])
+      .update(profile)
+      .eq('id', profile.id)
       .select()
       .single();
     
     return { data, error };
+  } catch (error) {
+    console.error('Unexpected error in createOrUpdateProfile:', error);
+    return { 
+      data: null, 
+      error: error instanceof Error ? error : new Error('Unknown error occurred') 
+    };
   }
-  
-  // If profile exists, update it
-  console.log('Profile exists, updating profile:', profile);
-  const { data, error } = await supabase
-    .from('profiles')
-    .update(profile)
-    .eq('id', profile.id)
-    .select()
-    .single();
-  
-  return { data, error };
 }
 
 export async function updateProfile(profile: Partial<Profile> & { id: string }) {

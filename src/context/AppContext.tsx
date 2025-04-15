@@ -81,22 +81,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Auth state listener
   useEffect(() => {
+    // Set up the auth state change listener
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
+        console.log("Auth state changed:", event, session?.user?.id);
         setLoading(true);
-        const user = session?.user || null;
-        setSupabaseUser(user);
-        setIsAuthenticated(!!user);
         
-        if (user) {
+        if (session?.user) {
+          setSupabaseUser(session.user);
+          setIsAuthenticated(true);
+          
           // Use setTimeout to prevent deadlocks
           setTimeout(async () => {
             try {
-              const profile = await getProfile(user.id);
+              const profile = await getProfile(session.user.id);
+              console.log("Profile fetched after auth change:", profile);
+              
               if (profile) {
                 setCurrentUser({
                   ...profile,
-                  email: user.email || '',
+                  email: session.user.email || '',
                 });
               }
             } catch (error) {
@@ -106,6 +110,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
           }, 0);
         } else {
+          setSupabaseUser(null);
+          setIsAuthenticated(false);
           setCurrentUser(null);
           setLoading(false);
         }
@@ -113,25 +119,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     );
 
     // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const user = session?.user || null;
-      setSupabaseUser(user);
-      setIsAuthenticated(!!user);
+    const checkSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      console.log("Initial session check:", data.session);
       
-      if (user) {
-        getProfile(user.id).then((profile) => {
-          if (profile) {
-            setCurrentUser({
-              ...profile,
-              email: user.email || '',
-            });
-          }
-          setLoading(false);
-        });
-      } else {
-        setLoading(false);
+      if (data.session?.user) {
+        setSupabaseUser(data.session.user);
+        setIsAuthenticated(true);
+        
+        const profile = await getProfile(data.session.user.id);
+        console.log("Initial profile:", profile);
+        
+        if (profile) {
+          setCurrentUser({
+            ...profile,
+            email: data.session.user.email || '',
+          });
+        }
       }
-    });
+      
+      setLoading(false);
+    };
+    
+    checkSession();
 
     return () => {
       subscription.unsubscribe();

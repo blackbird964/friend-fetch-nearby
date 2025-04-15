@@ -15,6 +15,7 @@ const Auth: React.FC = () => {
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
+      console.log("Initial session check:", data.session);
       if (data.session) {
         setIsAuthenticated(true);
         setSupabaseUser(data.session.user);
