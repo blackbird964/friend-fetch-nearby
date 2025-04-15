@@ -60,7 +60,9 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
         });
         
         // After successful signup, transition to profile setup
-        onContinue();
+        if (typeof onContinue === 'function') {
+          onContinue();
+        }
       }
     } catch (error: any) {
       console.error('Sign up error:', error);

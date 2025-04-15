@@ -61,7 +61,14 @@ const Auth: React.FC = () => {
       {formState === 'login' ? (
         <LoginForm onToggleForm={() => setFormState('signup')} />
       ) : (
-        <SignUpForm onToggleForm={() => setFormState('login')} />
+        <SignUpForm 
+          onToggleForm={() => setFormState('login')} 
+          onContinue={() => {
+            console.log("User signed up, redirecting to home");
+            // The user will be automatically redirected if authentication is successful
+            // This is handled by the useEffect hook in this component
+          }}
+        />
       )}
     </div>
   );
