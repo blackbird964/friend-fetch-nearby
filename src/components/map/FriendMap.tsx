@@ -1,36 +1,122 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { MapPin, User, Clock, MapPinOff } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import UserCard from '@/components/users/UserCard';
 import { useToast } from "@/components/ui/use-toast";
+import mapboxgl from 'mapbox-gl';
+import 'mapbox-gl/dist/mapbox-gl.css';
 
-// Mock Map component for now - in a real app, you'd use a proper map like Google Maps or Mapbox
 const FriendMap: React.FC = () => {
   const { currentUser, nearbyUsers, radiusInKm, setRadiusInKm, friendRequests, setFriendRequests } = useAppContext();
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<number>(30);
-  const { toast } = useToast();
+  const [mapboxToken, setMapboxToken] = useState<string>(localStorage.getItem('mapboxToken') || '');
   const [mapLoaded, setMapLoaded] = useState(false);
+  const { toast } = useToast();
+  
+  const mapContainer = useRef<HTMLDivElement>(null);
+  const map = useRef<mapboxgl.Map | null>(null);
+  const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
 
-  // Simulate map loading
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setMapLoaded(true);
-    }, 1000);
+    if (!mapboxToken) return;
     
-    return () => clearTimeout(timer);
-  }, []);
+    localStorage.setItem('mapboxToken', mapboxToken);
+    
+    if (!mapContainer.current) return;
+
+    // Initialize map
+    mapboxgl.accessToken = mapboxToken;
+    
+    map.current = new mapboxgl.Map({
+      container: mapContainer.current,
+      style: 'mapbox://styles/mapbox/streets-v12',
+      center: [-74.006, 40.7128], // Default to NYC
+      zoom: 12
+    });
+
+    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+    // Get user's location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          if (map.current) {
+            map.current.setCenter([position.coords.longitude, position.coords.latitude]);
+            // Add marker for current user
+            new mapboxgl.Marker({ color: '#0ea5e9' })
+              .setLngLat([position.coords.longitude, position.coords.latitude])
+              .addTo(map.current);
+          }
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          toast({
+            title: "Location Access Required",
+            description: "Please enable location services to use the map features.",
+            variant: "destructive"
+          });
+        }
+      );
+    }
+
+    map.current.on('load', () => {
+      setMapLoaded(true);
+    });
+
+    return () => {
+      if (map.current) {
+        map.current.remove();
+      }
+    };
+  }, [mapboxToken]);
+
+  // Update markers for nearby users
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    // Clear existing markers
+    Object.values(markersRef.current).forEach(marker => marker.remove());
+    markersRef.current = {};
+
+    // Add markers for nearby users
+    nearbyUsers.forEach((user) => {
+      if (user.location) {
+        const el = document.createElement('div');
+        el.className = 'marker-container';
+        el.innerHTML = `
+          <div class="w-8 h-8 rounded-full overflow-hidden border-2 border-white shadow-lg cursor-pointer transform transition-transform hover:scale-110">
+            <img 
+              src="${user.profile_pic || ''}" 
+              alt="${user.name}" 
+              class="w-full h-full object-cover"
+            />
+          </div>
+        `;
+
+        el.addEventListener('click', () => {
+          setSelectedUser(user.id === selectedUser ? null : user.id);
+        });
+
+        const marker = new mapboxgl.Marker(el)
+          .setLngLat([user.location.lng, user.location.lat])
+          .addTo(map.current!);
+
+        markersRef.current[user.id] = marker;
+      }
+    });
+  }, [nearbyUsers, mapLoaded, selectedUser]);
 
   const handleSendRequest = () => {
     if (!selectedUser) return;
     
     const user = nearbyUsers.find(u => u.id === selectedUser);
-    
     if (!user) return;
     
     const newRequest = {
@@ -43,7 +129,6 @@ const FriendMap: React.FC = () => {
       timestamp: Date.now(),
     };
     
-    // In a real app, this would be sent to a server
     toast({
       title: "Friend request sent!",
       description: `You sent a request to meet with ${user.name} for ${selectedDuration} minutes.`,
@@ -54,74 +139,31 @@ const FriendMap: React.FC = () => {
 
   const availableTimes = [15, 30, 45];
 
+  if (!mapboxToken) {
+    return (
+      <div className="flex flex-col gap-4 p-4">
+        <h2 className="text-lg font-semibold">Mapbox Configuration Required</h2>
+        <p className="text-sm text-gray-600">
+          Please enter your Mapbox access token to enable the map functionality.
+          You can get one from <a href="https://mapbox.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">mapbox.com</a>
+        </p>
+        <div className="flex gap-2">
+          <Input
+            type="text"
+            placeholder="Enter your Mapbox token"
+            value={mapboxToken}
+            onChange={(e) => setMapboxToken(e.target.value)}
+          />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-full relative">
       {/* Map Container */}
       <div className="flex-1 relative bg-gray-100 rounded-lg overflow-hidden shadow-inner">
-        {/* Simulated Map */}
-        {!mapLoaded ? (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
-          </div>
-        ) : (
-          <div className="absolute inset-0 bg-[#e8f4f8]">
-            {/* Current User Location */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="relative">
-                <div className="absolute -inset-8 rounded-full bg-primary/20 pulse-animation"></div>
-                <div className="relative z-10 bg-primary text-white rounded-full p-2">
-                  <User size={24} />
-                </div>
-              </div>
-            </div>
-            
-            {/* Nearby Users */}
-            {nearbyUsers.map((user, index) => {
-              // Calculate random positions around the center
-              const angle = (index / nearbyUsers.length) * 2 * Math.PI;
-              const distance = Math.random() * 30 + 15; // 15-45% from center
-              const top = 50 + Math.sin(angle) * distance;
-              const left = 50 + Math.cos(angle) * distance;
-              
-              return (
-                <button
-                  key={user.id}
-                  className={`absolute transform -translate-x-1/2 -translate-y-1/2 transition-all duration-300 ${
-                    selectedUser === user.id ? 'scale-110 z-10' : 'hover:scale-105'
-                  }`}
-                  style={{ top: `${top}%`, left: `${left}%` }}
-                  onClick={() => setSelectedUser(user.id === selectedUser ? null : user.id)}
-                >
-                  <div className="relative">
-                    <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-white shadow-lg">
-                      <img 
-                        src={user.profile_pic || ''} 
-                        alt={user.name || 'User'} 
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    {selectedUser === user.id && (
-                      <div className="absolute -bottom-1 -right-1 bg-primary text-white rounded-full p-1 shadow-lg">
-                        <MapPin size={10} />
-                      </div>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-            
-            {/* Radius Indicator */}
-            <div 
-              className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 border-2 border-primary/30 rounded-full"
-              style={{ 
-                width: `${radiusInKm * 8}%`, 
-                height: `${radiusInKm * 8}%`,
-                minWidth: '30%',
-                minHeight: '30%',
-              }}
-            ></div>
-          </div>
-        )}
+        <div ref={mapContainer} className="absolute inset-0" />
         
         {/* Radius Control */}
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-4/5 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-md">
@@ -197,3 +239,4 @@ const FriendMap: React.FC = () => {
 };
 
 export default FriendMap;
+
