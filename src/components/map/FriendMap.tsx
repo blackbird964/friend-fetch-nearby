@@ -4,7 +4,6 @@ import { User, Clock } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Badge } from "@/components/ui/badge";
 import UserCard from '@/components/users/UserCard';
 import { useToast } from "@/components/ui/use-toast";
 import 'ol/ol.css';
@@ -12,12 +11,13 @@ import Map from 'ol/Map';
 import View from 'ol/View';
 import TileLayer from 'ol/layer/Tile';
 import OSM from 'ol/source/OSM';
-import { fromLonLat } from 'ol/proj';
+import { fromLonLat, transform } from 'ol/proj';
 import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import { Vector as VectorLayer } from 'ol/layer';
 import { Vector as VectorSource } from 'ol/source';
-import { Style, Circle, Fill, Stroke } from 'ol/style';
+import { Style, Circle, Fill, Stroke, Text } from 'ol/style';
+import LineString from 'ol/geom/LineString';
 
 const FriendMap: React.FC = () => {
   const { currentUser, nearbyUsers, radiusInKm, setRadiusInKm, friendRequests, setFriendRequests } = useAppContext();
@@ -25,23 +25,55 @@ const FriendMap: React.FC = () => {
   const [selectedDuration, setSelectedDuration] = useState<number>(30);
   const [mapLoaded, setMapLoaded] = useState(false);
   const { toast } = useToast();
+  const [movingUsers, setMovingUsers] = useState<Set<string>>(new Set());
   
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<Map | null>(null);
   const vectorSource = useRef<VectorSource | null>(null);
   const vectorLayer = useRef<VectorLayer<VectorSource> | null>(null);
+  const routeLayer = useRef<VectorLayer<VectorSource> | null>(null);
+
+  const WYNYARD_COORDS = [151.2073, -33.8666];
 
   useEffect(() => {
     if (!mapContainer.current) return;
 
+    // Create vector sources and layers
     vectorSource.current = new VectorSource();
+    const routeSource = new VectorSource();
+    
     vectorLayer.current = new VectorLayer({
       source: vectorSource.current,
+      style: (feature) => {
+        const isMoving = movingUsers.has(feature.get('userId'));
+        const isUser = feature.get('isCurrentUser');
+        return new Style({
+          image: new Circle({
+            radius: 8,
+            fill: new Fill({ 
+              color: isUser ? '#0ea5e9' : 
+                     isMoving ? '#10b981' :
+                     selectedUser === feature.get('userId') ? '#6366f1' : '#6366f1' 
+            }),
+            stroke: new Stroke({ color: 'white', width: 2 })
+          }),
+          text: new Text({
+            text: feature.get('name'),
+            offsetY: -15,
+            fill: new Fill({ color: '#374151' }),
+            stroke: new Stroke({ color: 'white', width: 2 })
+          })
+        });
+      }
+    });
+
+    routeLayer.current = new VectorLayer({
+      source: routeSource,
       style: new Style({
-        image: new Circle({
-          radius: 8,
-          fill: new Fill({ color: '#0ea5e9' }),
-          stroke: new Stroke({ color: 'white', width: 2 })
+        stroke: new Stroke({
+          color: '#10b981',
+          width: 2,
+          lineDash: [5, 5]
         })
       })
     });
@@ -52,75 +84,73 @@ const FriendMap: React.FC = () => {
         new TileLayer({
           source: new OSM()
         }),
+        routeLayer.current,
         vectorLayer.current
       ],
       view: new View({
-        center: fromLonLat([151.2093, -33.8688]),
-        zoom: 13
+        center: fromLonLat(WYNYARD_COORDS),
+        zoom: 14
       })
     });
 
     setMapLoaded(true);
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          if (map.current) {
-            const userLocation = fromLonLat([position.coords.longitude, position.coords.latitude]);
-            map.current.getView().setCenter(userLocation);
-            
-            const userFeature = new Feature({
-              geometry: new Point(userLocation)
-            });
-            vectorSource.current?.addFeature(userFeature);
-          }
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          toast({
-            title: "Location Access",
-            description: "Using Sydney CBD as default location.",
-            variant: "default"
-          });
+    // Add current user marker at Wynyard
+    const userFeature = new Feature({
+      geometry: new Point(fromLonLat(WYNYARD_COORDS)),
+      isCurrentUser: true,
+      name: 'You'
+    });
+    vectorSource.current.addFeature(userFeature);
+
+    // Add click handler for markers
+    map.current.on('click', (event) => {
+      const feature = map.current?.forEachFeatureAtPixel(event.pixel, (f) => f);
+      if (feature) {
+        const userId = feature.get('userId');
+        if (userId && !movingUsers.has(userId)) {
+          setSelectedUser(userId);
         }
-      );
-    }
+      }
+    });
 
     return () => {
       if (map.current) {
         map.current.setTarget(undefined);
       }
     };
-  }, []);
+  }, [selectedUser, movingUsers]);
 
   useEffect(() => {
     if (!mapLoaded || !vectorSource.current) return;
 
+    // Clear existing user markers
     const features = vectorSource.current.getFeatures();
-    features.slice(1).forEach(feature => {
-      vectorSource.current?.removeFeature(feature);
+    features.forEach(feature => {
+      if (!feature.get('isCurrentUser')) {
+        vectorSource.current?.removeFeature(feature);
+      }
     });
 
-    nearbyUsers.forEach((user) => {
-      if (user.location) {
-        const userLocation = fromLonLat([user.location.lng, user.location.lat]);
-        const userFeature = new Feature({
-          geometry: new Point(userLocation),
-          properties: { userId: user.id }
-        });
-        
-        userFeature.setStyle(new Style({
-          image: new Circle({
-            radius: 8,
-            fill: new Fill({ color: selectedUser === user.id ? '#10b981' : '#6366f1' }),
-            stroke: new Stroke({ color: 'white', width: 2 })
-          })
-        }));
+    // Add markers for nearby users with realistic Sydney locations
+    const sydneyLocations = [
+      { lat: -33.8688, lng: 151.2093, name: "Sarah J." }, // Town Hall
+      { lat: -33.8568, lng: 151.2153, name: "David L." }, // The Rocks
+      { lat: -33.8736, lng: 151.2014, name: "Emma R." }   // Darling Harbour
+    ];
 
+    sydneyLocations.forEach((loc, index) => {
+      const user = nearbyUsers[index];
+      if (user) {
+        const userFeature = new Feature({
+          geometry: new Point(fromLonLat([loc.lng, loc.lat])),
+          userId: user.id,
+          name: loc.name
+        });
         vectorSource.current?.addFeature(userFeature);
       }
     });
-  }, [nearbyUsers, mapLoaded, selectedUser]);
+  }, [nearbyUsers, mapLoaded]);
 
   const handleSendRequest = () => {
     if (!selectedUser) return;
@@ -128,19 +158,46 @@ const FriendMap: React.FC = () => {
     const user = nearbyUsers.find(u => u.id === selectedUser);
     if (!user) return;
     
-    const newRequest = {
-      id: `fr${Date.now()}`,
-      receiverId: user.id,
-      receiverName: user.name,
-      receiverProfilePic: user.profile_pic,
-      duration: selectedDuration,
-      status: 'sent',
-      timestamp: Date.now(),
-    };
+    setMovingUsers(prev => new Set(prev).add(user.id));
     
+    // Simulate user moving to meeting point
+    const userFeature = vectorSource.current?.getFeatures().find(f => f.get('userId') === user.id);
+    if (userFeature && routeLayer.current?.getSource()) {
+      const startCoord = (userFeature.getGeometry() as Point).getCoordinates();
+      const endCoord = fromLonLat(WYNYARD_COORDS);
+      
+      // Add route line
+      const routeFeature = new Feature({
+        geometry: new LineString([startCoord, endCoord])
+      });
+      routeLayer.current.getSource()?.addFeature(routeFeature);
+      
+      // Animate marker
+      let progress = 0;
+      const animate = () => {
+        progress += 0.005;
+        if (progress <= 1) {
+          const currentCoord = [
+            startCoord[0] + (endCoord[0] - startCoord[0]) * progress,
+            startCoord[1] + (endCoord[1] - startCoord[1]) * progress
+          ];
+          userFeature.setGeometry(new Point(currentCoord));
+          requestAnimationFrame(animate);
+        } else {
+          routeLayer.current?.getSource()?.clear();
+          setMovingUsers(prev => {
+            const next = new Set(prev);
+            next.delete(user.id);
+            return next;
+          });
+        }
+      };
+      animate();
+    }
+
     toast({
-      title: "Friend request sent!",
-      description: `You sent a request to meet with ${user.name} for ${selectedDuration} minutes.`,
+      title: "Starting catch up!",
+      description: `${user.name} is heading to meet you at Wynyard.`,
     });
     
     setSelectedUser(null);
