@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { User, Clock } from 'lucide-react';
@@ -32,11 +31,9 @@ const FriendMap: React.FC = () => {
   const vectorSource = useRef<VectorSource | null>(null);
   const vectorLayer = useRef<VectorLayer<VectorSource> | null>(null);
 
-  // Initialize map
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Create vector source and layer for markers
     vectorSource.current = new VectorSource();
     vectorLayer.current = new VectorLayer({
       source: vectorSource.current,
@@ -49,7 +46,6 @@ const FriendMap: React.FC = () => {
       })
     });
 
-    // Initialize map
     map.current = new Map({
       target: mapContainer.current,
       layers: [
@@ -59,14 +55,13 @@ const FriendMap: React.FC = () => {
         vectorLayer.current
       ],
       view: new View({
-        center: fromLonLat([-74.006, 40.7128]), // Default to NYC
-        zoom: 12
+        center: fromLonLat([151.2093, -33.8688]),
+        zoom: 13
       })
     });
 
     setMapLoaded(true);
 
-    // Get user's location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -74,7 +69,6 @@ const FriendMap: React.FC = () => {
             const userLocation = fromLonLat([position.coords.longitude, position.coords.latitude]);
             map.current.getView().setCenter(userLocation);
             
-            // Add marker for current user
             const userFeature = new Feature({
               geometry: new Point(userLocation)
             });
@@ -84,9 +78,9 @@ const FriendMap: React.FC = () => {
         (error) => {
           console.error('Error getting location:', error);
           toast({
-            title: "Location Access Required",
-            description: "Please enable location services to use the map features.",
-            variant: "destructive"
+            title: "Location Access",
+            description: "Using Sydney CBD as default location.",
+            variant: "default"
           });
         }
       );
@@ -99,17 +93,14 @@ const FriendMap: React.FC = () => {
     };
   }, []);
 
-  // Update markers for nearby users
   useEffect(() => {
     if (!mapLoaded || !vectorSource.current) return;
 
-    // Clear existing markers except current user's marker
     const features = vectorSource.current.getFeatures();
     features.slice(1).forEach(feature => {
       vectorSource.current?.removeFeature(feature);
     });
 
-    // Add markers for nearby users
     nearbyUsers.forEach((user) => {
       if (user.location) {
         const userLocation = fromLonLat([user.location.lng, user.location.lat]);
@@ -159,11 +150,9 @@ const FriendMap: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full relative">
-      {/* Map Container */}
       <div className="flex-1 relative bg-gray-100 rounded-lg overflow-hidden shadow-inner">
         <div ref={mapContainer} className="absolute inset-0" />
         
-        {/* Radius Control */}
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-4/5 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center text-sm text-gray-600">
@@ -182,7 +171,6 @@ const FriendMap: React.FC = () => {
         </div>
       </div>
       
-      {/* User Details & Request Panel */}
       {selectedUser && (
         <Card className="mt-4 shadow-md animate-slide-in-bottom">
           <CardContent className="p-4">
@@ -237,4 +225,3 @@ const FriendMap: React.FC = () => {
 };
 
 export default FriendMap;
-
