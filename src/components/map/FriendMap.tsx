@@ -26,6 +26,7 @@ const FriendMap: React.FC = () => {
   const [mapLoaded, setMapLoaded] = useState(false);
   const { toast } = useToast();
   const [movingUsers, setMovingUsers] = useState<Set<string>>(new Set());
+  const [completedMoves, setCompletedMoves] = useState<Set<string>>(new Set());
   
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<Map | null>(null);
@@ -47,12 +48,14 @@ const FriendMap: React.FC = () => {
       style: (feature) => {
         const isMoving = movingUsers.has(feature.get('userId'));
         const isUser = feature.get('isCurrentUser');
+        const hasMoved = completedMoves.has(feature.get('userId'));
         return new Style({
           image: new Circle({
             radius: 8,
             fill: new Fill({ 
               color: isUser ? '#0ea5e9' : 
                      isMoving ? '#10b981' :
+                     hasMoved ? '#10b981' :
                      selectedUser === feature.get('userId') ? '#6366f1' : '#6366f1' 
             }),
             stroke: new Stroke({ color: 'white', width: 2 })
@@ -108,7 +111,7 @@ const FriendMap: React.FC = () => {
       const feature = map.current?.forEachFeatureAtPixel(event.pixel, (f) => f);
       if (feature) {
         const userId = feature.get('userId');
-        if (userId && !movingUsers.has(userId)) {
+        if (userId && !movingUsers.has(userId) && !completedMoves.has(userId)) {
           setSelectedUser(userId);
         }
       }
@@ -119,7 +122,7 @@ const FriendMap: React.FC = () => {
         map.current.setTarget(undefined);
       }
     };
-  }, [selectedUser, movingUsers]);
+  }, [selectedUser, movingUsers, completedMoves]);
 
   useEffect(() => {
     if (!mapLoaded || !vectorSource.current) return;
@@ -184,12 +187,26 @@ const FriendMap: React.FC = () => {
           userFeature.setGeometry(new Point(currentCoord));
           requestAnimationFrame(animate);
         } else {
-          routeLayer.current?.getSource()?.clear();
+          // When animation completes, mark user as completed move
+          setCompletedMoves(prev => {
+            const next = new Set(prev);
+            next.add(user.id);
+            return next;
+          });
+          
           setMovingUsers(prev => {
             const next = new Set(prev);
             next.delete(user.id);
             return next;
           });
+          
+          // Keep the feature but at the final position
+          userFeature.setGeometry(new Point(endCoord));
+          
+          // Wait a bit before clearing the route line
+          setTimeout(() => {
+            routeLayer.current?.getSource()?.clear();
+          }, 1000);
         }
       };
       animate();
