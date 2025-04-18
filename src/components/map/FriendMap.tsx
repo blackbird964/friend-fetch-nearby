@@ -1,58 +1,84 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { MapPin, User, Clock, MapPinOff } from 'lucide-react';
+import { User, Clock } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import UserCard from '@/components/users/UserCard';
 import { useToast } from "@/components/ui/use-toast";
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
+import 'ol/ol.css';
+import Map from 'ol/Map';
+import View from 'ol/View';
+import TileLayer from 'ol/layer/Tile';
+import OSM from 'ol/source/OSM';
+import { fromLonLat } from 'ol/proj';
+import Feature from 'ol/Feature';
+import Point from 'ol/geom/Point';
+import { Vector as VectorLayer } from 'ol/layer';
+import { Vector as VectorSource } from 'ol/source';
+import { Style, Circle, Fill, Stroke } from 'ol/style';
 
 const FriendMap: React.FC = () => {
   const { currentUser, nearbyUsers, radiusInKm, setRadiusInKm, friendRequests, setFriendRequests } = useAppContext();
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<number>(30);
-  const [mapboxToken, setMapboxToken] = useState<string>(localStorage.getItem('mapboxToken') || '');
   const [mapLoaded, setMapLoaded] = useState(false);
   const { toast } = useToast();
   
   const mapContainer = useRef<HTMLDivElement>(null);
-  const map = useRef<mapboxgl.Map | null>(null);
-  const markersRef = useRef<{ [key: string]: mapboxgl.Marker }>({});
+  const map = useRef<Map | null>(null);
+  const vectorSource = useRef<VectorSource | null>(null);
+  const vectorLayer = useRef<VectorLayer<VectorSource> | null>(null);
 
+  // Initialize map
   useEffect(() => {
-    if (!mapboxToken) return;
-    
-    localStorage.setItem('mapboxToken', mapboxToken);
-    
     if (!mapContainer.current) return;
 
-    // Initialize map
-    mapboxgl.accessToken = mapboxToken;
-    
-    map.current = new mapboxgl.Map({
-      container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/streets-v12',
-      center: [-74.006, 40.7128], // Default to NYC
-      zoom: 12
+    // Create vector source and layer for markers
+    vectorSource.current = new VectorSource();
+    vectorLayer.current = new VectorLayer({
+      source: vectorSource.current,
+      style: new Style({
+        image: new Circle({
+          radius: 8,
+          fill: new Fill({ color: '#0ea5e9' }),
+          stroke: new Stroke({ color: 'white', width: 2 })
+        })
+      })
     });
 
-    map.current.addControl(new mapboxgl.NavigationControl(), 'top-right');
+    // Initialize map
+    map.current = new Map({
+      target: mapContainer.current,
+      layers: [
+        new TileLayer({
+          source: new OSM()
+        }),
+        vectorLayer.current
+      ],
+      view: new View({
+        center: fromLonLat([-74.006, 40.7128]), // Default to NYC
+        zoom: 12
+      })
+    });
+
+    setMapLoaded(true);
 
     // Get user's location
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           if (map.current) {
-            map.current.setCenter([position.coords.longitude, position.coords.latitude]);
+            const userLocation = fromLonLat([position.coords.longitude, position.coords.latitude]);
+            map.current.getView().setCenter(userLocation);
+            
             // Add marker for current user
-            new mapboxgl.Marker({ color: '#0ea5e9' })
-              .setLngLat([position.coords.longitude, position.coords.latitude])
-              .addTo(map.current);
+            const userFeature = new Feature({
+              geometry: new Point(userLocation)
+            });
+            vectorSource.current?.addFeature(userFeature);
           }
         },
         (error) => {
@@ -66,49 +92,41 @@ const FriendMap: React.FC = () => {
       );
     }
 
-    map.current.on('load', () => {
-      setMapLoaded(true);
-    });
-
     return () => {
       if (map.current) {
-        map.current.remove();
+        map.current.setTarget(undefined);
       }
     };
-  }, [mapboxToken]);
+  }, []);
 
   // Update markers for nearby users
   useEffect(() => {
-    if (!map.current || !mapLoaded) return;
+    if (!mapLoaded || !vectorSource.current) return;
 
-    // Clear existing markers
-    Object.values(markersRef.current).forEach(marker => marker.remove());
-    markersRef.current = {};
+    // Clear existing markers except current user's marker
+    const features = vectorSource.current.getFeatures();
+    features.slice(1).forEach(feature => {
+      vectorSource.current?.removeFeature(feature);
+    });
 
     // Add markers for nearby users
     nearbyUsers.forEach((user) => {
       if (user.location) {
-        const el = document.createElement('div');
-        el.className = 'marker-container';
-        el.innerHTML = `
-          <div class="w-8 h-8 rounded-full overflow-hidden border-2 border-white shadow-lg cursor-pointer transform transition-transform hover:scale-110">
-            <img 
-              src="${user.profile_pic || ''}" 
-              alt="${user.name}" 
-              class="w-full h-full object-cover"
-            />
-          </div>
-        `;
-
-        el.addEventListener('click', () => {
-          setSelectedUser(user.id === selectedUser ? null : user.id);
+        const userLocation = fromLonLat([user.location.lng, user.location.lat]);
+        const userFeature = new Feature({
+          geometry: new Point(userLocation),
+          properties: { userId: user.id }
         });
+        
+        userFeature.setStyle(new Style({
+          image: new Circle({
+            radius: 8,
+            fill: new Fill({ color: selectedUser === user.id ? '#10b981' : '#6366f1' }),
+            stroke: new Stroke({ color: 'white', width: 2 })
+          })
+        }));
 
-        const marker = new mapboxgl.Marker(el)
-          .setLngLat([user.location.lng, user.location.lat])
-          .addTo(map.current!);
-
-        markersRef.current[user.id] = marker;
+        vectorSource.current?.addFeature(userFeature);
       }
     });
   }, [nearbyUsers, mapLoaded, selectedUser]);
@@ -139,26 +157,6 @@ const FriendMap: React.FC = () => {
 
   const availableTimes = [15, 30, 45];
 
-  if (!mapboxToken) {
-    return (
-      <div className="flex flex-col gap-4 p-4">
-        <h2 className="text-lg font-semibold">Mapbox Configuration Required</h2>
-        <p className="text-sm text-gray-600">
-          Please enter your Mapbox access token to enable the map functionality.
-          You can get one from <a href="https://mapbox.com" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">mapbox.com</a>
-        </p>
-        <div className="flex gap-2">
-          <Input
-            type="text"
-            placeholder="Enter your Mapbox token"
-            value={mapboxToken}
-            onChange={(e) => setMapboxToken(e.target.value)}
-          />
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="flex flex-col h-full relative">
       {/* Map Container */}
@@ -169,7 +167,7 @@ const FriendMap: React.FC = () => {
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-4/5 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-1">
             <div className="flex items-center text-sm text-gray-600">
-              <MapPin className="mr-1 h-4 w-4 text-primary" />
+              <User className="mr-1 h-4 w-4 text-primary" />
               <span>Radius</span>
             </div>
             <span className="text-sm font-medium">{radiusInKm} km</span>
