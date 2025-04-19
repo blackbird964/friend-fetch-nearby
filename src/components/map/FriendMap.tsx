@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { User, Clock } from 'lucide-react';
@@ -111,11 +112,29 @@ const FriendMap: React.FC = () => {
 
     // Add click handler for markers
     map.current.on('click', (event) => {
-      const feature = map.current?.forEachFeatureAtPixel(event.pixel, (f) => f);
-      if (feature) {
-        const userId = feature.get('userId');
+      // Clear previous marker selections if not moving
+      map.current?.forEachFeatureAtPixel(event.pixel, (f) => {
+        const userId = f.get('userId');
         if (userId && !movingUsers.has(userId) && !completedMoves.has(userId)) {
           setSelectedUser(userId);
+          // Refresh layer to update styles
+          if (vectorLayer.current) {
+            vectorLayer.current.changed();
+          }
+          return true; // Stop checking features
+        }
+        return false;
+      });
+    });
+
+    // Add click handler for map background to deselect
+    map.current.on('click', (event) => {
+      const hit = map.current?.forEachFeatureAtPixel(event.pixel, () => true);
+      if (!hit && selectedUser) {
+        setSelectedUser(null);
+        // Refresh layer to update styles
+        if (vectorLayer.current) {
+          vectorLayer.current.changed();
         }
       }
     });
@@ -156,6 +175,11 @@ const FriendMap: React.FC = () => {
         vectorSource.current?.addFeature(userFeature);
       }
     });
+    
+    // Make sure to refresh the vector layer to update styles for all features
+    if (vectorLayer.current) {
+      vectorLayer.current.changed();
+    }
   }, [nearbyUsers, mapLoaded]);
 
   const handleSendRequest = () => {
