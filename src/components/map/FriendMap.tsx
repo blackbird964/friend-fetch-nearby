@@ -36,6 +36,9 @@ const FriendMap: React.FC = () => {
 
   const WYNYARD_COORDS = [151.2073, -33.8666];
 
+  const ANIMATION_DURATION = 3000; // 3 seconds total
+  const ANIMATION_STEPS = 60; // 60 frames per second * 3 seconds
+
   useEffect(() => {
     if (!mapContainer.current) return;
 
@@ -175,19 +178,28 @@ const FriendMap: React.FC = () => {
       });
       routeLayer.current.getSource()?.addFeature(routeFeature);
       
-      // Animate marker
-      let progress = 0;
-      const animate = () => {
-        progress += 0.005;
-        if (progress <= 1) {
-          const currentCoord = [
-            startCoord[0] + (endCoord[0] - startCoord[0]) * progress,
-            startCoord[1] + (endCoord[1] - startCoord[1]) * progress
-          ];
-          userFeature.setGeometry(new Point(currentCoord));
+      // Smooth walking animation
+      let startTime: number | null = null;
+      
+      const animate = (currentTime: number) => {
+        if (!startTime) startTime = currentTime;
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / ANIMATION_DURATION, 1);
+        
+        // Add a slight up/down bounce effect
+        const bounce = Math.sin(progress * Math.PI * 8) * 0.0001;
+        
+        const currentCoord = [
+          startCoord[0] + (endCoord[0] - startCoord[0]) * progress,
+          startCoord[1] + (endCoord[1] - startCoord[1]) * progress + bounce
+        ];
+        
+        userFeature.setGeometry(new Point(currentCoord));
+        
+        if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
-          // When animation completes, mark user as completed move
+          // Animation complete
           setCompletedMoves(prev => {
             const next = new Set(prev);
             next.add(user.id);
@@ -200,16 +212,17 @@ const FriendMap: React.FC = () => {
             return next;
           });
           
-          // Keep the feature but at the final position
+          // Keep the feature at the final position
           userFeature.setGeometry(new Point(endCoord));
           
-          // Wait a bit before clearing the route line
+          // Clear the route line after a short delay
           setTimeout(() => {
             routeLayer.current?.getSource()?.clear();
           }, 1000);
         }
       };
-      animate();
+      
+      requestAnimationFrame(animate);
     }
 
     toast({
