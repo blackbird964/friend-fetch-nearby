@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { User, Clock } from 'lucide-react';
@@ -39,6 +38,18 @@ const FriendMap: React.FC = () => {
 
   const ANIMATION_DURATION = 3000; // 3 seconds total
   const ANIMATION_STEPS = 60; // 60 frames per second * 3 seconds
+
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    const R = 6371; // Radius of the Earth in kilometers
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
 
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -164,7 +175,18 @@ const FriendMap: React.FC = () => {
       { lat: -33.8736, lng: 151.2014, name: "Emma R." }   // Darling Harbour
     ];
 
-    sydneyLocations.forEach((loc, index) => {
+    // Filter locations based on radius
+    const filteredLocations = sydneyLocations.filter(loc => {
+      const distance = calculateDistance(
+        -33.8666, // Wynyard lat
+        151.2073, // Wynyard lng
+        loc.lat,
+        loc.lng
+      );
+      return distance <= radiusInKm;
+    });
+
+    filteredLocations.forEach((loc, index) => {
       const user = nearbyUsers[index];
       if (user) {
         const userFeature = new Feature({
@@ -180,7 +202,7 @@ const FriendMap: React.FC = () => {
     if (vectorLayer.current) {
       vectorLayer.current.changed();
     }
-  }, [nearbyUsers, mapLoaded]);
+  }, [nearbyUsers, mapLoaded, radiusInKm]);
 
   const handleSendRequest = () => {
     if (!selectedUser) return;
