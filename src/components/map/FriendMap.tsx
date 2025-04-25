@@ -35,7 +35,6 @@ const FriendMap: React.FC = () => {
   const routeLayer = useRef<VectorLayer<VectorSource> | null>(null);
 
   const WYNYARD_COORDS = [151.2073, -33.8666];
-
   const ANIMATION_DURATION = 3000; // 3 seconds total
   const ANIMATION_STEPS = 60; // 60 frames per second * 3 seconds
 
@@ -123,27 +122,18 @@ const FriendMap: React.FC = () => {
 
     // Add click handler for markers
     map.current.on('click', (event) => {
-      // Clear previous marker selections if not moving
-      map.current?.forEachFeatureAtPixel(event.pixel, (f) => {
-        const userId = f.get('userId');
+      const clickedFeature = map.current?.forEachFeatureAtPixel(event.pixel, (f) => f);
+      
+      if (clickedFeature) {
+        const userId = clickedFeature.get('userId');
         if (userId && !movingUsers.has(userId) && !completedMoves.has(userId)) {
           setSelectedUser(userId);
-          // Refresh layer to update styles
           if (vectorLayer.current) {
             vectorLayer.current.changed();
           }
-          return true; // Stop checking features
         }
-        return false;
-      });
-    });
-
-    // Add click handler for map background to deselect
-    map.current.on('click', (event) => {
-      const hit = map.current?.forEachFeatureAtPixel(event.pixel, () => true);
-      if (!hit && selectedUser) {
+      } else if (selectedUser) {
         setSelectedUser(null);
-        // Refresh layer to update styles
         if (vectorLayer.current) {
           vectorLayer.current.changed();
         }
@@ -224,7 +214,6 @@ const FriendMap: React.FC = () => {
       });
       routeLayer.current.getSource()?.addFeature(routeFeature);
       
-      // Smooth walking animation
       let startTime: number | null = null;
       
       const animate = (currentTime: number) => {
@@ -232,7 +221,7 @@ const FriendMap: React.FC = () => {
         const elapsed = currentTime - startTime;
         const progress = Math.min(elapsed / ANIMATION_DURATION, 1);
         
-        // Add a slight up/down bounce effect
+        // Add bounce effect
         const bounce = Math.sin(progress * Math.PI * 8) * 0.0001;
         
         const currentCoord = [
@@ -245,7 +234,6 @@ const FriendMap: React.FC = () => {
         if (progress < 1) {
           requestAnimationFrame(animate);
         } else {
-          // Animation complete
           setCompletedMoves(prev => {
             const next = new Set(prev);
             next.add(user.id);
@@ -258,24 +246,25 @@ const FriendMap: React.FC = () => {
             return next;
           });
           
-          // Keep the feature at the final position
+          // Keep marker at final position
           userFeature.setGeometry(new Point(endCoord));
           
-          // Clear the route line after a short delay
+          // Clear route line after delay
           setTimeout(() => {
             routeLayer.current?.getSource()?.clear();
           }, 1000);
+
+          // Show confirmation toast with selected duration
+          toast({
+            title: "Catch up confirmed!",
+            description: `Meeting ${user.name} at Wynyard for ${selectedDuration} minutes.`,
+          });
         }
       };
       
       requestAnimationFrame(animate);
     }
 
-    toast({
-      title: "Starting catch up!",
-      description: `${user.name} is heading to meet you at Wynyard.`,
-    });
-    
     setSelectedUser(null);
   };
 
