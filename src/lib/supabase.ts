@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 
@@ -12,6 +11,12 @@ export type Profile = {
   gender: string | null;
   interests: string[];
   profile_pic: string | null;
+  created_at?: string | null;
+  updated_at?: string | null;
+  location?: {
+    lat: number;
+    lng: number;
+  } | null;
 };
 
 export async function signUp(email: string, password: string, name: string) {
@@ -65,14 +70,48 @@ export async function getProfile(userId: string): Promise<Profile | null> {
     return null;
   }
   
+  // Convert Postgres point type to our location format if it exists
+  if (data && data.location) {
+    try {
+      // Handle conversion from Postgres point type if needed
+      if (typeof data.location === 'string' && data.location.startsWith('(')) {
+        const match = data.location.match(/\(([^,]+),([^)]+)\)/);
+        if (match) {
+          data.location = {
+            lng: parseFloat(match[1]),
+            lat: parseFloat(match[2])
+          };
+        }
+      }
+    } catch (e) {
+      console.error('Error parsing location data:', e);
+      data.location = null;
+    }
+  }
+  
   return data as Profile;
 }
 
 export async function createOrUpdateProfile(profile: Partial<Profile> & { id: string }) {
   console.log("Creating/updating profile:", profile);
+  
+  // Handle location conversion for PostgreSQL if needed
+  let profileToUpsert = { ...profile };
+  
+  // If we have location data in our format, convert it for PostgreSQL storage
+  if (profile.location && typeof profile.location === 'object') {
+    try {
+      // Your conversion logic here if needed
+      // For now, we'll keep it as is since we modified the Profile type
+    } catch (e) {
+      console.error('Error converting location for storage:', e);
+      profileToUpsert.location = null;
+    }
+  }
+  
   const { data, error } = await supabase
     .from('profiles')
-    .upsert(profile)
+    .upsert(profileToUpsert)
     .select()
     .single();
   

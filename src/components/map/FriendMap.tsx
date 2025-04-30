@@ -162,7 +162,12 @@ const FriendMap: React.FC = () => {
     const sydneyLocations = [
       { lat: -33.8688, lng: 151.2093, name: "Sarah J." }, // Town Hall
       { lat: -33.8568, lng: 151.2153, name: "David L." }, // The Rocks
-      { lat: -33.8736, lng: 151.2014, name: "Emma R." }   // Darling Harbour
+      { lat: -33.8736, lng: 151.2014, name: "Emma R." },   // Darling Harbour
+      { lat: -33.9509, lng: 151.1825, name: "Michael K." }, // Bankstown
+      { lat: -33.7480, lng: 151.2414, name: "Jessica M." }, // Chatswood
+      { lat: -33.8914, lng: 151.2766, name: "Thomas W." }, // Bondi
+      { lat: -33.7281, lng: 150.9686, name: "Lisa T." }, // Blacktown
+      { lat: -33.9657, lng: 150.8444, name: "Daniel H." } // Liverpool
     ];
 
     // Filter locations based on radius
@@ -268,7 +273,7 @@ const FriendMap: React.FC = () => {
     setSelectedUser(null);
   };
 
-  const availableTimes = [15, 30, 45];
+  const availableTimes = [15, 30, 45, 60];
 
   return (
     <div className="flex flex-col h-full relative">
@@ -286,7 +291,7 @@ const FriendMap: React.FC = () => {
           <Slider
             value={[radiusInKm]}
             min={1}
-            max={10}
+            max={60}
             step={1}
             onValueChange={(value) => setRadiusInKm(value[0])}
           />

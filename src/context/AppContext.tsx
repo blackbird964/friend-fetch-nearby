@@ -151,7 +151,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Demo data for the MVP
   useEffect(() => {
     if (isAuthenticated && currentUser) {
-      // Mock nearby users
+      // Mock nearby users - expanded with more realistic data and Sydney locations
       setNearbyUsers([
         {
           id: '1',
@@ -162,7 +162,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           gender: 'Female',
           interests: ['Hiking', 'Photography', 'Coffee'],
           bio: 'Adventure seeker and coffee enthusiast.',
-          location: { lat: 40.730610, lng: -73.935242 },
+          location: { lat: -33.8688, lng: 151.2093 }, // Town Hall
         },
         {
           id: '2',
@@ -173,7 +173,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           gender: 'Male',
           interests: ['Gaming', 'Tech', 'Movies'],
           bio: 'Tech geek with a passion for sci-fi films.',
-          location: { lat: 40.728610, lng: -73.937242 },
+          location: { lat: -33.8568, lng: 151.2153 }, // The Rocks
         },
         {
           id: '3',
@@ -184,7 +184,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           gender: 'Female',
           interests: ['Yoga', 'Reading', 'Travel'],
           bio: 'Yoga instructor and avid reader.',
-          location: { lat: 40.732610, lng: -73.934242 },
+          location: { lat: -33.8736, lng: 151.2014 }, // Darling Harbour
         },
         {
           id: '4',
@@ -195,7 +195,51 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           gender: 'Male',
           interests: ['Music', 'Cooking', 'Sports'],
           bio: 'Music producer and amateur chef.',
-          location: { lat: 40.729610, lng: -73.932242 },
+          location: { lat: -33.9509, lng: 151.1825 }, // Bankstown
+        },
+        {
+          id: '5',
+          name: 'Jessica M.',
+          email: 'jessica@example.com',
+          profile_pic: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHBlb3BsZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
+          age: 27,
+          gender: 'Female',
+          interests: ['Fashion', 'Design', 'Art'],
+          bio: 'Fashion designer who loves modern art.',
+          location: { lat: -33.7480, lng: 151.2414 }, // Chatswood
+        },
+        {
+          id: '6',
+          name: 'Thomas W.',
+          email: 'thomas@example.com',
+          profile_pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fHBlb3BsZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
+          age: 34,
+          gender: 'Male',
+          interests: ['Surfing', 'Beach', 'Fitness'],
+          bio: 'Surf instructor and fitness enthusiast.',
+          location: { lat: -33.8914, lng: 151.2766 }, // Bondi
+        },
+        {
+          id: '7',
+          name: 'Lisa T.',
+          email: 'lisa@example.com',
+          profile_pic: 'https://images.unsplash.com/photo-1499952127939-9bbf5af6c51c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHBlcnNvbnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
+          age: 29,
+          gender: 'Female',
+          interests: ['Cooking', 'Languages', 'Travel'],
+          bio: 'Polyglot who loves cooking international dishes.',
+          location: { lat: -33.7281, lng: 150.9686 }, // Blacktown
+        },
+        {
+          id: '8',
+          name: 'Daniel H.',
+          email: 'daniel@example.com',
+          profile_pic: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fHBlcnNvbnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
+          age: 31,
+          gender: 'Male',
+          interests: ['Business', 'Networking', 'Books'],
+          bio: 'Entrepreneur who loves reading business books.',
+          location: { lat: -33.9657, lng: 150.8444 }, // Liverpool
         },
       ]);
 
@@ -210,9 +254,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           status: 'pending',
           timestamp: Date.now() - 1000 * 60 * 5,
         },
+        {
+          id: 'fr2',
+          senderId: '5',
+          senderName: 'Jessica M.',
+          senderProfilePic: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHBlb3BsZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
+          duration: 45,
+          status: 'pending',
+          timestamp: Date.now() - 1000 * 60 * 15,
+        },
       ]);
 
-      // Mock chats
+      // Mock chats with more realistic conversations
       setChats([
         {
           id: 'c1',
@@ -263,6 +316,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               senderId: '2',
               text: 'Are you coming?',
               timestamp: Date.now() - 1000 * 60 * 10,
+            },
+          ],
+        },
+        {
+          id: 'c2',
+          participantId: '6',
+          participantName: 'Thomas W.',
+          profilePic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fHBlb3BsZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
+          lastMessage: 'Looking forward to it!',
+          lastMessageTime: Date.now() - 1000 * 60 * 30,
+          messages: [
+            {
+              id: 'm1',
+              senderId: '6',
+              text: 'Hey, I saw you were interested in fitness. Do you go to any gyms in the area?',
+              timestamp: Date.now() - 1000 * 60 * 120,
+            },
+            {
+              id: 'm2',
+              senderId: 'current',
+              text: 'Hi Thomas! Yes, I go to Fitness First on George Street. Do you work out there too?',
+              timestamp: Date.now() - 1000 * 60 * 118,
+            },
+            {
+              id: 'm3',
+              senderId: '6',
+              text: 'I usually go to F45 in Surry Hills, but I\'ve been thinking of switching. How\'s Fitness First?',
+              timestamp: Date.now() - 1000 * 60 * 110,
+            },
+            {
+              id: 'm4',
+              senderId: 'current',
+              text: 'It\'s pretty good! Great equipment and not too crowded most times. Want to try a class together?',
+              timestamp: Date.now() - 1000 * 60 * 100,
+            },
+            {
+              id: 'm5',
+              senderId: '6',
+              text: 'That would be awesome. How about Thursday evening?',
+              timestamp: Date.now() - 1000 * 60 * 40,
+            },
+            {
+              id: 'm6',
+              senderId: 'current',
+              text: 'Thursday works for me. 6pm HIIT class?',
+              timestamp: Date.now() - 1000 * 60 * 35,
+            },
+            {
+              id: 'm7',
+              senderId: '6',
+              text: 'Looking forward to it!',
+              timestamp: Date.now() - 1000 * 60 * 30,
             },
           ],
         },
