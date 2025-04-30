@@ -2,7 +2,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Send } from 'lucide-react';
@@ -116,15 +115,15 @@ const ChatWindow: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
-      {/* Message Input */}
-      <div className="p-3 border-t mt-auto">
+      {/* Message Input - Fixed position at the bottom */}
+      <div className="border-t bg-background p-3 sticky bottom-0">
         <form onSubmit={handleSendMessage} className="flex space-x-2">
           <Textarea
             ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1 min-h-[40px] max-h-[120px] resize-none"
+            className="flex-1 min-h-[40px] max-h-[80px] resize-none"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -135,7 +134,12 @@ const ChatWindow: React.FC = () => {
             }}
             autoFocus
           />
-          <Button type="submit" disabled={!message.trim()} className="self-end">
+          <Button 
+            type="submit" 
+            disabled={!message.trim()} 
+            className="self-end"
+            size="icon"
+          >
             <Send className="h-4 w-4" />
           </Button>
         </form>
