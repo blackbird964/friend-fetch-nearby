@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,12 @@ import { Label } from "@/components/ui/label";
 import { useToast } from '@/hooks/use-toast';
 import { Profile } from '@/lib/supabase';
 
-const EditProfileForm: React.FC = () => {
+// Define props interface for the component
+interface EditProfileFormProps {
+  onCancel: () => void;
+}
+
+const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
   const { currentUser, updateUserProfile } = useAppContext();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
@@ -78,6 +84,9 @@ const EditProfileForm: React.FC = () => {
         title: "Profile updated",
         description: "Your profile has been successfully updated.",
       });
+
+      // Call the onCancel function to exit edit mode after successful update
+      onCancel();
     } catch (error) {
       console.error('Error updating profile:', error);
       toast({
@@ -175,9 +184,14 @@ const EditProfileForm: React.FC = () => {
         </div>
       </div>
       
-      <Button type="submit" className="w-full" disabled={loading}>
-        {loading ? 'Saving...' : 'Save Profile'}
-      </Button>
+      <div className="flex space-x-3">
+        <Button type="submit" className="flex-1" disabled={loading}>
+          {loading ? 'Saving...' : 'Save Profile'}
+        </Button>
+        <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
+          Cancel
+        </Button>
+      </div>
     </form>
   );
 };

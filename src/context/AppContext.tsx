@@ -60,6 +60,7 @@ type AppContextType = {
   loading: boolean;
   refreshNearbyUsers: () => Promise<void>;
   updateUserLocation: (userId: string, location: { lat: number, lng: number }) => Promise<void>;
+  updateUserProfile: (updatedProfile: Partial<Profile>) => Promise<void>; // Add this property
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -111,6 +112,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return result;
     } catch (error) {
       console.error("Error updating user location:", error);
+      throw error;
+    }
+  };
+
+  // Update user profile in Supabase and local state
+  const updateUserProfile = async (updatedProfile: Partial<Profile>) => {
+    try {
+      if (!updatedProfile.id) {
+        throw new Error('Profile ID is missing');
+      }
+      
+      const { error } = await supabase
+        .from('profiles')
+        .update(updatedProfile)
+        .eq('id', updatedProfile.id);
+        
+      if (error) {
+        throw error;
+      }
+      
+      // Update the current user state if this is the current user's profile
+      if (currentUser && currentUser.id === updatedProfile.id) {
+        setCurrentUser({
+          ...currentUser,
+          ...updatedProfile,
+        });
+      }
+      
+    } catch (error) {
+      console.error('Error updating user profile:', error);
       throw error;
     }
   };
@@ -299,7 +330,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           id: '2',
           name: 'David L.',
           email: 'david@example.com',
-          profile_pic: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
+          profile_pic: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8fHBlb3BsZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
           age: 32,
           gender: 'Male',
           interests: ['Gaming', 'Tech', 'Movies'],
@@ -535,7 +566,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSupabaseUser,
         loading,
         refreshNearbyUsers,
-        updateUserLocation
+        updateUserLocation,
+        updateUserProfile
       }}
     >
       {children}
