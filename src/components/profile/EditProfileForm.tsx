@@ -1,219 +1,184 @@
-
-import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { X } from 'lucide-react';
-import { createOrUpdateProfile } from '@/lib/supabase';
-import { useToast } from "@/hooks/use-toast";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { useToast } from '@/hooks/use-toast';
+import { Profile } from '@/lib/supabase';
 
-const INTERESTS = [
-  'Art', 'Books', 'Cooking', 'Fitness', 'Gaming', 'Hiking', 
-  'Movies', 'Music', 'Photography', 'Sports', 'Technology', 
-  'Travel', 'Writing', 'Yoga', 'Dancing', 'Fashion'
-];
-
-type FormValues = {
-  name: string;
-  age: string;
-  gender: string;
-  bio: string;
-};
-
-interface EditProfileFormProps {
-  onCancel: () => void;
-}
-
-const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
-  const { currentUser, setCurrentUser } = useAppContext();
-  const [interests, setInterests] = useState<string[]>(currentUser?.interests || []);
-  const [currentInterest, setCurrentInterest] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(false);
+const EditProfileForm: React.FC = () => {
+  const { currentUser, updateUserProfile } = useAppContext();
   const { toast } = useToast();
-
-  const form = useForm<FormValues>({
-    defaultValues: {
-      name: currentUser?.name || '',
-      age: currentUser?.age?.toString() || '',
-      gender: currentUser?.gender || '',
-      bio: currentUser?.bio || '',
-    },
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState<Partial<Profile>>({
+    name: '',
+    bio: '',
+    age: null,
+    gender: '',
+    interests: [],
   });
 
-  const handleAddInterest = () => {
-    if (currentInterest && !interests.includes(currentInterest)) {
-      setInterests([...interests, currentInterest]);
-      setCurrentInterest('');
+  useEffect(() => {
+    if (currentUser) {
+      setFormData({
+        name: currentUser.name || '',
+        bio: currentUser.bio || '',
+        age: currentUser.age || null,
+        gender: currentUser.gender || '',
+        interests: currentUser.interests || [],
+      });
+    }
+  }, [currentUser]);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    
+    if (name === 'age') {
+      const ageValue = value ? parseInt(value, 10) : null;
+      setFormData(prev => ({ ...prev, [name]: ageValue }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
     }
   };
 
-  const handleRemoveInterest = (interest: string) => {
-    setInterests(interests.filter((i) => i !== interest));
+  const handleInterestChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const interests = value.split(',').map(interest => interest.trim()).filter(Boolean);
+    setFormData(prev => ({ ...prev, interests }));
   };
 
-  const onSubmit = async (values: FormValues) => {
-    if (!currentUser?.id) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
     
-    setIsLoading(true);
     try {
-      const profileData = {
-        id: currentUser.id,
-        name: values.name,
-        age: parseInt(values.age) || null,
-        gender: values.gender,
-        bio: values.bio,
-        interests,
-      };
-
-      const { data, error } = await createOrUpdateProfile(profileData);
-      
-      if (error) throw error;
-      
-      if (data) {
-        setCurrentUser({
-          ...currentUser,
-          ...data,
-        });
-        
-        toast({
-          title: "Profile updated",
-          description: "Your profile has been updated successfully",
-        });
-        
-        onCancel();
+      if (!currentUser?.id) {
+        throw new Error('User ID is missing');
       }
-    } catch (error: any) {
+      
+      // Ensure location is properly formatted if it exists
+      let updatedProfile: Partial<Profile> = {
+        ...formData,
+        id: currentUser.id,
+      };
+      
+      // If we have location data from currentUser, preserve it
+      if (currentUser.location && typeof currentUser.location === 'object' && 
+          'lat' in currentUser.location && 'lng' in currentUser.location) {
+        updatedProfile.location = {
+          lat: currentUser.location.lat,
+          lng: currentUser.location.lng
+        };
+      }
+      
+      await updateUserProfile(updatedProfile);
+      
       toast({
-        title: "Error updating profile",
-        description: error.message || "An error occurred while updating your profile",
-        variant: "destructive",
+        title: "Profile updated",
+        description: "Your profile has been successfully updated.",
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      toast({
+        title: "Update failed",
+        description: "There was a problem updating your profile.",
+        variant: "destructive"
       });
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Edit Profile</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Name</label>
-            <Input {...form.register('name')} placeholder="Your name" disabled={isLoading} />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Age</label>
-              <Input
-                type="number"
-                {...form.register('age')}
-                placeholder="Your age"
-                min={18}
-                max={120}
-                disabled={isLoading}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Gender</label>
-              <Select
-                value={form.getValues('gender')}
-                onValueChange={(value) => form.setValue('gender', value)}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select gender" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Male">Male</SelectItem>
-                  <SelectItem value="Female">Female</SelectItem>
-                  <SelectItem value="Non-Binary">Non-Binary</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
-                  <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Bio</label>
-            <Textarea
-              {...form.register('bio')}
-              placeholder="Tell others about yourself..."
-              className="min-h-[100px]"
-              disabled={isLoading}
+    <form onSubmit={handleSubmit} className="space-y-6">
+      <div className="space-y-4">
+        <div>
+          <Label htmlFor="name">Name</Label>
+          <Input
+            id="name"
+            name="name"
+            value={formData.name}
+            onChange={handleChange}
+            placeholder="Your name"
+            required
+          />
+        </div>
+        
+        <div>
+          <Label htmlFor="bio">Bio</Label>
+          <Textarea
+            id="bio"
+            name="bio"
+            value={formData.bio || ''}
+            onChange={handleChange}
+            placeholder="Tell us about yourself"
+            className="min-h-[120px]"
+          />
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="age">Age</Label>
+            <Input
+              id="age"
+              name="age"
+              type="number"
+              min="18"
+              max="120"
+              value={formData.age || ''}
+              onChange={handleChange}
+              placeholder="Your age"
             />
           </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium">Interests</label>
-            <div className="flex space-x-2">
-              <Select
-                value={currentInterest}
-                onValueChange={setCurrentInterest}
-                disabled={isLoading}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select interests" />
-                </SelectTrigger>
-                <SelectContent>
-                  {INTERESTS.map((interest) => (
-                    <SelectItem key={interest} value={interest}>
-                      {interest}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                type="button"
-                onClick={handleAddInterest}
-                disabled={!currentInterest || isLoading}
-              >
-                Add
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {interests.map((interest) => (
-                <Badge key={interest} variant="secondary" className="flex items-center gap-1">
+          
+          <div>
+            <Label htmlFor="gender">Gender</Label>
+            <select
+              id="gender"
+              name="gender"
+              value={formData.gender || ''}
+              onChange={handleChange}
+              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+            >
+              <option value="">Select gender</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="non-binary">Non-binary</option>
+              <option value="other">Other</option>
+              <option value="prefer-not-to-say">Prefer not to say</option>
+            </select>
+          </div>
+        </div>
+        
+        <div>
+          <Label htmlFor="interests">Interests (comma separated)</Label>
+          <Input
+            id="interests"
+            name="interests"
+            value={formData.interests?.join(', ') || ''}
+            onChange={handleInterestChange}
+            placeholder="hiking, reading, cooking, etc."
+          />
+          {formData.interests && formData.interests.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {formData.interests.map((interest, index) => (
+                <span 
+                  key={index}
+                  className="bg-primary/10 text-primary text-xs px-2 py-1 rounded-full"
+                >
                   {interest}
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveInterest(interest)}
-                    className="ml-1 rounded-full hover:bg-gray-200 p-1"
-                    disabled={isLoading}
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
-                </Badge>
+                </span>
               ))}
             </div>
-          </div>
-
-          <div className="flex justify-end space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={onCancel}
-              disabled={isLoading}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Saving..." : "Save Changes"}
-            </Button>
-          </div>
-        </form>
-      </CardContent>
-    </Card>
+          )}
+        </div>
+      </div>
+      
+      <Button type="submit" className="w-full" disabled={loading}>
+        {loading ? 'Saving...' : 'Save Profile'}
+      </Button>
+    </form>
   );
 };
 

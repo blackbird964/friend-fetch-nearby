@@ -5,7 +5,8 @@ import ChatList from '@/components/chat/ChatList';
 import ChatWindow from '@/components/chat/ChatWindow';
 import FriendRequestList from '@/components/users/FriendRequestList';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell } from 'lucide-react';
+import { Bell, ArrowLeft } from 'lucide-react';
+import { Button } from "@/components/ui/button";
 
 const ChatPage: React.FC = () => {
   const { friendRequests, selectedChat, setSelectedChat } = useAppContext();
@@ -33,7 +34,19 @@ const ChatPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-6 mb-20 max-w-3xl">
-      <h1 className="text-2xl font-bold mb-6">Messages</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Messages</h1>
+        {selectedChat && window.innerWidth < 768 && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="md:hidden flex items-center" 
+            onClick={() => setSelectedChat(null)}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" /> Back to chats
+          </Button>
+        )}
+      </div>
       
       {pendingRequests > 0 && (
         <Card className="mb-6">
@@ -59,7 +72,7 @@ const ChatPage: React.FC = () => {
           <ChatList />
         </div>
         <div className={`md:col-span-2 ${selectedChat ? 'block' : 'hidden md:block'}`}>
-          <div className="border rounded-lg h-full overflow-hidden">
+          <div className="border rounded-lg h-full overflow-hidden bg-background shadow-sm">
             <ChatWindow />
           </div>
         </div>

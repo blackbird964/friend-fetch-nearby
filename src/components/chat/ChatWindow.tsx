@@ -3,6 +3,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Send } from 'lucide-react';
 import { format } from 'date-fns';
@@ -11,10 +12,18 @@ const ChatWindow: React.FC = () => {
   const { selectedChat, setSelectedChat, chats, setChats, currentUser } = useAppContext();
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [selectedChat?.messages]);
+
+  // Focus input when chat is selected
+  useEffect(() => {
+    if (selectedChat && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [selectedChat]);
 
   const handleSendMessage = (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,10 +120,12 @@ const ChatWindow: React.FC = () => {
       <div className="p-3 border-t">
         <form onSubmit={handleSendMessage} className="flex space-x-2">
           <Input
+            ref={inputRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Type a message..."
             className="flex-1"
+            autoFocus
           />
           <Button type="submit" disabled={!message.trim()}>
             <Send className="h-4 w-4" />
