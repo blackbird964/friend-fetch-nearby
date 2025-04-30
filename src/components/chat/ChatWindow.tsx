@@ -12,16 +12,16 @@ const ChatWindow: React.FC = () => {
   const { selectedChat, setSelectedChat, chats, setChats, currentUser } = useAppContext();
   const [message, setMessage] = useState('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [selectedChat?.messages]);
 
-  // Focus input when chat is selected
+  // Focus textarea when chat is selected
   useEffect(() => {
-    if (selectedChat && inputRef.current) {
-      inputRef.current.focus();
+    if (selectedChat && textareaRef.current) {
+      textareaRef.current.focus();
     }
   }, [selectedChat]);
 
@@ -117,17 +117,25 @@ const ChatWindow: React.FC = () => {
       </div>
       
       {/* Message Input */}
-      <div className="p-3 border-t">
+      <div className="p-3 border-t mt-auto">
         <form onSubmit={handleSendMessage} className="flex space-x-2">
-          <Input
-            ref={inputRef}
+          <Textarea
+            ref={textareaRef}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             placeholder="Type a message..."
-            className="flex-1"
+            className="flex-1 min-h-[40px] max-h-[120px] resize-none"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                if (message.trim()) {
+                  handleSendMessage(e);
+                }
+              }
+            }}
             autoFocus
           />
-          <Button type="submit" disabled={!message.trim()}>
+          <Button type="submit" disabled={!message.trim()} className="self-end">
             <Send className="h-4 w-4" />
           </Button>
         </form>
