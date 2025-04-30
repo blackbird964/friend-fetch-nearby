@@ -68,10 +68,10 @@ const ChatPage: React.FC = () => {
       )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow overflow-hidden">
-        <div className={`md:col-span-1 ${selectedChat ? 'hidden md:block' : 'block'}`}>
+        <div className={`md:col-span-1 ${selectedChat ? 'hidden md:block' : 'block'} h-full overflow-auto`}>
           <ChatList />
         </div>
-        <div className={`md:col-span-2 ${selectedChat ? 'block' : 'hidden md:block'} h-full`}>
+        <div className={`md:col-span-2 ${selectedChat ? 'block' : 'hidden md:flex md:items-center md:justify-center'} h-full`}>
           <div className="border rounded-lg h-full bg-background shadow-sm flex flex-col">
             <ChatWindow />
           </div>

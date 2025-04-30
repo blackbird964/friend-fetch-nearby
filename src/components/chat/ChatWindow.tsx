@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ArrowLeft, Send } from 'lucide-react';
 import { format } from 'date-fns';
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const ChatWindow: React.FC = () => {
   const { selectedChat, setSelectedChat, chats, setChats, currentUser } = useAppContext();
@@ -68,7 +69,7 @@ const ChatWindow: React.FC = () => {
   return (
     <div className="flex flex-col h-full">
       {/* Chat Header */}
-      <div className="flex items-center p-3 border-b bg-background z-10">
+      <div className="flex items-center p-3 border-b bg-background">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -86,8 +87,8 @@ const ChatWindow: React.FC = () => {
         </div>
       </div>
       
-      {/* Messages Container - Make this scrollable but with flex-grow */}
-      <div className="flex-grow overflow-y-auto p-4 space-y-4">
+      {/* Messages Container */}
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {selectedChat.messages.map((msg) => {
           const isCurrentUser = msg.senderId === 'current';
           
@@ -115,7 +116,7 @@ const ChatWindow: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
-      {/* Message Input - Make sure it's at the bottom */}
+      {/* Message Input */}
       <div className="p-3 bg-background border-t mt-auto">
         <form onSubmit={handleSendMessage} className="flex space-x-2">
           <Textarea
