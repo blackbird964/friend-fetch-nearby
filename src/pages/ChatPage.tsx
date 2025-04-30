@@ -33,7 +33,7 @@ const ChatPage: React.FC = () => {
   }, [setSelectedChat]);
 
   return (
-    <div className="container mx-auto px-4 py-6 mb-20 max-w-3xl">
+    <div className="container mx-auto px-4 py-6 max-w-3xl flex flex-col h-[calc(100vh-130px)]">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Messages</h1>
         {selectedChat && window.innerWidth < 768 && (
@@ -67,7 +67,7 @@ const ChatPage: React.FC = () => {
         </Card>
       )}
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-[calc(100vh-250px)]">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow overflow-hidden">
         <div className={`md:col-span-1 ${selectedChat ? 'hidden md:block' : 'block'}`}>
           <ChatList />
         </div>

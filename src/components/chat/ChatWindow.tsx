@@ -86,8 +86,8 @@ const ChatWindow: React.FC = () => {
         </div>
       </div>
       
-      {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      {/* Messages Container - Make this scrollable but with flex-grow */}
+      <div className="flex-grow overflow-y-auto p-4 space-y-4">
         {selectedChat.messages.map((msg) => {
           const isCurrentUser = msg.senderId === 'current';
           
@@ -115,8 +115,8 @@ const ChatWindow: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
-      {/* Message Input */}
-      <div className="p-3 bg-background border-t">
+      {/* Message Input - Make sure it's at the bottom */}
+      <div className="p-3 bg-background border-t mt-auto">
         <form onSubmit={handleSendMessage} className="flex space-x-2">
           <Textarea
             ref={textareaRef}
