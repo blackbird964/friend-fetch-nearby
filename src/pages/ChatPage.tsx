@@ -72,7 +72,7 @@ const ChatPage: React.FC = () => {
           <ChatList />
         </div>
         <div className={`md:col-span-2 ${selectedChat ? 'block' : 'hidden md:block'}`}>
-          <div className="border rounded-lg h-full overflow-hidden bg-background shadow-sm flex flex-col relative">
+          <div className="border rounded-lg h-full overflow-hidden bg-background shadow-sm flex flex-col">
             <ChatWindow />
           </div>
         </div>

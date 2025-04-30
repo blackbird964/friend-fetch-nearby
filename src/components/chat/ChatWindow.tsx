@@ -66,9 +66,9 @@ const ChatWindow: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <>
       {/* Chat Header */}
-      <div className="flex items-center p-3 border-b">
+      <div className="flex items-center p-3 border-b sticky top-0 bg-background z-10">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -87,7 +87,7 @@ const ChatWindow: React.FC = () => {
       </div>
       
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar pb-16">
         {selectedChat.messages.map((msg) => {
           const isCurrentUser = msg.senderId === 'current';
           
@@ -115,8 +115,8 @@ const ChatWindow: React.FC = () => {
         <div ref={messagesEndRef} />
       </div>
       
-      {/* Message Input - Fixed position at the bottom */}
-      <div className="border-t bg-background p-3 sticky bottom-0">
+      {/* Message Input - Fixed at bottom */}
+      <div className="border-t bg-background p-3 absolute bottom-0 left-0 right-0">
         <form onSubmit={handleSendMessage} className="flex space-x-2">
           <Textarea
             ref={textareaRef}
@@ -144,7 +144,7 @@ const ChatWindow: React.FC = () => {
           </Button>
         </form>
       </div>
-    </div>
+    </>
   );
 };
 
