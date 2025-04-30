@@ -68,7 +68,7 @@ const ChatWindow: React.FC = () => {
   return (
     <div className="flex flex-col h-full">
       {/* Chat Header */}
-      <div className="flex items-center p-3 border-b sticky top-0 bg-background z-10">
+      <div className="flex items-center p-3 border-b bg-background z-10">
         <Button 
           variant="ghost" 
           size="icon" 
@@ -116,7 +116,7 @@ const ChatWindow: React.FC = () => {
       </div>
       
       {/* Message Input */}
-      <div className="border-t bg-background p-3 w-full mt-auto">
+      <div className="p-3 bg-background border-t">
         <form onSubmit={handleSendMessage} className="flex space-x-2">
           <Textarea
             ref={textareaRef}

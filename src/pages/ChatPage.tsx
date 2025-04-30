@@ -71,8 +71,8 @@ const ChatPage: React.FC = () => {
         <div className={`md:col-span-1 ${selectedChat ? 'hidden md:block' : 'block'}`}>
           <ChatList />
         </div>
-        <div className={`md:col-span-2 ${selectedChat ? 'block' : 'hidden md:block'}`}>
-          <div className="border rounded-lg h-full bg-background shadow-sm flex flex-col overflow-hidden">
+        <div className={`md:col-span-2 ${selectedChat ? 'block' : 'hidden md:block'} h-full`}>
+          <div className="border rounded-lg h-full bg-background shadow-sm flex flex-col">
             <ChatWindow />
           </div>
         </div>
