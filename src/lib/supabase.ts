@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 
@@ -82,6 +83,11 @@ export async function getProfile(userId: string): Promise<Profile | null> {
             lat: parseFloat(match[2])
           };
         }
+      } else if (typeof data.location === 'object') {
+        // If the data is already in the correct format, make sure it has lat/lng
+        if (data.location && !('lat' in data.location || 'lng' in data.location)) {
+          data.location = null;
+        }
       }
     } catch (e) {
       console.error('Error parsing location data:', e);
@@ -89,7 +95,57 @@ export async function getProfile(userId: string): Promise<Profile | null> {
     }
   }
   
+  // Ensure interests is always an array
+  if (data && !Array.isArray(data.interests)) {
+    data.interests = data.interests ? [String(data.interests)] : [];
+  }
+  
   return data as Profile;
+}
+
+export async function getAllProfiles(): Promise<Profile[]> {
+  console.log("Fetching all profiles");
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*');
+  
+  if (error) {
+    console.error('Error fetching profiles:', error);
+    return [];
+  }
+  
+  // Process each profile to ensure location data is properly formatted
+  return data.map(profile => {
+    // Convert Postgres point type to our location format if it exists
+    if (profile.location) {
+      try {
+        if (typeof profile.location === 'string' && profile.location.startsWith('(')) {
+          const match = profile.location.match(/\(([^,]+),([^)]+)\)/);
+          if (match) {
+            profile.location = {
+              lng: parseFloat(match[1]),
+              lat: parseFloat(match[2])
+            };
+          }
+        } else if (typeof profile.location === 'object') {
+          // If the data is already in the correct format, make sure it has lat/lng
+          if (profile.location && !('lat' in profile.location || 'lng' in profile.location)) {
+            profile.location = null;
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing location data for profile:', profile.id, e);
+        profile.location = null;
+      }
+    }
+    
+    // Ensure interests is always an array
+    if (!Array.isArray(profile.interests)) {
+      profile.interests = profile.interests ? [String(profile.interests)] : [];
+    }
+    
+    return profile as Profile;
+  });
 }
 
 export async function createOrUpdateProfile(profile: Partial<Profile> & { id: string }) {
@@ -112,6 +168,19 @@ export async function createOrUpdateProfile(profile: Partial<Profile> & { id: st
   const { data, error } = await supabase
     .from('profiles')
     .upsert(profileToUpsert)
+    .select()
+    .single();
+  
+  return { data, error };
+}
+
+export async function updateUserLocation(userId: string, location: { lat: number, lng: number }) {
+  console.log("Updating location for user:", userId, location);
+  
+  const { data, error } = await supabase
+    .from('profiles')
+    .update({ location })
+    .eq('id', userId)
     .select()
     .single();
   

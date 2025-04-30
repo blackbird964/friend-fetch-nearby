@@ -1,16 +1,11 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
-import { getProfile, Profile } from '@/lib/supabase';
+import { getProfile, Profile, getAllProfiles, updateUserLocation } from '@/lib/supabase';
 
 // Define types for our user and app state
 export type AppUser = Profile & {
   email: string;
-  location?: {
-    lat: number;
-    lng: number;
-  };
 };
 
 export type FriendRequest = {
@@ -63,6 +58,7 @@ type AppContextType = {
   supabaseUser: User | null;
   setSupabaseUser: (user: User | null) => void;
   loading: boolean;
+  refreshNearbyUsers: () => Promise<void>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -72,12 +68,84 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [supabaseUser, setSupabaseUser] = useState<User | null>(null);
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const [nearbyUsers, setNearbyUsers] = useState<AppUser[]>([]);
-  const [radiusInKm, setRadiusInKm] = useState(5);
+  const [radiusInKm, setRadiusInKm] = useState(60); // Expanded to 60km as requested
   const [friendRequests, setFriendRequests] = useState<FriendRequest[]>([]);
   const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Function to calculate distance between two coordinates
+  const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return Infinity;
+    
+    const R = 6371; // Radius of the Earth in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    return R * c;
+  };
+
+  // Refresh nearby users
+  const refreshNearbyUsers = async () => {
+    if (!isAuthenticated || !currentUser) return;
+
+    try {
+      // Set default location (Wynyard) if user doesn't have one
+      const userLocation = currentUser.location || { lat: -33.8666, lng: 151.2073 };
+      
+      // First, make sure the current user's location is saved
+      if (currentUser && !currentUser.location) {
+        const wynyard = { lat: -33.8666, lng: 151.2073 };
+        await updateUserLocation(currentUser.id, wynyard);
+        setCurrentUser({
+          ...currentUser,
+          location: wynyard
+        });
+      }
+      
+      // Fetch all profiles from the database
+      const profiles = await getAllProfiles();
+      console.log("Fetched profiles:", profiles);
+      
+      // Filter out the current user and convert to AppUser type
+      const otherUsers = profiles
+        .filter(profile => profile.id !== currentUser.id)
+        .map(profile => ({
+          ...profile,
+          email: '', // We don't have emails for other users
+          interests: Array.isArray(profile.interests) ? profile.interests : []
+        }));
+
+      console.log("Other users before location filtering:", otherUsers);
+      
+      // Add distance to each user and filter by radius
+      const usersWithDistance = otherUsers
+        .filter(user => user.location && user.location.lat && user.location.lng)
+        .map(user => {
+          if (!user.location) return { ...user, distance: Infinity };
+          
+          const distance = calculateDistance(
+            userLocation.lat,
+            userLocation.lng,
+            user.location.lat,
+            user.location.lng
+          );
+          
+          return { ...user, distance };
+        })
+        .filter(user => user.distance <= radiusInKm);
+
+      console.log("Users with distance calculation:", usersWithDistance);
+      setNearbyUsers(usersWithDistance);
+    } catch (error) {
+      console.error("Error fetching nearby users:", error);
+    }
+  };
 
   // Auth state listener
   useEffect(() => {
@@ -98,10 +166,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
               console.log("Profile fetched after auth change:", profile);
               
               if (profile) {
-                setCurrentUser({
+                const appUser = {
                   ...profile,
                   email: session.user.email || '',
-                });
+                };
+                setCurrentUser(appUser);
+                
+                // Set default location if none exists
+                if (!profile.location) {
+                  const wynyard = { lat: -33.8666, lng: 151.2073 };
+                  await updateUserLocation(profile.id, wynyard);
+                  appUser.location = wynyard;
+                  setCurrentUser(appUser);
+                }
+                
+                // Now refresh nearby users
+                setTimeout(() => {
+                  refreshNearbyUsers();
+                }, 0);
               }
             } catch (error) {
               console.error('Error fetching profile:', error);
@@ -131,10 +213,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         console.log("Initial profile:", profile);
         
         if (profile) {
-          setCurrentUser({
+          const appUser = {
             ...profile,
             email: data.session.user.email || '',
-          });
+          };
+          setCurrentUser(appUser);
+          
+          // Set default location if none exists
+          if (!profile.location) {
+            const wynyard = { lat: -33.8666, lng: 151.2073 };
+            await updateUserLocation(profile.id, wynyard);
+            appUser.location = wynyard;
+            setCurrentUser(appUser);
+          }
+          
+          // Refresh nearby users
+          setTimeout(() => {
+            refreshNearbyUsers();
+          }, 100);
         }
       }
       
@@ -148,11 +244,18 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, []);
 
-  // Demo data for the MVP
+  // Update nearbyUsers when radius changes
   useEffect(() => {
     if (isAuthenticated && currentUser) {
-      // Mock nearby users - expanded with more realistic data and Sydney locations
-      setNearbyUsers([
+      refreshNearbyUsers();
+    }
+  }, [radiusInKm, currentUser?.location]);
+
+  // Demo data for the MVP - we'll keep this as fallback
+  useEffect(() => {
+    if (isAuthenticated && currentUser && nearbyUsers.length === 0) {
+      // Only load mock data if we don't have real nearby users
+      const mockUsers = [
         {
           id: '1',
           name: 'Sarah J.',
@@ -241,9 +344,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           bio: 'Entrepreneur who loves reading business books.',
           location: { lat: -33.9657, lng: 150.8444 }, // Liverpool
         },
-      ]);
-
-      // Mock friend requests
+      ];
+      
+      // Only set mock users if we don't have any real ones
+      if (nearbyUsers.length === 0) {
+        console.log("Setting mock nearby users as fallback");
+        setNearbyUsers(mockUsers);
+      }
+      
+      // Mock friend requests - keep this
       setFriendRequests([
         {
           id: 'fr1',
@@ -265,7 +374,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         },
       ]);
 
-      // Mock chats with more realistic conversations
+      // Mock chats with more realistic conversations - keep this
       setChats([
         {
           id: 'c1',
@@ -373,7 +482,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         },
       ]);
     }
-  }, [isAuthenticated, currentUser]);
+  }, [isAuthenticated, currentUser, nearbyUsers.length]);
 
   return (
     <AppContext.Provider
@@ -397,6 +506,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         supabaseUser,
         setSupabaseUser,
         loading,
+        refreshNearbyUsers
       }}
     >
       {children}
