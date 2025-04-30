@@ -1,6 +1,7 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { User, Clock } from 'lucide-react';
+import { User, Clock, Navigation } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -20,13 +21,16 @@ import { Style, Circle, Fill, Stroke, Text } from 'ol/style';
 import LineString from 'ol/geom/LineString';
 
 const FriendMap: React.FC = () => {
-  const { currentUser, nearbyUsers, radiusInKm, setRadiusInKm, friendRequests, setFriendRequests } = useAppContext();
+  const { currentUser, nearbyUsers, radiusInKm, setRadiusInKm, friendRequests, setFriendRequests, setCurrentUser, updateUserLocation } = useAppContext();
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<number>(30);
   const [mapLoaded, setMapLoaded] = useState(false);
   const { toast } = useToast();
   const [movingUsers, setMovingUsers] = useState<Set<string>>(new Set());
   const [completedMoves, setCompletedMoves] = useState<Set<string>>(new Set());
+  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [isLocating, setIsLocating] = useState(false);
   
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<Map | null>(null);
@@ -50,6 +54,73 @@ const FriendMap: React.FC = () => {
     return R * c;
   };
 
+  // Request user location
+  const getUserLocation = () => {
+    setIsLocating(true);
+    setLocationError(null);
+    
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser");
+      setIsLocating(false);
+      return;
+    }
+    
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { longitude, latitude } = position.coords;
+        setUserLocation([longitude, latitude]);
+        
+        // If we have a current user, update their location in the database
+        if (currentUser) {
+          const newLocation = { lat: latitude, lng: longitude };
+          updateUserLocation(currentUser.id, newLocation);
+          
+          // Update the current user state with the new location
+          setCurrentUser({
+            ...currentUser,
+            location: newLocation
+          });
+        }
+        
+        setIsLocating(false);
+        
+        // Center the map on the user's location
+        if (map.current) {
+          map.current.getView().animate({
+            center: fromLonLat([longitude, latitude]),
+            duration: 1000,
+            zoom: 14
+          });
+        }
+        
+        toast({
+          title: "Location Updated",
+          description: "Your current location has been updated on the map.",
+        });
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        setLocationError("Unable to retrieve your location. Using default location instead.");
+        setIsLocating(false);
+        
+        // Use default location (Wynyard)
+        if (currentUser && (!currentUser.location || !currentUser.location.lat || !currentUser.location.lng)) {
+          const defaultLocation = { lat: -33.8666, lng: 151.2073 };
+          updateUserLocation(currentUser.id, defaultLocation);
+          setCurrentUser({
+            ...currentUser,
+            location: defaultLocation
+          });
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
+  };
+
   useEffect(() => {
     if (!mapContainer.current) return;
 
@@ -65,14 +136,17 @@ const FriendMap: React.FC = () => {
         const hasMoved = completedMoves.has(feature.get('userId'));
         return new Style({
           image: new Circle({
-            radius: 8,
+            radius: isUser ? 10 : 8,
             fill: new Fill({ 
               color: isUser ? '#0ea5e9' : 
                      isMoving ? '#10b981' :
                      hasMoved ? '#10b981' :
                      selectedUser === feature.get('userId') ? '#6366f1' : '#6366f1' 
             }),
-            stroke: new Stroke({ color: 'white', width: 2 })
+            stroke: new Stroke({ 
+              color: isUser ? '#0369a1' : 'white', 
+              width: isUser ? 3 : 2 
+            })
           }),
           text: new Text({
             text: feature.get('name'),
@@ -112,13 +186,8 @@ const FriendMap: React.FC = () => {
 
     setMapLoaded(true);
 
-    // Add current user marker at Wynyard
-    const userFeature = new Feature({
-      geometry: new Point(fromLonLat(WYNYARD_COORDS)),
-      isCurrentUser: true,
-      name: 'You'
-    });
-    vectorSource.current.addFeature(userFeature);
+    // Get user's location on initial load
+    getUserLocation();
 
     // Add click handler for markers
     map.current.on('click', (event) => {
@@ -158,46 +227,40 @@ const FriendMap: React.FC = () => {
       }
     });
 
-    // Add markers for nearby users with realistic Sydney locations
-    const sydneyLocations = [
-      { lat: -33.8688, lng: 151.2093, name: "Sarah J." }, // Town Hall
-      { lat: -33.8568, lng: 151.2153, name: "David L." }, // The Rocks
-      { lat: -33.8736, lng: 151.2014, name: "Emma R." },   // Darling Harbour
-      { lat: -33.9509, lng: 151.1825, name: "Michael K." }, // Bankstown
-      { lat: -33.7480, lng: 151.2414, name: "Jessica M." }, // Chatswood
-      { lat: -33.8914, lng: 151.2766, name: "Thomas W." }, // Bondi
-      { lat: -33.7281, lng: 150.9686, name: "Lisa T." }, // Blacktown
-      { lat: -33.9657, lng: 150.8444, name: "Daniel H." } // Liverpool
-    ];
-
-    // Filter locations based on radius
-    const filteredLocations = sydneyLocations.filter(loc => {
-      const distance = calculateDistance(
-        -33.8666, // Wynyard lat
-        151.2073, // Wynyard lng
-        loc.lat,
-        loc.lng
-      );
-      return distance <= radiusInKm;
-    });
-
-    filteredLocations.forEach((loc, index) => {
-      const user = nearbyUsers[index];
-      if (user) {
+    // Add markers for nearby users with their locations
+    nearbyUsers.forEach(user => {
+      if (user.location && user.location.lat && user.location.lng) {
         const userFeature = new Feature({
-          geometry: new Point(fromLonLat([loc.lng, loc.lat])),
+          geometry: new Point(fromLonLat([user.location.lng, user.location.lat])),
           userId: user.id,
-          name: loc.name
+          name: user.name || `User-${user.id.substring(0, 4)}`
         });
         vectorSource.current?.addFeature(userFeature);
       }
     });
+
+    // Add current user marker with the updated location
+    if (currentUser?.location?.lat && currentUser?.location?.lng) {
+      // Remove any existing current user marker
+      const existingUserFeatures = vectorSource.current.getFeatures().filter(feature => feature.get('isCurrentUser'));
+      existingUserFeatures.forEach(feature => {
+        vectorSource.current?.removeFeature(feature);
+      });
+
+      // Add updated user marker
+      const userFeature = new Feature({
+        geometry: new Point(fromLonLat([currentUser.location.lng, currentUser.location.lat])),
+        isCurrentUser: true,
+        name: 'You'
+      });
+      vectorSource.current.addFeature(userFeature);
+    }
     
     // Make sure to refresh the vector layer to update styles for all features
     if (vectorLayer.current) {
       vectorLayer.current.changed();
     }
-  }, [nearbyUsers, mapLoaded, radiusInKm]);
+  }, [nearbyUsers, mapLoaded, radiusInKm, currentUser?.location]);
 
   const handleSendRequest = () => {
     if (!selectedUser) return;
@@ -279,6 +342,25 @@ const FriendMap: React.FC = () => {
     <div className="flex flex-col h-full relative">
       <div className="flex-1 relative bg-gray-100 rounded-lg overflow-hidden shadow-inner">
         <div ref={mapContainer} className="absolute inset-0" />
+        
+        <div className="absolute top-4 right-4 z-10">
+          <Button 
+            variant="default" 
+            size="sm"
+            onClick={getUserLocation}
+            disabled={isLocating}
+            className="flex items-center gap-2"
+          >
+            <Navigation className={`h-4 w-4 ${isLocating ? 'animate-spin' : ''}`} />
+            {isLocating ? 'Locating...' : 'Update My Location'}
+          </Button>
+        </div>
+        
+        {locationError && (
+          <div className="absolute top-16 right-4 z-10 bg-red-100 border border-red-200 text-red-800 px-4 py-2 rounded-md text-sm max-w-xs">
+            {locationError}
+          </div>
+        )}
         
         <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-4/5 px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg shadow-md">
           <div className="flex items-center justify-between mb-1">

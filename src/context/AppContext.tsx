@@ -59,6 +59,7 @@ type AppContextType = {
   setSupabaseUser: (user: User | null) => void;
   loading: boolean;
   refreshNearbyUsers: () => Promise<void>;
+  updateUserLocation: (userId: string, location: { lat: number, lng: number }) => Promise<void>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -90,11 +91,36 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return R * c;
   };
 
+  // Update user location in Supabase and local state
+  const updateUserLocation = async (userId: string, location: { lat: number, lng: number }) => {
+    try {
+      console.log("Updating user location in context:", userId, location);
+      const result = await updateUserLocation(userId, location);
+      
+      // If this is the current user, update the local state
+      if (currentUser && currentUser.id === userId) {
+        setCurrentUser({
+          ...currentUser,
+          location: location
+        });
+      }
+      
+      // Refresh nearby users with the new location
+      refreshNearbyUsers();
+      
+      return result;
+    } catch (error) {
+      console.error("Error updating user location:", error);
+      throw error;
+    }
+  };
+
   // Refresh nearby users
   const refreshNearbyUsers = async () => {
     if (!isAuthenticated || !currentUser) return;
 
     try {
+      setLoading(true);
       // Set default location (Wynyard) if user doesn't have one
       const userLocation = currentUser.location || { lat: -33.8666, lng: 151.2073 };
       
@@ -144,6 +170,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setNearbyUsers(usersWithDistance);
     } catch (error) {
       console.error("Error fetching nearby users:", error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -282,7 +310,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           id: '3',
           name: 'Emma R.',
           email: 'emma@example.com',
-          profile_pic: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
+          profile_pic: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8fHBlb3BsZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
           age: 25,
           gender: 'Female',
           interests: ['Yoga', 'Reading', 'Travel'],
@@ -506,7 +534,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         supabaseUser,
         setSupabaseUser,
         loading,
-        refreshNearbyUsers
+        refreshNearbyUsers,
+        updateUserLocation
       }}
     >
       {children}
