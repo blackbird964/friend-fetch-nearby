@@ -66,7 +66,7 @@ const Home: React.FC = () => {
             <div className="flex items-start space-x-3">
               <Info className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
               <div className="space-y-1 text-sm">
-                <p className="font-medium">How PairUp Works:</p>
+                <p className="font-medium">How Kairo Works:</p>
                 <p className="text-gray-600">
                   Find people nearby who share your interests, select a time block (15, 30, or 45 minutes), 
                   and send them a meet-up request. If accepted, you can chat and see each other's location.

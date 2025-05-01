@@ -1,5 +1,5 @@
 
-# Welcome to your PairUp project
+# Welcome to your Kairo project
 
 ## Project info
 

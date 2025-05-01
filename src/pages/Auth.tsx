@@ -54,7 +54,7 @@ const Auth: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
       <div className="w-full max-w-md mb-8 text-center">
-        <h1 className="text-3xl font-bold text-primary mb-2">PairUp</h1>
+        <h1 className="text-3xl font-bold text-primary mb-2">Kairo</h1>
         <p className="text-gray-600">Connect with people nearby, right now.</p>
       </div>
 
