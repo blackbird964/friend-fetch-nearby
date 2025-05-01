@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Send } from 'lucide-react';
 import { format } from 'date-fns';
+import { getConversation, sendMessage, markMessagesAsRead } from '@/lib/supabase';
 
 const ChatWindow: React.FC = () => {
   const { selectedChat, setSelectedChat, chats, setChats, currentUser } = useAppContext();
@@ -13,6 +14,66 @@ const ChatWindow: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch conversation when selected chat changes
+  useEffect(() => {
+    const fetchConversation = async () => {
+      if (!selectedChat || !currentUser) return;
+      
+      setIsLoading(true);
+      try {
+        // Fetch messages from the database
+        const dbMessages = await getConversation(selectedChat.participantId);
+        
+        if (dbMessages.length > 0) {
+          // Transform database messages to our app format
+          const formattedMessages = dbMessages.map(dbMsg => ({
+            id: dbMsg.id,
+            senderId: dbMsg.sender_id === currentUser.id ? 'current' : selectedChat.participantId,
+            text: dbMsg.content,
+            timestamp: new Date(dbMsg.created_at).getTime(),
+          }));
+          
+          // Mark unread messages as read
+          const unreadMessageIds = dbMessages
+            .filter(msg => !msg.read && msg.receiver_id === currentUser.id)
+            .map(msg => msg.id);
+            
+          if (unreadMessageIds.length > 0) {
+            markMessagesAsRead(unreadMessageIds);
+          }
+          
+          // Update selected chat with messages from the database
+          const updatedChat = {
+            ...selectedChat,
+            messages: formattedMessages,
+          };
+          
+          if (formattedMessages.length > 0) {
+            const lastMsg = formattedMessages[formattedMessages.length - 1];
+            updatedChat.lastMessage = lastMsg.text;
+            updatedChat.lastMessageTime = lastMsg.timestamp;
+          }
+          
+          setSelectedChat(updatedChat);
+          
+          // Update chat in the list
+          setChats(
+            chats.map(chat => 
+              chat.id === selectedChat.id ? updatedChat : chat
+            )
+          );
+        }
+      } catch (err) {
+        console.error("Error fetching conversation:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchConversation();
+  }, [selectedChat?.id, currentUser]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -25,33 +86,47 @@ const ChatWindow: React.FC = () => {
     }
   }, [selectedChat]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!selectedChat || !message.trim() || !currentUser) return;
     
-    const newMessage = {
-      id: `msg-${Date.now()}`,
-      senderId: 'current',
-      text: message.trim(),
-      timestamp: Date.now(),
-    };
-    
-    const updatedChat = {
-      ...selectedChat,
-      messages: [...selectedChat.messages, newMessage],
-      lastMessage: message.trim(),
-      lastMessageTime: Date.now(),
-    };
-    
-    setChats(
-      chats.map(chat => 
-        chat.id === selectedChat.id ? updatedChat : chat
-      )
-    );
-    
-    setSelectedChat(updatedChat);
-    setMessage('');
+    try {
+      // Save the message in the database
+      const sentMessage = await sendMessage(selectedChat.participantId, message.trim());
+      
+      if (!sentMessage) {
+        console.error("Failed to send message");
+        return;
+      }
+      
+      // Create the message object for our app
+      const newMessage = {
+        id: sentMessage.id,
+        senderId: 'current',
+        text: sentMessage.content,
+        timestamp: new Date(sentMessage.created_at).getTime(),
+      };
+      
+      // Update selected chat
+      const updatedChat = {
+        ...selectedChat,
+        messages: [...selectedChat.messages, newMessage],
+        lastMessage: message.trim(),
+        lastMessageTime: new Date(sentMessage.created_at).getTime(),
+      };
+      
+      setChats(
+        chats.map(chat => 
+          chat.id === selectedChat.id ? updatedChat : chat
+        )
+      );
+      
+      setSelectedChat(updatedChat);
+      setMessage('');
+    } catch (err) {
+      console.error("Error sending message:", err);
+    }
   };
 
   const formatMessageTime = (timestamp: number) => {
@@ -84,30 +159,40 @@ const ChatWindow: React.FC = () => {
         ref={messagesContainerRef}
         className="flex-1 overflow-y-auto p-4 space-y-4"
       >
-        {selectedChat.messages.map((msg) => {
-          const isCurrentUser = msg.senderId === 'current';
-          
-          return (
-            <div 
-              key={msg.id} 
-              className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`
-                max-w-[75%] rounded-2xl p-3 
-                ${isCurrentUser 
-                  ? 'bg-primary text-white rounded-tr-none' 
-                  : 'bg-gray-100 text-gray-800 rounded-tl-none'}
-              `}>
-                <p className="break-words">{msg.text}</p>
-                <p className={`text-xs mt-1 text-right ${
-                  isCurrentUser ? 'text-white/70' : 'text-gray-500'
-                }`}>
-                  {formatMessageTime(msg.timestamp)}
-                </p>
+        {isLoading ? (
+          <div className="flex justify-center py-4">
+            <p className="text-gray-500">Loading messages...</p>
+          </div>
+        ) : selectedChat.messages.length === 0 ? (
+          <div className="flex justify-center py-4">
+            <p className="text-gray-500">No messages yet. Say hello!</p>
+          </div>
+        ) : (
+          selectedChat.messages.map((msg) => {
+            const isCurrentUser = msg.senderId === 'current';
+            
+            return (
+              <div 
+                key={msg.id} 
+                className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+              >
+                <div className={`
+                  max-w-[75%] rounded-2xl p-3 
+                  ${isCurrentUser 
+                    ? 'bg-primary text-white rounded-tr-none' 
+                    : 'bg-gray-100 text-gray-800 rounded-tl-none'}
+                `}>
+                  <p className="break-words">{msg.text}</p>
+                  <p className={`text-xs mt-1 text-right ${
+                    isCurrentUser ? 'text-white/70' : 'text-gray-500'
+                  }`}>
+                    {formatMessageTime(msg.timestamp)}
+                  </p>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
         <div ref={messagesEndRef} />
       </div>
       
@@ -132,7 +217,7 @@ const ChatWindow: React.FC = () => {
           />
           <Button 
             type="submit" 
-            disabled={!message.trim()} 
+            disabled={!message.trim() || isLoading} 
             className="self-end"
             size="icon"
           >

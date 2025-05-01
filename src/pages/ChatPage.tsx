@@ -1,15 +1,15 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import ChatList from '@/components/chat/ChatList';
 import ChatWindow from '@/components/chat/ChatWindow';
 import FriendRequestList from '@/components/users/FriendRequestList';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, ArrowLeft } from 'lucide-react';
+import { Bell, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 
 const ChatPage: React.FC = () => {
-  const { friendRequests, selectedChat, setSelectedChat } = useAppContext();
+  const { friendRequests, selectedChat, setSelectedChat, loading } = useAppContext();
   
   const pendingRequests = friendRequests.filter(r => r.status === 'pending').length;
 
@@ -48,32 +48,41 @@ const ChatPage: React.FC = () => {
         </Card>
       )}
       
-      <div className="flex flex-col md:flex-row gap-6 flex-grow overflow-hidden">
-        {/* Always show chat list on mobile, with a fixed height when a chat is selected */}
-        <div className={`${selectedChat ? 'h-[30%] md:h-auto' : 'h-full'} md:w-1/3 overflow-hidden flex-shrink-0`}>
-          <div className="border rounded-lg bg-background shadow-sm h-full overflow-hidden">
-            <ChatList />
+      {loading ? (
+        <div className="flex-grow flex items-center justify-center">
+          <div className="flex flex-col items-center">
+            <Loader2 className="h-10 w-10 animate-spin text-primary mb-2" />
+            <p className="text-gray-500">Loading conversations...</p>
           </div>
         </div>
-        
-        {/* Show the chat window if a chat is selected */}
-        {selectedChat && (
-          <div className={`${selectedChat ? 'h-[70%] md:h-auto' : 'hidden'} md:w-2/3 flex-grow overflow-hidden`}>
-            <div className="border rounded-lg h-full bg-background shadow-sm flex flex-col">
-              <ChatWindow />
+      ) : (
+        <div className="flex flex-col md:flex-row gap-6 flex-grow overflow-hidden">
+          {/* Always show chat list on mobile, with a fixed height when a chat is selected */}
+          <div className={`${selectedChat ? 'h-[30%] md:h-auto' : 'h-full'} md:w-1/3 overflow-hidden flex-shrink-0`}>
+            <div className="border rounded-lg bg-background shadow-sm h-full overflow-hidden">
+              <ChatList />
             </div>
           </div>
-        )}
-        
-        {/* Show a placeholder if no chat is selected (desktop only) */}
-        {!selectedChat && (
-          <div className="hidden md:flex md:w-2/3 md:items-center md:justify-center h-full">
-            <div className="border rounded-lg h-full w-full bg-background shadow-sm flex flex-col items-center justify-center text-gray-500">
-              <p>Select a chat to start messaging</p>
+          
+          {/* Show the chat window if a chat is selected */}
+          {selectedChat && (
+            <div className={`${selectedChat ? 'h-[70%] md:h-auto' : 'hidden'} md:w-2/3 flex-grow overflow-hidden`}>
+              <div className="border rounded-lg h-full bg-background shadow-sm flex flex-col">
+                <ChatWindow />
+              </div>
             </div>
-          </div>
-        )}
-      </div>
+          )}
+          
+          {/* Show a placeholder if no chat is selected (desktop only) */}
+          {!selectedChat && (
+            <div className="hidden md:flex md:w-2/3 md:items-center md:justify-center h-full">
+              <div className="border rounded-lg h-full w-full bg-background shadow-sm flex flex-col items-center justify-center text-gray-500">
+                <p>Select a chat to start messaging</p>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import UserCard from './UserCard';
@@ -5,38 +6,50 @@ import { Button } from '@/components/ui/button';
 import { MessageCircle, RefreshCw, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
+import { Chat } from '@/context/types';
 
 const UserList: React.FC = () => {
-  const { nearbyUsers, radiusInKm, chats, setChats, currentUser, refreshNearbyUsers, loading } = useAppContext();
+  const { nearbyUsers, radiusInKm, chats, setChats, currentUser, refreshNearbyUsers, loading, setSelectedChat } = useAppContext();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const startChat = (user: any) => {
+    if (!currentUser) {
+      toast({
+        title: "Not logged in",
+        description: "You need to be logged in to chat",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     // Check if chat already exists
     const existingChat = chats.find(chat => chat.participantId === user.id);
     
     if (existingChat) {
+      setSelectedChat(existingChat);
       toast({
         title: "Chat exists",
-        description: `You already have a chat with ${user.name}. Opening existing chat.`,
+        description: `Opening your chat with ${user.name}`,
       });
     } else {
       // Create new chat
-      const newChat = {
-        id: `chat-${Date.now()}`,
+      const newChat: Chat = {
+        id: `chat-${user.id}`,
         participantId: user.id,
         participantName: user.name,
-        profilePic: user.profile_pic,
-        lastMessage: "Say hello!",
+        profilePic: user.profile_pic || '',
+        lastMessage: "Start chatting now",
         lastMessageTime: Date.now(),
         messages: [],
       };
       
-      setChats([...chats, newChat]);
+      setChats([newChat, ...chats]);
+      setSelectedChat(newChat);
       
       toast({
         title: "Chat created",
-        description: `New chat started with ${user.name}`,
+        description: `Started a new chat with ${user.name}`,
       });
     }
     
@@ -60,9 +73,6 @@ const UserList: React.FC = () => {
       });
     }
   };
-
-  console.log("All nearby users:", nearbyUsers);
-  console.log("Current user:", currentUser);
 
   return (
     <div className="space-y-6">
