@@ -3,7 +3,7 @@ import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import UserCard from './UserCard';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, RefreshCw } from 'lucide-react';
+import { MessageCircle, RefreshCw, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 
@@ -62,16 +62,14 @@ const UserList: React.FC = () => {
     }
   };
 
-  // Calculate which users are within the radius
-  const usersInRange = nearbyUsers.filter(user => {
-    // Users already come with distance info from the context
-    return true; // All users in nearbyUsers are already filtered by radius
-  });
+  // Get all users, whether they have location data or not
+  // This ensures we'll see users even if they don't have precise location
+  const allUsers = nearbyUsers;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">People Nearby ({usersInRange.length})</h2>
+        <h2 className="text-xl font-semibold">People Nearby ({allUsers.length})</h2>
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-500">Radius: {radiusInKm} km</span>
           <Button 
@@ -86,7 +84,7 @@ const UserList: React.FC = () => {
         </div>
       </div>
       
-      {usersInRange.length === 0 ? (
+      {allUsers.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <p className="mb-2">No users found nearby. Try increasing your radius or refreshing.</p>
           {!currentUser?.location && (
@@ -95,10 +93,16 @@ const UserList: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {usersInRange.map((user) => (
+          {allUsers.map((user) => (
             <div key={user.id} className="border rounded-lg overflow-hidden">
               <UserCard user={user} />
-              <div className="px-4 pb-4 pt-1">
+              <div className="px-4 pb-4 pt-1 flex flex-col gap-2">
+                {!user.location && (
+                  <div className="text-xs text-amber-600 flex items-center gap-1 mb-1">
+                    <MapPin className="h-3 w-3" />
+                    <span>User hasn't shared their location yet</span>
+                  </div>
+                )}
                 <Button 
                   className="w-full" 
                   onClick={() => startChat(user)}

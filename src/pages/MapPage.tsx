@@ -68,13 +68,13 @@ const MapPage: React.FC = () => {
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start gap-2">
           <MapPin className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-blue-800 text-sm font-medium">No users nearby</p>
-            <p className="text-blue-700 text-sm">Try increasing your radius or come back later when more users are online.</p>
+            <p className="text-blue-800 text-sm font-medium">Finding nearby users</p>
+            <p className="text-blue-700 text-sm">Check the List View to see all users, including those who haven't shared their location yet.</p>
           </div>
         </div>
       )}
       
-      <Tabs defaultValue="map" className="mb-6">
+      <Tabs defaultValue="list" className="mb-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="map" className="flex items-center gap-2">
             <MapPin className="h-4 w-4" /> Map View
