@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from "@/components/ui/button";
@@ -231,7 +232,7 @@ const ChatWindow: React.FC = () => {
             disabled={!message.trim() || isLoading} 
             className="self-end rounded-full"
             size="icon"
-            variant="primary"
+            variant="default"
           >
             <Send className="h-4 w-4" />
           </Button>
