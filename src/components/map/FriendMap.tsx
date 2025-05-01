@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { AlertTriangle } from 'lucide-react';
@@ -7,7 +6,7 @@ import 'ol/ol.css';
 
 // Import custom hooks
 import { useMapInitialization } from './hooks/useMapInitialization';
-import { useMapMarkers } from './hooks/useMapMarkers';
+import { useMapMarkers from './hooks/useMapMarkers';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useMeetingAnimation } from './hooks/useMeetingAnimation';
 
@@ -17,6 +16,7 @@ import UserRequestCard from './components/UserRequestCard';
 import LocationErrorMessage from './components/LocationErrorMessage';
 
 const FriendMap: React.FC = () => {
+  
   const { 
     currentUser, 
     nearbyUsers, 
@@ -50,7 +50,7 @@ const FriendMap: React.FC = () => {
     getSafariHelp
   } = useGeolocation(map, currentUser, updateUserLocation, setCurrentUser);
 
-  // Handle map markers
+  
   const { getMarkerStyle, WYNYARD_COORDS } = useMapMarkers(
     map, 
     vectorSource, 

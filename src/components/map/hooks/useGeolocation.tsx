@@ -1,9 +1,10 @@
 
 import { useState, useEffect } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { AppUser } from '@/context/types';
 import { fromLonLat } from 'ol/proj';
 import Map from 'ol/Map';
+import { AlertTriangle } from 'lucide-react';
 
 export const useGeolocation = (
   map: React.MutableRefObject<Map | null>,
