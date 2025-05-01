@@ -6,7 +6,7 @@ import 'ol/ol.css';
 
 // Import custom hooks
 import { useMapInitialization } from './hooks/useMapInitialization';
-import { useMapMarkers from './hooks/useMapMarkers';
+import { useMapMarkers } from './hooks/useMapMarkers';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useMeetingAnimation } from './hooks/useMeetingAnimation';
 
