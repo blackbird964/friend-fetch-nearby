@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { User, Session } from '@supabase/supabase-js';
 
@@ -34,10 +35,19 @@ export type Message = {
 export async function sendMessage(receiverId: string, content: string): Promise<Message | null> {
   console.log("Sending message to:", receiverId, content);
   
+  // Get the current user
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    console.error('No authenticated user found');
+    return null;
+  }
+  
   const { data, error } = await supabase
     .from('messages')
     .insert({
       receiver_id: receiverId,
+      sender_id: user.id, // Add the sender_id from the authenticated user
       content
     })
     .select()
