@@ -20,7 +20,7 @@ const ChatList: React.FC = () => {
 
   if (chats.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-40 text-gray-500 px-4">
+      <div className="flex flex-col items-center justify-center h-full text-gray-500 px-4">
         <p>No chats yet</p>
         <p className="text-sm">Accept a friend request to start chatting</p>
       </div>
@@ -28,7 +28,7 @@ const ChatList: React.FC = () => {
   }
 
   return (
-    <div className="divide-y overflow-y-auto h-full">
+    <div className="h-full overflow-y-auto">
       {chats.map((chat) => (
         <button
           key={chat.id}
