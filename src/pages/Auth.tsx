@@ -18,6 +18,13 @@ const Auth: React.FC = () => {
   const confirmationToken = searchParams.get('token_hash');
   const type = searchParams.get('type');
   
+  // Debug authentication state
+  useEffect(() => {
+    if (isAuthenticated) {
+      console.log("Auth component - User is authenticated:", { currentUser });
+    }
+  }, [isAuthenticated, currentUser]);
+  
   useEffect(() => {
     // Handle email confirmation if token is present
     const handleEmailConfirmation = async () => {
@@ -87,20 +94,24 @@ const Auth: React.FC = () => {
 
   // If authenticated and has a complete profile, redirect to home
   if (isAuthenticated && currentUser?.age && !loading) {
+    console.log("User has complete profile, redirecting to home");
     return <Navigate to="/home" replace />;
   }
   
   // If authenticated but profile is incomplete, show profile setup
-  if (isAuthenticated && !currentUser?.age && !loading) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
-        <div className="w-full max-w-md mb-8 text-center">
-          <h1 className="text-3xl font-bold text-primary mb-2">Kairo</h1>
-          <p className="text-gray-600">Complete your profile to continue</p>
+  if (isAuthenticated && currentUser && !loading) {
+    if (!currentUser.age) {
+      console.log("User profile is incomplete, showing profile setup");
+      return (
+        <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
+          <div className="w-full max-w-md mb-8 text-center">
+            <h1 className="text-3xl font-bold text-primary mb-2">Kairo</h1>
+            <p className="text-gray-600">Complete your profile to continue</p>
+          </div>
+          <ProfileSetupForm />
         </div>
-        <ProfileSetupForm />
-      </div>
-    );
+      );
+    }
   }
 
   if (loading) {

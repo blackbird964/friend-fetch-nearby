@@ -19,10 +19,11 @@ const MainLayout: React.FC = () => {
   // If user is authenticated but doesn't have a complete profile
   // They should complete their profile first
   useEffect(() => {
-    if (isAuthenticated && currentUser && !currentUser.age && location.pathname !== '/') {
+    if (isAuthenticated && currentUser && !currentUser.age) {
+      console.log("User needs to complete profile:", currentUser);
       navigate('/');
     }
-  }, [isAuthenticated, currentUser, navigate, location.pathname]);
+  }, [isAuthenticated, currentUser, navigate]);
 
   // If user is authenticated and has completed their profile, they can access the app
   useEffect(() => {
