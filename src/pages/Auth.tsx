@@ -3,12 +3,57 @@ import React, { useState, useEffect } from 'react';
 import LoginForm from '@/components/auth/LoginForm';
 import SignUpForm from '@/components/auth/SignUpForm';
 import { useAppContext } from '@/context/AppContext';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/hooks/use-toast';
 
 const Auth: React.FC = () => {
   const [formState, setFormState] = useState<'login' | 'signup'>('login');
   const { isAuthenticated, loading, setIsAuthenticated, setSupabaseUser } = useAppContext();
+  const [searchParams] = useSearchParams();
+  const { toast } = useToast();
+  
+  // Check for email confirmation parameters
+  const confirmationToken = searchParams.get('token_hash');
+  const type = searchParams.get('type');
+  
+  useEffect(() => {
+    // Handle email confirmation if token is present
+    const handleEmailConfirmation = async () => {
+      if (confirmationToken && type === 'email_confirmation') {
+        try {
+          const { error } = await supabase.auth.verifyOtp({
+            token_hash: confirmationToken,
+            type: 'email',
+          });
+          
+          if (error) {
+            toast({
+              title: 'Verification failed',
+              description: error.message,
+              variant: 'destructive',
+            });
+          } else {
+            toast({
+              title: 'Email verified successfully!',
+              description: 'You can now sign in to your account.',
+              variant: 'default',
+            });
+            setFormState('login');
+          }
+        } catch (err) {
+          console.error('Error during email verification:', err);
+          toast({
+            title: 'Verification error',
+            description: 'There was a problem verifying your email. Please try again.',
+            variant: 'destructive',
+          });
+        }
+      }
+    };
+    
+    handleEmailConfirmation();
+  }, [confirmationToken, type, toast]);
 
   useEffect(() => {
     const checkAuth = async () => {
