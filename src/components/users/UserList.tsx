@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import UserCard from './UserCard';
@@ -62,14 +61,13 @@ const UserList: React.FC = () => {
     }
   };
 
-  // Get all users, whether they have location data or not
-  // This ensures we'll see users even if they don't have precise location
-  const allUsers = nearbyUsers;
+  console.log("All nearby users:", nearbyUsers);
+  console.log("Current user:", currentUser);
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">People Nearby ({allUsers.length})</h2>
+        <h2 className="text-xl font-semibold">People Nearby ({nearbyUsers.length})</h2>
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-500">Radius: {radiusInKm} km</span>
           <Button 
@@ -84,7 +82,7 @@ const UserList: React.FC = () => {
         </div>
       </div>
       
-      {allUsers.length === 0 ? (
+      {nearbyUsers.length === 0 ? (
         <div className="text-center py-8 text-gray-500">
           <p className="mb-2">No users found nearby. Try increasing your radius or refreshing.</p>
           {!currentUser?.location && (
@@ -93,7 +91,7 @@ const UserList: React.FC = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {allUsers.map((user) => (
+          {nearbyUsers.map((user) => (
             <div key={user.id} className="border rounded-lg overflow-hidden">
               <UserCard user={user} />
               <div className="px-4 pb-4 pt-1 flex flex-col gap-2">

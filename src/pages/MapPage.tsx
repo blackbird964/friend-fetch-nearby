@@ -29,6 +29,9 @@ const MapPage: React.FC = () => {
     }
   };
 
+  // Count users with location for map view
+  const usersWithLocation = nearbyUsers.filter(user => user.location).length;
+
   return (
     <div className="container mx-auto px-4 py-6 mb-20 max-w-4xl">
       <div className="flex justify-between items-center mb-6">
@@ -64,7 +67,7 @@ const MapPage: React.FC = () => {
         </div>
       )}
       
-      {nearbyUsers.length === 0 && currentUser?.location && (
+      {usersWithLocation === 0 && currentUser?.location && (
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start gap-2">
           <MapPin className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
           <div>

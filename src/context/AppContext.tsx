@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
@@ -160,6 +161,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     try {
       setLoading(true);
+      console.log("Refreshing nearby users for:", currentUser.name, "with ID:", currentUser.id);
+      
       // Set default location (Wynyard) if user doesn't have one
       const userLocation = currentUser.location || { lat: -33.8666, lng: 151.2073 };
       
@@ -186,26 +189,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           interests: Array.isArray(profile.interests) ? profile.interests : []
         }));
 
-      console.log("Other users before location filtering:", otherUsers);
+      console.log("Other users:", otherUsers);
       
-      // Add distance to each user and filter by radius
-      const usersWithDistance = otherUsers
-        .filter(user => user.location && user.location.lat && user.location.lng)
-        .map(user => {
-          if (!user.location) return { ...user, distance: Infinity };
-          
-          const distance = calculateDistance(
-            userLocation.lat,
-            userLocation.lng,
-            user.location.lat,
-            user.location.lng
-          );
-          
-          return { ...user, distance };
-        })
-        .filter(user => user.distance <= radiusInKm);
+      // Calculate distance for each user regardless of location
+      const usersWithDistance = otherUsers.map(user => {
+        if (!user.location || !user.location.lat || !user.location.lng) {
+          return { ...user, distance: Infinity };
+        }
+        
+        const distance = calculateDistance(
+          userLocation.lat,
+          userLocation.lng,
+          user.location.lat,
+          user.location.lng
+        );
+        
+        return { ...user, distance };
+      });
 
       console.log("Users with distance calculation:", usersWithDistance);
+      
+      // Set all users, including those without location
+      // Only filter by radius for users that have a location
       setNearbyUsers(usersWithDistance);
     } catch (error) {
       console.error("Error fetching nearby users:", error);
