@@ -318,108 +318,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, [radiusInKm, currentUser?.location]);
 
-  // Demo data for the MVP - we'll keep this as fallback
+  // IMPORTANT CHANGE: Only load mock data if explicitly requested or as a debug option
   useEffect(() => {
-    if (isAuthenticated && currentUser && nearbyUsers.length === 0) {
-      // Only load mock data if we don't have real nearby users
-      const mockUsers = [
-        {
-          id: '1',
-          name: 'Sarah J.',
-          email: 'sarah@example.com',
-          profile_pic: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OXx8cGVvcGxlfGVufDB8fDB8fHww&auto=format&fit=crop&w=500&q=60',
-          age: 28,
-          gender: 'Female',
-          interests: ['Hiking', 'Photography', 'Coffee'],
-          bio: 'Adventure seeker and coffee enthusiast.',
-          location: { lat: -33.8688, lng: 151.2093 }, // Town Hall
-        },
-        {
-          id: '2',
-          name: 'David L.',
-          email: 'david@example.com',
-          profile_pic: 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Nnx8fHBlb3BsZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
-          age: 32,
-          gender: 'Male',
-          interests: ['Gaming', 'Tech', 'Movies'],
-          bio: 'Tech geek with a passion for sci-fi films.',
-          location: { lat: -33.8568, lng: 151.2153 }, // The Rocks
-        },
-        {
-          id: '3',
-          name: 'Emma R.',
-          email: 'emma@example.com',
-          profile_pic: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8fHBlb3BsZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
-          age: 25,
-          gender: 'Female',
-          interests: ['Yoga', 'Reading', 'Travel'],
-          bio: 'Yoga instructor and avid reader.',
-          location: { lat: -33.8736, lng: 151.2014 }, // Darling Harbour
-        },
-        {
-          id: '4',
-          name: 'Michael K.',
-          email: 'michael@example.com',
-          profile_pic: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHBlb3BsZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
-          age: 30,
-          gender: 'Male',
-          interests: ['Music', 'Cooking', 'Sports'],
-          bio: 'Music producer and amateur chef.',
-          location: { lat: -33.9509, lng: 151.1825 }, // Bankstown
-        },
-        {
-          id: '5',
-          name: 'Jessica M.',
-          email: 'jessica@example.com',
-          profile_pic: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTF8fHBlb3BsZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
-          age: 27,
-          gender: 'Female',
-          interests: ['Fashion', 'Design', 'Art'],
-          bio: 'Fashion designer who loves modern art.',
-          location: { lat: -33.7480, lng: 151.2414 }, // Chatswood
-        },
-        {
-          id: '6',
-          name: 'Thomas W.',
-          email: 'thomas@example.com',
-          profile_pic: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTl8fHBlb3BsZXxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
-          age: 34,
-          gender: 'Male',
-          interests: ['Surfing', 'Beach', 'Fitness'],
-          bio: 'Surf instructor and fitness enthusiast.',
-          location: { lat: -33.8914, lng: 151.2766 }, // Bondi
-        },
-        {
-          id: '7',
-          name: 'Lisa T.',
-          email: 'lisa@example.com',
-          profile_pic: 'https://images.unsplash.com/photo-1499952127939-9bbf5af6c51c?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTJ8fHBlcnNvbnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
-          age: 29,
-          gender: 'Female',
-          interests: ['Cooking', 'Languages', 'Travel'],
-          bio: 'Polyglot who loves cooking international dishes.',
-          location: { lat: -33.7281, lng: 150.9686 }, // Blacktown
-        },
-        {
-          id: '8',
-          name: 'Daniel H.',
-          email: 'daniel@example.com',
-          profile_pic: 'https://images.unsplash.com/photo-1492562080023-ab3db95bfbce?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MjB8fHBlcnNvbnxlbnwwfHwwfHx8MA%3D%3D&auto=format&fit=crop&w=500&q=60',
-          age: 31,
-          gender: 'Male',
-          interests: ['Business', 'Networking', 'Books'],
-          bio: 'Entrepreneur who loves reading business books.',
-          location: { lat: -33.9657, lng: 150.8444 }, // Liverpool
-        },
-      ];
-      
-      // Only set mock users if we don't have any real ones
-      if (nearbyUsers.length === 0) {
-        console.log("Setting mock nearby users as fallback");
-        setNearbyUsers(mockUsers);
-      }
-      
-      // Mock friend requests - keep this
+    if (isAuthenticated && currentUser) {
+      // Only load mock friend requests as fallback for now
+      // since we don't have a real implementation for them yet
       setFriendRequests([
         {
           id: 'fr1',
@@ -549,7 +452,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         },
       ]);
     }
-  }, [isAuthenticated, currentUser, nearbyUsers.length]);
+  }, [isAuthenticated, currentUser]);
 
   return (
     <AppContext.Provider
