@@ -1,10 +1,10 @@
-
 import { User } from '@supabase/supabase-js';
 import { Profile } from '@/lib/supabase';
 
 // Define types for our user and app state
 export type AppUser = Profile & {
   email: string;
+  distance?: number; // Add distance property as optional
 };
 
 export type FriendRequest = {

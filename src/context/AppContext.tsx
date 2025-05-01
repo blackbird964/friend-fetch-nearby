@@ -20,9 +20,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [loading, setLoading] = useState(false); // Add loading state
   
   // Use our custom hook for nearby users management
-  const { nearbyUsers, setNearbyUsers, loading, refreshNearbyUsers: fetchNearbyUsers } = useNearbyUsers(currentUser);
+  const { nearbyUsers, setNearbyUsers, loading: nearbyUsersLoading, refreshNearbyUsers: fetchNearbyUsers } = useNearbyUsers(currentUser);
   
   // Wrapper function to maintain API compatibility
   const refreshNearbyUsers = async () => {
@@ -84,6 +85,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Check for existing session
     const checkSession = async () => {
+      setLoading(true);
       const { data } = await supabase.auth.getSession();
       console.log("Initial session check:", data.session);
       

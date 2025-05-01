@@ -1,7 +1,7 @@
-
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { useAppContext, AppUser } from '@/context/AppContext';
+import { useAppContext } from '@/context/AppContext';
+import { AppUser } from '@/context/types';
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { User } from 'lucide-react';

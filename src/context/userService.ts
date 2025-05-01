@@ -55,8 +55,11 @@ export const processNearbyUsers = (
   userLocation: { lat: number, lng: number }
 ): AppUser[] => {
   return otherUsers.map(user => {
+    const userWithDistance = { ...user };
+    
     if (!user.location || !user.location.lat || !user.location.lng) {
-      return { ...user, distance: Infinity };
+      userWithDistance.distance = Infinity;
+      return userWithDistance;
     }
     
     const distance = calculateDistance(
@@ -66,7 +69,8 @@ export const processNearbyUsers = (
       user.location.lng
     );
     
-    return { ...user, distance };
+    userWithDistance.distance = distance;
+    return userWithDistance;
   });
 };
 
