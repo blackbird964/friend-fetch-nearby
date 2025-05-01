@@ -59,8 +59,8 @@ type AppContextType = {
   setSupabaseUser: (user: User | null) => void;
   loading: boolean;
   refreshNearbyUsers: () => Promise<void>;
-  updateUserLocation: (userId: string, location: { lat: number, lng: number }) => Promise<void>;
-  updateUserProfile: (updatedProfile: Partial<Profile>) => Promise<void>; // Add this property
+  updateUserLocation: (userId: string, location: { lat: number, lng: number }) => Promise<any>; // Changed return type to Promise<any>
+  updateUserProfile: (updatedProfile: Partial<Profile>) => Promise<void>;
 };
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
