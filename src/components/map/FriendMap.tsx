@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { User, Clock, Navigation } from 'lucide-react';
+import { User, Clock, Navigation, MapPin, AlertTriangle } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
@@ -31,6 +31,7 @@ const FriendMap: React.FC = () => {
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
+  const [permissionState, setPermissionState] = useState<string>('prompt');
   
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<Map | null>(null);
@@ -54,20 +55,57 @@ const FriendMap: React.FC = () => {
     return R * c;
   };
 
+  // Check permission status on component mount
+  useEffect(() => {
+    // Check if the Permissions API is available
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' })
+        .then(permissionStatus => {
+          setPermissionState(permissionStatus.state);
+          
+          // Set up a listener for permission changes
+          permissionStatus.onchange = () => {
+            setPermissionState(permissionStatus.state);
+            
+            // If permission is granted after a change, try to get location again
+            if (permissionStatus.state === 'granted') {
+              getUserLocation();
+            }
+          };
+        })
+        .catch(error => {
+          console.log("Permission query not supported", error);
+        });
+    }
+  }, []);
+
   // Request user location
   const getUserLocation = () => {
     setIsLocating(true);
     setLocationError(null);
     
+    // First, check if geolocation is supported
     if (!navigator.geolocation) {
       setLocationError("Geolocation is not supported by your browser");
       setIsLocating(false);
+      useDefaultLocation();
       return;
     }
+    
+    // For Safari and iOS specifically, we need to make a more explicit request
+    // to make sure the permission dialog appears
+    const positionOptions = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    };
+    
+    console.log("Requesting geolocation permission...");
     
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { longitude, latitude } = position.coords;
+        console.log("Location obtained:", latitude, longitude);
         setUserLocation([longitude, latitude]);
         
         // If we have a current user, update their location in the database
@@ -83,6 +121,7 @@ const FriendMap: React.FC = () => {
         }
         
         setIsLocating(false);
+        setPermissionState('granted');
         
         // Center the map on the user's location
         if (map.current) {
@@ -100,25 +139,70 @@ const FriendMap: React.FC = () => {
       },
       (error) => {
         console.error("Error getting location:", error);
-        setLocationError("Unable to retrieve your location. Using default location instead.");
+        let errorMessage = "Unable to retrieve your location.";
+        
+        if (error.code === 1) {
+          // Permission denied
+          setPermissionState('denied');
+          errorMessage = "Location permission denied. Please enable location services for this website in your browser settings.";
+        } else if (error.code === 2) {
+          // Position unavailable
+          errorMessage = "Your location information is unavailable. Please check your device settings.";
+        } else if (error.code === 3) {
+          // Timeout
+          errorMessage = "Location request timed out. Please try again.";
+        }
+        
+        setLocationError(errorMessage);
         setIsLocating(false);
         
-        // Use default location (Wynyard)
-        if (currentUser && (!currentUser.location || !currentUser.location.lat || !currentUser.location.lng)) {
-          const defaultLocation = { lat: -33.8666, lng: 151.2073 };
-          updateUserLocation(currentUser.id, defaultLocation);
-          setCurrentUser({
-            ...currentUser,
-            location: defaultLocation
-          });
-        }
+        // Use default location
+        useDefaultLocation();
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
+      positionOptions
     );
+  };
+
+  // Apply default location when geolocation fails or is denied
+  const useDefaultLocation = () => {
+    if (currentUser && (!currentUser.location || !currentUser.location.lat || !currentUser.location.lng)) {
+      const defaultLocation = { lat: -33.8666, lng: 151.2073 }; // Wynyard
+      updateUserLocation(currentUser.id, defaultLocation);
+      setCurrentUser({
+        ...currentUser,
+        location: defaultLocation
+      });
+      
+      toast({
+        title: "Default Location Used",
+        description: "Using Wynyard as your location. Enable location access for accuracy.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Safari-specific help instructions
+  const getSafariHelp = () => {
+    if (permissionState === 'denied') {
+      return (
+        <div className="bg-amber-50 border border-amber-200 p-3 rounded-md text-sm mb-4">
+          <h4 className="font-medium flex items-center text-amber-800 mb-1">
+            <AlertTriangle className="h-4 w-4 mr-1" />
+            Location Access Required
+          </h4>
+          <p className="text-amber-700 mb-2">To see people nearby, please enable location access:</p>
+          <ol className="list-decimal list-inside text-amber-700 space-y-1 pl-1">
+            <li>Go to <strong>Settings</strong> on your device</li>
+            <li>Scroll down and tap <strong>Safari</strong></li>
+            <li>Tap <strong>Settings for Websites</strong></li>
+            <li>Tap <strong>Location</strong></li>
+            <li>Set to <strong>Allow</strong> for this website</li>
+          </ol>
+          <p className="text-amber-700 mt-2">After enabling, refresh this page and try again.</p>
+        </div>
+      );
+    }
+    return null;
   };
 
   useEffect(() => {
@@ -186,8 +270,11 @@ const FriendMap: React.FC = () => {
 
     setMapLoaded(true);
 
-    // Get user's location on initial load
-    getUserLocation();
+    // Get user's location on initial load after a short delay
+    // This helps mobile browsers show the permission dialog
+    setTimeout(() => {
+      getUserLocation();
+    }, 500);
 
     // Add click handler for markers
     map.current.on('click', (event) => {
@@ -356,7 +443,13 @@ const FriendMap: React.FC = () => {
           </Button>
         </div>
         
-        {locationError && (
+        {locationError && permissionState === 'denied' && (
+          <div className="absolute top-16 right-4 left-4 z-10">
+            {getSafariHelp()}
+          </div>
+        )}
+        
+        {locationError && permissionState !== 'denied' && (
           <div className="absolute top-16 right-4 z-10 bg-red-100 border border-red-200 text-red-800 px-4 py-2 rounded-md text-sm max-w-xs">
             {locationError}
           </div>
