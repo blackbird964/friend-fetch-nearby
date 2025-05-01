@@ -63,20 +63,14 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
         throw new Error('User ID is missing');
       }
       
-      // Ensure location is properly formatted if it exists
+      // Prepare profile data for update without location
       let updatedProfile: Partial<Profile> = {
         ...formData,
         id: currentUser.id,
       };
       
-      // If we have location data from currentUser, preserve it
-      if (currentUser.location && typeof currentUser.location === 'object' && 
-          'lat' in currentUser.location && 'lng' in currentUser.location) {
-        updatedProfile.location = {
-          lat: currentUser.location.lat,
-          lng: currentUser.location.lng
-        };
-      }
+      // Remove location from the update payload to avoid format errors
+      delete updatedProfile.location;
       
       await updateUserProfile(updatedProfile);
       

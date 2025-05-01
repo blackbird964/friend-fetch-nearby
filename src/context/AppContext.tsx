@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
-import { getProfile, Profile, getAllProfiles, updateUserLocation } from '@/lib/supabase';
+import { getProfile, Profile, getAllProfiles, updateUserLocation as updateLocation } from '@/lib/supabase';
 
 // Define types for our user and app state
 export type AppUser = Profile & {
@@ -96,7 +96,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateUserLocation = async (userId: string, location: { lat: number, lng: number }) => {
     try {
       console.log("Updating user location in context:", userId, location);
-      const result = await updateUserLocation(userId, location);
+      const result = await updateLocation(userId, location);
       
       // If this is the current user, update the local state
       if (currentUser && currentUser.id === userId) {
@@ -123,9 +123,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         throw new Error('Profile ID is missing');
       }
       
+      // Create a clean copy of the profile data without location
+      const profileUpdate = { ...updatedProfile };
+      
+      // Remove location from update to avoid format errors
+      delete profileUpdate.location;
+      
       const { error } = await supabase
         .from('profiles')
-        .update(updatedProfile)
+        .update(profileUpdate)
         .eq('id', updatedProfile.id);
         
       if (error) {
@@ -134,9 +140,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       
       // Update the current user state if this is the current user's profile
       if (currentUser && currentUser.id === updatedProfile.id) {
+        // Preserve the location from current user
         setCurrentUser({
           ...currentUser,
-          ...updatedProfile,
+          ...profileUpdate,
+          location: currentUser.location, // Keep existing location
         });
       }
       
