@@ -1,8 +1,12 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { AlertTriangle } from 'lucide-react';
 import { Style, Circle, Fill, Stroke, Text } from 'ol/style';
 import 'ol/ol.css';
+import Feature from 'ol/Feature';
+import FeatureLike from 'ol/Feature';
+import Geometry from 'ol/geom/Geometry';
 
 // Import custom hooks
 import { useMapInitialization } from './hooks/useMapInitialization';
@@ -69,13 +73,16 @@ const FriendMap: React.FC = () => {
     setMovingUsers,
     setCompletedMoves,
     setSelectedUser,
-    WYNYARD_COORDS
+    WYNYARD_COORDS as [number, number] // Fix the type error by explicitly casting to tuple
   );
 
   // Set up marker styles
   useEffect(() => {
     if (vectorLayer.current) {
-      vectorLayer.current.setStyle((feature) => getMarkerStyle(feature));
+      vectorLayer.current.setStyle((feature) => {
+        // Cast the feature to the correct type
+        return getMarkerStyle(feature as Feature<Geometry>);
+      });
     }
     
     if (routeLayer.current) {

@@ -7,6 +7,7 @@ import { fromLonLat } from 'ol/proj';
 import { Style, Circle as CircleStyle, Fill, Stroke, Text } from 'ol/style';
 import { Vector as VectorSource } from 'ol/source';
 import Map from 'ol/Map';
+import Geometry from 'ol/geom/Geometry';
 import { WYNYARD_COORDS } from './useMapInitialization';
 
 export const useMapMarkers = (
@@ -20,7 +21,7 @@ export const useMapMarkers = (
   mapLoaded: boolean
 ) => {
   // Set up marker styles
-  const getMarkerStyle = (feature: Feature) => {
+  const getMarkerStyle = (feature: Feature<Geometry>) => {
     const isMoving = movingUsers.has(feature.get('userId'));
     const isUser = feature.get('isCurrentUser');
     const hasMoved = completedMoves.has(feature.get('userId'));
