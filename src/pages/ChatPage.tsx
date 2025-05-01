@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import ChatList from '@/components/chat/ChatList';
@@ -13,11 +12,12 @@ const ChatPage: React.FC = () => {
   
   const pendingRequests = friendRequests.filter(r => r.status === 'pending').length;
 
-  // Clear selected chat when navigating away or on mobile devices
+  // We'll keep the selectedChat handling for desktop mode only
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth < 768 && selectedChat) {
-        setSelectedChat(null);
+        // We're not clearing the selected chat anymore on resize
+        // This keeps the chat selected even on mobile
       }
     };
 
@@ -25,18 +25,16 @@ const ChatPage: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, [selectedChat, setSelectedChat]);
 
-  // Force clear selected chat on page load for mobile
+  // We'll also modify this to not force clear on page load for mobile
   useEffect(() => {
-    if (window.innerWidth < 768) {
-      setSelectedChat(null);
-    }
+    // Removed the forced clearing of selected chat on mobile
   }, [setSelectedChat]);
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-3xl flex flex-col h-[calc(100vh-130px)]">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Messages</h1>
-        {selectedChat && window.innerWidth < 768 && (
+        {selectedChat && (
           <Button 
             variant="ghost" 
             size="sm" 
@@ -68,16 +66,30 @@ const ChatPage: React.FC = () => {
       )}
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow overflow-hidden">
-        <div className={`md:col-span-1 ${selectedChat ? 'hidden md:block' : 'block'} h-full overflow-y-auto`}>
+        {/* Always show the chat list, regardless of whether a chat is selected */}
+        <div className="md:col-span-1 block h-full overflow-y-auto">
           <div className="border rounded-lg bg-background shadow-sm h-full">
             <ChatList />
           </div>
         </div>
-        <div className={`md:col-span-2 ${selectedChat ? 'block' : 'hidden md:flex md:items-center md:justify-center'} h-full`}>
-          <div className="border rounded-lg h-full bg-background shadow-sm flex flex-col">
-            <ChatWindow />
+        
+        {/* Show the chat window if a chat is selected */}
+        {selectedChat && (
+          <div className="md:col-span-2 h-full">
+            <div className="border rounded-lg h-full bg-background shadow-sm flex flex-col">
+              <ChatWindow />
+            </div>
           </div>
-        </div>
+        )}
+        
+        {/* Show a placeholder if no chat is selected (desktop only) */}
+        {!selectedChat && (
+          <div className="md:col-span-2 hidden md:flex md:items-center md:justify-center h-full">
+            <div className="border rounded-lg h-full bg-background shadow-sm flex flex-col items-center justify-center text-gray-500">
+              <p>Select a chat to start messaging</p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
