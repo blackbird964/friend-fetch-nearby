@@ -48,13 +48,15 @@ const ProfileSetupForm: React.FC = () => {
       if (currentUser.age) setAge(currentUser.age.toString());
       if (currentUser.gender) setGender(currentUser.gender);
       if (currentUser.bio) setBio(currentUser.bio);
-      if (currentUser.interests) setInterests(currentUser.interests);
+      if (currentUser.interests && Array.isArray(currentUser.interests)) {
+        setInterests(currentUser.interests);
+      }
     }
   }, [currentUser]);
 
   const handleAddInterest = () => {
     if (currentInterest && !interests.includes(currentInterest)) {
-      setInterests([...interests, currentInterest]);
+      setInterests(prevInterests => [...prevInterests, currentInterest]);
       setCurrentInterest('');
     }
   };
@@ -100,7 +102,7 @@ const ProfileSetupForm: React.FC = () => {
         age: parseInt(age) || null,
         gender,
         bio,
-        interests,
+        interests: interests.length > 0 ? interests : [], // Ensure interests is an array
       };
 
       console.log("Creating or updating profile with data:", profileData);
@@ -120,7 +122,7 @@ const ProfileSetupForm: React.FC = () => {
           bio: data.bio || '',
           age: data.age || null,
           gender: data.gender || '',
-          interests: data.interests || [],
+          interests: Array.isArray(data.interests) ? data.interests : [],
           profile_pic: data.profile_pic || null,
           email: user.email || '',
           location: currentUser?.location

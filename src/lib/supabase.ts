@@ -96,8 +96,13 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   }
   
   // Ensure interests is always an array
-  if (data && !Array.isArray(data.interests)) {
-    data.interests = data.interests ? [String(data.interests)] : [];
+  if (data) {
+    if (!data.interests) {
+      data.interests = [];
+    } else if (!Array.isArray(data.interests)) {
+      // If interests is not an array, convert it to one
+      data.interests = data.interests ? [String(data.interests)] : [];
+    }
   }
   
   return data as Profile;
@@ -164,6 +169,17 @@ export async function createOrUpdateProfile(profile: Partial<Profile> & { id: st
       profileToUpsert.location = null;
     }
   }
+
+  // Ensure interests is an array before saving
+  if (profileToUpsert.interests) {
+    if (!Array.isArray(profileToUpsert.interests)) {
+      profileToUpsert.interests = [String(profileToUpsert.interests)];
+    }
+  } else {
+    profileToUpsert.interests = [];
+  }
+  
+  console.log("Final profile data being sent to Supabase:", profileToUpsert);
   
   const { data, error } = await supabase
     .from('profiles')
