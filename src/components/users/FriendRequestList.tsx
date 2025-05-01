@@ -1,7 +1,5 @@
-
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Clock, Check, X } from 'lucide-react';
