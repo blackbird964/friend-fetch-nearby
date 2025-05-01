@@ -31,7 +31,7 @@ const ChatPage: React.FC = () => {
         )}
       </div>
       
-      {pendingRequests > 0 && (
+      {pendingRequests > 0 && !selectedChat && (
         <Card className="mb-6">
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
@@ -61,7 +61,7 @@ const ChatPage: React.FC = () => {
         <div className="flex flex-col md:flex-row gap-6 flex-grow overflow-hidden">
           {/* On mobile: Show chat list when no chat is selected, hide when viewing a chat */}
           {(!selectedChat || !isMobile) && (
-            <div className={`${isMobile ? 'h-full' : 'md:w-1/3'} overflow-hidden flex-shrink-0`}>
+            <div className={`${isMobile ? 'h-full w-full' : 'md:w-1/3'} overflow-hidden flex-shrink-0`}>
               <div className="border rounded-lg bg-background shadow-sm h-full overflow-hidden">
                 <ChatList />
               </div>
@@ -70,7 +70,7 @@ const ChatPage: React.FC = () => {
           
           {/* Show the chat window if a chat is selected */}
           {selectedChat && (
-            <div className={`${isMobile ? 'h-full' : 'md:w-2/3'} flex-grow overflow-hidden`}>
+            <div className={`${isMobile ? 'h-full w-full absolute inset-0 z-10 pt-[70px] pb-[80px]' : 'md:w-2/3'} flex-grow overflow-hidden bg-background`}>
               <div className="border rounded-lg h-full bg-background shadow-sm flex flex-col">
                 <ChatWindow />
               </div>

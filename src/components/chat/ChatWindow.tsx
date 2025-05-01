@@ -30,7 +30,7 @@ const ChatWindow: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full bg-background">
       <ChatHeader 
         participantName={selectedChat.participantName}
         profilePic={selectedChat.profilePic}
@@ -48,6 +48,7 @@ const ChatWindow: React.FC = () => {
         isLoading={isLoading}
         onMessageChange={setMessage}
         onSendMessage={handleSendMessage}
+        textareaRef={textareaRef}
       />
     </div>
   );

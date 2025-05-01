@@ -18,7 +18,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   showBackButton 
 }) => {
   return (
-    <div className="flex items-center p-3 border-b bg-background">
+    <div className="flex items-center p-3 border-b bg-background sticky top-0 z-10">
       {showBackButton && (
         <Button 
           variant="ghost" 

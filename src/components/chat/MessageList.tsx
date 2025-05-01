@@ -22,7 +22,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading }) => {
   
   if (isLoading) {
     return (
-      <div className="flex justify-center py-4">
+      <div className="flex justify-center items-center py-4 flex-grow">
         <p className="text-gray-500">Loading messages...</p>
       </div>
     );
@@ -30,7 +30,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading }) => {
   
   if (messages.length === 0) {
     return (
-      <div className="flex justify-center py-4">
+      <div className="flex justify-center items-center py-4 flex-grow">
         <p className="text-gray-500">No messages yet. Say hello!</p>
       </div>
     );

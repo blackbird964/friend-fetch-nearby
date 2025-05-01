@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React, { RefObject } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send } from 'lucide-react';
@@ -9,16 +9,16 @@ interface MessageInputProps {
   isLoading: boolean;
   onMessageChange: (value: string) => void;
   onSendMessage: (e: React.FormEvent) => void;
+  textareaRef?: RefObject<HTMLTextAreaElement>;
 }
 
 const MessageInput: React.FC<MessageInputProps> = ({ 
   message, 
   isLoading, 
   onMessageChange, 
-  onSendMessage 
+  onSendMessage,
+  textareaRef
 }) => {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
   return (
     <div className="p-3 bg-background border-t mt-auto">
       <form onSubmit={onSendMessage} className="flex space-x-2">
