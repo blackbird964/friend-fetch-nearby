@@ -76,13 +76,13 @@ const FriendRequestList: React.FC = () => {
   return (
     <div className="space-y-3">
       {pendingRequests.map((request) => (
-        <Card key={request.id} className="overflow-hidden">
-          <CardContent className="p-4">
+        <div key={request.id} className="border rounded-lg overflow-hidden bg-white">
+          <div className="p-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <Avatar>
                   <AvatarImage src={request.senderProfilePic} alt={request.senderName} />
-                  <AvatarFallback>{request.senderName.charAt(0)}</AvatarFallback>
+                  <AvatarFallback>{request.senderName.charAt(0).toUpperCase()}</AvatarFallback>
                 </Avatar>
                 <div>
                   <h4 className="font-medium">{request.senderName}</h4>
@@ -99,22 +99,22 @@ const FriendRequestList: React.FC = () => {
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="h-8 w-8 p-0" 
+                  className="h-10 w-10 rounded-full p-0" 
                   onClick={() => handleReject(request.id)}
                 >
-                  <X className="h-4 w-4" />
+                  <X className="h-5 w-5" />
                 </Button>
                 <Button 
                   size="sm" 
-                  className="h-8 w-8 p-0" 
+                  className="h-10 w-10 rounded-full p-0 bg-primary" 
                   onClick={() => handleAccept(request.id)}
                 >
-                  <Check className="h-4 w-4" />
+                  <Check className="h-5 w-5" />
                 </Button>
               </div>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       ))}
     </div>
   );

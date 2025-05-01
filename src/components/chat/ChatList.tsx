@@ -121,7 +121,7 @@ const ChatList: React.FC = () => {
       {chats.map((chat) => (
         <button
           key={chat.id}
-          className={`flex items-center w-full p-4 text-left transition-colors ${
+          className={`flex items-center w-full p-4 text-left transition-colors border-b last:border-b-0 ${
             selectedChat?.id === chat.id
               ? 'bg-primary/10'
               : 'hover:bg-gray-50'
@@ -130,7 +130,7 @@ const ChatList: React.FC = () => {
         >
           <Avatar className="h-12 w-12 mr-3 flex-shrink-0">
             <AvatarImage src={chat.profilePic} alt={chat.participantName} />
-            <AvatarFallback>{chat.participantName.charAt(0)}</AvatarFallback>
+            <AvatarFallback>{chat.participantName.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
           <div className="flex-1 min-w-0">
             <div className="flex justify-between items-baseline">

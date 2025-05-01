@@ -1,12 +1,12 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Send } from 'lucide-react';
+import { Send, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 import { getConversation, sendMessage, markMessagesAsRead } from '@/lib/supabase';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const ChatWindow: React.FC = () => {
   const { selectedChat, setSelectedChat, chats, setChats, currentUser } = useAppContext();
@@ -15,6 +15,7 @@ const ChatWindow: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const isMobile = useIsMobile();
 
   // Fetch conversation when selected chat changes
   useEffect(() => {
@@ -145,9 +146,19 @@ const ChatWindow: React.FC = () => {
     <div className="flex flex-col h-full">
       {/* Chat Header */}
       <div className="flex items-center p-3 border-b bg-background">
+        {isMobile && (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="mr-2" 
+            onClick={() => setSelectedChat(null)}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+        )}
         <Avatar className="h-10 w-10 mr-3">
           <AvatarImage src={selectedChat.profilePic} alt={selectedChat.participantName} />
-          <AvatarFallback>{selectedChat.participantName.charAt(0)}</AvatarFallback>
+          <AvatarFallback>{selectedChat.participantName.charAt(0).toUpperCase()}</AvatarFallback>
         </Avatar>
         <div>
           <h3 className="font-medium">{selectedChat.participantName}</h3>
@@ -218,8 +229,9 @@ const ChatWindow: React.FC = () => {
           <Button 
             type="submit" 
             disabled={!message.trim() || isLoading} 
-            className="self-end"
+            className="self-end rounded-full"
             size="icon"
+            variant="primary"
           >
             <Send className="h-4 w-4" />
           </Button>
