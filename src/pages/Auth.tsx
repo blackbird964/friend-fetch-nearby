@@ -2,14 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import LoginForm from '@/components/auth/LoginForm';
 import SignUpForm from '@/components/auth/SignUpForm';
+import ProfileSetupForm from '@/components/auth/ProfileSetupForm';
 import { useAppContext } from '@/context/AppContext';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 
 const Auth: React.FC = () => {
-  const [formState, setFormState] = useState<'login' | 'signup'>('login');
-  const { isAuthenticated, loading, setIsAuthenticated, setSupabaseUser } = useAppContext();
+  const [formState, setFormState] = useState<'login' | 'signup' | 'profile-setup'>('login');
+  const { isAuthenticated, loading, setIsAuthenticated, setSupabaseUser, currentUser } = useAppContext();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   
@@ -84,16 +85,30 @@ const Auth: React.FC = () => {
     };
   }, [setIsAuthenticated, setSupabaseUser]);
 
+  // If authenticated and has a complete profile, redirect to home
+  if (isAuthenticated && currentUser?.age && !loading) {
+    return <Navigate to="/home" replace />;
+  }
+  
+  // If authenticated but profile is incomplete, show profile setup
+  if (isAuthenticated && !currentUser?.age && !loading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
+        <div className="w-full max-w-md mb-8 text-center">
+          <h1 className="text-3xl font-bold text-primary mb-2">Kairo</h1>
+          <p className="text-gray-600">Complete your profile to continue</p>
+        </div>
+        <ProfileSetupForm />
+      </div>
+    );
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
       </div>
     );
-  }
-
-  if (isAuthenticated) {
-    return <Navigate to="/home" replace />;
   }
 
   return (
@@ -105,16 +120,15 @@ const Auth: React.FC = () => {
 
       {formState === 'login' ? (
         <LoginForm onToggleForm={() => setFormState('signup')} />
-      ) : (
+      ) : formState === 'signup' ? (
         <SignUpForm 
           onToggleForm={() => setFormState('login')} 
           onContinue={() => {
-            console.log("User signed up, redirecting to home");
-            // The user will be automatically redirected if authentication is successful
-            // This is handled by the useEffect hook in this component
+            console.log("User signed up, showing profile setup");
+            setFormState('profile-setup');
           }}
         />
-      )}
+      ) : null}
     </div>
   );
 };

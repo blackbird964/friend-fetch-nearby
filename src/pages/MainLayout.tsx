@@ -17,13 +17,14 @@ const MainLayout: React.FC = () => {
   }, [isAuthenticated, navigate]);
 
   // If user is authenticated but doesn't have a complete profile
+  // They should complete their profile first
   useEffect(() => {
     if (isAuthenticated && currentUser && !currentUser.age && location.pathname !== '/') {
       navigate('/');
     }
   }, [isAuthenticated, currentUser, navigate, location.pathname]);
 
-  // If user is on root path, navigate to home
+  // If user is authenticated and has completed their profile, they can access the app
   useEffect(() => {
     if (isAuthenticated && currentUser?.age && location.pathname === '/') {
       navigate('/home');
