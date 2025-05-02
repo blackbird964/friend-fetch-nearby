@@ -1,54 +1,34 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Map from 'ol/Map';
-import View from 'ol/View';
-import TileLayer from 'ol/layer/Tile';
-import OSM from 'ol/source/OSM';
-import { Vector as VectorLayer } from 'ol/layer';
-import { Vector as VectorSource } from 'ol/source';
-import { fromLonLat } from 'ol/proj';
+import { useMapLayers } from './map/useMapLayers';
+import { useMapConfig, WYNYARD_COORDS } from './map/useMapConfig';
 
-// Default coordinates for Wynyard
-export const WYNYARD_COORDS = [151.2073, -33.8666];
+export { WYNYARD_COORDS };
 
 export const useMapInitialization = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<Map | null>(null);
-  const vectorSource = useRef<VectorSource | null>(null);
-  const vectorLayer = useRef<VectorLayer<VectorSource> | null>(null);
-  const routeLayer = useRef<VectorLayer<VectorSource> | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
+  
+  const { vectorSource, vectorLayer, routeLayer, createLayers } = useMapLayers();
+  const { createMapView } = useMapConfig();
 
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Create vector sources and layers
-    vectorSource.current = new VectorSource();
-    const routeSource = new VectorSource();
+    // Create layers
+    const { baseLayer, vectorLayer: vLayer, routeLayer: rLayer } = createLayers();
     
-    vectorLayer.current = new VectorLayer({
-      source: vectorSource.current,
-      style: () => undefined // We'll set this in the FriendMap component
-    });
-
-    routeLayer.current = new VectorLayer({
-      source: routeSource,
-      style: () => undefined // We'll set this in the FriendMap component
-    });
-
+    // Initialize map
     map.current = new Map({
       target: mapContainer.current,
       layers: [
-        new TileLayer({
-          source: new OSM()
-        }),
-        routeLayer.current,
-        vectorLayer.current
+        baseLayer,
+        rLayer,
+        vLayer
       ],
-      view: new View({
-        center: fromLonLat(WYNYARD_COORDS),
-        zoom: 14
-      })
+      view: createMapView()
     });
 
     setMapLoaded(true);

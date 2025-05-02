@@ -57,7 +57,7 @@ const FriendMapContainer: React.FC = () => {
     isTracking
   } = useGeolocation(map, currentUser, updateUserLocation, setCurrentUser);
 
-  
+  // Get marker styles and handle marker updates
   const { getMarkerStyle, WYNYARD_COORDS } = useMapMarkers(
     map, 
     vectorSource, 
