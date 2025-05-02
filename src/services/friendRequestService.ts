@@ -96,3 +96,28 @@ export async function updateFriendRequestStatus(
     return false;
   }
 }
+
+/**
+ * Cancel a friend request that was sent
+ */
+export async function cancelFriendRequest(
+  requestId: string
+): Promise<boolean> {
+  try {
+    // Delete the message representing the friend request
+    const { error } = await supabase
+      .from('messages')
+      .delete()
+      .eq('id', requestId);
+      
+    if (error) {
+      console.error('Error canceling friend request in database:', error);
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error canceling friend request:', error);
+    return false;
+  }
+}

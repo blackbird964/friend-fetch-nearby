@@ -1,3 +1,4 @@
+
 import { User } from '@supabase/supabase-js';
 
 export interface Location {
@@ -12,6 +13,11 @@ export interface AppUser {
   avatar?: string;
   location?: Location;
   interests: string[];
+  profile_pic?: string;
+  bio?: string;
+  age?: number;
+  gender?: string;
+  distance?: number;
 }
 
 export interface Chat {
@@ -20,6 +26,11 @@ export interface Chat {
   avatar?: string;
   participants: string[]; // User IDs
   messages: Message[];
+  participantId?: string;
+  participantName?: string;
+  profilePic?: string;
+  lastMessage?: string;
+  lastMessageTime?: number;
 }
 
 export interface Message {
@@ -29,6 +40,7 @@ export interface Message {
   content: string;
   timestamp: string;
   status: MessageStatus;
+  text?: string;
 }
 
 export interface FriendRequest {
@@ -36,6 +48,12 @@ export interface FriendRequest {
   senderId: string;
   receiverId: string;
   status: 'pending' | 'accepted' | 'rejected';
+  senderName?: string;
+  senderProfilePic?: string;
+  receiverName?: string;
+  receiverProfilePic?: string;
+  duration?: number;
+  timestamp?: number;
 }
 
 export interface AppContextType {

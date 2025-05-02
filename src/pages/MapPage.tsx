@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import FriendMap from '@/components/map/FriendMap';
 import UserList from '@/components/users/UserList';
@@ -73,7 +72,6 @@ const MapPage: React.FC = () => {
         </div>
       )}
       
-      {/* Debug information */}
       <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start gap-2">
         <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
         <div>
