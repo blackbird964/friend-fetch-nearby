@@ -6,7 +6,7 @@ import { User } from 'lucide-react';
 interface UserAvatarProps {
   src?: string | null;
   alt?: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
 const UserAvatar: React.FC<UserAvatarProps> = ({ 
@@ -17,19 +17,21 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   const sizeClass = {
     sm: 'h-10 w-10',
     md: 'h-12 w-12',
-    lg: 'h-16 w-16'
+    lg: 'h-16 w-16',
+    xl: 'h-24 w-24'
   };
   
   const iconSize = {
     sm: 'h-5 w-5',
     md: 'h-6 w-6',
-    lg: 'h-8 w-8'
+    lg: 'h-8 w-8',
+    xl: 'h-12 w-12'
   };
   
   return (
     <Avatar className={sizeClass[size]}>
       <AvatarImage src={src || ''} alt={alt} />
-      <AvatarFallback>
+      <AvatarFallback className="bg-gray-100">
         <User className={iconSize[size]} />
       </AvatarFallback>
     </Avatar>

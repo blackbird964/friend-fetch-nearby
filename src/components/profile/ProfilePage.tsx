@@ -6,14 +6,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, User, Edit, Camera } from 'lucide-react';
+import { LogOut, User, Edit } from 'lucide-react';
 import { signOut } from '@/lib/supabase';
 import EditProfileForm from './EditProfileForm';
+import ProfilePictureUpload from './ProfilePictureUpload';
+import UserAvatar from '../users/cards/UserAvatar';
 
 const ProfilePage: React.FC = () => {
   const { currentUser, setCurrentUser, setIsAuthenticated } = useAppContext();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [showPictureUpload, setShowPictureUpload] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -39,6 +42,17 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  const handleProfilePicUpdate = (url: string) => {
+    if (currentUser) {
+      // Update the local user state with new profile pic
+      setCurrentUser({
+        ...currentUser,
+        profile_pic: url
+      });
+    }
+    setShowPictureUpload(false);
+  };
+
   if (!currentUser) return null;
 
   if (isEditing) {
@@ -55,23 +69,29 @@ const ProfilePage: React.FC = () => {
         <CardContent className="-mt-16 relative">
           <div className="flex flex-col items-center">
             <div className="relative">
-              <Avatar className="h-32 w-32 border-4 border-white bg-white">
-                <AvatarImage src={currentUser.profile_pic || ''} alt={currentUser.name} />
-                <AvatarFallback>
-                  <User className="h-20 w-20" />
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar 
+                src={currentUser.profile_pic} 
+                alt={currentUser.name}
+                size="lg"
+              />
               
               <button 
                 className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full shadow-md"
-                onClick={() => toast({ 
-                  title: "Feature Coming Soon",
-                  description: "Profile picture upload will be available in the next version."
-                })}
+                onClick={() => setShowPictureUpload(!showPictureUpload)}
+                aria-label="Update profile picture"
               >
                 <Camera className="h-4 w-4" />
               </button>
             </div>
+            
+            {showPictureUpload && (
+              <div className="mt-4 w-full max-w-xs">
+                <ProfilePictureUpload 
+                  currentImageUrl={currentUser.profile_pic}
+                  onUploadComplete={handleProfilePicUpdate}
+                />
+              </div>
+            )}
             
             <h2 className="text-2xl font-bold mt-4">{currentUser.name}</h2>
             
