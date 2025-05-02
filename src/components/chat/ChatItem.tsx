@@ -3,6 +3,7 @@ import React from 'react';
 import { Chat } from '@/context/types';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { formatMessageTime } from '@/utils/dateFormatters';
+import { CircleDot, Circle } from 'lucide-react';
 
 interface ChatItemProps {
   chat: Chat;
@@ -18,10 +19,19 @@ const ChatItem: React.FC<ChatItemProps> = ({ chat, isSelected, onSelect }) => {
       }`}
       onClick={() => onSelect(chat)}
     >
-      <Avatar className="h-12 w-12 mr-3 flex-shrink-0">
-        <AvatarImage src={chat.profilePic} alt={chat.participantName} />
-        <AvatarFallback>{chat.participantName.charAt(0).toUpperCase()}</AvatarFallback>
-      </Avatar>
+      <div className="relative">
+        <Avatar className="h-12 w-12 mr-3 flex-shrink-0">
+          <AvatarImage src={chat.profilePic} alt={chat.participantName} />
+          <AvatarFallback>{chat.participantName.charAt(0).toUpperCase()}</AvatarFallback>
+        </Avatar>
+        <div className="absolute -right-1 bottom-0">
+          {chat.isOnline ? (
+            <CircleDot className="h-4 w-4 text-green-500 bg-white rounded-full" />
+          ) : (
+            <Circle className="h-4 w-4 text-gray-400 bg-white rounded-full" />
+          )}
+        </div>
+      </div>
       <div className="flex-1 min-w-0">
         <div className="flex justify-between items-baseline">
           <h3 className="font-medium truncate">{chat.participantName}</h3>

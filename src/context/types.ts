@@ -31,6 +31,7 @@ export interface Chat {
   profilePic?: string;
   lastMessage?: string;
   lastMessageTime?: number;
+  isOnline?: boolean; // Added this property
 }
 
 export interface Message {

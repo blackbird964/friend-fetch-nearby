@@ -1,13 +1,13 @@
-
 import React, { useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import ChatList from '@/components/chat/ChatList';
 import ChatWindow from '@/components/chat/ChatWindow';
 import FriendRequestList from '@/components/users/FriendRequestList';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, ArrowLeft, Loader2 } from 'lucide-react';
+import { Bell, ArrowLeft, Loader2, CircleDot, Circle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const ChatPage: React.FC = () => {
   const { friendRequests, selectedChat, setSelectedChat, loading } = useAppContext();
@@ -103,6 +103,39 @@ const ChatPage: React.FC = () => {
           {selectedChat && (
             <div className={`${isMobile ? 'fixed inset-0 z-20 bg-background pt-0' : 'md:w-2/3 relative'} flex-grow overflow-hidden`}>
               <div className={`${isMobile ? 'h-full' : 'border rounded-lg shadow-sm h-full'} bg-background flex flex-col`}>
+                <div className="border-b p-4 flex items-center">
+                  <div className="mr-3">
+                    <div className="relative">
+                      <Avatar className="h-10 w-10">
+                        <AvatarImage src={selectedChat.profilePic} alt={selectedChat.participantName} />
+                        <AvatarFallback>{selectedChat.participantName.charAt(0).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      <div className="absolute -right-1 bottom-0">
+                        {selectedChat.isOnline ? (
+                          <CircleDot className="h-3 w-3 text-green-500 bg-white rounded-full" />
+                        ) : (
+                          <Circle className="h-3 w-3 text-gray-400 bg-white rounded-full" />
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                    <h3 className="font-medium">{selectedChat.participantName}</h3>
+                    <p className="text-xs text-gray-500">
+                      {selectedChat.isOnline ? 'Online' : 'Offline'}
+                    </p>
+                  </div>
+                  {isMobile && (
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      className="ml-auto"
+                      onClick={() => setSelectedChat(null)}
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
                 <ChatWindow />
               </div>
             </div>
