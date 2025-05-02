@@ -8,15 +8,24 @@ export function useChat(selectedChatId: string | null) {
   const { selectedChat, setSelectedChat, chats, setChats, currentUser } = useAppContext();
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSending, setIsSending] = useState(false);
+
+  // Reset state when selectedChatId changes
+  useEffect(() => {
+    setMessage('');
+    setIsLoading(selectedChatId !== null);
+  }, [selectedChatId]);
 
   // Fetch conversation when selected chat changes
   useEffect(() => {
     let isMounted = true;
     
     const fetchConversation = async () => {
-      if (!selectedChat || !currentUser) return;
+      if (!selectedChat || !currentUser) {
+        if (isMounted) setIsLoading(false);
+        return;
+      }
       
-      setIsLoading(true);
       try {
         // Fetch messages from the database
         const dbMessages = await getConversation(selectedChat.participantId);
@@ -67,7 +76,10 @@ export function useChat(selectedChatId: string | null) {
         console.error("Error fetching conversation:", err);
       } finally {
         if (isMounted) {
-          setIsLoading(false);
+          // Short delay to prevent UI flicker
+          setTimeout(() => {
+            if (isMounted) setIsLoading(false);
+          }, 300);
         }
       }
     };
@@ -83,10 +95,11 @@ export function useChat(selectedChatId: string | null) {
   const handleSendMessage = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedChat || !message.trim() || !currentUser) return;
+    if (!selectedChat || !message.trim() || !currentUser || isSending) return;
     
     const originalMessage = message.trim();
     setMessage(''); // Clear input field immediately for better UX
+    setIsSending(true);
     
     try {
       // Save the message in the database
@@ -122,8 +135,10 @@ export function useChat(selectedChatId: string | null) {
       setSelectedChat(updatedChat);
     } catch (err) {
       console.error("Error sending message:", err);
+    } finally {
+      setIsSending(false);
     }
-  }, [message, selectedChat, currentUser, setChats, setSelectedChat, chats]);
+  }, [message, selectedChat, currentUser, setChats, setSelectedChat, chats, isSending]);
 
   return {
     message,

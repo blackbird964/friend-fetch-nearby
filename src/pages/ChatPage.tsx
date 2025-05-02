@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import ChatList from '@/components/chat/ChatList';
 import ChatWindow from '@/components/chat/ChatWindow';
@@ -14,6 +14,15 @@ const ChatPage: React.FC = () => {
   const isMobile = useIsMobile();
   
   const pendingRequests = friendRequests.filter(r => r.status === 'pending').length;
+
+  // Reset selected chat when navigating away on mobile
+  useEffect(() => {
+    return () => {
+      if (isMobile) {
+        setSelectedChat(null);
+      }
+    };
+  }, [isMobile, setSelectedChat]);
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-3xl flex flex-col h-[calc(100vh-130px)]">
@@ -70,8 +79,8 @@ const ChatPage: React.FC = () => {
           
           {/* Show the chat window if a chat is selected */}
           {selectedChat && (
-            <div className={`${isMobile ? 'h-full w-full fixed inset-0 bg-background z-20' : 'md:w-2/3'} flex-grow overflow-hidden`}>
-              <div className={`${isMobile ? 'h-full' : 'border rounded-lg shadow-sm'} h-full bg-background flex flex-col`}>
+            <div className={`${isMobile ? 'fixed inset-0 z-20 bg-background pt-0' : 'md:w-2/3 relative'} flex-grow overflow-hidden`}>
+              <div className={`${isMobile ? 'h-full' : 'border rounded-lg shadow-sm h-full'} bg-background flex flex-col`}>
                 <ChatWindow />
               </div>
             </div>

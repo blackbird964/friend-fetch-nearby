@@ -14,12 +14,17 @@ const ChatWindow: React.FC = () => {
   
   const { message, setMessage, isLoading, handleSendMessage } = useChat(selectedChat?.id || null);
 
-  // Focus textarea when chat is selected
+  // Focus textarea when chat is selected and not loading
   useEffect(() => {
-    if (selectedChat && textareaRef.current) {
-      textareaRef.current.focus();
+    if (selectedChat && textareaRef.current && !isLoading) {
+      // Short delay to ensure UI is ready
+      const timer = setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 100);
+      
+      return () => clearTimeout(timer);
     }
-  }, [selectedChat]);
+  }, [selectedChat, isLoading]);
 
   if (!selectedChat) {
     return (
