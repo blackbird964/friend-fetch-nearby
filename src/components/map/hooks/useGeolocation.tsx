@@ -4,8 +4,10 @@ import { useToast } from '@/hooks/use-toast';
 import { AppUser } from '@/context/types';
 import { fromLonLat } from 'ol/proj';
 import Map from 'ol/Map';
-import { AlertTriangle } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { useLocationPermission } from './location/useLocationPermission';
+import { useLocationTracking } from './location/useLocationTracking';
+import { DEFAULT_LOCATION, useDefaultLocation, formatLocationErrorMessage } from './location/locationUtils';
 
 export const useGeolocation = (
   map: React.MutableRefObject<Map | null>,
@@ -16,132 +18,51 @@ export const useGeolocation = (
   const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [isLocating, setIsLocating] = useState(false);
-  const [permissionState, setPermissionState] = useState<string>('prompt');
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const locationToastShown = useRef<boolean>(false);
   const lastUpdateTime = useRef<number>(0);
   const isUpdatingRef = useRef<boolean>(false);
-  const watchIdRef = useRef<number | null>(null);
-  const continuousTrackingEnabled = useRef<boolean>(false);
 
-  // Default location for Wynyard
-  const DEFAULT_LOCATION = { lat: -33.8666, lng: 151.2073 };
+  // Import permission-related functionality
+  const { permissionState, setPermissionState, getSafariHelp } = useLocationPermission();
 
-  // Check permission status on component mount
-  useEffect(() => {
-    // Check if the Permissions API is available
-    if (navigator.permissions && navigator.permissions.query) {
-      navigator.permissions.query({ name: 'geolocation' })
-        .then(permissionStatus => {
-          setPermissionState(permissionStatus.state);
-          
-          // Set up a listener for permission changes
-          permissionStatus.onchange = () => {
-            setPermissionState(permissionStatus.state);
-            
-            // If permission is granted after a change, try to get location again
-            if (permissionStatus.state === 'granted') {
-              getUserLocation();
-            }
-          };
-        })
-        .catch(error => {
-          console.log("Permission query not supported", error);
-        });
-    }
-  }, []);
-
-  // Start continuous location tracking
-  const startLocationTracking = () => {
-    if (!navigator.geolocation) {
-      setLocationError("Geolocation is not supported by your browser");
-      useDefaultLocation();
-      return;
-    }
-
-    // Already tracking
-    if (watchIdRef.current !== null) {
-      return;
-    }
-
-    continuousTrackingEnabled.current = true;
+  // Handle location error
+  const handleLocationError = (error: GeolocationPositionError) => {
+    console.error("Error getting location:", error);
+    const errorMessage = formatLocationErrorMessage(error);
     
-    console.log("Starting continuous location tracking...");
+    if (error.code === 1) {
+      // Permission denied
+      setPermissionState('denied');
+    }
     
-    const positionOptions = {
-      enableHighAccuracy: true,
-      timeout: 10000,
-      maximumAge: 0
-    };
+    setLocationError(errorMessage);
+    setIsLocating(false);
+    isUpdatingRef.current = false;
     
-    watchIdRef.current = navigator.geolocation.watchPosition(
-      (position) => {
-        const { longitude, latitude } = position.coords;
-        console.log("Location update received:", latitude, longitude);
-        setUserLocation([longitude, latitude]);
-        setLocationError(null);
-        setPermissionState('granted');
-        
-        // Update user location in database
-        if (currentUser) {
-          const now = Date.now();
-          // Throttle updates to database (every 3 seconds)
-          if (now - lastUpdateTime.current > 3000) {
-            lastUpdateTime.current = now;
-            
-            const newLocation = { lat: latitude, lng: longitude };
-            updateUserLocation(currentUser.id, newLocation);
-            
-            // Update the current user state with the new location
-            setCurrentUser({
-              ...currentUser,
-              location: newLocation
-            });
-            
-            // Center the map on the user's location if tracking is enabled
-            if (map.current && continuousTrackingEnabled.current) {
-              map.current.getView().animate({
-                center: fromLonLat([longitude, latitude]),
-                duration: 500
-              });
-            }
-          }
-        }
-      },
-      (error) => {
-        handleLocationError(error);
-      },
-      positionOptions
-    );
+    // Use default location
+    useDefaultLocation(currentUser, updateUserLocation, setCurrentUser, locationToastShown, toast);
   };
 
-  // Stop continuous location tracking
-  const stopLocationTracking = () => {
-    if (watchIdRef.current !== null) {
-      navigator.geolocation.clearWatch(watchIdRef.current);
-      watchIdRef.current = null;
-      continuousTrackingEnabled.current = false;
-      console.log("Continuous location tracking stopped");
-    }
-  };
-
-  // Toggle GPS tracking on/off
-  const toggleLocationTracking = () => {
-    if (watchIdRef.current === null) {
-      startLocationTracking();
-      toast({
-        title: "GPS Tracking Enabled",
-        description: "Your location will be updated continuously on the map.",
-      });
-    } else {
-      stopLocationTracking();
-      toast({
-        title: "GPS Tracking Disabled",
-        description: "Your location will no longer be updated automatically.",
-      });
-    }
-  };
+  // Import location tracking functionality
+  const {
+    startLocationTracking,
+    stopLocationTracking,
+    toggleLocationTracking,
+    isTracking,
+    watchIdRef
+  } = useLocationTracking(
+    map, 
+    currentUser, 
+    updateUserLocation, 
+    setCurrentUser, 
+    setLocationError, 
+    setPermissionState, 
+    handleLocationError,
+    isUpdatingRef,
+    lastUpdateTime
+  );
 
   // Get a single location update
   const getUserLocation = () => {
@@ -170,7 +91,7 @@ export const useGeolocation = (
       setLocationError("Geolocation is not supported by your browser");
       setIsLocating(false);
       isUpdatingRef.current = false;
-      useDefaultLocation();
+      useDefaultLocation(currentUser, updateUserLocation, setCurrentUser, locationToastShown, toast);
       return;
     }
     
@@ -234,77 +155,6 @@ export const useGeolocation = (
     );
   };
 
-  // Handle location error
-  const handleLocationError = (error: GeolocationPositionError) => {
-    console.error("Error getting location:", error);
-    let errorMessage = "Unable to retrieve your location.";
-    
-    if (error.code === 1) {
-      // Permission denied
-      setPermissionState('denied');
-      errorMessage = "Location permission denied. Please enable location services for this website in your browser settings.";
-    } else if (error.code === 2) {
-      // Position unavailable
-      errorMessage = "Your location information is unavailable. Please check your device settings.";
-    } else if (error.code === 3) {
-      // Timeout
-      errorMessage = "Location request timed out. Please try again.";
-    }
-    
-    setLocationError(errorMessage);
-    setIsLocating(false);
-    isUpdatingRef.current = false;
-    
-    // Use default location
-    useDefaultLocation();
-  };
-
-  // Apply default location when geolocation fails or is denied
-  const useDefaultLocation = () => {
-    if (currentUser && (!currentUser.location || !currentUser.location.lat || !currentUser.location.lng)) {
-      updateUserLocation(currentUser.id, DEFAULT_LOCATION);
-      setCurrentUser({
-        ...currentUser,
-        location: DEFAULT_LOCATION
-      });
-      
-      // Always show this toast as it's important for the user to know
-      // But only once per session
-      if (!locationToastShown.current) {
-        toast({
-          title: "Default Location Used",
-          description: "Using Wynyard as your location. Enable location access for accuracy.",
-          variant: "destructive"
-        });
-        locationToastShown.current = true;
-      }
-    }
-  };
-
-  // Safari-specific help instructions
-  const getSafariHelp = () => {
-    if (permissionState === 'denied') {
-      return (
-        <div className="bg-amber-50 border border-amber-200 p-3 rounded-md text-sm mb-4">
-          <h4 className="font-medium flex items-center text-amber-800 mb-1">
-            <AlertTriangle className="h-4 w-4 mr-1" />
-            Location Access Required
-          </h4>
-          <p className="text-amber-700 mb-2">To see people nearby, please enable location access:</p>
-          <ol className="list-decimal list-inside text-amber-700 space-y-1 pl-1">
-            <li>Go to <strong>Settings</strong> on your device</li>
-            <li>Scroll down and tap <strong>Safari</strong></li>
-            <li>Tap <strong>Settings for Websites</strong></li>
-            <li>Tap <strong>Location</strong></li>
-            <li>Set to <strong>Allow</strong> for this website</li>
-          </ol>
-          <p className="text-amber-700 mt-2">After enabling, refresh this page and try again.</p>
-        </div>
-      );
-    }
-    return null;
-  };
-
   // Clean up on component unmount
   useEffect(() => {
     return () => {
@@ -324,6 +174,6 @@ export const useGeolocation = (
     toggleLocationTracking,
     startLocationTracking,
     stopLocationTracking,
-    isTracking: watchIdRef.current !== null
+    isTracking: isTracking()
   };
 };
