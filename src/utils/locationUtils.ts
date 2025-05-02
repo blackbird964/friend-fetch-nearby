@@ -62,12 +62,32 @@ export const createNearbyUser = (baseLocation: { lat: number, lng: number }, dis
 
 /**
  * Format location for database storage
+ * The Supabase database uses PostgreSQL point type for location
  */
 export const formatLocationForStorage = (location: { lat: number, lng: number }) => {
-  // This should match the format expected by your database
-  // For JSON storage or TEXT:
-  return JSON.stringify(location);
-  
-  // For point type (uncomment if using PostgreSQL point type):
-  // return `(${location.lng},${location.lat})`;
+  // PostgreSQL expects point data in the format '(longitude,latitude)'
+  // Note the order: longitude first, then latitude
+  return `(${location.lng},${location.lat})`;
 };
+
+/**
+ * Create test users near a specified location for development
+ */
+export const createTestUsers = (baseLocation: { lat: number, lng: number }, count: number = 5) => {
+  const users = [];
+  const names = ["Alex", "Sam", "Jordan", "Taylor", "Morgan", "Casey", "Riley", "Quinn", "Avery", "Dakota"];
+  
+  for (let i = 0; i < count; i++) {
+    // Random distance between 0.2 and 3 km
+    const distance = 0.2 + Math.random() * 2.8;
+    // Random bearing between 0 and 360 degrees
+    const bearing = Math.random() * 360;
+    const userId = `test-${i}`;
+    const name = names[i % names.length];
+    
+    users.push(createNearbyUser(baseLocation, distance, bearing, userId, name));
+  }
+  
+  return users;
+};
+

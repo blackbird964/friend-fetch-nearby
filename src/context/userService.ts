@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Profile, updateUserLocation as updateLocation } from '@/lib/supabase';
 import { AppUser } from './types';
-import { calculateDistance, DEFAULT_LOCATION, formatLocationForStorage } from '@/utils/locationUtils';
+import { calculateDistance, DEFAULT_LOCATION, formatLocationForStorage, createTestUsers } from '@/utils/locationUtils';
 
 /**
  * Update user location in Supabase and local state
@@ -11,12 +11,11 @@ export const updateUserLocation = async (userId: string, location: { lat: number
   try {
     console.log("Updating user location in context:", userId, location);
     
-    // Format the location data for storage if needed
-    const formattedLocation = location;
+    // Format the location data for PostgreSQL point type storage
+    const formattedLocation = formatLocationForStorage(location);
     
-    const result = await updateLocation(userId, formattedLocation);
+    console.log("Formatted location for PostgreSQL:", formattedLocation);
     
-    // Add a direct debug update to ensure the location is properly saved
     const { data, error } = await supabase
       .from('profiles')
       .update({ location: formattedLocation })
@@ -24,14 +23,15 @@ export const updateUserLocation = async (userId: string, location: { lat: number
       .select();
       
     if (error) {
-      console.error("Error directly updating user location:", error);
+      console.error("Error updating user location:", error);
+      throw error;
     } else {
-      console.log("Location directly updated:", data);
+      console.log("Location successfully updated:", data);
     }
     
-    return result;
+    return { data, error };
   } catch (error) {
-    console.error("Error updating user location:", error);
+    console.error("Error in updateUserLocation:", error);
     throw error;
   }
 };
@@ -45,7 +45,7 @@ export const updateUserProfile = async (updatedProfile: Partial<Profile>) => {
       throw new Error('Profile ID is missing');
     }
     
-    // Create a clean copy of the profile data without location
+    // Create a copy of the profile data without location
     const profileUpdate = { ...updatedProfile };
     
     // Remove location from update to avoid format errors
@@ -75,13 +75,17 @@ export const updateUserProfile = async (updatedProfile: Partial<Profile>) => {
  */
 export const addTestUsersNearby = async (currentUserId: string, currentLocation: { lat: number, lng: number }) => {
   try {
-    // This function could add test users with locations near the current user
-    // For development/testing purposes
-    console.log("Could add test users near", currentLocation);
+    // Create test users near the current user's location
+    const testUsers = createTestUsers(currentLocation, 5);
     
-    // Implementation would go here if needed
+    console.log("Generated test users:", testUsers);
+    
+    // In a real app, we would save these users to the database
+    // For now, just return them
+    return testUsers;
   } catch (error) {
     console.error("Error adding test users:", error);
+    return [];
   }
 };
 

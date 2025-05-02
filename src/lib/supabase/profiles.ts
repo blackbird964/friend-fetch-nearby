@@ -1,4 +1,6 @@
+
 import { supabase } from '@/integrations/supabase/client';
+import { formatLocationForStorage } from '@/utils/locationUtils';
 
 export type Profile = {
   id: string;
@@ -32,7 +34,7 @@ export async function getProfile(userId: string): Promise<Profile | null> {
   // Convert Postgres point type to our location format if it exists
   if (data && data.location) {
     try {
-      // Handle conversion from Postgres point type if needed
+      // Handle conversion from Postgres point type
       if (typeof data.location === 'string' && data.location.startsWith('(')) {
         const match = data.location.match(/\(([^,]+),([^)]+)\)/);
         if (match) {
@@ -82,6 +84,7 @@ export async function getAllProfiles(): Promise<Profile[]> {
     // Convert Postgres point type to our location format if it exists
     if (profile.location) {
       try {
+        // PostgreSQL stores point data as '(longitude,latitude)'
         if (typeof profile.location === 'string' && profile.location.startsWith('(')) {
           const match = profile.location.match(/\(([^,]+),([^)]+)\)/);
           if (match) {
@@ -114,17 +117,33 @@ export async function getAllProfiles(): Promise<Profile[]> {
 export async function createOrUpdateProfile(profile: Partial<Profile> & { id: string }) {
   console.log("Creating/updating profile:", profile);
   
-  // Handle location conversion for PostgreSQL if needed
+  // Handle location conversion for PostgreSQL
   let profileToUpsert = { ...profile };
   
-  // If we have location data in our format, convert it for PostgreSQL storage
-  if (profile.location && typeof profile.location === 'object') {
+  // If location exists, format it for PostgreSQL storage
+  if (profile.location) {
     try {
-      // Your conversion logic here if needed
-      // For now, we'll keep it as is since we modified the Profile type
+      // Store location separately to handle proper PostgreSQL point format
+      const locationObject = profile.location;
+      delete profileToUpsert.location;
+      
+      // First update other fields
+      const { error } = await supabase
+        .from('profiles')
+        .upsert(profileToUpsert)
+        .select()
+        .single();
+        
+      if (error) {
+        console.error('Error updating profile:', error);
+        return { data: null, error };
+      }
+      
+      // Then update location with proper format
+      return await updateUserLocation(profile.id, locationObject);
     } catch (e) {
       console.error('Error converting location for storage:', e);
-      profileToUpsert.location = null;
+      delete profileToUpsert.location;
     }
   }
 
@@ -151,9 +170,13 @@ export async function createOrUpdateProfile(profile: Partial<Profile> & { id: st
 export async function updateUserLocation(userId: string, location: { lat: number, lng: number }) {
   console.log("Updating location for user:", userId, location);
   
+  // Format location for PostgreSQL point type
+  const formattedLocation = formatLocationForStorage(location);
+  console.log("Formatted location:", formattedLocation);
+  
   const { data, error } = await supabase
     .from('profiles')
-    .update({ location })
+    .update({ location: formattedLocation })
     .eq('id', userId)
     .select()
     .single();

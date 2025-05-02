@@ -3,7 +3,7 @@ import React, { useEffect } from 'react';
 import FriendMap from '@/components/map/FriendMap';
 import UserList from '@/components/users/UserList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Users, RefreshCw, Navigation, AlertTriangle, Bug } from 'lucide-react';
+import { MapPin, Users, RefreshCw, Navigation, AlertTriangle, Bug, Info } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
@@ -74,6 +74,16 @@ const MapPage: React.FC = () => {
           <span>Your location: {currentUser.location.lat.toFixed(4)}, {currentUser.location.lng.toFixed(4)}</span>
         </div>
       )}
+      
+      {/* Debug information */}
+      <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start gap-2">
+        <Info className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-blue-800 text-sm font-medium">Debug Information</p>
+          <p className="text-blue-700 text-sm">For others to appear on the map, they must also have the app open and share their location.</p>
+          <p className="text-blue-700 text-sm">Total users: {totalUsers}, Users with location: {usersWithLocation}</p>
+        </div>
+      </div>
       
       {totalUsers === 0 && currentUser?.location && (
         <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">

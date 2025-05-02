@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { getAllProfiles } from '@/lib/supabase';
 import { AppUser } from '@/context/types';
-import { processNearbyUsers } from '@/context/userService';
+import { processNearbyUsers, addTestUsersNearby } from '@/context/userService';
 import { DEFAULT_LOCATION } from '@/utils/locationUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -54,6 +54,18 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
       
       // Set all users, including those without location
       setNearbyUsers(usersWithDistance);
+      
+      // If there are no users with location data, we could add some test users
+      if (usersWithDistance.every(user => !user.location || user.distance === Infinity)) {
+        const testUsers = await addTestUsersNearby(currentUser.id, userLocation);
+        console.log("Added test users:", testUsers);
+        
+        // For testing only: simulate adding these users with location data
+        if (testUsers.length > 0 && process.env.NODE_ENV === 'development') {
+          // Only show test users in dev mode
+          setNearbyUsers([...usersWithDistance, ...testUsers]);
+        }
+      }
       
       // Show success toast
       toast({
