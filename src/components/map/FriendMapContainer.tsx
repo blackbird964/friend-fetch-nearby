@@ -25,6 +25,7 @@ const FriendMapContainer: React.FC = () => {
     setRadiusInKm, 
     setCurrentUser, 
     updateUserLocation,
+    friendRequests // Add this to access friend requests
   } = useAppContext();
   
   const { toast } = useToast();
@@ -95,7 +96,7 @@ const FriendMapContainer: React.FC = () => {
     }
   }, [selectedUser, movingUsers, completedMoves, getMarkerStyle]);
 
-  // Add map click handlers
+  // Add map click handlers - pass friendRequests and currentUser
   useMapEvents(
     map,
     mapLoaded,
@@ -103,7 +104,9 @@ const FriendMapContainer: React.FC = () => {
     setSelectedUser,
     movingUsers,
     completedMoves,
-    vectorLayer
+    vectorLayer,
+    friendRequests,  // Pass friend requests
+    currentUser     // Pass current user
   );
 
   // Get user's location on initial load - without triggering refreshNearbyUsers
