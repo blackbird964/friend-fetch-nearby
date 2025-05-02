@@ -2,6 +2,9 @@
 import { supabase } from '@/integrations/supabase/client';
 import { FriendRequest } from '@/context/types';
 
+/**
+ * Send a friend request from one user to another
+ */
 export async function sendFriendRequest(
   senderId: string,
   senderName: string,
@@ -12,6 +15,7 @@ export async function sendFriendRequest(
   duration: number
 ): Promise<FriendRequest | null> {
   try {
+    // Create the friend request object
     const newRequest: FriendRequest = {
       id: `fr-${Date.now()}`,
       senderId,
@@ -21,21 +25,26 @@ export async function sendFriendRequest(
       receiverName,
       receiverProfilePic,
       duration,
-      status: 'pending', // Explicitly set to one of the allowed values
+      status: 'pending', // This is explicitly set to one of the allowed values
       timestamp: Date.now()
     };
 
-    // In production, you would save this to the database
-    // Insert into Supabase
+    // Since we don't have a friend_requests table in the database yet,
+    // we'll just use messages table as a temporary solution
+    // and later we can create a proper friend_requests table
     const { data, error } = await supabase
-      .from('friend_requests')
+      .from('messages')
       .insert({
         id: newRequest.id,
         sender_id: senderId,
         receiver_id: receiverId,
-        duration: duration,
-        status: 'pending',
-        timestamp: Date.now()
+        content: JSON.stringify({
+          type: 'friend_request',
+          duration: duration,
+          status: 'pending',
+          timestamp: Date.now()
+        }),
+        read: false
       })
       .select('*')
       .single();
@@ -54,15 +63,26 @@ export async function sendFriendRequest(
   }
 }
 
+/**
+ * Update the status of a friend request
+ */
 export async function updateFriendRequestStatus(
   requestId: string,
   status: 'accepted' | 'rejected'
 ): Promise<boolean> {
   try {
-    // Update in Supabase
+    // Since we're using messages table temporarily for friend requests
+    // we need to update the message content instead
     const { error } = await supabase
-      .from('friend_requests')
-      .update({ status })
+      .from('messages')
+      .update({
+        content: JSON.stringify({
+          type: 'friend_request',
+          status: status,
+          timestamp: Date.now()
+        }),
+        read: true
+      })
       .eq('id', requestId);
       
     if (error) {
