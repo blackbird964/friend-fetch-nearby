@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import UserCard from './UserCard';
@@ -99,7 +98,7 @@ const UserList: React.FC = () => {
       toast({
         title: "Request already sent",
         description: `You already have a pending request with ${user.name}`,
-        variant: "warning"
+        variant: "default"
       });
       return;
     }
