@@ -1,9 +1,11 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Clock, Check, X } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
+import { updateFriendRequestStatus } from '@/services/friendRequestService';
 
 const FriendRequestList: React.FC = () => {
   const { friendRequests, setFriendRequests, chats, setChats } = useAppContext();
@@ -14,51 +16,83 @@ const FriendRequestList: React.FC = () => {
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const handleAccept = (requestId: string) => {
+  const handleAccept = async (requestId: string) => {
     const request = friendRequests.find(r => r.id === requestId);
     if (!request) return;
 
-    // Update request status
-    setFriendRequests(
-      friendRequests.map(r => 
-        r.id === requestId ? { ...r, status: 'accepted' } : r
-      )
-    );
+    try {
+      // Update request status on the backend
+      const success = await updateFriendRequestStatus(requestId, 'accepted');
+      
+      if (success) {
+        // Update request status in local state
+        setFriendRequests(
+          friendRequests.map(r => 
+            r.id === requestId ? { ...r, status: 'accepted' } : r
+          )
+        );
 
-    // Create a chat with this user
-    const newChat = {
-      id: `chat-${Date.now()}`,
-      participantId: request.senderId,
-      participantName: request.senderName,
-      profilePic: request.senderProfilePic,
-      lastMessage: "Say hello!",
-      lastMessageTime: Date.now(),
-      messages: [],
-    };
+        // Create a chat with this user
+        const newChat = {
+          id: `chat-${Date.now()}`,
+          participantId: request.senderId || '',
+          participantName: request.senderName || 'User',
+          profilePic: request.senderProfilePic || '',
+          lastMessage: "Say hello!",
+          lastMessageTime: Date.now(),
+          messages: [],
+        };
 
-    setChats([...chats, newChat]);
+        setChats([...chats, newChat]);
 
-    toast({
-      title: "Request Accepted!",
-      description: `You've accepted ${request.senderName}'s request.`,
-    });
+        toast({
+          title: "Request Accepted!",
+          description: `You've accepted ${request.senderName}'s request.`,
+        });
+      } else {
+        throw new Error("Failed to update request status");
+      }
+    } catch (error) {
+      console.error('Error accepting friend request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to accept request. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
-  const handleReject = (requestId: string) => {
+  const handleReject = async (requestId: string) => {
     const request = friendRequests.find(r => r.id === requestId);
     if (!request) return;
 
-    // Update request status
-    setFriendRequests(
-      friendRequests.map(r => 
-        r.id === requestId ? { ...r, status: 'rejected' } : r
-      )
-    );
+    try {
+      // Update request status on the backend
+      const success = await updateFriendRequestStatus(requestId, 'rejected');
+      
+      if (success) {
+        // Update request status in local state
+        setFriendRequests(
+          friendRequests.map(r => 
+            r.id === requestId ? { ...r, status: 'rejected' } : r
+          )
+        );
 
-    toast({
-      title: "Request Rejected",
-      description: `You've declined ${request.senderName}'s request.`,
-    });
+        toast({
+          title: "Request Rejected",
+          description: `You've declined ${request.senderName}'s request.`,
+        });
+      } else {
+        throw new Error("Failed to update request status");
+      }
+    } catch (error) {
+      console.error('Error rejecting friend request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to reject request. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   const pendingRequests = friendRequests.filter(r => r.status === 'pending');
@@ -79,11 +113,11 @@ const FriendRequestList: React.FC = () => {
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <Avatar>
-                  <AvatarImage src={request.senderProfilePic} alt={request.senderName} />
-                  <AvatarFallback>{request.senderName.charAt(0).toUpperCase()}</AvatarFallback>
+                  <AvatarImage src={request.senderProfilePic || ''} alt={request.senderName || 'User'} />
+                  <AvatarFallback>{request.senderName ? request.senderName.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <h4 className="font-medium">{request.senderName}</h4>
+                  <h4 className="font-medium">{request.senderName || 'User'}</h4>
                   <div className="flex items-center text-sm text-gray-500">
                     <Clock className="mr-1 h-3 w-3" />
                     <span>{request.duration} mins</span>

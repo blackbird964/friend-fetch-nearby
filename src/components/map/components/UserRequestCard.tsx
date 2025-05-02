@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Clock } from 'lucide-react';
 import UserCard from '@/components/users/UserCard';
 import { AppUser } from '@/context/types';
+import { useAppContext } from '@/context/AppContext';
+import { useToast } from '@/hooks/use-toast';
+import { sendFriendRequest } from '@/services/friendRequestService';
 
 interface UserRequestCardProps {
   user: AppUser;
@@ -21,7 +24,50 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   onSendRequest,
   onCancel
 }) => {
+  const { currentUser, friendRequests, setFriendRequests } = useAppContext();
+  const { toast } = useToast();
   const availableTimes = [15, 30, 45, 60];
+  
+  const handleSendRequest = async () => {
+    if (!currentUser) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to send friend requests",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    try {
+      const request = await sendFriendRequest(
+        currentUser.id,
+        currentUser.name || 'User',
+        currentUser.profile_pic,
+        user.id,
+        user.name || 'User',
+        user.profile_pic,
+        selectedDuration
+      );
+      
+      if (request) {
+        setFriendRequests([...friendRequests, request]);
+        
+        toast({
+          title: "Request Sent!",
+          description: `You've sent a ${selectedDuration} minute meet-up request to ${user.name}`,
+        });
+        
+        onSendRequest();
+      }
+    } catch (error) {
+      console.error('Error sending friend request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send friend request. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
   
   return (
     <Card className="mt-4 shadow-md animate-slide-in-bottom">
@@ -59,7 +105,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
               </Button>
               <Button 
                 className="flex-1" 
-                onClick={onSendRequest}
+                onClick={handleSendRequest}
               >
                 Send Request
               </Button>

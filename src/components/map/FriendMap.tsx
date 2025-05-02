@@ -7,6 +7,7 @@ import 'ol/ol.css';
 import Feature from 'ol/Feature';
 import FeatureLike from 'ol/Feature';
 import Geometry from 'ol/geom/Geometry';
+import { useToast } from '@/hooks/use-toast';
 
 // Import custom hooks
 import { useMapInitialization } from './hooks/useMapInitialization';
@@ -27,9 +28,12 @@ const FriendMap: React.FC = () => {
     radiusInKm, 
     setRadiusInKm, 
     setCurrentUser, 
-    updateUserLocation 
+    updateUserLocation,
+    friendRequests,
+    setFriendRequests
   } = useAppContext();
   
+  const { toast } = useToast();
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<number>(30);
   const [movingUsers, setMovingUsers] = useState<Set<string>>(new Set());
@@ -137,13 +141,29 @@ const FriendMap: React.FC = () => {
   }, [mapLoaded]);
 
   // Handle sending a meeting request
-  const handleSendRequest = () => {
+  const handleSendRequest = async () => {
+    if (!currentUser) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to send friend requests",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     if (!selectedUser) return;
     
     const user = nearbyUsers.find(u => u.id === selectedUser);
     if (!user) return;
-
+    
+    // In a real implementation, we would save this to the database
+    // For now, we'll just update the local state and animate
     animateUserToMeeting(user, selectedDuration);
+    
+    toast({
+      title: "Request Sent!",
+      description: `You've sent a ${selectedDuration} minute meet-up request to ${user.name}`,
+    });
   };
 
   return (
