@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, User, Edit } from 'lucide-react';
+import { LogOut, User, Edit, Camera } from 'lucide-react';
 import { signOut } from '@/lib/supabase';
 import EditProfileForm from './EditProfileForm';
 import ProfilePictureUpload from './ProfilePictureUpload';
