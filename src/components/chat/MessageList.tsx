@@ -7,9 +7,10 @@ import { formatMessageTime } from '@/utils/dateFormatters';
 interface MessageListProps {
   messages: Message[];
   isLoading: boolean;
+  fetchError?: string | null;
 }
 
-const MessageList: React.FC<MessageListProps> = ({ messages, isLoading }) => {
+const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchError }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   
@@ -31,7 +32,18 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading }) => {
     );
   }
   
-  if (messages.length === 0) {
+  if (fetchError) {
+    return (
+      <div className="flex justify-center items-center py-4 flex-grow">
+        <div className="flex flex-col items-center">
+          <p className="text-red-500 mb-2">{fetchError}</p>
+          <p className="text-gray-500">Please try again later</p>
+        </div>
+      </div>
+    );
+  }
+  
+  if (!messages || messages.length === 0) {
     return (
       <div className="flex justify-center items-center py-4 flex-grow">
         <p className="text-gray-500">No messages yet. Say hello!</p>
