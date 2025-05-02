@@ -25,7 +25,7 @@ const FriendMapContainer: React.FC = () => {
     setRadiusInKm, 
     setCurrentUser, 
     updateUserLocation,
-    friendRequests // Add this to access friend requests
+    friendRequests 
   } = useAppContext();
   
   const { toast } = useToast();
@@ -52,7 +52,9 @@ const FriendMapContainer: React.FC = () => {
     isLocating,
     locationError,
     permissionState,
-    getSafariHelp
+    getSafariHelp,
+    toggleLocationTracking,
+    isTracking
   } = useGeolocation(map, currentUser, updateUserLocation, setCurrentUser);
 
   
@@ -105,8 +107,8 @@ const FriendMapContainer: React.FC = () => {
     movingUsers,
     completedMoves,
     vectorLayer,
-    friendRequests,  // Pass friend requests
-    currentUser     // Pass current user
+    friendRequests,
+    currentUser
   );
 
   // Get user's location on initial load - without triggering refreshNearbyUsers
@@ -162,6 +164,8 @@ const FriendMapContainer: React.FC = () => {
           setRadiusInKm={setRadiusInKm}
           getUserLocation={getUserLocation}
           isLocating={isLocating}
+          toggleLocationTracking={toggleLocationTracking}
+          isTracking={isTracking}
         />
         
         <LocationErrorMessage 

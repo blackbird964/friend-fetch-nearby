@@ -22,6 +22,8 @@ export const useGeolocation = (
   const locationToastShown = useRef<boolean>(false);
   const lastUpdateTime = useRef<number>(0);
   const isUpdatingRef = useRef<boolean>(false);
+  const watchIdRef = useRef<number | null>(null);
+  const continuousTrackingEnabled = useRef<boolean>(false);
 
   // Default location for Wynyard
   const DEFAULT_LOCATION = { lat: -33.8666, lng: 151.2073 };
@@ -50,7 +52,98 @@ export const useGeolocation = (
     }
   }, []);
 
-  // Request user location
+  // Start continuous location tracking
+  const startLocationTracking = () => {
+    if (!navigator.geolocation) {
+      setLocationError("Geolocation is not supported by your browser");
+      useDefaultLocation();
+      return;
+    }
+
+    // Already tracking
+    if (watchIdRef.current !== null) {
+      return;
+    }
+
+    continuousTrackingEnabled.current = true;
+    
+    console.log("Starting continuous location tracking...");
+    
+    const positionOptions = {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    };
+    
+    watchIdRef.current = navigator.geolocation.watchPosition(
+      (position) => {
+        const { longitude, latitude } = position.coords;
+        console.log("Location update received:", latitude, longitude);
+        setUserLocation([longitude, latitude]);
+        setLocationError(null);
+        setPermissionState('granted');
+        
+        // Update user location in database
+        if (currentUser) {
+          const now = Date.now();
+          // Throttle updates to database (every 3 seconds)
+          if (now - lastUpdateTime.current > 3000) {
+            lastUpdateTime.current = now;
+            
+            const newLocation = { lat: latitude, lng: longitude };
+            updateUserLocation(currentUser.id, newLocation);
+            
+            // Update the current user state with the new location
+            setCurrentUser({
+              ...currentUser,
+              location: newLocation
+            });
+            
+            // Center the map on the user's location if tracking is enabled
+            if (map.current && continuousTrackingEnabled.current) {
+              map.current.getView().animate({
+                center: fromLonLat([longitude, latitude]),
+                duration: 500
+              });
+            }
+          }
+        }
+      },
+      (error) => {
+        handleLocationError(error);
+      },
+      positionOptions
+    );
+  };
+
+  // Stop continuous location tracking
+  const stopLocationTracking = () => {
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+      watchIdRef.current = null;
+      continuousTrackingEnabled.current = false;
+      console.log("Continuous location tracking stopped");
+    }
+  };
+
+  // Toggle GPS tracking on/off
+  const toggleLocationTracking = () => {
+    if (watchIdRef.current === null) {
+      startLocationTracking();
+      toast({
+        title: "GPS Tracking Enabled",
+        description: "Your location will be updated continuously on the map.",
+      });
+    } else {
+      stopLocationTracking();
+      toast({
+        title: "GPS Tracking Disabled",
+        description: "Your location will no longer be updated automatically.",
+      });
+    }
+  };
+
+  // Get a single location update
   const getUserLocation = () => {
     // Prevent multiple simultaneous location requests
     if (isUpdatingRef.current) {
@@ -135,30 +228,35 @@ export const useGeolocation = (
         }
       },
       (error) => {
-        console.error("Error getting location:", error);
-        let errorMessage = "Unable to retrieve your location.";
-        
-        if (error.code === 1) {
-          // Permission denied
-          setPermissionState('denied');
-          errorMessage = "Location permission denied. Please enable location services for this website in your browser settings.";
-        } else if (error.code === 2) {
-          // Position unavailable
-          errorMessage = "Your location information is unavailable. Please check your device settings.";
-        } else if (error.code === 3) {
-          // Timeout
-          errorMessage = "Location request timed out. Please try again.";
-        }
-        
-        setLocationError(errorMessage);
-        setIsLocating(false);
-        isUpdatingRef.current = false;
-        
-        // Use default location
-        useDefaultLocation();
+        handleLocationError(error);
       },
       positionOptions
     );
+  };
+
+  // Handle location error
+  const handleLocationError = (error: GeolocationPositionError) => {
+    console.error("Error getting location:", error);
+    let errorMessage = "Unable to retrieve your location.";
+    
+    if (error.code === 1) {
+      // Permission denied
+      setPermissionState('denied');
+      errorMessage = "Location permission denied. Please enable location services for this website in your browser settings.";
+    } else if (error.code === 2) {
+      // Position unavailable
+      errorMessage = "Your location information is unavailable. Please check your device settings.";
+    } else if (error.code === 3) {
+      // Timeout
+      errorMessage = "Location request timed out. Please try again.";
+    }
+    
+    setLocationError(errorMessage);
+    setIsLocating(false);
+    isUpdatingRef.current = false;
+    
+    // Use default location
+    useDefaultLocation();
   };
 
   // Apply default location when geolocation fails or is denied
@@ -207,12 +305,25 @@ export const useGeolocation = (
     return null;
   };
 
+  // Clean up on component unmount
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
+  }, []);
+
   return {
     getUserLocation,
     isLocating,
     locationError,
     permissionState,
     getSafariHelp,
-    DEFAULT_LOCATION
+    DEFAULT_LOCATION,
+    toggleLocationTracking,
+    startLocationTracking,
+    stopLocationTracking,
+    isTracking: watchIdRef.current !== null
   };
 };

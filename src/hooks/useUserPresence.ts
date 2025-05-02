@@ -65,7 +65,7 @@ export function useUserPresence() {
             setNearbyUsers(
               nearbyUsers.map(user => 
                 user.id === updatedProfile.id 
-                  ? { ...user, isOnline: updatedProfile.is_online } 
+                  ? { ...user, isOnline: updatedProfile.is_online, location: updatedProfile.location ? parseLocationFromPostgres(updatedProfile.location) : user.location } 
                   : user
               )
             );
@@ -85,6 +85,37 @@ export function useUserPresence() {
         }
       )
       .subscribe();
+
+    // Helper function to parse location from PostgreSQL point format
+    function parseLocationFromPostgres(pgLocation: any): { lat: number, lng: number } | null {
+      if (!pgLocation) return null;
+      
+      try {
+        // Handle string format from Postgres: "(lng,lat)"
+        if (typeof pgLocation === 'string' && pgLocation.startsWith('(')) {
+          const match = pgLocation.match(/\(([^,]+),([^)]+)\)/);
+          if (match) {
+            return {
+              lng: parseFloat(match[1]),
+              lat: parseFloat(match[2])
+            };
+          }
+        }
+        // Handle if it's already parsed as an object
+        else if (typeof pgLocation === 'object' && pgLocation !== null) {
+          if ('lat' in pgLocation && 'lng' in pgLocation) {
+            return {
+              lat: pgLocation.lat,
+              lng: pgLocation.lng
+            };
+          }
+        }
+      } catch (e) {
+        console.error('Error parsing location data:', e);
+      }
+      
+      return null;
+    }
 
     // Clean up function
     return () => {

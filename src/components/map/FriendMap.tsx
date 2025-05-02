@@ -1,10 +1,13 @@
 
 import React from 'react';
-import { Style, Stroke } from 'ol/style';
 import 'ol/ol.css';
 import FriendMapContainer from './FriendMapContainer';
+import { useUserPresence } from '@/hooks/useUserPresence';
 
 const FriendMap: React.FC = () => {
+  // Enable real-time user presence tracking
+  useUserPresence();
+  
   return <FriendMapContainer />;
 };
 
