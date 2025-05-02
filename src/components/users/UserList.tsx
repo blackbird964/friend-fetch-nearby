@@ -1,14 +1,16 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import UserCard from './UserCard';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, RefreshCw, MapPin } from 'lucide-react';
+import { MessageCircle, RefreshCw, MapPin, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Chat } from '@/context/types';
+import { sendFriendRequest } from '@/services/friendRequestService';
 
 const UserList: React.FC = () => {
-  const { nearbyUsers, radiusInKm, chats, setChats, currentUser, refreshNearbyUsers, loading, setSelectedChat } = useAppContext();
+  const { nearbyUsers, radiusInKm, chats, setChats, currentUser, refreshNearbyUsers, loading, setSelectedChat, friendRequests, setFriendRequests } = useAppContext();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -75,6 +77,64 @@ const UserList: React.FC = () => {
     }
   };
 
+  // Function to handle sending friend request
+  const handleAddFriend = async (user: any) => {
+    if (!currentUser) {
+      toast({
+        title: "Not logged in",
+        description: "You need to be logged in to send friend requests",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // Check if we already have a pending request with this user
+    const existingRequest = friendRequests.find(req => 
+      req.status === 'pending' && 
+      ((req.receiverId === user.id && req.senderId === currentUser.id) ||
+       (req.senderId === user.id && req.receiverId === currentUser.id))
+    );
+
+    if (existingRequest) {
+      toast({
+        title: "Request already sent",
+        description: `You already have a pending request with ${user.name}`,
+        variant: "warning"
+      });
+      return;
+    }
+
+    try {
+      // Use the default 30 minutes duration
+      const defaultDuration = 30;
+      const request = await sendFriendRequest(
+        currentUser.id,
+        currentUser.name || 'User',
+        currentUser.profile_pic,
+        user.id,
+        user.name || 'User',
+        user.profile_pic,
+        defaultDuration
+      );
+      
+      if (request) {
+        setFriendRequests([...friendRequests, request]);
+        
+        toast({
+          title: "Friend Request Sent!",
+          description: `You've sent a friend request to ${user.name}`,
+        });
+      }
+    } catch (error) {
+      console.error('Error sending friend request:', error);
+      toast({
+        title: "Error",
+        description: "Failed to send friend request. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -112,14 +172,24 @@ const UserList: React.FC = () => {
                     <span>User hasn't shared their location yet</span>
                   </div>
                 )}
-                <Button 
-                  className="w-full" 
-                  onClick={() => startChat(user)}
-                  variant="outline"
-                >
-                  <MessageCircle className="w-4 h-4 mr-2" />
-                  Chat with {user.name}
-                </Button>
+                <div className="flex gap-2 w-full">
+                  <Button 
+                    className="w-1/2" 
+                    onClick={() => handleAddFriend(user)}
+                    variant="default"
+                  >
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Add Friend
+                  </Button>
+                  <Button 
+                    className="w-1/2" 
+                    onClick={() => startChat(user)}
+                    variant="outline"
+                  >
+                    <MessageCircle className="w-4 h-4 mr-2" />
+                    Chat
+                  </Button>
+                </div>
               </div>
             </div>
           ))}

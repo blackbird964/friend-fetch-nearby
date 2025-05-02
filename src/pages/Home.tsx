@@ -3,7 +3,7 @@ import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bell, MapPin, MessageSquare, Info } from 'lucide-react';
+import { Bell, MapPin, MessageSquare, Info, UserPlus } from 'lucide-react';
 import FriendRequestList from '@/components/users/FriendRequestList';
 import UserList from '@/components/users/UserList';
 import { useNavigate } from 'react-router-dom';
@@ -26,7 +26,7 @@ const Home: React.FC = () => {
           <CardHeader className="pb-3">
             <div className="flex justify-between items-center">
               <CardTitle className="text-xl flex items-center">
-                <Bell className="mr-2 h-5 w-5 text-primary" />
+                <UserPlus className="mr-2 h-5 w-5 text-primary" />
                 Friend Requests
               </CardTitle>
               {pendingRequests > 0 && (
@@ -35,6 +35,9 @@ const Home: React.FC = () => {
                 </span>
               )}
             </div>
+            <CardDescription>
+              Send and manage friend requests with nearby people
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <FriendRequestList />
@@ -68,8 +71,8 @@ const Home: React.FC = () => {
               <div className="space-y-1 text-sm">
                 <p className="font-medium">How Kairo Works:</p>
                 <p className="text-gray-600">
-                  Find people nearby who share your interests, select a time block (15, 30, or 45 minutes), 
-                  and send them a meet-up request. If accepted, you can chat and see each other's location.
+                  Find people nearby who share your interests, send them friend requests, 
+                  and once connected, you can chat and plan meet-ups with specific time blocks.
                 </p>
               </div>
             </div>
