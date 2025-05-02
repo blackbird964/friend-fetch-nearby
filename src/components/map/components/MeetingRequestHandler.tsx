@@ -2,6 +2,7 @@
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
+import UserRequestCard from './UserRequestCard';
 
 interface MeetingRequestHandlerProps {
   selectedUser: string | null;
