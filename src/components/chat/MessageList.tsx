@@ -1,8 +1,8 @@
 
 import React, { useRef, useEffect } from 'react';
-import { format } from 'date-fns';
 import { Message } from '@/context/types';
 import { Loader2 } from 'lucide-react';
+import { formatMessageTime } from '@/utils/dateFormatters';
 
 interface MessageListProps {
   messages: Message[];
@@ -16,10 +16,6 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading }) => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
-  
-  const formatMessageTime = (timestamp: number) => {
-    return format(new Date(timestamp), 'HH:mm');
-  };
   
   if (isLoading) {
     return (

@@ -11,6 +11,8 @@ export function useChat(selectedChatId: string | null) {
 
   // Fetch conversation when selected chat changes
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchConversation = async () => {
       if (!selectedChat || !currentUser) return;
       
@@ -18,6 +20,9 @@ export function useChat(selectedChatId: string | null) {
       try {
         // Fetch messages from the database
         const dbMessages = await getConversation(selectedChat.participantId);
+        
+        // Check if component is still mounted
+        if (!isMounted) return;
         
         if (dbMessages.length > 0) {
           // Transform database messages to our app format
@@ -61,11 +66,18 @@ export function useChat(selectedChatId: string | null) {
       } catch (err) {
         console.error("Error fetching conversation:", err);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchConversation();
+    
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
   }, [selectedChatId, currentUser, selectedChat, setSelectedChat, chats, setChats]);
 
   const handleSendMessage = useCallback(async (e: React.FormEvent) => {
@@ -73,9 +85,12 @@ export function useChat(selectedChatId: string | null) {
     
     if (!selectedChat || !message.trim() || !currentUser) return;
     
+    const originalMessage = message.trim();
+    setMessage(''); // Clear input field immediately for better UX
+    
     try {
       // Save the message in the database
-      const sentMessage = await sendMessage(selectedChat.participantId, message.trim());
+      const sentMessage = await sendMessage(selectedChat.participantId, originalMessage);
       
       if (!sentMessage) {
         console.error("Failed to send message");
@@ -94,7 +109,7 @@ export function useChat(selectedChatId: string | null) {
       const updatedChat = {
         ...selectedChat,
         messages: [...selectedChat.messages, newMessage],
-        lastMessage: message.trim(),
+        lastMessage: originalMessage,
         lastMessageTime: new Date(sentMessage.created_at).getTime(),
       };
       
@@ -105,7 +120,6 @@ export function useChat(selectedChatId: string | null) {
       );
       
       setSelectedChat(updatedChat);
-      setMessage('');
     } catch (err) {
       console.error("Error sending message:", err);
     }

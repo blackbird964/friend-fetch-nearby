@@ -11,6 +11,8 @@ export function useChatList() {
 
   // Fetch chats for current user when component mounts
   useEffect(() => {
+    let isMounted = true;
+    
     const fetchChats = async () => {
       if (!currentUser) return;
       
@@ -28,6 +30,9 @@ export function useChatList() {
           console.error('Error fetching messages:', error);
           return;
         }
+        
+        // Check if component is still mounted
+        if (!isMounted) return;
         
         if (!messages || messages.length === 0) {
           setIsLoading(false);
@@ -50,6 +55,8 @@ export function useChatList() {
           // Get the profile for this participant
           const profile = await getProfile(participantId);
           
+          if (!isMounted) return;
+          
           if (profile) {
             // Find the latest message with this participant
             const latestMessage = messages.find(msg => 
@@ -71,6 +78,9 @@ export function useChatList() {
           }
         }
         
+        // Check if component is still mounted
+        if (!isMounted) return;
+        
         // Sort chats by latest message
         chatsList.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
         
@@ -79,11 +89,18 @@ export function useChatList() {
       } catch (err) {
         console.error('Error loading chats:', err);
       } finally {
-        setIsLoading(false);
+        if (isMounted) {
+          setIsLoading(false);
+        }
       }
     };
 
     fetchChats();
+    
+    // Cleanup function to prevent state updates after unmount
+    return () => {
+      isMounted = false;
+    };
   }, [currentUser, setChats]);
 
   return { isLoading };
