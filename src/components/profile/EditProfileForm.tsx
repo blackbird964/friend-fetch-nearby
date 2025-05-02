@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from "@/components/ui/button";
@@ -72,7 +71,7 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
       // Remove location from the update payload to avoid format errors
       delete updatedProfile.location;
       
-      await updateUserProfile(updatedProfile);
+      await updateUserProfile(currentUser.id, updatedProfile);
       
       toast({
         title: "Profile updated",

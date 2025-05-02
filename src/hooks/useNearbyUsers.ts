@@ -6,6 +6,7 @@ import { processNearbyUsers, addTestUsersNearby } from '@/context/userService';
 import { DEFAULT_LOCATION } from '@/utils/locationUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 /**
  * Hook to manage nearby users functionality
@@ -15,6 +16,7 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   const hasInitiallyFetched = useRef<boolean>(false);
 
   /**
@@ -25,9 +27,11 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
     if (!currentUser) return;
 
     try {
-      // Throttle refreshes - only refresh if it's been more than 3 seconds since last fetch
+      // Throttle refreshes even more aggressively on mobile - wait at least 5 seconds
       const now = Date.now();
-      if (now - lastFetchTime < 3000) {
+      const throttleTime = isMobile ? 5000 : 3000;
+      
+      if (now - lastFetchTime < throttleTime) {
         console.log("Skipping refresh - throttled");
         return;
       }
@@ -76,8 +80,9 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
       // Set the initial fetch flag to true
       hasInitiallyFetched.current = true;
       
-      // Only show toast if explicitly requested by the user through manual refresh
-      if (showToast) {
+      // Only show toast if explicitly requested AND not on mobile
+      // This prevents toast flickering on mobile when auto-refreshing
+      if (showToast && !isMobile) {
         toast({
           title: "Users Updated",
           description: `Found ${usersWithDistance.length} users nearby.`,
@@ -85,6 +90,7 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
       }
     } catch (error) {
       console.error("Error fetching nearby users:", error);
+      // Only show error toast if explicitly requested by the user through manual refresh
       if (showToast) {
         toast({
           title: "Error",

@@ -5,6 +5,7 @@ import { AppUser } from '@/context/types';
 import { fromLonLat } from 'ol/proj';
 import Map from 'ol/Map';
 import { AlertTriangle } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export const useGeolocation = (
   map: React.MutableRefObject<Map | null>,
@@ -17,6 +18,7 @@ export const useGeolocation = (
   const [isLocating, setIsLocating] = useState(false);
   const [permissionState, setPermissionState] = useState<string>('prompt');
   const { toast } = useToast();
+  const isMobile = useIsMobile();
 
   // Default location for Wynyard
   const DEFAULT_LOCATION = { lat: -33.8666, lng: 151.2073 };
@@ -98,10 +100,13 @@ export const useGeolocation = (
           });
         }
         
-        toast({
-          title: "Location Updated",
-          description: "Your current location has been updated on the map.",
-        });
+        // Only show toast on desktop to avoid flickering on mobile
+        if (!isMobile) {
+          toast({
+            title: "Location Updated",
+            description: "Your current location has been updated on the map.",
+          });
+        }
       },
       (error) => {
         console.error("Error getting location:", error);
@@ -138,6 +143,7 @@ export const useGeolocation = (
         location: DEFAULT_LOCATION
       });
       
+      // Always show this toast as it's important for the user to know
       toast({
         title: "Default Location Used",
         description: "Using Wynyard as your location. Enable location access for accuracy.",

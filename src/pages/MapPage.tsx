@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import FriendMap from '@/components/map/FriendMap';
 import UserList from '@/components/users/UserList';
@@ -6,10 +7,12 @@ import { MapPin, Users, RefreshCw, Navigation, AlertTriangle, Bug, Info } from '
 import { Button } from "@/components/ui/button";
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 const MapPage: React.FC = () => {
   const { refreshNearbyUsers, loading, currentUser, nearbyUsers } = useAppContext();
   const { toast } = useToast();
+  const isMobile = useIsMobile();
   
   // Fetch nearby users on initial load - without toast notification
   useEffect(() => {
@@ -21,8 +24,17 @@ const MapPage: React.FC = () => {
   
   const handleRefresh = async () => {
     try {
-      // Only show toast when manually refreshing
-      await refreshNearbyUsers(true);
+      // Only show toast on desktop or when manually refreshing on mobile
+      // This prevents the toast from appearing too frequently on mobile
+      await refreshNearbyUsers(!isMobile);
+      
+      // For mobile, only show a toast if the refresh was successful
+      if (isMobile) {
+        toast({
+          title: "Refreshed",
+          description: "Nearby users updated",
+        });
+      }
     } catch (error) {
       console.error("Error refreshing users:", error);
       toast({
