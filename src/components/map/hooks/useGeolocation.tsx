@@ -20,6 +20,8 @@ export const useGeolocation = (
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const locationToastShown = useRef<boolean>(false);
+  const lastUpdateTime = useRef<number>(0);
+  const isUpdatingRef = useRef<boolean>(false);
 
   // Default location for Wynyard
   const DEFAULT_LOCATION = { lat: -33.8666, lng: 151.2073 };
@@ -50,6 +52,23 @@ export const useGeolocation = (
 
   // Request user location
   const getUserLocation = () => {
+    // Prevent multiple simultaneous location requests
+    if (isUpdatingRef.current) {
+      console.log("Location update already in progress, ignoring request");
+      return;
+    }
+    
+    // Throttle location updates to prevent flickering
+    const now = Date.now();
+    const minimumUpdateInterval = 2000; // 2 seconds minimum between updates
+    
+    if (now - lastUpdateTime.current < minimumUpdateInterval) {
+      console.log("Location update throttled, ignoring request");
+      return;
+    }
+    
+    lastUpdateTime.current = now;
+    isUpdatingRef.current = true;
     setIsLocating(true);
     setLocationError(null);
     
@@ -57,6 +76,7 @@ export const useGeolocation = (
     if (!navigator.geolocation) {
       setLocationError("Geolocation is not supported by your browser");
       setIsLocating(false);
+      isUpdatingRef.current = false;
       useDefaultLocation();
       return;
     }
@@ -80,13 +100,17 @@ export const useGeolocation = (
         // If we have a current user, update their location in the database
         if (currentUser) {
           const newLocation = { lat: latitude, lng: longitude };
-          updateUserLocation(currentUser.id, newLocation);
+          updateUserLocation(currentUser.id, newLocation).finally(() => {
+            isUpdatingRef.current = false;
+          });
           
           // Update the current user state with the new location
           setCurrentUser({
             ...currentUser,
             location: newLocation
           });
+        } else {
+          isUpdatingRef.current = false;
         }
         
         setIsLocating(false);
@@ -128,6 +152,7 @@ export const useGeolocation = (
         
         setLocationError(errorMessage);
         setIsLocating(false);
+        isUpdatingRef.current = false;
         
         // Use default location
         useDefaultLocation();

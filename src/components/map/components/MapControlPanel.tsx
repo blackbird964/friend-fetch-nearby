@@ -25,7 +25,8 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
           size="sm"
           onClick={getUserLocation}
           disabled={isLocating}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 pointer-events-auto"
+          aria-label="Update my location"
         >
           <Navigation className={`h-4 w-4 ${isLocating ? 'animate-spin' : ''}`} />
           {isLocating ? 'Locating...' : 'Update My Location'}

@@ -33,6 +33,7 @@ const FriendMapContainer: React.FC = () => {
   const [movingUsers, setMovingUsers] = useState<Set<string>>(new Set());
   const [completedMoves, setCompletedMoves] = useState<Set<string>>(new Set());
   const requestSentToastRef = useRef<boolean>(false);
+  const initialLocationObtained = useRef<boolean>(false);
 
   // Initialize map with references
   const { 
@@ -107,13 +108,16 @@ const FriendMapContainer: React.FC = () => {
 
   // Get user's location on initial load - without triggering refreshNearbyUsers
   useEffect(() => {
-    if (mapLoaded) {
-      // Get user's location after a short delay
-      setTimeout(() => {
+    if (mapLoaded && !initialLocationObtained.current) {
+      // Get user's location after a short delay, but only once
+      const timer = setTimeout(() => {
+        initialLocationObtained.current = true;
         getUserLocation();
-      }, 500);
+      }, 1000);
+      
+      return () => clearTimeout(timer);
     }
-  }, [mapLoaded, getUserLocation]);
+  }, [mapLoaded]);
 
   // Handle sending a meeting request
   const handleSendRequest = async () => {
