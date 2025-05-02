@@ -13,7 +13,7 @@ export async function sendFriendRequest(
   duration: number
 ): Promise<FriendRequest | null> {
   try {
-    const newRequest = {
+    const newRequest: FriendRequest = {
       id: `fr-${Date.now()}`,
       senderId,
       senderName,
@@ -22,7 +22,7 @@ export async function sendFriendRequest(
       receiverName,
       receiverProfilePic,
       duration,
-      status: 'pending',
+      status: 'pending', // Explicitly set to one of the allowed values
       timestamp: Date.now()
     };
 
