@@ -20,7 +20,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   textareaRef
 }) => {
   return (
-    <div className="p-3 bg-background border-t mt-auto">
+    <div className="p-3 bg-background border-t sticky bottom-0 z-10">
       <form onSubmit={onSendMessage} className="flex space-x-2">
         <Textarea
           ref={textareaRef}

@@ -70,8 +70,8 @@ const ChatPage: React.FC = () => {
           
           {/* Show the chat window if a chat is selected */}
           {selectedChat && (
-            <div className={`${isMobile ? 'h-full w-full absolute inset-0 z-10 pt-[70px] pb-[80px]' : 'md:w-2/3'} flex-grow overflow-hidden bg-background`}>
-              <div className="border rounded-lg h-full bg-background shadow-sm flex flex-col">
+            <div className={`${isMobile ? 'h-full w-full fixed inset-0 bg-background z-20' : 'md:w-2/3'} flex-grow overflow-hidden`}>
+              <div className={`${isMobile ? 'h-full' : 'border rounded-lg shadow-sm'} h-full bg-background flex flex-col`}>
                 <ChatWindow />
               </div>
             </div>

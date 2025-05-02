@@ -2,6 +2,7 @@
 import React, { useRef, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Message } from '@/context/types';
+import { Loader2 } from 'lucide-react';
 
 interface MessageListProps {
   messages: Message[];
@@ -23,7 +24,10 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading }) => {
   if (isLoading) {
     return (
       <div className="flex justify-center items-center py-4 flex-grow">
-        <p className="text-gray-500">Loading messages...</p>
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
+          <p className="text-gray-500">Loading messages...</p>
+        </div>
       </div>
     );
   }
