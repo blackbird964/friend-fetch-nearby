@@ -18,6 +18,7 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
   const { toast } = useToast();
   const isMobile = useIsMobile();
   const hasInitiallyFetched = useRef<boolean>(false);
+  const toastShownRef = useRef<boolean>(false);
 
   /**
    * Refresh nearby users list
@@ -27,13 +28,19 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
     if (!currentUser) return;
 
     try {
-      // Throttle refreshes even more aggressively on mobile - wait at least 5 seconds
+      // Throttle refreshes even more aggressively on mobile - wait at least 10 seconds
       const now = Date.now();
-      const throttleTime = isMobile ? 5000 : 3000;
+      const throttleTime = isMobile ? 10000 : 5000;
       
       if (now - lastFetchTime < throttleTime) {
         console.log("Skipping refresh - throttled");
         return;
+      }
+      
+      // On mobile, only show one toast per session for automatic updates
+      if (isMobile && showToast && toastShownRef.current) {
+        console.log("Skipping toast on mobile - already shown once");
+        showToast = false;
       }
       
       setLoading(true);
@@ -80,13 +87,19 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
       // Set the initial fetch flag to true
       hasInitiallyFetched.current = true;
       
-      // Only show toast if explicitly requested AND not on mobile
-      // This prevents toast flickering on mobile when auto-refreshing
-      if (showToast && !isMobile) {
-        toast({
-          title: "Users Updated",
-          description: `Found ${usersWithDistance.length} users nearby.`,
-        });
+      // Only show toast if explicitly requested AND not on mobile (or first time on mobile)
+      if (showToast) {
+        if (!isMobile || !toastShownRef.current) {
+          toast({
+            title: "Users Updated",
+            description: `Found ${usersWithDistance.length} users nearby.`,
+          });
+          
+          // Track that we've shown a toast on mobile
+          if (isMobile) {
+            toastShownRef.current = true;
+          }
+        }
       }
     } catch (error) {
       console.error("Error fetching nearby users:", error);

@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Style, Stroke } from 'ol/style';
 import { useToast } from '@/hooks/use-toast';
@@ -31,6 +32,7 @@ const FriendMapContainer: React.FC = () => {
   const [selectedDuration, setSelectedDuration] = useState<number>(30);
   const [movingUsers, setMovingUsers] = useState<Set<string>>(new Set());
   const [completedMoves, setCompletedMoves] = useState<Set<string>>(new Set());
+  const requestSentToastRef = useRef<boolean>(false);
 
   // Initialize map with references
   const { 
@@ -133,10 +135,14 @@ const FriendMapContainer: React.FC = () => {
     // For now, we'll just update the local state and animate
     animateUserToMeeting(user, selectedDuration);
     
-    toast({
-      title: "Request Sent!",
-      description: `You've sent a ${selectedDuration} minute meet-up request to ${user.name}`,
-    });
+    // Only show toast once per session to prevent flickering
+    if (!requestSentToastRef.current) {
+      toast({
+        title: "Request Sent!",
+        description: `You've sent a ${selectedDuration} minute meet-up request to ${user.name}`,
+      });
+      requestSentToastRef.current = true;
+    }
   };
 
   return (

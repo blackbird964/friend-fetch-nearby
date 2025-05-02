@@ -34,7 +34,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     await updateProfile(userId, profileData);
   };
   
-  // Wrapper function to maintain API compatibility - update to accept showToast parameter
+  // Wrapper function to maintain API compatibility
   const refreshNearbyUsers = async (showToast: boolean = false) => {
     return fetchNearbyUsers(showToast);
   };

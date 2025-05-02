@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppUser } from '@/context/types';
 import { fromLonLat } from 'ol/proj';
@@ -19,6 +19,7 @@ export const useGeolocation = (
   const [permissionState, setPermissionState] = useState<string>('prompt');
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  const locationToastShown = useRef<boolean>(false);
 
   // Default location for Wynyard
   const DEFAULT_LOCATION = { lat: -33.8666, lng: 151.2073 };
@@ -100,12 +101,13 @@ export const useGeolocation = (
           });
         }
         
-        // Only show toast on desktop to avoid flickering on mobile
-        if (!isMobile) {
+        // Only show toast on desktop and only once per session
+        if (!isMobile && !locationToastShown.current) {
           toast({
             title: "Location Updated",
             description: "Your current location has been updated on the map.",
           });
+          locationToastShown.current = true;
         }
       },
       (error) => {
@@ -144,11 +146,15 @@ export const useGeolocation = (
       });
       
       // Always show this toast as it's important for the user to know
-      toast({
-        title: "Default Location Used",
-        description: "Using Wynyard as your location. Enable location access for accuracy.",
-        variant: "destructive"
-      });
+      // But only once per session
+      if (!locationToastShown.current) {
+        toast({
+          title: "Default Location Used",
+          description: "Using Wynyard as your location. Enable location access for accuracy.",
+          variant: "destructive"
+        });
+        locationToastShown.current = true;
+      }
     }
   };
 
