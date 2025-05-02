@@ -31,7 +31,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   
   const updateUserProfile = async (userId: string, profileData: Partial<AppUser>): Promise<void> => {
-    await updateProfile(userId, profileData);
+    await updateProfile({ ...profileData, id: userId });
   };
   
   // Wrapper function to maintain API compatibility
