@@ -23,11 +23,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [loading, setLoading] = useState(false); // Add loading state
   
   // Use our custom hook for nearby users management
-  const { nearbyUsers, setNearbyUsers, loading: nearbyUsersLoading, refreshNearbyUsers: fetchNearbyUsers } = useNearbyUsers(currentUser);
+  const { nearbyUsers, setNearbyUsers, loading: nearbyUsersLoading, refreshNearbyUsers: fetchNearbyUsers, lastFetchTime } = useNearbyUsers(currentUser);
   
   // Wrapper function to maintain API compatibility
-  const refreshNearbyUsers = async () => {
-    return fetchNearbyUsers();
+  const refreshNearbyUsers = async (showToast: boolean = true) => {
+    return fetchNearbyUsers(showToast);
   };
 
   // Auth state listener
@@ -63,9 +63,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                   setCurrentUser(appUser);
                 }
                 
-                // Now refresh nearby users
+                // Now refresh nearby users - don't show toast on initial load
                 setTimeout(() => {
-                  refreshNearbyUsers();
+                  refreshNearbyUsers(false);
                 }, 0);
               }
             } catch (error) {
@@ -111,9 +111,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             setCurrentUser(appUser);
           }
           
-          // Refresh nearby users
+          // Refresh nearby users - don't show toast on initial load
           setTimeout(() => {
-            refreshNearbyUsers();
+            refreshNearbyUsers(false);
           }, 100);
         }
       }
@@ -128,10 +128,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, []);
 
-  // Update nearbyUsers when radius changes
+  // Update nearbyUsers when radius changes, but don't show toast for automatic updates
   useEffect(() => {
     if (isAuthenticated && currentUser) {
-      refreshNearbyUsers();
+      refreshNearbyUsers(false);
     }
   }, [radiusInKm, currentUser?.location]);
 

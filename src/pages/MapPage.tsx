@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import FriendMap from '@/components/map/FriendMap';
 import UserList from '@/components/users/UserList';
@@ -12,20 +11,17 @@ const MapPage: React.FC = () => {
   const { refreshNearbyUsers, loading, currentUser, nearbyUsers } = useAppContext();
   const { toast } = useToast();
   
-  // Fetch nearby users on initial load
+  // Fetch nearby users on initial load - without toast notification
   useEffect(() => {
     if (currentUser?.location) {
-      refreshNearbyUsers();
+      refreshNearbyUsers(false);
     }
   }, [currentUser?.location]);
   
   const handleRefresh = async () => {
     try {
-      await refreshNearbyUsers();
-      toast({
-        title: "Refreshed",
-        description: "Nearby users list has been updated.",
-      });
+      // Only show toast when manually refreshing
+      await refreshNearbyUsers(true);
     } catch (error) {
       console.error("Error refreshing users:", error);
       toast({

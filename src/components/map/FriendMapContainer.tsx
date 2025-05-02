@@ -15,7 +15,6 @@ import { useMapEvents } from './hooks/useMapEvents';
 import MapControlPanel from './components/MapControlPanel';
 import LocationErrorMessage from './components/LocationErrorMessage';
 import MeetingRequestHandler from './components/MeetingRequestHandler';
-import UserRequestCard from './components/UserRequestCard';
 
 const FriendMapContainer: React.FC = () => {
   
@@ -105,7 +104,7 @@ const FriendMapContainer: React.FC = () => {
     vectorLayer
   );
 
-  // Get user's location on initial load
+  // Get user's location on initial load - without triggering refreshNearbyUsers
   useEffect(() => {
     if (mapLoaded) {
       // Get user's location after a short delay

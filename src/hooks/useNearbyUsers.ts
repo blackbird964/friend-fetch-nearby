@@ -13,16 +13,26 @@ import { useToast } from '@/hooks/use-toast';
 export const useNearbyUsers = (currentUser: AppUser | null) => {
   const [nearbyUsers, setNearbyUsers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const { toast } = useToast();
 
   /**
    * Refresh nearby users list
+   * @param showToast Whether to show a toast notification (default: true)
    */
-  const refreshNearbyUsers = async () => {
+  const refreshNearbyUsers = async (showToast: boolean = true) => {
     if (!currentUser) return;
 
     try {
+      // Throttle refreshes - only refresh if it's been more than 2 seconds since last fetch
+      const now = Date.now();
+      if (now - lastFetchTime < 2000) {
+        console.log("Skipping refresh - throttled");
+        return;
+      }
+      
       setLoading(true);
+      setLastFetchTime(now);
       console.log("Refreshing nearby users for:", currentUser.name, "with ID:", currentUser.id);
       
       // Set default location if user doesn't have one
@@ -67,22 +77,26 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
         }
       }
       
-      // Show success toast
-      toast({
-        title: "Users Updated",
-        description: `Found ${usersWithDistance.length} users nearby.`,
-      });
+      // Show success toast only if requested
+      if (showToast) {
+        toast({
+          title: "Users Updated",
+          description: `Found ${usersWithDistance.length} users nearby.`,
+        });
+      }
     } catch (error) {
       console.error("Error fetching nearby users:", error);
-      toast({
-        title: "Error",
-        description: "Failed to refresh nearby users.",
-        variant: "destructive"
-      });
+      if (showToast) {
+        toast({
+          title: "Error",
+          description: "Failed to refresh nearby users.",
+          variant: "destructive"
+        });
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  return { nearbyUsers, setNearbyUsers, loading, refreshNearbyUsers };
+  return { nearbyUsers, setNearbyUsers, loading, refreshNearbyUsers, lastFetchTime };
 };
