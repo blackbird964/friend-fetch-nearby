@@ -44,6 +44,8 @@ export type Database = {
           gender: string | null
           id: string
           interests: string[] | null
+          is_online: boolean | null
+          last_seen: string | null
           location: unknown | null
           name: string | null
           profile_pic: string | null
@@ -56,6 +58,8 @@ export type Database = {
           gender?: string | null
           id: string
           interests?: string[] | null
+          is_online?: boolean | null
+          last_seen?: string | null
           location?: unknown | null
           name?: string | null
           profile_pic?: string | null
@@ -68,6 +72,8 @@ export type Database = {
           gender?: string | null
           id?: string
           interests?: string[] | null
+          is_online?: boolean | null
+          last_seen?: string | null
           location?: unknown | null
           name?: string | null
           profile_pic?: string | null
