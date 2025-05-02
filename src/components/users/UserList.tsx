@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import UserCard from './UserCard';
@@ -33,9 +32,11 @@ const UserList: React.FC = () => {
         description: `Opening your chat with ${user.name}`,
       });
     } else {
-      // Create new chat
+      // Create new chat with required properties
       const newChat: Chat = {
         id: `chat-${user.id}`,
+        name: user.name || 'Chat',
+        participants: [currentUser.id, user.id],
         participantId: user.id,
         participantName: user.name,
         profilePic: user.profile_pic || '',
@@ -59,7 +60,7 @@ const UserList: React.FC = () => {
 
   const handleRefresh = async () => {
     try {
-      await refreshNearbyUsers();
+      await refreshNearbyUsers(true);
       toast({
         title: "Refreshed",
         description: "Nearby users list has been updated.",

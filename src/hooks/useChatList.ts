@@ -78,9 +78,11 @@ export function useChatList() {
             );
             
             if (latestMessage) {
-              // Create a chat object
+              // Create a chat object with required properties
               chatsList.push({
                 id: `chat-${participantId}`,
+                name: profile.name || 'Anonymous',
+                participants: [currentUser.id, participantId],
                 participantId: participantId,
                 participantName: profile.name || 'Anonymous',
                 profilePic: profile.profile_pic || '',
@@ -98,7 +100,7 @@ export function useChatList() {
         console.log(`Created ${chatsList.length} chat objects`);
         
         // Sort chats by latest message
-        chatsList.sort((a, b) => b.lastMessageTime - a.lastMessageTime);
+        chatsList.sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
         
         // Update the chats state
         setChats(chatsList);

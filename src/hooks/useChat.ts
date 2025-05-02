@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { getConversation, sendMessage, markMessagesAsRead } from '@/lib/supabase';
-import { Message } from '@/context/types';
+import { Message, Chat } from '@/context/types';
 import { toast } from 'sonner';
 
 export function useChat(selectedChatId: string | null) {
@@ -41,11 +41,14 @@ export function useChat(selectedChatId: string | null) {
         console.log(`Fetched ${dbMessages.length} messages for chat:`, selectedChat.id);
         
         // Transform database messages to our app format
-        const formattedMessages = dbMessages.map(dbMsg => ({
+        const formattedMessages: Message[] = dbMessages.map(dbMsg => ({
           id: dbMsg.id,
+          chatId: selectedChat.id,
           senderId: dbMsg.sender_id === currentUser.id ? 'current' : selectedChat.participantId,
           text: dbMsg.content,
+          content: dbMsg.content,
           timestamp: new Date(dbMsg.created_at).getTime(),
+          status: dbMsg.sender_id === currentUser.id ? 'sent' : 'received',
         }));
         
         // Mark unread messages as read
@@ -58,15 +61,17 @@ export function useChat(selectedChatId: string | null) {
         }
         
         // Update selected chat with messages from the database
-        const updatedChat = {
+        const updatedChat: Chat = {
           ...selectedChat,
           messages: formattedMessages,
         };
         
         if (formattedMessages.length > 0) {
           const lastMsg = formattedMessages[formattedMessages.length - 1];
-          updatedChat.lastMessage = lastMsg.text;
-          updatedChat.lastMessageTime = lastMsg.timestamp;
+          updatedChat.lastMessage = lastMsg.text || lastMsg.content || '';
+          updatedChat.lastMessageTime = typeof lastMsg.timestamp === 'string' 
+            ? parseInt(lastMsg.timestamp, 10) 
+            : lastMsg.timestamp;
         }
         
         setSelectedChat(updatedChat);
@@ -128,15 +133,18 @@ export function useChat(selectedChatId: string | null) {
       console.log("Message sent successfully:", sentMessage);
       
       // Create the message object for our app
-      const newMessage = {
+      const newMessage: Message = {
         id: sentMessage.id,
+        chatId: selectedChat.id,
         senderId: 'current',
         text: sentMessage.content,
+        content: sentMessage.content,
         timestamp: new Date(sentMessage.created_at).getTime(),
+        status: 'sent',
       };
       
       // Update selected chat
-      const updatedChat = {
+      const updatedChat: Chat = {
         ...selectedChat,
         messages: [...(selectedChat.messages || []), newMessage],
         lastMessage: originalMessage,

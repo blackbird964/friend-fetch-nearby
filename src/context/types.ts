@@ -35,12 +35,12 @@ export interface Chat {
 
 export interface Message {
   id: string;
-  chatId: string;
+  chatId?: string;  // Made optional since not all context requires it
   senderId: string;
-  content: string;
-  timestamp: string;
-  status: MessageStatus;
-  text?: string;
+  content?: string;  // Made optional since we're using text in some places
+  text?: string;     // Added to support existing usage
+  timestamp: string | number;  // Support both string and number timestamps
+  status?: MessageStatus;  // Made optional for compatibility
 }
 
 export interface FriendRequest {

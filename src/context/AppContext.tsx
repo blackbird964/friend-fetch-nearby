@@ -3,8 +3,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { getProfile } from '@/lib/supabase';
-import { AppUser, AppContextType, Chat, FriendRequest } from './types';
-import { updateUserLocation, updateUserProfile } from './userService';
+import { AppUser, AppContextType, Chat, FriendRequest, Location } from './types';
+import { updateUserLocation as updateLocation, updateUserProfile as updateProfile } from './userService';
 import { useNearbyUsers } from '@/hooks/useNearbyUsers';
 import { loadMockFriendRequests, loadMockChats } from './mockDataService';
 import { DEFAULT_LOCATION } from '@/utils/locationUtils';
@@ -24,6 +24,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   
   // Use our custom hook for nearby users management
   const { nearbyUsers, setNearbyUsers, loading: nearbyUsersLoading, refreshNearbyUsers: fetchNearbyUsers, lastFetchTime } = useNearbyUsers(currentUser);
+  
+  // Wrapper for the user location and profile update functions to match expected types
+  const updateUserLocation = async (userId: string, location: Location): Promise<void> => {
+    await updateLocation(userId, location);
+  };
+  
+  const updateUserProfile = async (userId: string, profileData: Partial<AppUser>): Promise<void> => {
+    await updateProfile(userId, profileData);
+  };
   
   // Wrapper function to maintain API compatibility - update to accept showToast parameter
   const refreshNearbyUsers = async (showToast: boolean = false) => {

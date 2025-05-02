@@ -58,6 +58,9 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
     >
       {messages.map((msg) => {
         const isCurrentUser = msg.senderId === 'current';
+        const messageText = msg.text || msg.content || '';
+        // Convert timestamp to number if it's a string
+        const timestamp = typeof msg.timestamp === 'string' ? parseInt(msg.timestamp, 10) : msg.timestamp;
         
         return (
           <div 
@@ -70,11 +73,11 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
                 ? 'bg-primary text-white rounded-tr-none' 
                 : 'bg-gray-100 text-gray-800 rounded-tl-none'}
             `}>
-              <p className="break-words">{msg.text}</p>
+              <p className="break-words">{messageText}</p>
               <p className={`text-xs mt-1 text-right ${
                 isCurrentUser ? 'text-white/70' : 'text-gray-500'
               }`}>
-                {formatMessageTime(msg.timestamp)}
+                {formatMessageTime(timestamp)}
               </p>
             </div>
           </div>
