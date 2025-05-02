@@ -15,18 +15,20 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const { toast } = useToast();
+  const [hasShownInitialToast, setHasShownInitialToast] = useState<boolean>(false);
 
   /**
    * Refresh nearby users list
-   * @param showToast Whether to show a toast notification (default: true)
+   * @param showToast Whether to show a toast notification (default: false)
    */
-  const refreshNearbyUsers = async (showToast: boolean = true) => {
+  const refreshNearbyUsers = async (showToast: boolean = false) => {
     if (!currentUser) return;
 
     try {
-      // Throttle refreshes - only refresh if it's been more than 2 seconds since last fetch
+      // Throttle refreshes - only refresh if it's been more than 3 seconds since last fetch
+      // Increased from 2s to 3s to reduce frequency
       const now = Date.now();
-      if (now - lastFetchTime < 2000) {
+      if (now - lastFetchTime < 3000) {
         console.log("Skipping refresh - throttled");
         return;
       }
@@ -41,11 +43,6 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
       // Fetch all profiles from the database
       const profiles = await getAllProfiles();
       console.log("Fetched profiles:", profiles);
-      
-      // Debug each profile's location data
-      profiles.forEach(profile => {
-        console.log(`Profile ${profile.id} (${profile.name}) location:`, profile.location);
-      });
       
       // Filter out the current user and convert to AppUser type
       const otherUsers = profiles
@@ -77,12 +74,15 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
         }
       }
       
-      // Show success toast only if requested
+      // Show success toast only if explicitly requested AND not the first load
       if (showToast) {
         toast({
           title: "Users Updated",
           description: `Found ${usersWithDistance.length} users nearby.`,
         });
+        
+        // Mark that we've shown at least one toast
+        setHasShownInitialToast(true);
       }
     } catch (error) {
       console.error("Error fetching nearby users:", error);

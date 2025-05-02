@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import FriendMap from '@/components/map/FriendMap';
 import UserList from '@/components/users/UserList';
@@ -14,6 +15,7 @@ const MapPage: React.FC = () => {
   // Fetch nearby users on initial load - without toast notification
   useEffect(() => {
     if (currentUser?.location) {
+      // Don't show toast for automatic updates
       refreshNearbyUsers(false);
     }
   }, [currentUser?.location]);
