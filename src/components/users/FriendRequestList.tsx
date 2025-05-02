@@ -1,15 +1,22 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Clock, Check, X } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
 import { updateFriendRequestStatus, cancelFriendRequest } from '@/services/friendRequestService';
+import UserAvatar from './cards/UserAvatar';
 
 const FriendRequestList: React.FC = () => {
-  const { currentUser, friendRequests, setFriendRequests, chats, setChats } = useAppContext();
+  const { currentUser, friendRequests, setFriendRequests, chats, setChats, refreshFriendRequests } = useAppContext();
   const { toast } = useToast();
+
+  // Refresh friend requests when component mounts
+  useEffect(() => {
+    if (currentUser) {
+      refreshFriendRequests();
+    }
+  }, [currentUser]);
 
   const formatTime = (timestamp: number) => {
     const date = new Date(timestamp);
@@ -149,10 +156,10 @@ const FriendRequestList: React.FC = () => {
               <div className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <Avatar>
-                      <AvatarImage src={request.senderProfilePic || ''} alt={request.senderName || 'User'} />
-                      <AvatarFallback>{request.senderName ? request.senderName.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
-                    </Avatar>
+                    <UserAvatar
+                      src={request.senderProfilePic}
+                      alt={request.senderName || 'User'}
+                    />
                     <div>
                       <h4 className="font-medium">{request.senderName || 'User'}</h4>
                       <div className="flex items-center text-sm text-gray-500">
@@ -196,10 +203,10 @@ const FriendRequestList: React.FC = () => {
               <div className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
-                    <Avatar>
-                      <AvatarImage src={request.receiverProfilePic || ''} alt={request.receiverName || 'User'} />
-                      <AvatarFallback>{request.receiverName ? request.receiverName.charAt(0).toUpperCase() : 'U'}</AvatarFallback>
-                    </Avatar>
+                    <UserAvatar
+                      src={request.receiverProfilePic}
+                      alt={request.receiverName || 'User'}
+                    />
                     <div>
                       <h4 className="font-medium">{request.receiverName || 'User'}</h4>
                       <div className="flex items-center text-sm text-gray-500">

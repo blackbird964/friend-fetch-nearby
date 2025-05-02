@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -9,10 +9,19 @@ import UserList from '@/components/users/UserList';
 import { useNavigate } from 'react-router-dom';
 
 const Home: React.FC = () => {
-  const { friendRequests, nearbyUsers, currentUser } = useAppContext();
+  const { friendRequests, nearbyUsers, currentUser, refreshFriendRequests } = useAppContext();
   const navigate = useNavigate();
   
-  const pendingRequests = friendRequests.filter(r => r.status === 'pending').length;
+  // Refresh friend requests when home page loads
+  useEffect(() => {
+    if (currentUser) {
+      refreshFriendRequests();
+    }
+  }, [currentUser]);
+  
+  const pendingRequests = friendRequests.filter(r => 
+    r.status === 'pending' && r.receiverId === currentUser?.id
+  ).length;
 
   return (
     <div className="container mx-auto px-4 py-6 mb-20 max-w-3xl">

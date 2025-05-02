@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MapPin, MessageSquare, User, Home } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
@@ -8,9 +8,18 @@ import { Badge } from "@/components/ui/badge";
 const BottomNavigation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { friendRequests, chats } = useAppContext();
+  const { friendRequests, chats, currentUser, refreshFriendRequests } = useAppContext();
   
-  const pendingRequests = friendRequests.filter(r => r.status === 'pending').length;
+  // Refresh friend requests when component mounts
+  useEffect(() => {
+    if (currentUser) {
+      refreshFriendRequests();
+    }
+  }, [currentUser]);
+  
+  const pendingRequests = friendRequests.filter(r => 
+    r.status === 'pending' && r.receiverId === currentUser?.id
+  ).length;
   
   const routes = [
     {

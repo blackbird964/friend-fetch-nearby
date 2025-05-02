@@ -79,6 +79,7 @@ export interface AppContextType {
   refreshNearbyUsers: (showToast?: boolean) => Promise<void>;
   updateUserLocation: (userId: string, location: Location) => Promise<void>;
   updateUserProfile: (userId: string, profileData: Partial<AppUser>) => Promise<void>;
+  refreshFriendRequests: () => Promise<void>;
 }
 
 export type MessageStatus = 'sent' | 'received' | 'read';

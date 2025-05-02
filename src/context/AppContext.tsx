@@ -8,6 +8,7 @@ import { updateUserLocation as updateLocation, updateUserProfile as updateProfil
 import { useNearbyUsers } from '@/hooks/useNearbyUsers';
 import { loadMockFriendRequests, loadMockChats } from './mockDataService';
 import { DEFAULT_LOCATION } from '@/utils/locationUtils';
+import { fetchFriendRequests } from '@/services/friendRequestService';
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
@@ -37,6 +38,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Wrapper function to maintain API compatibility
   const refreshNearbyUsers = async (showToast: boolean = false) => {
     return fetchNearbyUsers(showToast);
+  };
+
+  // Refresh friend requests
+  const refreshFriendRequests = async () => {
+    if (currentUser) {
+      try {
+        const requests = await fetchFriendRequests(currentUser.id);
+        if (requests && requests.length > 0) {
+          setFriendRequests(requests);
+          return;
+        }
+      } catch (error) {
+        console.error("Error fetching friend requests:", error);
+      }
+      
+      // Fallback to mock data if needed
+      setFriendRequests(loadMockFriendRequests());
+    }
   };
 
   // Auth state listener
@@ -75,6 +94,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
                 // Now refresh nearby users - don't show toast on initial load
                 setTimeout(() => {
                   refreshNearbyUsers(false);
+                  refreshFriendRequests(); // Refresh friend requests on login
                 }, 0);
               }
             } catch (error) {
@@ -123,6 +143,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           // Refresh nearby users - don't show toast on initial load
           setTimeout(() => {
             refreshNearbyUsers(false);
+            refreshFriendRequests(); // Refresh friend requests on initial load
           }, 100);
         }
       }
@@ -137,6 +158,20 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
   }, []);
 
+  // Set up a periodic refresh for friend requests
+  useEffect(() => {
+    if (isAuthenticated && currentUser) {
+      refreshFriendRequests();
+      
+      // Set up periodic refresh every 30 seconds
+      const interval = setInterval(() => {
+        refreshFriendRequests();
+      }, 30000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [isAuthenticated, currentUser]);
+
   // Update nearbyUsers when radius changes, but don't show toast for automatic updates
   useEffect(() => {
     if (isAuthenticated && currentUser) {
@@ -147,10 +182,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Load mock data for testing
   useEffect(() => {
     if (isAuthenticated && currentUser) {
-      // Only load mock friend requests as fallback for now
-      setFriendRequests(loadMockFriendRequests());
-      
-      // Mock chats with realistic conversations
+      // Only load mock chats as fallback - friend requests should come from the database
       setChats(loadMockChats());
     }
   }, [isAuthenticated, currentUser]);
@@ -179,7 +211,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         loading,
         refreshNearbyUsers,
         updateUserLocation,
-        updateUserProfile
+        updateUserProfile,
+        refreshFriendRequests
       }}
     >
       {children}
