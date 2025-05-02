@@ -2,7 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Profile, updateUserLocation as updateLocation } from '@/lib/supabase';
 import { AppUser } from './types';
-import { calculateDistance, DEFAULT_LOCATION } from '@/utils/locationUtils';
+import { calculateDistance, DEFAULT_LOCATION, formatLocationForStorage } from '@/utils/locationUtils';
 
 /**
  * Update user location in Supabase and local state
@@ -10,7 +10,25 @@ import { calculateDistance, DEFAULT_LOCATION } from '@/utils/locationUtils';
 export const updateUserLocation = async (userId: string, location: { lat: number, lng: number }) => {
   try {
     console.log("Updating user location in context:", userId, location);
-    const result = await updateLocation(userId, location);
+    
+    // Format the location data for storage if needed
+    const formattedLocation = location;
+    
+    const result = await updateLocation(userId, formattedLocation);
+    
+    // Add a direct debug update to ensure the location is properly saved
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ location: formattedLocation })
+      .eq('id', userId)
+      .select();
+      
+    if (error) {
+      console.error("Error directly updating user location:", error);
+    } else {
+      console.log("Location directly updated:", data);
+    }
+    
     return result;
   } catch (error) {
     console.error("Error updating user location:", error);
@@ -41,9 +59,29 @@ export const updateUserProfile = async (updatedProfile: Partial<Profile>) => {
     if (error) {
       throw error;
     }
+    
+    // If location is provided, update it separately with the correct format
+    if (updatedProfile.location) {
+      await updateUserLocation(updatedProfile.id, updatedProfile.location);
+    }
   } catch (error) {
     console.error('Error updating user profile:', error);
     throw error;
+  }
+};
+
+/**
+ * Add test users nearby the current user for development purposes
+ */
+export const addTestUsersNearby = async (currentUserId: string, currentLocation: { lat: number, lng: number }) => {
+  try {
+    // This function could add test users with locations near the current user
+    // For development/testing purposes
+    console.log("Could add test users near", currentLocation);
+    
+    // Implementation would go here if needed
+  } catch (error) {
+    console.error("Error adding test users:", error);
   }
 };
 

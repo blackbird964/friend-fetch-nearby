@@ -4,6 +4,8 @@ import { getAllProfiles } from '@/lib/supabase';
 import { AppUser } from '@/context/types';
 import { processNearbyUsers } from '@/context/userService';
 import { DEFAULT_LOCATION } from '@/utils/locationUtils';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 /**
  * Hook to manage nearby users functionality
@@ -11,6 +13,7 @@ import { DEFAULT_LOCATION } from '@/utils/locationUtils';
 export const useNearbyUsers = (currentUser: AppUser | null) => {
   const [nearbyUsers, setNearbyUsers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const { toast } = useToast();
 
   /**
    * Refresh nearby users list
@@ -29,6 +32,11 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
       const profiles = await getAllProfiles();
       console.log("Fetched profiles:", profiles);
       
+      // Debug each profile's location data
+      profiles.forEach(profile => {
+        console.log(`Profile ${profile.id} (${profile.name}) location:`, profile.location);
+      });
+      
       // Filter out the current user and convert to AppUser type
       const otherUsers = profiles
         .filter(profile => profile.id !== currentUser.id)
@@ -46,8 +54,19 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
       
       // Set all users, including those without location
       setNearbyUsers(usersWithDistance);
+      
+      // Show success toast
+      toast({
+        title: "Users Updated",
+        description: `Found ${usersWithDistance.length} users nearby.`,
+      });
     } catch (error) {
       console.error("Error fetching nearby users:", error);
+      toast({
+        title: "Error",
+        description: "Failed to refresh nearby users.",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }

@@ -1,7 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { FriendRequest } from '@/context/types';
-import { useToast } from '@/hooks/use-toast';
 
 export async function sendFriendRequest(
   senderId: string,
@@ -27,7 +26,27 @@ export async function sendFriendRequest(
     };
 
     // In production, you would save this to the database
-    // For now, we'll return the object directly and handle it in the context
+    // Insert into Supabase
+    const { data, error } = await supabase
+      .from('friend_requests')
+      .insert({
+        id: newRequest.id,
+        sender_id: senderId,
+        receiver_id: receiverId,
+        duration: duration,
+        status: 'pending',
+        timestamp: Date.now()
+      })
+      .select('*')
+      .single();
+      
+    if (error) {
+      console.error('Error saving friend request to database:', error);
+    } else {
+      console.log('Friend request saved to database:', data);
+    }
+
+    // Return the request object to handle in the context
     return newRequest;
   } catch (error) {
     console.error('Error sending friend request:', error);
@@ -40,8 +59,17 @@ export async function updateFriendRequestStatus(
   status: 'accepted' | 'rejected'
 ): Promise<boolean> {
   try {
-    // In production, you would update this in the database
-    // For now, we'll just return true to indicate success
+    // Update in Supabase
+    const { error } = await supabase
+      .from('friend_requests')
+      .update({ status })
+      .eq('id', requestId);
+      
+    if (error) {
+      console.error('Error updating friend request status in database:', error);
+      return false;
+    }
+    
     return true;
   } catch (error) {
     console.error('Error updating friend request status:', error);

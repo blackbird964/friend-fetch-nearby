@@ -1,9 +1,9 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import FriendMap from '@/components/map/FriendMap';
 import UserList from '@/components/users/UserList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Users, RefreshCw, Navigation, AlertTriangle } from 'lucide-react';
+import { MapPin, Users, RefreshCw, Navigation, AlertTriangle, Bug } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 const MapPage: React.FC = () => {
   const { refreshNearbyUsers, loading, currentUser, nearbyUsers } = useAppContext();
   const { toast } = useToast();
+  
+  // Fetch nearby users on initial load
+  useEffect(() => {
+    if (currentUser?.location) {
+      refreshNearbyUsers();
+    }
+  }, [currentUser?.location]);
   
   const handleRefresh = async () => {
     try {
@@ -31,6 +38,7 @@ const MapPage: React.FC = () => {
 
   // Count users with location for map view
   const usersWithLocation = nearbyUsers.filter(user => user.location).length;
+  const totalUsers = nearbyUsers.length;
 
   return (
     <div className="container mx-auto px-4 py-6 mb-20 max-w-4xl">
@@ -67,12 +75,22 @@ const MapPage: React.FC = () => {
         </div>
       )}
       
-      {usersWithLocation === 0 && currentUser?.location && (
+      {totalUsers === 0 && currentUser?.location && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-md flex items-start gap-2">
+          <Bug className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-red-800 text-sm font-medium">No users found</p>
+            <p className="text-red-700 text-sm">There are no users in the database. Try refreshing or checking your connection.</p>
+          </div>
+        </div>
+      )}
+      
+      {totalUsers > 0 && usersWithLocation === 0 && currentUser?.location && (
         <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md flex items-start gap-2">
           <MapPin className="h-5 w-5 text-blue-500 flex-shrink-0 mt-0.5" />
           <div>
             <p className="text-blue-800 text-sm font-medium">Finding nearby users</p>
-            <p className="text-blue-700 text-sm">Check the List View to see all users, including those who haven't shared their location yet.</p>
+            <p className="text-blue-700 text-sm">Found {totalUsers} users, but none have shared their location yet. Check the List View to see all users.</p>
           </div>
         </div>
       )}
@@ -80,10 +98,10 @@ const MapPage: React.FC = () => {
       <Tabs defaultValue="list" className="mb-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="map" className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" /> Map View
+            <MapPin className="h-4 w-4" /> Map View ({usersWithLocation})
           </TabsTrigger>
           <TabsTrigger value="list" className="flex items-center gap-2">
-            <Users className="h-4 w-4" /> List View
+            <Users className="h-4 w-4" /> List View ({totalUsers})
           </TabsTrigger>
         </TabsList>
         <TabsContent value="map" className="pt-4">
