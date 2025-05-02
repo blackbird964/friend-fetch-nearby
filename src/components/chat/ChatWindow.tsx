@@ -27,6 +27,28 @@ const ChatWindow: React.FC = () => {
     }
   }, [selectedChat, isLoading]);
 
+  // Prevent viewport zooming on mobile
+  useEffect(() => {
+    if (isMobile) {
+      const metaViewport = document.querySelector('meta[name=viewport]');
+      if (metaViewport) {
+        metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+      } else {
+        const meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+      }
+      
+      return () => {
+        const metaViewport = document.querySelector('meta[name=viewport]');
+        if (metaViewport) {
+          metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+        }
+      };
+    }
+  }, [isMobile]);
+
   if (!selectedChat) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-gray-500">

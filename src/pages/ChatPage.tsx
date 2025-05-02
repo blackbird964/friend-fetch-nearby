@@ -24,6 +24,28 @@ const ChatPage: React.FC = () => {
     };
   }, [isMobile, setSelectedChat]);
 
+  // Prevent viewport scaling on mobile
+  useEffect(() => {
+    if (isMobile) {
+      const metaViewport = document.querySelector('meta[name=viewport]');
+      if (metaViewport) {
+        metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no');
+      } else {
+        const meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+      }
+      
+      return () => {
+        const metaViewport = document.querySelector('meta[name=viewport]');
+        if (metaViewport) {
+          metaViewport.setAttribute('content', 'width=device-width, initial-scale=1.0');
+        }
+      };
+    }
+  }, [isMobile]);
+
   return (
     <div className="container mx-auto px-4 py-6 max-w-3xl flex flex-col h-[calc(100vh-130px)]">
       <div className="flex items-center justify-between mb-6">

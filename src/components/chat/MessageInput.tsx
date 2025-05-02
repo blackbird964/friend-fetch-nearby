@@ -1,5 +1,5 @@
 
-import React, { RefObject, useState } from 'react';
+import React, { RefObject, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send } from 'lucide-react';
@@ -22,7 +22,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   const [localMessage, setLocalMessage] = useState('');
   
   // Sync local state with prop when the prop changes
-  React.useEffect(() => {
+  useEffect(() => {
     setLocalMessage(message);
   }, [message]);
   
@@ -61,7 +61,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
         <Button 
           type="submit" 
           disabled={!localMessage.trim() || isLoading} 
-          className="self-end rounded-full"
+          className="self-end rounded-full flex-shrink-0 w-10 h-10"
           size="icon"
           variant="default"
         >
