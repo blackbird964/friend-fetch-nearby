@@ -18,7 +18,7 @@ const MapPage: React.FC = () => {
       // Don't show toast for automatic updates
       refreshNearbyUsers(false);
     }
-  }, [currentUser?.location]);
+  }, [currentUser?.location, refreshNearbyUsers]);
   
   const handleRefresh = async () => {
     try {

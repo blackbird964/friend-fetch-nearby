@@ -1,43 +1,44 @@
 import { User } from '@supabase/supabase-js';
-import { Profile } from '@/lib/supabase';
 
-// Define types for our user and app state
-export type AppUser = Profile & {
-  email: string;
-  distance?: number; // Add distance property as optional
-};
+export interface Location {
+  lat: number;
+  lng: number;
+}
 
-export type FriendRequest = {
+export interface AppUser {
   id: string;
-  senderId?: string;
-  senderName?: string;
-  senderProfilePic?: string;
-  receiverId?: string;
-  receiverName?: string;
-  receiverProfilePic?: string;
-  duration: number;
-  status: 'pending' | 'accepted' | 'rejected' | 'sent';
-  timestamp: number;
-};
+  name: string;
+  email: string;
+  avatar?: string;
+  location?: Location;
+  interests: string[];
+}
 
-export type Message = {
+export interface Chat {
+  id: string;
+  name: string;
+  avatar?: string;
+  participants: string[]; // User IDs
+  messages: Message[];
+}
+
+export interface Message {
+  id: string;
+  chatId: string;
+  senderId: string;
+  content: string;
+  timestamp: string;
+  status: MessageStatus;
+}
+
+export interface FriendRequest {
   id: string;
   senderId: string;
-  text: string;
-  timestamp: number;
-};
+  receiverId: string;
+  status: 'pending' | 'accepted' | 'rejected';
+}
 
-export type Chat = {
-  id: string;
-  participantId: string;
-  participantName: string;
-  profilePic: string;
-  lastMessage: string;
-  lastMessageTime: number;
-  messages: Message[];
-};
-
-export type AppContextType = {
+export interface AppContextType {
   isAuthenticated: boolean;
   setIsAuthenticated: (value: boolean) => void;
   currentUser: AppUser | null;
@@ -57,7 +58,9 @@ export type AppContextType = {
   supabaseUser: User | null;
   setSupabaseUser: (user: User | null) => void;
   loading: boolean;
-  refreshNearbyUsers: () => Promise<void>;
-  updateUserLocation: (userId: string, location: { lat: number, lng: number }) => Promise<any>;
-  updateUserProfile: (updatedProfile: Partial<Profile>) => Promise<void>;
-};
+  refreshNearbyUsers: (showToast?: boolean) => Promise<void>;
+  updateUserLocation: (userId: string, location: Location) => Promise<void>;
+  updateUserProfile: (userId: string, profileData: Partial<AppUser>) => Promise<void>;
+}
+
+export type MessageStatus = 'sent' | 'received' | 'read';

@@ -20,13 +20,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
-  const [loading, setLoading] = useState(false); // Add loading state
+  const [loading, setLoading] = useState(false);
   
   // Use our custom hook for nearby users management
   const { nearbyUsers, setNearbyUsers, loading: nearbyUsersLoading, refreshNearbyUsers: fetchNearbyUsers, lastFetchTime } = useNearbyUsers(currentUser);
   
-  // Wrapper function to maintain API compatibility
-  const refreshNearbyUsers = async (showToast: boolean = true) => {
+  // Wrapper function to maintain API compatibility - update to accept showToast parameter
+  const refreshNearbyUsers = async (showToast: boolean = false) => {
     return fetchNearbyUsers(showToast);
   };
 
