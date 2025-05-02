@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { getAllProfiles } from '@/lib/supabase';
 import { AppUser } from '@/context/types';
 import { processNearbyUsers, addTestUsersNearby } from '@/context/userService';
@@ -15,7 +15,7 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [lastFetchTime, setLastFetchTime] = useState<number>(0);
   const { toast } = useToast();
-  const [hasShownInitialToast, setHasShownInitialToast] = useState<boolean>(false);
+  const hasInitiallyFetched = useRef<boolean>(false);
 
   /**
    * Refresh nearby users list
@@ -26,7 +26,6 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
 
     try {
       // Throttle refreshes - only refresh if it's been more than 3 seconds since last fetch
-      // Increased from 2s to 3s to reduce frequency
       const now = Date.now();
       if (now - lastFetchTime < 3000) {
         console.log("Skipping refresh - throttled");
@@ -74,15 +73,15 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
         }
       }
       
-      // Show success toast only if explicitly requested AND not the first load
+      // Set the initial fetch flag to true
+      hasInitiallyFetched.current = true;
+      
+      // Only show toast if explicitly requested by the user through manual refresh
       if (showToast) {
         toast({
           title: "Users Updated",
           description: `Found ${usersWithDistance.length} users nearby.`,
         });
-        
-        // Mark that we've shown at least one toast
-        setHasShownInitialToast(true);
       }
     } catch (error) {
       console.error("Error fetching nearby users:", error);
