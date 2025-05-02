@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { Map } from 'ol';
 import Feature from 'ol/Feature';
@@ -24,8 +25,8 @@ export const useMapEvents = (
       if (clickedFeature) {
         const userId = clickedFeature.get('userId');
         
-        if (userId && !movingUsers.has(userId) && !completedMoves.has(userId)) {
-          // Check if the currently selected user is the same as the one we just clicked
+        if (userId) {
+          // Always allow toggling selection, even for moving or completed users
           if (selectedUser === userId) {
             // If we click the same user again, toggle the selection off
             setSelectedUser(null);

@@ -178,6 +178,10 @@ const FriendMapContainer: React.FC = () => {
         onSendRequest={handleSendRequest}
         onCancel={() => setSelectedUser(null)}
         nearbyUsers={nearbyUsers}
+        movingUsers={movingUsers}
+        completedMoves={completedMoves}
+        setMovingUsers={setMovingUsers}
+        setCompletedMoves={setCompletedMoves}
       />
     </div>
   );
