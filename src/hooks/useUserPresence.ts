@@ -34,9 +34,9 @@ export function useUserPresence() {
     };
 
     const handleBeforeUnload = () => {
-      // Attempt to update status before the user leaves
+      // Use the REST API URL instead of accessing the protected supabaseUrl property
       navigator.sendBeacon(
-        `${supabase.supabaseUrl}/rest/v1/profiles?id=eq.${currentUser.id}`,
+        `https://sqrlsxmwvmgmbmcyaxcq.supabase.co/rest/v1/profiles?id=eq.${currentUser.id}`,
         JSON.stringify({ 
           is_online: false,
           last_seen: new Date().toISOString() 
