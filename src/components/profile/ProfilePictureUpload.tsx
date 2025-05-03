@@ -22,19 +22,6 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const captureInputRef = useRef<HTMLInputElement>(null);
 
-  // Ensure the bucket exists when component loads
-  useEffect(() => {
-    const initializeBucket = async () => {
-      try {
-        await checkAndCreateProfilesBucket();
-      } catch (error) {
-        console.error('Error checking/creating profiles bucket:', error);
-      }
-    };
-    
-    initializeBucket();
-  }, []);
-
   const handleUpload = async (file: File) => {
     if (!currentUser?.id) {
       toast({
@@ -48,11 +35,16 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
     try {
       setUploading(true);
 
-      // Ensure the bucket exists before uploading
-      const bucketInitialized = await checkAndCreateProfilesBucket();
+      // Check if we can access the bucket
+      const bucketAccessible = await checkAndCreateProfilesBucket();
       
-      if (!bucketInitialized) {
-        throw new Error('Could not initialize storage bucket');
+      if (!bucketAccessible) {
+        toast({
+          title: "Storage Error",
+          description: "Could not access the storage bucket. Please try again later.",
+          variant: "destructive"
+        });
+        return;
       }
 
       // Create a unique file path

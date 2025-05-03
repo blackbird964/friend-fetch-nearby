@@ -39,17 +39,23 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
     xl: 'h-6 w-6 bottom-0 right-0'
   };
   
+  // Determine status color class based on online status
+  const statusColorClass = isOnline ? 'bg-green-500' : 'bg-gray-500';
+  
   return (
     <div className="relative">
       <Avatar className={sizeClass[size]}>
-        <AvatarImage src={src || ''} alt={alt} />
-        <AvatarFallback className="bg-gray-100">
-          <User className={iconSize[size]} />
-        </AvatarFallback>
+        {src ? (
+          <AvatarImage src={src} alt={alt} />
+        ) : (
+          <AvatarFallback className="bg-gray-100">
+            <User className={iconSize[size]} />
+          </AvatarFallback>
+        )}
       </Avatar>
       
       {showStatus && (
-        <span className={`absolute ${statusSize[size]} border-2 border-white rounded-full bg-${isOnline ? 'green' : 'gray'}-500`}>
+        <span className={`absolute ${statusSize[size]} border-2 border-white rounded-full ${statusColorClass}`}>
         </span>
       )}
     </div>

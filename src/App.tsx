@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AppProvider } from "@/context/AppContext";
 import { useEffect } from "react";
-import { checkAndCreateProfilesBucket } from "./lib/supabase/storage";
 
 // Import pages
 import Auth from "@/pages/Auth";
@@ -20,11 +19,6 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 const App = () => {
-  // Initialize the storage bucket when the app starts
-  useEffect(() => {
-    checkAndCreateProfilesBucket().catch(console.error);
-  }, []);
-
   return (
     <QueryClientProvider client={queryClient}>
       <AppProvider>

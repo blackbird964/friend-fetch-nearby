@@ -5,45 +5,34 @@ export const checkAndCreateProfilesBucket = async () => {
   try {
     console.log("Checking if profiles bucket exists...");
     
-    // Check if the profiles bucket exists
-    const { data: buckets, error } = await supabase
+    // Check if we can access the profiles bucket
+    const { data, error } = await supabase
       .storage
-      .listBuckets();
+      .from('profiles')
+      .list('', {
+        limit: 1,
+      });
     
     if (error) {
-      console.error("Error listing buckets:", error);
+      console.error("Error accessing profiles bucket:", error);
       throw error;
     }
-
-    const profilesBucketExists = buckets.some(bucket => bucket.name === 'profiles');
     
-    if (!profilesBucketExists) {
-      console.log("Profiles bucket does not exist, attempting to create it");
-      
-      // Create the profiles bucket
-      const { error: createError } = await supabase
-        .storage
-        .createBucket('profiles', {
-          public: true,
-          fileSizeLimit: 5242880, // 5MB
-        });
-      
-      if (createError) {
-        console.error("Error creating profiles bucket:", createError);
-        throw createError;
-      }
-      
-      console.log('Created profiles storage bucket');
-
-      // Wait a moment for the bucket to be fully created
-      await new Promise(resolve => setTimeout(resolve, 500));
-    } else {
-      console.log("Profiles bucket already exists");
-    }
-    
+    console.log("Successfully accessed profiles bucket");
     return true;
   } catch (error) {
-    console.error('Error setting up profiles bucket:', error);
+    console.error('Error accessing profiles bucket:', error);
     return false;
   }
+};
+
+export const getProfileImageUrl = (filePath: string) => {
+  if (!filePath) return null;
+  
+  const { data } = supabase
+    .storage
+    .from('profiles')
+    .getPublicUrl(filePath);
+    
+  return data.publicUrl;
 };
