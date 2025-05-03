@@ -33,10 +33,10 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   };
 
   const statusSize = {
-    sm: 'h-3 w-3 right-0 bottom-0',
-    md: 'h-4 w-4 right-0 bottom-0',
-    lg: 'h-5 w-5 right-0 bottom-0',
-    xl: 'h-6 w-6 right-0 bottom-0'
+    sm: 'h-3 w-3 bottom-0 right-0',
+    md: 'h-4 w-4 bottom-0 right-0',
+    lg: 'h-5 w-5 bottom-0 right-0',
+    xl: 'h-6 w-6 bottom-0 right-0'
   };
   
   return (
@@ -49,13 +49,8 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
       </Avatar>
       
       {showStatus && (
-        <div className={`absolute ${statusSize[size]} border-2 border-white rounded-full bg-white`}>
-          {isOnline ? (
-            <CircleDot className="h-full w-full text-green-500" />
-          ) : (
-            <Circle className="h-full w-full text-gray-400" />
-          )}
-        </div>
+        <span className={`absolute ${statusSize[size]} border-2 border-white rounded-full bg-${isOnline ? 'green' : 'gray'}-500`}>
+        </span>
       )}
     </div>
   );

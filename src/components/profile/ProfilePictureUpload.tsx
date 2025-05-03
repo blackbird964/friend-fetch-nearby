@@ -1,10 +1,11 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Camera, Upload, Image } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAppContext } from '@/context/AppContext';
+import { checkAndCreateProfilesBucket } from '@/lib/supabase/storage';
 
 interface ProfilePictureUploadProps {
   currentImageUrl?: string | null;
@@ -21,6 +22,19 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const captureInputRef = useRef<HTMLInputElement>(null);
 
+  // Ensure the bucket exists when component loads
+  useEffect(() => {
+    const initializeBucket = async () => {
+      try {
+        await checkAndCreateProfilesBucket();
+      } catch (error) {
+        console.error('Error checking/creating profiles bucket:', error);
+      }
+    };
+    
+    initializeBucket();
+  }, []);
+
   const handleUpload = async (file: File) => {
     if (!currentUser?.id) {
       toast({
@@ -34,10 +48,19 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
     try {
       setUploading(true);
 
+      // Ensure the bucket exists before uploading
+      const bucketInitialized = await checkAndCreateProfilesBucket();
+      
+      if (!bucketInitialized) {
+        throw new Error('Could not initialize storage bucket');
+      }
+
       // Create a unique file path
       const fileExt = file.name.split('.').pop();
       const fileName = `${currentUser.id}-${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
+
+      console.log('Uploading file to path:', filePath);
 
       // Upload the file to Supabase Storage
       const { error: uploadError, data } = await supabase
@@ -49,6 +72,7 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
         });
 
       if (uploadError) {
+        console.error('Upload error details:', uploadError);
         throw uploadError;
       }
 
@@ -57,6 +81,8 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
         .storage
         .from('profiles')
         .getPublicUrl(filePath);
+
+      console.log('File uploaded successfully, public URL:', publicUrl);
 
       // Update the user's profile with the new profile picture URL
       await updateUserProfile(currentUser.id, { profile_pic: publicUrl });
