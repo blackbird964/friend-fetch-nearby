@@ -1,18 +1,22 @@
 
 import React from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { User } from 'lucide-react';
+import { User, CircleDot, Circle } from 'lucide-react';
 
 interface UserAvatarProps {
   src?: string | null;
   alt?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  showStatus?: boolean;
+  isOnline?: boolean;
 }
 
 const UserAvatar: React.FC<UserAvatarProps> = ({ 
   src, 
   alt = 'User', 
-  size = 'md' 
+  size = 'md',
+  showStatus = false,
+  isOnline = false
 }) => {
   const sizeClass = {
     sm: 'h-10 w-10',
@@ -27,14 +31,33 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
     lg: 'h-8 w-8',
     xl: 'h-12 w-12'
   };
+
+  const statusSize = {
+    sm: 'h-3 w-3 right-0 bottom-0',
+    md: 'h-4 w-4 right-0 bottom-0',
+    lg: 'h-5 w-5 right-0 bottom-0',
+    xl: 'h-6 w-6 right-0 bottom-0'
+  };
   
   return (
-    <Avatar className={sizeClass[size]}>
-      <AvatarImage src={src || ''} alt={alt} />
-      <AvatarFallback className="bg-gray-100">
-        <User className={iconSize[size]} />
-      </AvatarFallback>
-    </Avatar>
+    <div className="relative">
+      <Avatar className={sizeClass[size]}>
+        <AvatarImage src={src || ''} alt={alt} />
+        <AvatarFallback className="bg-gray-100">
+          <User className={iconSize[size]} />
+        </AvatarFallback>
+      </Avatar>
+      
+      {showStatus && (
+        <div className={`absolute ${statusSize[size]} border-2 border-white rounded-full bg-white`}>
+          {isOnline ? (
+            <CircleDot className="h-full w-full text-green-500" />
+          ) : (
+            <Circle className="h-full w-full text-gray-400" />
+          )}
+        </div>
+      )}
+    </div>
   );
 };
 

@@ -1,13 +1,14 @@
+
 import React, { useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import ChatList from '@/components/chat/ChatList';
 import ChatWindow from '@/components/chat/ChatWindow';
 import FriendRequestList from '@/components/users/FriendRequestList';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, ArrowLeft, Loader2, CircleDot, Circle } from 'lucide-react';
+import { Bell, ArrowLeft, Loader2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import UserAvatar from '@/components/users/cards/UserAvatar';
 
 const ChatPage: React.FC = () => {
   const { friendRequests, selectedChat, setSelectedChat, loading } = useAppContext();
@@ -105,19 +106,13 @@ const ChatPage: React.FC = () => {
               <div className={`${isMobile ? 'h-full' : 'border rounded-lg shadow-sm h-full'} bg-background flex flex-col`}>
                 <div className="border-b p-4 flex items-center">
                   <div className="mr-3">
-                    <div className="relative">
-                      <Avatar className="h-10 w-10">
-                        <AvatarImage src={selectedChat.profilePic} alt={selectedChat.participantName} />
-                        <AvatarFallback>{selectedChat.participantName.charAt(0).toUpperCase()}</AvatarFallback>
-                      </Avatar>
-                      <div className="absolute -right-1 bottom-0">
-                        {selectedChat.isOnline ? (
-                          <CircleDot className="h-3 w-3 text-green-500 bg-white rounded-full" />
-                        ) : (
-                          <Circle className="h-3 w-3 text-gray-400 bg-white rounded-full" />
-                        )}
-                      </div>
-                    </div>
+                    <UserAvatar 
+                      src={selectedChat.profilePic} 
+                      alt={selectedChat.participantName} 
+                      size="sm"
+                      showStatus
+                      isOnline={selectedChat.isOnline}
+                    />
                   </div>
                   <div>
                     <h3 className="font-medium">{selectedChat.participantName}</h3>
