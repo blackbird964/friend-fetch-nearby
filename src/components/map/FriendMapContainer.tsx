@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Style, Stroke } from 'ol/style';
@@ -66,7 +65,8 @@ const FriendMapContainer: React.FC = () => {
     selectedUser, 
     movingUsers, 
     completedMoves, 
-    mapLoaded
+    mapLoaded,
+    friendRequests // Pass friendRequests to the useMapMarkers hook
   );
 
   // Handle meeting animations
@@ -96,9 +96,9 @@ const FriendMapContainer: React.FC = () => {
         })
       }));
     }
-  }, [selectedUser, movingUsers, completedMoves, getMarkerStyle]);
+  }, [selectedUser, movingUsers, completedMoves, friendRequests, getMarkerStyle]);
 
-  // Add map click handlers - pass friendRequests and currentUser
+  // Add map click handlers
   useMapEvents(
     map,
     mapLoaded,
@@ -122,7 +122,7 @@ const FriendMapContainer: React.FC = () => {
       
       return () => clearTimeout(timer);
     }
-  }, [mapLoaded]);
+  }, [mapLoaded, getUserLocation]);
 
   // Handle sending a meeting request
   const handleSendRequest = async () => {

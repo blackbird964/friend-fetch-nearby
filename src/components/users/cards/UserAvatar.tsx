@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { User, CircleDot, Circle } from 'lucide-react';
+import { User, CircleDot, Circle, UserCheck, UserPlus } from 'lucide-react';
 
 interface UserAvatarProps {
   src?: string | null;
@@ -9,6 +9,7 @@ interface UserAvatarProps {
   size?: 'sm' | 'md' | 'lg' | 'xl';
   showStatus?: boolean;
   isOnline?: boolean;
+  friendStatus?: 'none' | 'sent' | 'received' | 'accepted';
 }
 
 const UserAvatar: React.FC<UserAvatarProps> = ({ 
@@ -16,7 +17,8 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   alt = 'User', 
   size = 'md',
   showStatus = false,
-  isOnline = false
+  isOnline = false,
+  friendStatus = 'none'
 }) => {
   const sizeClass = {
     sm: 'h-10 w-10',
@@ -40,7 +42,17 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   };
   
   // Determine status color class based on online status
-  const statusColorClass = isOnline ? 'bg-green-500' : 'bg-gray-500';
+  let statusColorClass = isOnline ? 'bg-green-500' : 'bg-gray-500';
+  let statusIcon = null;
+  
+  // Override with friend status if specified
+  if (friendStatus === 'sent' || friendStatus === 'received') {
+    statusColorClass = 'bg-amber-300';
+    statusIcon = <UserPlus className="h-2 w-2 text-amber-800" />;
+  } else if (friendStatus === 'accepted') {
+    statusColorClass = 'bg-green-500';
+    statusIcon = <UserCheck className="h-2 w-2 text-white" />;
+  }
   
   return (
     <div className="relative">
@@ -55,7 +67,8 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
       </Avatar>
       
       {showStatus && (
-        <span className={`absolute ${statusSize[size]} border-2 border-white rounded-full ${statusColorClass}`}>
+        <span className={`absolute ${statusSize[size]} border-2 border-white rounded-full ${statusColorClass} flex items-center justify-center`}>
+          {statusIcon}
         </span>
       )}
     </div>

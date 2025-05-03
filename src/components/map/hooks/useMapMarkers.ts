@@ -1,6 +1,6 @@
 
 import { useRef } from 'react';
-import { AppUser } from '@/context/types';
+import { AppUser, FriendRequest } from '@/context/types';
 import { Vector as VectorSource } from 'ol/source';
 import Map from 'ol/Map';
 import { useMarkerStyles } from './markers/useMarkerStyles';
@@ -15,10 +15,11 @@ export const useMapMarkers = (
   selectedUser: string | null,
   movingUsers: Set<string>,
   completedMoves: Set<string>,
-  mapLoaded: boolean
+  mapLoaded: boolean,
+  friendRequests: FriendRequest[]
 ) => {
   // Get marker styles
-  const { getMarkerStyle } = useMarkerStyles(selectedUser, movingUsers, completedMoves);
+  const { getMarkerStyle } = useMarkerStyles(selectedUser, movingUsers, completedMoves, friendRequests);
   
   // Update markers when data changes
   useMarkerUpdater(vectorSource, nearbyUsers, currentUser, mapLoaded);
