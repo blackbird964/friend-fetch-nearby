@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { Profile, updateUserLocation as updateLocation } from '@/lib/supabase';
 import { AppUser } from './types';
@@ -125,4 +124,80 @@ export const filterUsersByDistance = (users: AppUser[], maxDistanceKm: number): 
     if (!user.distance || user.distance === Infinity) return true;
     return user.distance <= maxDistanceKm;
   });
+};
+
+/**
+ * Get nearby users for a user based on their location and radius
+ */
+export const getNearbyUsers = async (userId: string, location: { lat: number, lng: number }, radiusKm: number): Promise<AppUser[]> => {
+  try {
+    console.log(`Getting nearby users for user ${userId} within ${radiusKm}km radius`);
+    
+    // Fetch all profiles from the database
+    const { data: profiles, error } = await supabase
+      .from('profiles')
+      .select('*');
+      
+    if (error) {
+      console.error("Error fetching profiles:", error);
+      throw error;
+    }
+    
+    // Filter out the current user and convert to AppUser type
+    const otherUsers = profiles
+      .filter(profile => profile.id !== userId)
+      .map(profile => ({
+        id: profile.id,
+        name: profile.name || 'User',
+        email: '', // We don't have emails for other users
+        avatar: profile.profile_pic || undefined,
+        location: profile.location ? extractLocationFromPgPoint(profile.location) : undefined,
+        interests: Array.isArray(profile.interests) ? profile.interests : [],
+        profile_pic: profile.profile_pic || undefined,
+        bio: profile.bio || undefined,
+        age: profile.age || undefined,
+        gender: profile.gender || undefined,
+        blockedUsers: profile.blockedUsers || [] // If profile has blockedUsers property
+      }));
+
+    // Calculate distance for each user
+    const usersWithDistance = processNearbyUsers(otherUsers, location);
+    
+    // Filter users by distance
+    const nearbyUsers = filterUsersByDistance(usersWithDistance, radiusKm);
+    
+    return nearbyUsers;
+  } catch (error) {
+    console.error("Error getting nearby users:", error);
+    return [];
+  }
+};
+
+/**
+ * Extract location from PostgreSQL point type
+ */
+const extractLocationFromPgPoint = (pgPoint: unknown): { lat: number, lng: number } | undefined => {
+  try {
+    if (typeof pgPoint === 'string' && pgPoint.startsWith('(')) {
+      const match = pgPoint.match(/\(([^,]+),([^)]+)\)/);
+      if (match) {
+        return {
+          lng: parseFloat(match[1]),
+          lat: parseFloat(match[2])
+        };
+      }
+    } else if (typeof pgPoint === 'object' && pgPoint !== null) {
+      const point = pgPoint as any;
+      if (point.lat !== undefined && point.lng !== undefined) {
+        return {
+          lat: point.lat,
+          lng: point.lng
+        };
+      }
+    }
+    return undefined;
+  } catch (e) {
+    console.error('Error parsing PG point:', e);
+    return undefined;
+  }
 };

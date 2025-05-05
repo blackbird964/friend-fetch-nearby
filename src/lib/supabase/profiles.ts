@@ -16,6 +16,7 @@ export type Profile = {
     lat: number;
     lng: number;
   } | null;
+  blockedUsers?: string[]; // Add the blockedUsers field
 };
 
 export async function getProfile(userId: string): Promise<Profile | null> {
