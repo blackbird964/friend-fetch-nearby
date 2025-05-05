@@ -1,36 +1,40 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAppContext } from '@/context/AppContext';
+import { debounce } from 'lodash';
 
 export function useUserPresence() {
   const { currentUser, nearbyUsers, setNearbyUsers, chats, setChats } = useAppContext();
-
+  const updateStatusRef = useRef<any>(null);
+  
   // Update the user's online status when they connect/disconnect
   useEffect(() => {
     if (!currentUser?.id) return;
 
-    // Mark the current user as online
-    const updateUserStatus = async (isOnline: boolean) => {
-      try {
-        await supabase
-          .from('profiles')
-          .update({ 
-            is_online: isOnline,
-            last_seen: new Date().toISOString() 
-          })
-          .eq('id', currentUser.id);
-      } catch (error) {
-        console.error('Error updating online status:', error);
-      }
-    };
+    // Create a debounced function for updating status to prevent flickering
+    if (!updateStatusRef.current) {
+      updateStatusRef.current = debounce(async (isOnline: boolean) => {
+        try {
+          await supabase
+            .from('profiles')
+            .update({ 
+              is_online: isOnline,
+              last_seen: new Date().toISOString() 
+            })
+            .eq('id', currentUser.id);
+        } catch (error) {
+          console.error('Error updating online status:', error);
+        }
+      }, 300); // 300ms debounce to reduce flicker
+    }
 
     // Mark user as online when they load the app
-    updateUserStatus(true);
+    updateStatusRef.current(true);
 
     // Set up event listeners to handle page visibility changes and before unload
     const handleVisibilityChange = () => {
-      updateUserStatus(document.visibilityState === 'visible');
+      updateStatusRef.current(document.visibilityState === 'visible');
     };
 
     const handleBeforeUnload = () => {
@@ -121,7 +125,8 @@ export function useUserPresence() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      updateUserStatus(false);
+      updateStatusRef.current.cancel(); // Cancel any pending debounced calls
+      updateStatusRef.current(false); // Set status to offline
       supabase.removeChannel(channel);
     };
   }, [currentUser?.id, nearbyUsers, setNearbyUsers, chats, setChats]);
