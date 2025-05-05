@@ -19,12 +19,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(false);
 
   // Wrapper for the user location and profile update functions to match expected types
-  const updateUserLocation = async (userId: string, location: Location): Promise<void> => {
-    await updateLocation(userId, location);
+  const handleUpdateUserLocation = async (userId: string, location: Location): Promise<void> => {
+    await updateUserLocation(userId, location);
   };
   
-  const updateUserProfile = async (userId: string, profileData: Partial<AppUser>): Promise<void> => {
-    await updateProfile({ ...profileData, id: userId });
+  const handleUpdateUserProfile = async (userId: string, profileData: Partial<AppUser>): Promise<void> => {
+    await updateUserProfile({ ...profileData, id: userId });
   };
 
   // Add block user functionality
@@ -194,8 +194,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         supabaseUser,
         setSupabaseUser,
         loading,
-        updateUserLocation,
-        updateUserProfile,
+        updateUserLocation: handleUpdateUserLocation,
+        updateUserProfile: handleUpdateUserProfile,
         blockUser: blockUserAction,
         unblockUser: unblockUserAction,
         reportUser: reportUserAction,
