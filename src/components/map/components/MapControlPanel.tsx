@@ -25,7 +25,7 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
     <div className="absolute bottom-4 left-0 right-0 mx-4 p-3 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg z-10">
       <div className="flex flex-col gap-3">
         <div className="flex items-center justify-between">
-          <div className="text-sm font-medium">Radius: {radiusInKm} km</div>
+          <div className="text-sm font-medium">Search Radius: {radiusInKm} km</div>
           <div className="flex gap-2">
             <Button 
               variant="outline" 
@@ -48,13 +48,16 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
             </Button>
           </div>
         </div>
-        <Slider 
-          value={[radiusInKm]} 
-          min={1} 
-          max={100}
-          step={1}
-          onValueChange={([value]) => setRadiusInKm(value)} 
-        />
+        <div>
+          <Slider 
+            value={[radiusInKm]} 
+            min={1} 
+            max={100}
+            step={1}
+            onValueChange={([value]) => setRadiusInKm(value)} 
+            className="py-1"
+          />
+        </div>
       </div>
     </div>
   );

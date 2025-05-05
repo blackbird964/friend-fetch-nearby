@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Style, Stroke } from 'ol/style';
@@ -9,6 +10,7 @@ import { useMapMarkers } from './hooks/useMapMarkers';
 import { useGeolocation } from './hooks/useGeolocation';
 import { useMeetingAnimation } from './hooks/useMeetingAnimation';
 import { useMapEvents } from './hooks/useMapEvents';
+import { useRadiusCircle } from './hooks/useRadiusCircle';
 
 // Import components
 import MapControlPanel from './components/MapControlPanel';
@@ -56,6 +58,14 @@ const FriendMapContainer: React.FC = () => {
     isTracking
   } = useGeolocation(map, currentUser, updateUserLocation, setCurrentUser);
 
+  // Initialize radius circle
+  const { radiusLayer, radiusFeature } = useRadiusCircle(
+    map,
+    vectorSource,
+    currentUser,
+    radiusInKm
+  );
+
   // Get marker styles and handle marker updates
   const { getMarkerStyle, WYNYARD_COORDS } = useMapMarkers(
     map, 
@@ -66,7 +76,7 @@ const FriendMapContainer: React.FC = () => {
     movingUsers, 
     completedMoves, 
     mapLoaded,
-    friendRequests // Pass friendRequests to the useMapMarkers hook
+    friendRequests
   );
 
   // Handle meeting animations
