@@ -28,7 +28,7 @@ interface UserContextMenuProps {
 }
 
 const UserContextMenu: React.FC<UserContextMenuProps> = ({ user, children }) => {
-  const { currentUser, blockUser, reportUser } = useAppContext();
+  const { currentUser, blockUser, unblockUser, reportUser } = useAppContext();
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   
@@ -42,7 +42,8 @@ const UserContextMenu: React.FC<UserContextMenuProps> = ({ user, children }) => 
   
   const handleBlockUser = async () => {
     if (user.id) {
-      await blockUser(user.id);
+      const action = isBlocked ? unblockUser : blockUser;
+      await action(user.id);
       setShowBlockDialog(false);
     }
   };

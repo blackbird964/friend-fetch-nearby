@@ -1,14 +1,12 @@
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
-import { getProfile } from '@/lib/supabase';
-import { AppUser, Location } from './types';
-import { updateUserLocation, updateUserProfile } from '@/services/user';
-import { DEFAULT_LOCATION } from '@/utils/locationUtils';
+import { AppUser } from './types';
 import { AuthContextType } from './AppContextTypes';
-import { blockUser, unblockUser, reportUser as reportUserService } from '@/services/userActionsService';
-import { toast } from "sonner";
+import { useUserActions } from '@/hooks/useUserActions';
+import { useUserProfile } from '@/hooks/useUserProfile';
+import { fetchUserProfile, getCurrentSession, setupAuthListener } from '@/services/auth/authService';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -18,88 +16,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(false);
 
-  // Wrapper for the user location and profile update functions to match expected types
-  const handleUpdateUserLocation = async (userId: string, location: Location): Promise<void> => {
-    await updateUserLocation(userId, location);
-  };
-  
-  const handleUpdateUserProfile = async (userId: string, profileData: Partial<AppUser>): Promise<void> => {
-    await updateUserProfile({ ...profileData, id: userId });
-  };
-
-  // Add block user functionality
-  const blockUserAction = useCallback(async (userId: string) => {
-    if (!currentUser) return false;
-    
-    const success = await blockUser(currentUser.id, userId);
-    
-    if (success) {
-      // Update the current user in state with the new blocked users array
-      const updatedCurrentUser = { 
-        ...currentUser,
-        blockedUsers: [...(currentUser.blockedUsers || []), userId]
-      };
-      setCurrentUser(updatedCurrentUser);
-      
-      toast.success("User blocked", {
-        description: "You won't see this user anymore."
-      });
-    } else {
-      toast.error("Failed to block user", {
-        description: "Please try again later."
-      });
-    }
-    
-    return success;
-  }, [currentUser, setCurrentUser]);
-
-  // Add unblock user functionality
-  const unblockUserAction = useCallback(async (userId: string) => {
-    if (!currentUser) return false;
-    
-    const success = await unblockUser(currentUser.id, userId);
-    
-    if (success && currentUser.blockedUsers) {
-      // Update the current user in state with the new blocked users array
-      const updatedCurrentUser = { 
-        ...currentUser,
-        blockedUsers: currentUser.blockedUsers.filter(id => id !== userId)
-      };
-      setCurrentUser(updatedCurrentUser);
-      
-      toast.success("User unblocked");
-    } else if (!success) {
-      toast.error("Failed to unblock user", {
-        description: "Please try again later."
-      });
-    }
-    
-    return success;
-  }, [currentUser, setCurrentUser]);
-
-  // Add report user functionality
-  const reportUserAction = useCallback(async (userId: string, reason: string) => {
-    if (!currentUser) return false;
-    
-    const success = await reportUserService(currentUser.id, userId, reason);
-    
-    if (success) {
-      toast.success("Report submitted", {
-        description: "Thank you for helping keep our community safe."
-      });
-    } else {
-      toast.error("Failed to submit report", {
-        description: "Please try again later."
-      });
-    }
-    
-    return success;
-  }, [currentUser]);
+  // Use the profile and actions hooks
+  const { updateUserLocation, updateUserProfile } = useUserProfile();
+  const { blockUser, unblockUser, reportUser, loading: actionsLoading } = useUserActions(currentUser, setCurrentUser);
 
   // Auth state listener
   useEffect(() => {
     // Set up the auth state change listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = setupAuthListener(
       (event, session) => {
         console.log("Auth state changed:", event, session?.user?.id);
         setLoading(true);
@@ -111,23 +35,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Use setTimeout to prevent deadlocks
           setTimeout(async () => {
             try {
-              const profile = await getProfile(session.user.id);
-              console.log("Profile fetched after auth change:", profile);
-              
-              if (profile) {
-                const appUser = {
-                  ...profile,
-                  email: session.user.email || '',
-                };
+              const appUser = await fetchUserProfile(session.user.id);
+              if (appUser) {
+                // Add the email from the session
+                appUser.email = session.user.email || '';
                 setCurrentUser(appUser);
-                
-                // Set default location if none exists
-                if (!profile.location) {
-                  const defaultLocation = DEFAULT_LOCATION;
-                  await updateUserLocation(profile.id, defaultLocation);
-                  appUser.location = defaultLocation;
-                  setCurrentUser(appUser);
-                }
               }
             } catch (error) {
               console.error('Error fetching profile:', error);
@@ -147,30 +59,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for existing session
     const checkSession = async () => {
       setLoading(true);
-      const { data } = await supabase.auth.getSession();
-      console.log("Initial session check:", data.session);
+      const session = await getCurrentSession();
+      console.log("Initial session check:", session);
       
-      if (data.session?.user) {
-        setSupabaseUser(data.session.user);
+      if (session?.user) {
+        setSupabaseUser(session.user);
         setIsAuthenticated(true);
         
-        const profile = await getProfile(data.session.user.id);
-        console.log("Initial profile:", profile);
-        
-        if (profile) {
-          const appUser = {
-            ...profile,
-            email: data.session.user.email || '',
-          };
+        const appUser = await fetchUserProfile(session.user.id);
+        if (appUser) {
+          // Add the email from the session
+          appUser.email = session.user.email || '';
           setCurrentUser(appUser);
-          
-          // Set default location if none exists
-          if (!profile.location) {
-            const defaultLocation = DEFAULT_LOCATION;
-            await updateUserLocation(profile.id, defaultLocation);
-            appUser.location = defaultLocation;
-            setCurrentUser(appUser);
-          }
         }
       }
       
@@ -193,12 +93,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setCurrentUser,
         supabaseUser,
         setSupabaseUser,
-        loading,
-        updateUserLocation: handleUpdateUserLocation,
-        updateUserProfile: handleUpdateUserProfile,
-        blockUser: blockUserAction,
-        unblockUser: unblockUserAction,
-        reportUser: reportUserAction,
+        loading: loading || actionsLoading,
+        updateUserLocation,
+        updateUserProfile,
+        blockUser,
+        unblockUser,
+        reportUser,
       }}
     >
       {children}
