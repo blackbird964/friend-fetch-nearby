@@ -1,8 +1,9 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { AppUser, Location } from './types';
 import { UsersContextType } from './AppContextTypes';
 import { useAuthContext } from './AuthContext';
-import { getNearbyUsers } from './userService';
+import { getNearbyUsers } from '@/services/user';
 import { toast } from "sonner";
 
 const UsersContext = createContext<UsersContextType | undefined>(undefined);
