@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+
+import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { Style, Stroke } from 'ol/style';
 import { useToast } from '@/hooks/use-toast';
 
 // Import custom hooks
@@ -10,6 +10,9 @@ import { useGeolocation } from './hooks/useGeolocation';
 import { useMeetingAnimation } from './hooks/useMeetingAnimation';
 import { useMapEvents } from './hooks/useMapEvents';
 import { useRadiusCircle } from './hooks/useRadiusCircle';
+import { useMapStyles } from './hooks/useMapStyles';
+import { useLocationHandling } from './hooks/useLocationHandling';
+import { useMeetingRequestHandler } from './hooks/useMeetingRequestHandler';
 
 // Import components
 import MapControlPanel from './components/MapControlPanel';
@@ -28,13 +31,10 @@ const FriendMapContainer: React.FC = () => {
     friendRequests 
   } = useAppContext();
   
-  const { toast } = useToast();
   const [selectedUser, setSelectedUser] = useState<string | null>(null);
   const [selectedDuration, setSelectedDuration] = useState<number>(30);
   const [movingUsers, setMovingUsers] = useState<Set<string>>(new Set());
   const [completedMoves, setCompletedMoves] = useState<Set<string>>(new Set());
-  const requestSentToastRef = useRef<boolean>(false);
-  const initialLocationObtained = useRef<boolean>(false);
 
   // Initialize map with references
   const { 
@@ -76,7 +76,7 @@ const FriendMapContainer: React.FC = () => {
     completedMoves, 
     mapLoaded,
     friendRequests,
-    radiusInKm  // Pass the radius parameter
+    radiusInKm
   );
 
   // Handle meeting animations
@@ -88,25 +88,17 @@ const FriendMapContainer: React.FC = () => {
     setSelectedUser,
     WYNYARD_COORDS as [number, number]
   );
-
-  // Set up marker styles
-  useEffect(() => {
-    if (vectorLayer.current) {
-      vectorLayer.current.setStyle((feature: any) => {
-        return getMarkerStyle(feature);
-      });
-    }
-    
-    if (routeLayer.current) {
-      routeLayer.current.setStyle(new Style({
-        stroke: new Stroke({
-          color: '#10b981',
-          width: 2,
-          lineDash: [5, 5]
-        })
-      }));
-    }
-  }, [selectedUser, movingUsers, completedMoves, friendRequests, getMarkerStyle]);
+  
+  // Apply styling to map layers
+  useMapStyles(
+    vectorLayer,
+    routeLayer,
+    getMarkerStyle,
+    selectedUser,
+    movingUsers,
+    completedMoves,
+    friendRequests
+  );
 
   // Add map click handlers
   useMapEvents(
@@ -121,49 +113,17 @@ const FriendMapContainer: React.FC = () => {
     currentUser
   );
 
-  // Get user's location on initial load - without triggering refreshNearbyUsers
-  useEffect(() => {
-    if (mapLoaded && !initialLocationObtained.current) {
-      // Get user's location after a short delay, but only once
-      const timer = setTimeout(() => {
-        initialLocationObtained.current = true;
-        getUserLocation();
-      }, 1000);
-      
-      return () => clearTimeout(timer);
-    }
-  }, [mapLoaded, getUserLocation]);
+  // Handle initial location fetching
+  useLocationHandling(mapLoaded, getUserLocation);
+  
+  // Handle meeting request functionality
+  const { handleSendRequest } = useMeetingRequestHandler({
+    selectedUser,
+    nearbyUsers,
+    animateUserToMeeting
+  });
 
-  // Handle sending a meeting request
-  const handleSendRequest = async () => {
-    if (!currentUser) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to send friend requests",
-        variant: "destructive"
-      });
-      return;
-    }
-    
-    if (!selectedUser) return;
-    
-    const user = nearbyUsers.find(u => u.id === selectedUser);
-    if (!user) return;
-    
-    // In a real implementation, we would save this to the database
-    // For now, we'll just update the local state and animate
-    animateUserToMeeting(user, selectedDuration);
-    
-    // Only show toast once per session to prevent flickering
-    if (!requestSentToastRef.current) {
-      toast({
-        title: "Request Sent!",
-        description: `You've sent a ${selectedDuration} minute meet-up request to ${user.name}`,
-      });
-      requestSentToastRef.current = true;
-    }
-  };
-
+  // Simplified JSX structure
   return (
     <div className="flex flex-col h-full relative">
       <div className="flex-1 relative bg-gray-100 rounded-lg overflow-hidden shadow-inner">
@@ -189,7 +149,7 @@ const FriendMapContainer: React.FC = () => {
         selectedUser={selectedUser}
         selectedDuration={selectedDuration}
         setSelectedDuration={setSelectedDuration}
-        onSendRequest={handleSendRequest}
+        onSendRequest={() => handleSendRequest(selectedDuration)}
         onCancel={() => setSelectedUser(null)}
         nearbyUsers={nearbyUsers}
         movingUsers={movingUsers}
