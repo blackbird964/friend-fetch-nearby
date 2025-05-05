@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Profile, updateUserLocation as updateLocation } from '@/lib/supabase';
 import { AppUser } from './types';
@@ -146,19 +147,23 @@ export const getNearbyUsers = async (userId: string, location: { lat: number, ln
     // Filter out the current user and convert to AppUser type
     const otherUsers = profiles
       .filter(profile => profile.id !== userId)
-      .map(profile => ({
-        id: profile.id,
-        name: profile.name || 'User',
-        email: '', // We don't have emails for other users
-        avatar: profile.profile_pic || undefined,
-        location: profile.location ? extractLocationFromPgPoint(profile.location) : undefined,
-        interests: Array.isArray(profile.interests) ? profile.interests : [],
-        profile_pic: profile.profile_pic || undefined,
-        bio: profile.bio || undefined,
-        age: profile.age || undefined,
-        gender: profile.gender || undefined,
-        blockedUsers: profile.blockedUsers || [] // If profile has blockedUsers property
-      }));
+      .map(profile => {
+        // Use type assertion to handle the blockedUsers property
+        const typedProfile = profile as any;
+        return {
+          id: profile.id,
+          name: profile.name || 'User',
+          email: '', // We don't have emails for other users
+          avatar: profile.profile_pic || undefined,
+          location: profile.location ? extractLocationFromPgPoint(profile.location) : undefined,
+          interests: Array.isArray(profile.interests) ? profile.interests : [],
+          profile_pic: profile.profile_pic || undefined,
+          bio: profile.bio || undefined,
+          age: profile.age || undefined,
+          gender: profile.gender || undefined,
+          blockedUsers: typedProfile.blockedUsers || [] // Use type assertion to access blockedUsers
+        };
+      });
 
     // Calculate distance for each user
     const usersWithDistance = processNearbyUsers(otherUsers, location);
