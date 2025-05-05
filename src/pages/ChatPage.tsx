@@ -3,12 +3,11 @@ import React, { useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import ChatList from '@/components/chat/ChatList';
 import ChatWindow from '@/components/chat/ChatWindow';
+import ChatHeader from '@/components/chat/ChatHeader';
 import FriendRequestList from '@/components/users/FriendRequestList';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, ArrowLeft, Loader2 } from 'lucide-react';
-import { Button } from "@/components/ui/button";
+import { Bell, Loader2 } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
-import UserAvatar from '@/components/users/cards/UserAvatar';
 
 const ChatPage: React.FC = () => {
   const { friendRequests, selectedChat, setSelectedChat, loading } = useAppContext();
@@ -51,16 +50,6 @@ const ChatPage: React.FC = () => {
     <div className="container mx-auto px-4 py-6 max-w-3xl flex flex-col h-[calc(100vh-130px)]">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Messages</h1>
-        {selectedChat && isMobile && (
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            className="flex items-center" 
-            onClick={() => setSelectedChat(null)}
-          >
-            <ArrowLeft className="h-4 w-4 mr-1" /> Back to chats
-          </Button>
-        )}
       </div>
       
       {pendingRequests > 0 && !selectedChat && (
@@ -104,33 +93,13 @@ const ChatPage: React.FC = () => {
           {selectedChat && (
             <div className={`${isMobile ? 'fixed inset-0 z-20 bg-background pt-0' : 'md:w-2/3 relative'} flex-grow overflow-hidden`}>
               <div className={`${isMobile ? 'h-full' : 'border rounded-lg shadow-sm h-full'} bg-background flex flex-col`}>
-                <div className="border-b p-4 flex items-center">
-                  <div className="mr-3">
-                    <UserAvatar 
-                      src={selectedChat.profilePic} 
-                      alt={selectedChat.participantName} 
-                      size="sm"
-                      showStatus
-                      isOnline={selectedChat.isOnline}
-                    />
-                  </div>
-                  <div>
-                    <h3 className="font-medium">{selectedChat.participantName}</h3>
-                    <p className="text-xs text-gray-500">
-                      {selectedChat.isOnline ? 'Online' : 'Offline'}
-                    </p>
-                  </div>
-                  {isMobile && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      className="ml-auto"
-                      onClick={() => setSelectedChat(null)}
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
+                <ChatHeader 
+                  participantName={selectedChat.participantName}
+                  profilePic={selectedChat.profilePic}
+                  onBack={() => setSelectedChat(null)}
+                  showBackButton={isMobile}
+                  isOnline={selectedChat.isOnline}
+                />
                 <ChatWindow />
               </div>
             </div>

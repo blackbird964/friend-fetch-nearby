@@ -2,7 +2,6 @@
 import React, { useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useIsMobile } from '@/hooks/use-mobile';
-import ChatHeader from './ChatHeader';
 import MessageList from './MessageList';
 import MessageInput from './MessageInput';
 import useChat from '@/hooks/useChat';
@@ -59,13 +58,6 @@ const ChatWindow: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      <ChatHeader 
-        participantName={selectedChat.participantName}
-        profilePic={selectedChat.profilePic}
-        onBack={() => setSelectedChat(null)}
-        showBackButton={isMobile}
-      />
-      
       {isLoading && selectedChat.messages.length === 0 ? (
         <div className="flex-grow flex items-center justify-center">
           <div className="flex flex-col items-center">
