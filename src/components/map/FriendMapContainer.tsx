@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Style, Stroke } from 'ol/style';
@@ -76,7 +75,8 @@ const FriendMapContainer: React.FC = () => {
     movingUsers, 
     completedMoves, 
     mapLoaded,
-    friendRequests
+    friendRequests,
+    radiusInKm  // Pass the radius parameter
   );
 
   // Handle meeting animations

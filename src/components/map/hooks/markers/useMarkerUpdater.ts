@@ -5,12 +5,14 @@ import Feature from 'ol/Feature';
 import Point from 'ol/geom/Point';
 import { fromLonLat } from 'ol/proj';
 import { Vector as VectorSource } from 'ol/source';
+import { calculateDistance } from '@/utils/locationUtils';
 
 export const useMarkerUpdater = (
   vectorSource: React.MutableRefObject<VectorSource | null>,
   nearbyUsers: AppUser[],
   currentUser: AppUser | null,
-  mapLoaded: boolean
+  mapLoaded: boolean,
+  radiusInKm: number // Add radius as a parameter
 ) => {
   // Update map markers when user data changes
   useEffect(() => {
@@ -24,9 +26,24 @@ export const useMarkerUpdater = (
       }
     });
 
-    // Add markers for nearby users with their locations
+    // Add markers for nearby users with their locations, but only if they're within the radius
     nearbyUsers.forEach(user => {
       if (user.location && user.location.lat && user.location.lng) {
+        // Skip users outside the radius if we have user location
+        if (currentUser?.location) {
+          const distance = calculateDistance(
+            currentUser.location.lat,
+            currentUser.location.lng,
+            user.location.lat,
+            user.location.lng
+          );
+          
+          // If user is outside the radius, don't add them to the map
+          if (distance > radiusInKm) {
+            return;
+          }
+        }
+        
         const userFeature = new Feature({
           geometry: new Point(fromLonLat([user.location.lng, user.location.lat])),
           userId: user.id,
@@ -52,5 +69,5 @@ export const useMarkerUpdater = (
       });
       vectorSource.current.addFeature(userFeature);
     }
-  }, [nearbyUsers, mapLoaded, currentUser?.location, vectorSource]);
+  }, [nearbyUsers, mapLoaded, currentUser?.location, vectorSource, radiusInKm]); // Add radiusInKm to dependencies
 };
