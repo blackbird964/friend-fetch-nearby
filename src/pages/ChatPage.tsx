@@ -1,19 +1,23 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import ChatList from '@/components/chat/ChatList';
 import ChatWindow from '@/components/chat/ChatWindow';
 import ChatHeader from '@/components/chat/ChatHeader';
 import FriendRequestList from '@/components/users/FriendRequestList';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, Loader2 } from 'lucide-react';
+import { Bell, Loader2, UserPlus } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ChatPage: React.FC = () => {
-  const { friendRequests, selectedChat, setSelectedChat, loading } = useAppContext();
+  const { friendRequests, selectedChat, setSelectedChat, loading, refreshFriendRequests } = useAppContext();
+  const [activeTab, setActiveTab] = useState('chats');
   const isMobile = useIsMobile();
   
-  const pendingRequests = friendRequests.filter(r => r.status === 'pending').length;
+  const pendingRequests = friendRequests.filter(r => 
+    r.status === 'pending' && r.receiverId === friendRequests[0]?.receiverId
+  ).length;
 
   // Reset selected chat when navigating away on mobile
   useEffect(() => {
@@ -23,6 +27,11 @@ const ChatPage: React.FC = () => {
       }
     };
   }, [isMobile, setSelectedChat]);
+  
+  // Refresh friend requests when component mounts
+  useEffect(() => {
+    refreshFriendRequests();
+  }, [refreshFriendRequests]);
 
   // Prevent viewport scaling on mobile
   useEffect(() => {
@@ -52,25 +61,6 @@ const ChatPage: React.FC = () => {
         <h1 className="text-2xl font-bold">Messages</h1>
       </div>
       
-      {pendingRequests > 0 && !selectedChat && (
-        <Card className="mb-6">
-          <CardHeader className="pb-3">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-xl flex items-center">
-                <Bell className="mr-2 h-5 w-5 text-primary" />
-                Friend Requests
-              </CardTitle>
-              <span className="bg-primary text-white text-sm font-medium py-1 px-2 rounded-full">
-                {pendingRequests} new
-              </span>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <FriendRequestList />
-          </CardContent>
-        </Card>
-      )}
-      
       {loading ? (
         <div className="flex-grow flex items-center justify-center">
           <div className="flex flex-col items-center">
@@ -83,9 +73,46 @@ const ChatPage: React.FC = () => {
           {/* On mobile: Show chat list when no chat is selected, hide when viewing a chat */}
           {(!selectedChat || !isMobile) && (
             <div className={`${isMobile ? 'h-full w-full' : 'md:w-1/3'} overflow-hidden flex-shrink-0`}>
-              <div className="border rounded-lg bg-background shadow-sm h-full overflow-hidden">
-                <ChatList />
-              </div>
+              <Tabs 
+                defaultValue="chats" 
+                value={activeTab} 
+                onValueChange={setActiveTab}
+                className="w-full h-full"
+              >
+                <TabsList className="grid w-full grid-cols-2 mb-4">
+                  <TabsTrigger value="chats">
+                    Chats
+                  </TabsTrigger>
+                  <TabsTrigger value="requests" className="relative">
+                    Requests
+                    {pendingRequests > 0 && (
+                      <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                        {pendingRequests}
+                      </span>
+                    )}
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="chats" className="h-[calc(100%-48px)] overflow-hidden rounded-md border">
+                  <div className="border rounded-lg bg-background shadow-sm h-full overflow-hidden">
+                    <ChatList />
+                  </div>
+                </TabsContent>
+                
+                <TabsContent value="requests" className="h-[calc(100%-48px)] space-y-4 overflow-y-auto p-4 rounded-md border">
+                  <Card>
+                    <CardHeader className="pb-3">
+                      <CardTitle className="text-xl flex items-center">
+                        <UserPlus className="mr-2 h-5 w-5 text-primary" />
+                        Friend Requests
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <FriendRequestList />
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+              </Tabs>
             </div>
           )}
           
@@ -106,7 +133,7 @@ const ChatPage: React.FC = () => {
           )}
           
           {/* Show a placeholder if no chat is selected (desktop only) */}
-          {!selectedChat && !isMobile && (
+          {!selectedChat && !isMobile && activeTab === 'chats' && (
             <div className="hidden md:flex md:w-2/3 md:items-center md:justify-center h-full">
               <div className="border rounded-lg h-full w-full bg-background shadow-sm flex flex-col items-center justify-center text-gray-500">
                 <p>Select a chat to start messaging</p>

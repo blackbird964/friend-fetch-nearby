@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Chat, FriendRequest } from './types';
 import { loadMockChats } from './mockDataService';
 import { fetchFriendRequests } from '@/services/friendRequestService';
@@ -16,7 +16,7 @@ export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [showSidebar, setShowSidebar] = useState(false);
   
   // Refresh friend requests
-  const refreshFriendRequests = async () => {
+  const refreshFriendRequests = useCallback(async () => {
     if (currentUser) {
       try {
         const requests = await fetchFriendRequests(currentUser.id);
@@ -32,7 +32,7 @@ export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       const mockRequests = [];
       setFriendRequests(mockRequests);
     }
-  };
+  }, [currentUser]);
 
   // Set up a periodic refresh for friend requests
   useEffect(() => {
@@ -46,7 +46,7 @@ export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ childr
       
       return () => clearInterval(interval);
     }
-  }, [isAuthenticated, currentUser]);
+  }, [isAuthenticated, currentUser, refreshFriendRequests]);
 
   // Load mock data for testing
   useEffect(() => {

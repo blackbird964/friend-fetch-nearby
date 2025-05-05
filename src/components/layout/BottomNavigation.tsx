@@ -8,14 +8,14 @@ import { Badge } from "@/components/ui/badge";
 const BottomNavigation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { friendRequests, chats, currentUser, refreshFriendRequests } = useAppContext();
+  const { friendRequests, currentUser, refreshFriendRequests } = useAppContext();
   
   // Refresh friend requests when component mounts
   useEffect(() => {
     if (currentUser) {
       refreshFriendRequests();
     }
-  }, [currentUser]);
+  }, [currentUser, refreshFriendRequests]);
   
   const pendingRequests = friendRequests.filter(r => 
     r.status === 'pending' && r.receiverId === currentUser?.id

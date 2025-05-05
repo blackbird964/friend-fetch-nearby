@@ -1,28 +1,16 @@
 
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bell, MapPin, MessageSquare, Info, UserPlus } from 'lucide-react';
-import FriendRequestList from '@/components/users/FriendRequestList';
+import { MapPin, Users, Info } from 'lucide-react';
 import UserList from '@/components/users/UserList';
 import { useNavigate } from 'react-router-dom';
 
 const Home: React.FC = () => {
-  const { friendRequests, nearbyUsers, currentUser, refreshFriendRequests } = useAppContext();
+  const { currentUser, nearbyUsers } = useAppContext();
   const navigate = useNavigate();
   
-  // Refresh friend requests when home page loads
-  useEffect(() => {
-    if (currentUser) {
-      refreshFriendRequests();
-    }
-  }, [currentUser]);
-  
-  const pendingRequests = friendRequests.filter(r => 
-    r.status === 'pending' && r.receiverId === currentUser?.id
-  ).length;
-
   return (
     <div className="container mx-auto px-4 py-6 mb-20 max-w-3xl">
       <div className="flex justify-between items-center mb-6">
@@ -30,29 +18,6 @@ const Home: React.FC = () => {
       </div>
       
       <div className="space-y-6">
-        {/* Friend Requests */}
-        <Card>
-          <CardHeader className="pb-3">
-            <div className="flex justify-between items-center">
-              <CardTitle className="text-xl flex items-center">
-                <UserPlus className="mr-2 h-5 w-5 text-primary" />
-                Friend Requests
-              </CardTitle>
-              {pendingRequests > 0 && (
-                <span className="bg-primary text-white text-sm font-medium py-1 px-2 rounded-full">
-                  {pendingRequests} new
-                </span>
-              )}
-            </div>
-            <CardDescription>
-              Send and manage friend requests with nearby people
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <FriendRequestList />
-          </CardContent>
-        </Card>
-        
         {/* Quick Actions */}
         <div className="grid grid-cols-2 gap-4">
           <Button 
@@ -65,10 +30,10 @@ const Home: React.FC = () => {
           <Button
             variant="outline"
             className="h-auto py-6 flex flex-col items-center justify-center space-y-2"
-            onClick={() => navigate('/chat')}
+            onClick={() => navigate('/friends')}
           >
-            <MessageSquare className="h-6 w-6" />
-            <span>Messages</span>
+            <Users className="h-6 w-6" />
+            <span>Friends</span>
           </Button>
         </div>
         
