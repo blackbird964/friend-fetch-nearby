@@ -1,5 +1,4 @@
-
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { getProfile } from '@/lib/supabase';
@@ -7,6 +6,8 @@ import { AppUser, Location } from './types';
 import { updateUserLocation as updateLocation, updateUserProfile as updateProfile } from './userService';
 import { DEFAULT_LOCATION } from '@/utils/locationUtils';
 import { AuthContextType } from './AppContextTypes';
+import { blockUser, unblockUser, reportUser as reportUserService } from '@/services/userActionsService';
+import { toast } from 'react-toastify';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
@@ -24,6 +25,75 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateUserProfile = async (userId: string, profileData: Partial<AppUser>): Promise<void> => {
     await updateProfile({ ...profileData, id: userId });
   };
+
+  // Add block user functionality
+  const blockUserAction = useCallback(async (userId: string) => {
+    if (!currentUser) return false;
+    
+    const success = await blockUser(currentUser.id, userId);
+    
+    if (success) {
+      // Update the current user in state with the new blocked users array
+      const updatedCurrentUser = { 
+        ...currentUser,
+        blockedUsers: [...(currentUser.blockedUsers || []), userId]
+      };
+      setCurrentUser(updatedCurrentUser);
+      
+      toast.success("User blocked", {
+        description: "You won't see this user anymore."
+      });
+    } else {
+      toast.error("Failed to block user", {
+        description: "Please try again later."
+      });
+    }
+    
+    return success;
+  }, [currentUser, setCurrentUser]);
+
+  // Add unblock user functionality
+  const unblockUserAction = useCallback(async (userId: string) => {
+    if (!currentUser) return false;
+    
+    const success = await unblockUser(currentUser.id, userId);
+    
+    if (success && currentUser.blockedUsers) {
+      // Update the current user in state with the new blocked users array
+      const updatedCurrentUser = { 
+        ...currentUser,
+        blockedUsers: currentUser.blockedUsers.filter(id => id !== userId)
+      };
+      setCurrentUser(updatedCurrentUser);
+      
+      toast.success("User unblocked");
+    } else if (!success) {
+      toast.error("Failed to unblock user", {
+        description: "Please try again later."
+      });
+    }
+    
+    return success;
+  }, [currentUser, setCurrentUser]);
+
+  // Add report user functionality
+  const reportUserAction = useCallback(async (userId: string, reason: string) => {
+    if (!currentUser) return false;
+    
+    const success = await reportUserService(currentUser.id, userId, reason);
+    
+    if (success) {
+      toast.success("Report submitted", {
+        description: "Thank you for helping keep our community safe."
+      });
+    } else {
+      toast.error("Failed to submit report", {
+        description: "Please try again later."
+      });
+    }
+    
+    return success;
+  }, [currentUser]);
 
   // Auth state listener
   useEffect(() => {
@@ -125,6 +195,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         loading,
         updateUserLocation,
         updateUserProfile,
+        blockUser: blockUserAction,
+        unblockUser: unblockUserAction,
+        reportUser: reportUserAction,
       }}
     >
       {children}

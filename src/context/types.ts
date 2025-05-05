@@ -1,4 +1,3 @@
-
 import { User } from '@supabase/supabase-js';
 
 export interface Location {
@@ -20,6 +19,7 @@ export interface AppUser {
   distance?: number;
   chat?: Chat; // Chat property for navigation purposes
   isOnline?: boolean; // Adding isOnline property
+  blockedUsers?: string[]; // Array of blocked user IDs
 }
 
 export interface Chat {
@@ -83,6 +83,9 @@ export interface AppContextType {
   updateUserLocation: (userId: string, location: Location) => Promise<void>;
   updateUserProfile: (userId: string, profileData: Partial<AppUser>) => Promise<void>;
   refreshFriendRequests: () => Promise<void>;
+  blockUser: (userId: string) => Promise<boolean>;
+  unblockUser: (userId: string) => Promise<boolean>;
+  reportUser: (userId: string, reason: string) => Promise<boolean>;
 }
 
 export type MessageStatus = 'sent' | 'received' | 'read';
