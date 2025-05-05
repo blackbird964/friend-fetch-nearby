@@ -2,7 +2,7 @@
 import { useState, useRef } from 'react';
 import { getAllProfiles } from '@/lib/supabase';
 import { AppUser } from '@/context/types';
-import { processNearbyUsers, addTestUsersNearby } from '@/context/userService';
+import { processNearbyUsers, addTestUsersNearby } from '@/services/user';
 import { DEFAULT_LOCATION } from '@/utils/locationUtils';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';

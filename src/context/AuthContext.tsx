@@ -1,9 +1,10 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { User } from '@supabase/supabase-js';
 import { getProfile } from '@/lib/supabase';
 import { AppUser, Location } from './types';
-import { updateUserLocation as updateLocation, updateUserProfile as updateProfile } from './userService';
+import { updateUserLocation, updateUserProfile } from '@/services/user';
 import { DEFAULT_LOCATION } from '@/utils/locationUtils';
 import { AuthContextType } from './AppContextTypes';
 import { blockUser, unblockUser, reportUser as reportUserService } from '@/services/userActionsService';
