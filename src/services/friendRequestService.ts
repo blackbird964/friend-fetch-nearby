@@ -15,9 +15,12 @@ export async function sendFriendRequest(
   duration: number
 ): Promise<FriendRequest | null> {
   try {
+    // Create a unique ID for the request
+    const requestId = `fr-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
     // Create the friend request object
     const newRequest: FriendRequest = {
-      id: `fr-${Date.now()}`,
+      id: requestId,
       senderId,
       senderName,
       senderProfilePic,
@@ -25,13 +28,14 @@ export async function sendFriendRequest(
       receiverName,
       receiverProfilePic,
       duration,
-      status: 'pending', // This is explicitly set to one of the allowed values
+      status: 'pending',
       timestamp: Date.now()
     };
 
+    console.log("Sending friend request:", newRequest);
+
     // Since we don't have a friend_requests table in the database yet,
-    // we'll just use messages table as a temporary solution
-    // and later we can create a proper friend_requests table
+    // we'll use messages table as a temporary solution
     const { data, error } = await supabase
       .from('messages')
       .insert({
@@ -55,6 +59,7 @@ export async function sendFriendRequest(
       
     if (error) {
       console.error('Error saving friend request to database:', error);
+      return null;
     } else {
       console.log('Friend request saved to database:', data);
     }
@@ -72,7 +77,9 @@ export async function sendFriendRequest(
  */
 export async function fetchFriendRequests(userId: string): Promise<FriendRequest[]> {
   try {
-    // Fetch messages that are actually friend requests
+    console.log("Fetching friend requests for user ID:", userId);
+    
+    // Fetch messages that are actually friend requests where the user is sender or receiver
     const { data, error } = await supabase
       .from('messages')
       .select('*')
@@ -83,6 +90,8 @@ export async function fetchFriendRequests(userId: string): Promise<FriendRequest
       console.error('Error fetching friend requests:', error);
       return [];
     }
+    
+    console.log("Raw messages data:", data);
     
     // Filter out messages that aren't friend requests
     const friendRequests = data
@@ -111,6 +120,7 @@ export async function fetchFriendRequests(userId: string): Promise<FriendRequest
         };
       });
       
+    console.log("Processed friend requests:", friendRequests);
     return friendRequests;
   } catch (error) {
     console.error('Error fetching friend requests:', error);
@@ -126,6 +136,8 @@ export async function updateFriendRequestStatus(
   status: 'accepted' | 'rejected'
 ): Promise<boolean> {
   try {
+    console.log(`Updating friend request ${requestId} status to ${status}`);
+    
     // Get the current message content first
     const { data: currentMessage, error: fetchError } = await supabase
       .from('messages')
@@ -138,6 +150,8 @@ export async function updateFriendRequestStatus(
       return false;
     }
     
+    console.log("Current message content:", currentMessage);
+    
     // Parse the current content
     let content;
     try {
@@ -149,6 +163,8 @@ export async function updateFriendRequestStatus(
     
     // Update only the status field
     content.status = status;
+    
+    console.log("Updated content:", content);
     
     // Update the message with the new status
     const { error } = await supabase
@@ -164,6 +180,7 @@ export async function updateFriendRequestStatus(
       return false;
     }
     
+    console.log(`Friend request ${requestId} updated successfully to ${status}`);
     return true;
   } catch (error) {
     console.error('Error updating friend request status:', error);
@@ -178,6 +195,8 @@ export async function cancelFriendRequest(
   requestId: string
 ): Promise<boolean> {
   try {
+    console.log(`Cancelling friend request ${requestId}`);
+    
     // Delete the message representing the friend request
     const { error } = await supabase
       .from('messages')
@@ -189,6 +208,7 @@ export async function cancelFriendRequest(
       return false;
     }
     
+    console.log(`Friend request ${requestId} cancelled successfully`);
     return true;
   } catch (error) {
     console.error('Error canceling friend request:', error);

@@ -4,22 +4,21 @@ import { useToast } from '@/hooks/use-toast';
 import { useAppContext } from '@/context/AppContext';
 import { sendFriendRequest } from '@/services/friendRequestService';
 import { AppUser } from '@/context/types';
+import { toast } from "sonner";
 
 export const useFriendActions = () => {
   const { 
     currentUser, 
     friendRequests, 
-    setFriendRequests
+    setFriendRequests,
+    refreshFriendRequests
   } = useAppContext();
-  const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
   const handleAddFriend = async (user: AppUser) => {
     if (!currentUser) {
-      toast({
-        title: "Not logged in",
-        description: "You need to be logged in to send friend requests",
-        variant: "destructive"
+      toast.error("Not logged in", {
+        description: "You need to be logged in to send friend requests"
       });
       return;
     }
@@ -31,11 +30,23 @@ export const useFriendActions = () => {
        (req.senderId === user.id && req.receiverId === currentUser.id))
     );
 
+    // Check if we already have an accepted request with this user
+    const alreadyFriends = friendRequests.find(req => 
+      req.status === 'accepted' && 
+      ((req.receiverId === user.id && req.senderId === currentUser.id) ||
+       (req.senderId === user.id && req.receiverId === currentUser.id))
+    );
+
     if (existingRequest) {
-      toast({
-        title: "Request already sent",
-        description: `You already have a pending request with ${user.name}`,
-        variant: "default"
+      toast.info("Request already sent", {
+        description: `You already have a pending request with ${user.name}`
+      });
+      return;
+    }
+
+    if (alreadyFriends) {
+      toast.info("Already friends", {
+        description: `You are already friends with ${user.name}`
       });
       return;
     }
@@ -57,17 +68,19 @@ export const useFriendActions = () => {
       if (request) {
         setFriendRequests([...friendRequests, request]);
         
-        toast({
-          title: "Friend Request Sent!",
-          description: `You've sent a friend request to ${user.name}`,
+        toast.success("Friend Request Sent!", {
+          description: `You've sent a friend request to ${user.name}`
         });
+        
+        // Refresh friend requests to ensure our state is up-to-date
+        await refreshFriendRequests();
+      } else {
+        throw new Error("Failed to send friend request");
       }
     } catch (error) {
       console.error('Error sending friend request:', error);
-      toast({
-        title: "Error",
-        description: "Failed to send friend request. Please try again.",
-        variant: "destructive"
+      toast.error("Error", {
+        description: "Failed to send friend request. Please try again."
       });
     } finally {
       setLoading(false);

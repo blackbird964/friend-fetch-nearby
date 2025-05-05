@@ -8,8 +8,13 @@ import UserList from '@/components/users/UserList';
 import { useNavigate } from 'react-router-dom';
 
 const Home: React.FC = () => {
-  const { currentUser, nearbyUsers } = useAppContext();
+  const { currentUser, nearbyUsers, chats, friendRequests } = useAppContext();
   const navigate = useNavigate();
+  
+  // Count accepted friends
+  const acceptedFriends = friendRequests.filter(req => req.status === 'accepted').length;
+  const totalFriends = chats.length;
+  const friendsCount = Math.max(acceptedFriends, totalFriends);
   
   return (
     <div className="container mx-auto px-4 py-6 mb-20 max-w-3xl">
@@ -29,11 +34,16 @@ const Home: React.FC = () => {
           </Button>
           <Button
             variant="outline"
-            className="h-auto py-6 flex flex-col items-center justify-center space-y-2"
+            className="h-auto py-6 flex flex-col items-center justify-center space-y-2 relative"
             onClick={() => navigate('/friends')}
           >
             <Users className="h-6 w-6" />
             <span>Friends</span>
+            {friendsCount > 0 && (
+              <span className="absolute top-2 right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {friendsCount}
+              </span>
+            )}
           </Button>
         </div>
         

@@ -1,29 +1,36 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 import UserCard from '@/components/users/UserCard';
-import { Chat, AppUser } from '@/context/types';
+import { Chat, AppUser, FriendRequest } from '@/context/types';
 import { Separator } from '@/components/ui/separator';
 
 const FriendsPage: React.FC = () => {
-  const { chats, setSelectedChat } = useAppContext();
+  const { chats, setSelectedChat, friendRequests, refreshFriendRequests } = useAppContext();
   const navigate = useNavigate();
 
-  // Extract friends from chats and create AppUser compatible objects
+  useEffect(() => {
+    // Refresh friend requests when component mounts
+    refreshFriendRequests();
+  }, [refreshFriendRequests]);
+
+  // Get accepted friend requests
+  const acceptedRequests = friendRequests.filter(req => req.status === 'accepted');
+
+  // Extract friends from both chats and accepted requests
   const friends = chats.map(chat => {
     // Create an AppUser compatible object from the chat participant info
     const friend: AppUser = {
       id: chat.participantId || '',
       name: chat.participantName || '',
-      email: '',  // Required by AppUser but not used in display
-      interests: [],  // Required by AppUser but not used in display
+      email: '', // Required by AppUser but not used in display
+      interests: [], // Required by AppUser but not used in display
       profile_pic: chat.profilePic,
       isOnline: chat.isOnline,
-      // Additional properties to help with chat navigation
-      chat: chat
+      chat: chat // Link to the chat for navigation
     };
     
     return friend;
