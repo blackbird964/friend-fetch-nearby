@@ -1,7 +1,8 @@
+
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { Chat, FriendRequest } from './types';
 import { loadMockChats } from './mockDataService';
-import { fetchFriendRequests } from '@/services/friendRequestService';
+import { fetchFriendRequests } from '@/services/friend-requests';
 import { SocialContextType } from './AppContextTypes';
 import { useAuthContext } from './AuthContext';
 import { toast } from "sonner";

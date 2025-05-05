@@ -7,7 +7,7 @@ import { updateUserLocation as updateLocation, updateUserProfile as updateProfil
 import { DEFAULT_LOCATION } from '@/utils/locationUtils';
 import { AuthContextType } from './AppContextTypes';
 import { blockUser, unblockUser, reportUser as reportUserService } from '@/services/userActionsService';
-import { toast } from 'react-toastify';
+import { toast } from "sonner";
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 

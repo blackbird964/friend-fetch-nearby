@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
@@ -6,7 +5,7 @@ import UserRequestCard from './UserRequestCard';
 import { AppUser, FriendRequest } from '@/context/types';
 import { Button } from '@/components/ui/button';
 import { X, MapPin } from 'lucide-react';
-import { cancelFriendRequest } from '@/services/friendRequestService';
+import { cancelFriendRequest } from '@/services/friend-requests';
 
 interface MeetingRequestHandlerProps {
   selectedUser: string | null;

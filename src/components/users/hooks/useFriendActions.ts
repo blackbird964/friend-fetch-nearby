@@ -1,7 +1,7 @@
 
 import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { sendFriendRequest } from '@/services/friendRequestService';
+import { sendFriendRequest } from '@/services/friend-requests';
 import { AppUser } from '@/context/types';
 import { toast } from "sonner";
 

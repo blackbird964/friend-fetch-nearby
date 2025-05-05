@@ -1,50 +1,48 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { toast } from "sonner";
+import { v4 as uuidv4 } from 'uuid';
 
 /**
- * Block a user
+ * Add a user to the current user's blocked list
  */
-export async function blockUser(currentUserId: string, userIdToBlock: string): Promise<boolean> {
+export async function blockUser(currentUserId: string, blockedUserId: string): Promise<boolean> {
   try {
-    console.log(`Blocking user ${userIdToBlock} for user ${currentUserId}`);
-    
-    // First, get the current user's profile to check if they have any blocked users already
-    const { data: userProfile, error: fetchError } = await supabase
+    // First get the current profile with any existing blocked users
+    const { data: profile, error: fetchError } = await supabase
       .from('profiles')
-      .select('id, blockedUsers')
+      .select('*')
       .eq('id', currentUserId)
       .single();
       
     if (fetchError) {
-      console.error('Error fetching user profile:', fetchError);
+      console.error('Error fetching profile:', fetchError);
       return false;
     }
     
-    // Initialize or update the blockedUsers array
-    const blockedUsers = userProfile.blockedUsers || [];
+    // Get current blocked users or initialize empty array
+    const currentBlockedUsers = profile.blockedUsers || [];
     
-    // Check if user is already blocked
-    if (blockedUsers.includes(userIdToBlock)) {
-      console.log(`User ${userIdToBlock} is already blocked`);
+    // Add new blocked user if not already blocked
+    if (!currentBlockedUsers.includes(blockedUserId)) {
+      currentBlockedUsers.push(blockedUserId);
+      
+      // Update the profile with new blocked users array
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update({
+          blockedUsers: currentBlockedUsers
+        })
+        .eq('id', currentUserId);
+        
+      if (updateError) {
+        console.error('Error updating blocked users:', updateError);
+        return false;
+      }
+      
       return true;
     }
     
-    // Add the user to block to the blockedUsers array
-    blockedUsers.push(userIdToBlock);
-    
-    // Update the user's profile with the new blockedUsers array
-    const { error: updateError } = await supabase
-      .from('profiles')
-      .update({ blockedUsers: blockedUsers })
-      .eq('id', currentUserId);
-      
-    if (updateError) {
-      console.error('Error updating blocked users:', updateError);
-      return false;
-    }
-    
-    console.log(`Successfully blocked user ${userIdToBlock}`);
+    // User was already blocked
     return true;
   } catch (error) {
     console.error('Error blocking user:', error);
@@ -53,39 +51,34 @@ export async function blockUser(currentUserId: string, userIdToBlock: string): P
 }
 
 /**
- * Unblock a user
+ * Remove a user from the current user's blocked list
  */
-export async function unblockUser(currentUserId: string, userIdToUnblock: string): Promise<boolean> {
+export async function unblockUser(currentUserId: string, blockedUserId: string): Promise<boolean> {
   try {
-    console.log(`Unblocking user ${userIdToUnblock} for user ${currentUserId}`);
-    
-    // First, get the current user's profile
-    const { data: userProfile, error: fetchError } = await supabase
+    // First get the current profile with any existing blocked users
+    const { data: profile, error: fetchError } = await supabase
       .from('profiles')
-      .select('id, blockedUsers')
+      .select('*')
       .eq('id', currentUserId)
       .single();
       
     if (fetchError) {
-      console.error('Error fetching user profile:', fetchError);
+      console.error('Error fetching profile:', fetchError);
       return false;
     }
     
-    // Check if blockedUsers exists and contains the user to unblock
-    const blockedUsers = userProfile.blockedUsers || [];
+    // Get current blocked users or initialize empty array
+    const currentBlockedUsers = profile.blockedUsers || [];
     
-    if (!blockedUsers.includes(userIdToUnblock)) {
-      console.log(`User ${userIdToUnblock} is not blocked`);
-      return true;
-    }
+    // Remove the blocked user
+    const updatedBlockedUsers = currentBlockedUsers.filter(id => id !== blockedUserId);
     
-    // Filter out the user to unblock
-    const updatedBlockedUsers = blockedUsers.filter(id => id !== userIdToUnblock);
-    
-    // Update the user's profile with the new blockedUsers array
+    // Update the profile with new blocked users array
     const { error: updateError } = await supabase
       .from('profiles')
-      .update({ blockedUsers: updatedBlockedUsers })
+      .update({
+        blockedUsers: updatedBlockedUsers
+      })
       .eq('id', currentUserId);
       
     if (updateError) {
@@ -93,7 +86,6 @@ export async function unblockUser(currentUserId: string, userIdToUnblock: string
       return false;
     }
     
-    console.log(`Successfully unblocked user ${userIdToUnblock}`);
     return true;
   } catch (error) {
     console.error('Error unblocking user:', error);
@@ -102,20 +94,22 @@ export async function unblockUser(currentUserId: string, userIdToUnblock: string
 }
 
 /**
- * Report a user to admins
+ * Report a user to administrators
  */
 export async function reportUser(reporterId: string, reportedUserId: string, reason: string): Promise<boolean> {
   try {
-    console.log(`Reporting user ${reportedUserId} by user ${reporterId} for reason: ${reason}`);
+    const reportId = uuidv4();
     
-    // Insert into messages table with a special format to indicate a report
+    // Store report as a message for admin review
     const { error } = await supabase
       .from('messages')
       .insert({
+        id: reportId,
         sender_id: reporterId,
-        receiver_id: reportedUserId,
+        receiver_id: 'admin', // Special receiver ID for admin reports
         content: JSON.stringify({
           type: 'user_report',
+          reported_user_id: reportedUserId,
           reason: reason,
           timestamp: Date.now()
         }),
@@ -123,11 +117,10 @@ export async function reportUser(reporterId: string, reportedUserId: string, rea
       });
       
     if (error) {
-      console.error('Error submitting user report:', error);
+      console.error('Error reporting user:', error);
       return false;
     }
     
-    console.log(`Successfully reported user ${reportedUserId}`);
     return true;
   } catch (error) {
     console.error('Error reporting user:', error);

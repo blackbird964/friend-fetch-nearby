@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +6,7 @@ import UserCard from '@/components/users/UserCard';
 import { AppUser } from '@/context/types';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { sendFriendRequest } from '@/services/friendRequestService';
+import { sendFriendRequest } from '@/services/friend-requests';
 
 interface UserRequestCardProps {
   user: AppUser;

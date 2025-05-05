@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { FriendRequest } from '@/context/types';
 import { useToast } from "@/hooks/use-toast";
-import { updateFriendRequestStatus, cancelFriendRequest } from '@/services/friendRequestService';
+import { updateFriendRequestStatus, cancelFriendRequest } from '@/services/friend-requests';
 import { toast } from "sonner";
 
 export const useFriendRequests = () => {
