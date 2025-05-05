@@ -40,6 +40,7 @@ export async function updateFriendRequestStatus(
     console.log("Updated content:", content);
     
     // Update the message with the new status
+    // Ensure the content is properly serialized as a string
     const { error } = await supabase
       .from('messages')
       .update({

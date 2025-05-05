@@ -51,6 +51,37 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
     );
   }
   
+  const renderMessageContent = (message: Message) => {
+    const messageText = message.text || message.content || '';
+    
+    // Try to parse as JSON if the message appears to be JSON data
+    try {
+      if (messageText && (messageText.startsWith('{') || messageText.startsWith('['))) {
+        const jsonData = JSON.parse(messageText);
+        
+        // Handle friend request
+        if (jsonData.type === 'friend_request') {
+          return (
+            <div className="bg-primary-50 p-3 rounded-md border border-primary-100">
+              <p className="font-medium mb-1">Friend Request {jsonData.status === 'accepted' ? '(Accepted)' : ''}</p>
+              <p className="text-sm">
+                {jsonData.duration} minute meetup with {jsonData.sender_name}
+              </p>
+            </div>
+          );
+        }
+        
+        // For other types of JSON data, just display it nicely formatted
+        return <p className="break-words">{JSON.stringify(jsonData, null, 2)}</p>;
+      }
+    } catch (error) {
+      // Not valid JSON, treat as regular text
+    }
+    
+    // Default rendering for regular text messages
+    return <p className="break-words">{messageText}</p>;
+  };
+  
   return (
     <div 
       ref={messagesContainerRef}
@@ -58,7 +89,6 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
     >
       {messages.map((msg) => {
         const isCurrentUser = msg.senderId === 'current';
-        const messageText = msg.text || msg.content || '';
         // Convert timestamp to number if it's a string
         const timestamp = typeof msg.timestamp === 'string' ? parseInt(msg.timestamp, 10) : msg.timestamp;
         
@@ -73,7 +103,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
                 ? 'bg-primary text-white rounded-tr-none' 
                 : 'bg-gray-100 text-gray-800 rounded-tl-none'}
             `}>
-              <p className="break-words">{messageText}</p>
+              {renderMessageContent(msg)}
               <p className={`text-xs mt-1 text-right ${
                 isCurrentUser ? 'text-white/70' : 'text-gray-500'
               }`}>
