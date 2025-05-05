@@ -5,21 +5,29 @@ import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, UserPlus } from 'lucide-react';
 import UserCard from '@/components/users/UserCard';
-import { Chat } from '@/context/types';
+import { Chat, AppUser } from '@/context/types';
 import { Separator } from '@/components/ui/separator';
 
 const FriendsPage: React.FC = () => {
   const { chats, setSelectedChat } = useAppContext();
   const navigate = useNavigate();
 
-  // Extract friends from chats
-  const friends = chats.map(chat => ({
-    id: chat.participantId,
-    name: chat.participantName,
-    profile_pic: chat.profilePic,
-    isOnline: chat.isOnline,
-    chat: chat
-  }));
+  // Extract friends from chats and create AppUser compatible objects
+  const friends = chats.map(chat => {
+    // Create an AppUser compatible object from the chat participant info
+    const friend: AppUser = {
+      id: chat.participantId || '',
+      name: chat.participantName || '',
+      email: '',  // Required by AppUser but not used in display
+      interests: [],  // Required by AppUser but not used in display
+      profile_pic: chat.profilePic,
+      isOnline: chat.isOnline,
+      // Additional properties to help with chat navigation
+      chat: chat
+    };
+    
+    return friend;
+  });
 
   const handleFriendClick = (chat: Chat) => {
     setSelectedChat(chat);
@@ -46,7 +54,7 @@ const FriendsPage: React.FC = () => {
             <div 
               key={friend.id}
               className="border rounded-lg p-4 bg-white cursor-pointer hover:bg-gray-50"
-              onClick={() => handleFriendClick(friend.chat)}
+              onClick={() => friend.chat && handleFriendClick(friend.chat)}
             >
               <UserCard user={friend} minimal={false} />
             </div>

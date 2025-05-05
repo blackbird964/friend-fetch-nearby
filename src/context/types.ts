@@ -18,6 +18,7 @@ export interface AppUser {
   age?: number;
   gender?: string;
   distance?: number;
+  chat?: Chat; // Adding optional chat property to AppUser
 }
 
 export interface Chat {
