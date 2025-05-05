@@ -1,6 +1,5 @@
 
 import { useState } from 'react';
-import { useToast } from '@/hooks/use-toast';
 import { useAppContext } from '@/context/AppContext';
 import { sendFriendRequest } from '@/services/friendRequestService';
 import { AppUser } from '@/context/types';
@@ -55,13 +54,22 @@ export const useFriendActions = () => {
       setLoading(true);
       // Use the default 30 minutes duration
       const defaultDuration = 30;
+      
+      console.log("Sending friend request with data:", {
+        currentUserId: currentUser.id, 
+        currentUserName: currentUser.name, 
+        profilePic: currentUser.profile_pic,
+        userId: user.id, 
+        userName: user.name
+      });
+      
       const request = await sendFriendRequest(
         currentUser.id,
         currentUser.name || 'User',
-        currentUser.profile_pic,
+        currentUser.profile_pic || null,
         user.id,
         user.name || 'User',
-        user.profile_pic,
+        user.profile_pic || null,
         defaultDuration
       );
       

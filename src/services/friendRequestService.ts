@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { FriendRequest } from '@/context/types';
+import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Send a friend request from one user to another
@@ -15,8 +16,8 @@ export async function sendFriendRequest(
   duration: number
 ): Promise<FriendRequest | null> {
   try {
-    // Create a unique ID for the request
-    const requestId = `fr-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    // Create a proper UUID for the request instead of a custom string format
+    const requestId = uuidv4();
     
     // Create the friend request object
     const newRequest: FriendRequest = {
@@ -39,7 +40,7 @@ export async function sendFriendRequest(
     const { data, error } = await supabase
       .from('messages')
       .insert({
-        id: newRequest.id,
+        id: requestId, // Using a proper UUID now
         sender_id: senderId,
         receiver_id: receiverId,
         content: JSON.stringify({
