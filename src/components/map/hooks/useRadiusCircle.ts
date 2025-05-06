@@ -19,7 +19,9 @@ export const useRadiusCircle = (
   const radiusFeature = useRef<Feature | null>(null);
   const [isLayerInitialized, setIsLayerInitialized] = useState(false);
   
-  // Create a separate layer for the radius circle
+  console.log("useRadiusCircle - Current radius:", radiusInKm, "km, user:", currentUser?.id);
+  
+  // Create a separate layer for the radius circle - independent from the main vector layer
   useEffect(() => {
     if (!map.current) {
       console.log("Map reference not available for radius circle");
@@ -28,44 +30,50 @@ export const useRadiusCircle = (
     
     console.log("Initializing radius circle layer, map is available");
     
-    if (!radiusLayer.current) {
-      console.log("Creating new radius circle layer");
-      
-      // Create a separate source for the radius circle
-      const source = new VectorSource();
-      
-      radiusLayer.current = new VectorLayer({
-        source,
-        style: new Style({
-          fill: new Fill({
-            color: 'rgba(66, 133, 244, 0.2)', // Semi-transparent blue
-          }),
-          stroke: new Stroke({
-            color: 'rgba(64, 99, 255, 0.5)',
-            width: 2,
-            lineDash: [5, 5]
-          }),
-        }),
-        zIndex: 2, // Make sure it's visible (higher than other layers)
-      });
-      
-      console.log("Adding radius layer to map");
-      map.current.addLayer(radiusLayer.current);
-      setIsLayerInitialized(true);
+    // Always recreate the layer to ensure it's fresh
+    if (radiusLayer.current) {
+      console.log("Removing existing radius layer");
+      map.current.removeLayer(radiusLayer.current);
+      radiusLayer.current = null;
     }
+    
+    // Create a new layer with its own source
+    console.log("Creating new radius circle layer");
+    const source = new VectorSource();
+    
+    radiusLayer.current = new VectorLayer({
+      source,
+      style: new Style({
+        fill: new Fill({
+          color: 'rgba(66, 133, 244, 0.2)', // Semi-transparent blue
+        }),
+        stroke: new Stroke({
+          color: 'rgba(64, 99, 255, 0.5)',
+          width: 2,
+          lineDash: [5, 5]
+        }),
+      }),
+      zIndex: 99, // Much higher zIndex to ensure visibility
+    });
+    
+    console.log("Adding radius layer to map");
+    map.current.addLayer(radiusLayer.current);
+    setIsLayerInitialized(true);
     
     return () => {
       if (map.current && radiusLayer.current) {
-        console.log("Removing radius layer from map");
+        console.log("Cleanup: Removing radius layer from map");
         map.current.removeLayer(radiusLayer.current);
         radiusLayer.current = null;
         setIsLayerInitialized(false);
       }
     };
-  }, [map]);
+  }, [map]); // Only recreate when map changes
   
   // Update radius circle when user location or radius changes
   useEffect(() => {
+    console.log("Radius circle update triggered - radius:", radiusInKm, "km");
+    
     if (!radiusLayer.current || !map.current) {
       console.log("Radius layer or map not available for updating circle");
       return;
@@ -84,6 +92,9 @@ export const useRadiusCircle = (
       radiusLayer.current.getSource()?.removeFeature(radiusFeature.current);
       radiusFeature.current = null;
     }
+    
+    // Always clear all features from the source to avoid duplicates
+    radiusLayer.current.getSource()?.clear();
     
     // Create a new radius circle if user has a location
     if (currentUser?.location) {
@@ -109,11 +120,10 @@ export const useRadiusCircle = (
         console.log("Adding radius feature to layer source");
         radiusLayer.current.getSource()?.addFeature(radiusFeature.current);
         
-        // Force redraw of the layer
+        // Force redraw of the layer and the entire map
         radiusLayer.current.changed();
-        
-        // Also update source directly to ensure rendering
         radiusLayer.current.getSource()?.changed();
+        map.current.render(); // Force map rendering
       } else {
         console.error("Radius layer source is null");
       }
@@ -129,15 +139,19 @@ export const useRadiusCircle = (
         // Force redraw
         if (radiusLayer.current) {
           radiusLayer.current.changed();
+          radiusLayer.current.getSource()?.changed();
+          map.current.render(); // Force map rendering
         }
       };
       
       // Add listener to update circle when view changes
       map.current.getView().on('change:resolution', updateCircle);
+      map.current.getView().on('change:center', updateCircle);
       
       return () => {
         if (map.current) {
           map.current.getView().un('change:resolution', updateCircle);
+          map.current.getView().un('change:center', updateCircle);
         }
       };
     } else {
