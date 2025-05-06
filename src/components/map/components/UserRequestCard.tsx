@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -68,8 +69,16 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
     }
   };
   
+  // Stop propagation on all click events within the card to prevent deselection
+  const stopPropagation = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+  
   return (
-    <Card className="mt-4 shadow-md animate-slide-in-bottom">
+    <Card 
+      className="mt-4 shadow-md animate-slide-in-bottom"
+      onClick={stopPropagation} // Stop click propagation at the card level
+    >
       <CardContent className="p-4">
         <div className="flex flex-col">
           <UserCard user={user} minimal={true} />
@@ -87,7 +96,10 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
                   key={time}
                   variant={selectedDuration === time ? "default" : "outline"}
                   className="flex-1"
-                  onClick={() => setSelectedDuration(time)}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent propagation on button click
+                    setSelectedDuration(time);
+                  }}
                 >
                   {time} min
                 </Button>
@@ -98,13 +110,19 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
               <Button 
                 variant="outline" 
                 className="flex-1"
-                onClick={onCancel}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent propagation on cancel click
+                  onCancel();
+                }}
               >
                 Cancel
               </Button>
               <Button 
                 className="flex-1" 
-                onClick={handleSendRequest}
+                onClick={(e) => {
+                  e.stopPropagation(); // Prevent propagation on send click
+                  handleSendRequest();
+                }}
               >
                 Send Request
               </Button>

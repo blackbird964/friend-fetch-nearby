@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
@@ -50,6 +51,11 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
     onSendRequest();
   };
 
+  // Stop propagation on all click events to prevent deselection
+  const stopPropagation = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
   // Check if we already have a pending request with this user
   const existingRequest = selectedUser ? 
     friendRequests.find(req => 
@@ -63,7 +69,8 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   const hasUserMoved = selectedUser ? completedMoves.has(selectedUser) : false;
 
   // Handle cancelling an existing request
-  const handleCancelRequest = async (request: FriendRequest) => {
+  const handleCancelRequest = async (request: FriendRequest, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent map click propagation
     try {
       const success = await cancelFriendRequest(request.id);
       
@@ -92,7 +99,8 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   };
 
   // Handle cancelling active movement
-  const handleCancelMeeting = () => {
+  const handleCancelMeeting = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent map click propagation
     if (selectedUser) {
       // Remove from moving and completed sets
       setMovingUsers(prev => {
@@ -127,7 +135,10 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   // If the user is currently moving to a meeting or has already moved
   if (isUserMoving || hasUserMoved) {
     return (
-      <div className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-slide-in-bottom">
+      <div 
+        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-slide-in-bottom"
+        onClick={stopPropagation} // Stop click propagation at container level
+      >
         <div className="flex justify-between items-center mb-3">
           <h3 className="font-medium">Active Meeting</h3>
           <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
@@ -144,7 +155,7 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
         <Button 
           variant="destructive"
           className="w-full flex items-center justify-center"
-          onClick={handleCancelMeeting}
+          onClick={(e) => handleCancelMeeting(e)}
         >
           <X className="mr-2 h-4 w-4" />
           Cancel Meeting
@@ -156,7 +167,10 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   // If there's an existing pending request, show cancellation option
   if (existingRequest) {
     return (
-      <div className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-slide-in-bottom">
+      <div 
+        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-slide-in-bottom"
+        onClick={stopPropagation} // Stop click propagation at container level
+      >
         <div className="flex justify-between items-center mb-3">
           <h3 className="font-medium">Active Catch-up Request</h3>
           <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">
@@ -171,7 +185,7 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
         <Button 
           variant="destructive"
           className="w-full flex items-center justify-center"
-          onClick={() => handleCancelRequest(existingRequest)}
+          onClick={(e) => handleCancelRequest(existingRequest, e)}
         >
           <X className="mr-2 h-4 w-4" />
           Cancel Request

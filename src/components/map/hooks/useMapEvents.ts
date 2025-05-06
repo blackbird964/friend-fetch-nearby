@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { Map } from 'ol';
 import Feature from 'ol/Feature';
@@ -28,10 +27,12 @@ export const useMapEvents = (
         if (userId) {
           // Always allow toggling selection, even for moving or completed users
           if (selectedUser === userId) {
-            // If we click the same user again, toggle the selection off
-            setSelectedUser(null);
+            // If we click the same user again, we don't deselect - keep the selection
+            // This makes the popup persist when clicking around the user
+            console.log("Clicked on currently selected user, keeping selection");
           } else {
-            // Otherwise, select the user
+            // If clicking a different user, select them
+            console.log("Selecting new user:", userId);
             setSelectedUser(userId);
           }
           
@@ -39,12 +40,31 @@ export const useMapEvents = (
           if (vectorLayer.current) {
             vectorLayer.current.changed();
           }
+          
+          // Prevent map click event from bubbling up to avoid deselection
+          event.stopPropagation();
+          return;
         }
-      } else if (selectedUser) {
-        // If clicking outside a marker, deselect
-        setSelectedUser(null);
-        if (vectorLayer.current) {
-          vectorLayer.current.changed();
+      } 
+      
+      // If we reach here, check if we need to deselect (clicked on map empty space)
+      // But only do it if we're more than 20 pixels away from any feature
+      // This creates a buffer zone around markers where clicking won't deselect
+      if (selectedUser) {
+        // Check if there are any features within 20 pixels
+        const featuresNearby = map.current?.getFeaturesAtPixel(event.pixel, {
+          hitTolerance: 20 // 20 pixel tolerance for keeping selection
+        });
+        
+        if (!featuresNearby || featuresNearby.length === 0) {
+          // If no features nearby, deselect
+          console.log("Clicked away from users, deselecting");
+          setSelectedUser(null);
+          if (vectorLayer.current) {
+            vectorLayer.current.changed();
+          }
+        } else {
+          console.log("Clicked near a feature, keeping selection");
         }
       }
     };
