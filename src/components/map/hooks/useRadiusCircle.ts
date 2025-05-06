@@ -98,6 +98,24 @@ export const useRadiusCircle = (
       } else {
         console.error("Radius layer source is null");
       }
+      
+      // Update the circle when the map view changes to maintain shape
+      const updateCircle = () => {
+        if (!map.current || !radiusFeature.current || !currentUser?.location) return;
+        
+        // Recreate circle with same center and radius
+        const center = fromLonLat([currentUser.location.lng, currentUser.location.lat]);
+        radiusFeature.current.setGeometry(new Circle(center, radiusInKm * 1000));
+      };
+      
+      // Add listener to update circle when view changes
+      map.current.getView().on('change:resolution', updateCircle);
+      
+      return () => {
+        if (map.current) {
+          map.current.getView().un('change:resolution', updateCircle);
+        }
+      };
     } else {
       console.log("Current user has no location, not creating radius circle");
     }
