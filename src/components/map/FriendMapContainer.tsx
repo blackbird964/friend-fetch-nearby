@@ -10,6 +10,7 @@ import { useGeolocation } from './hooks/useGeolocation';
 import { useMeetingAnimation } from './hooks/useMeetingAnimation';
 import { useMapEvents } from './hooks/useMapEvents';
 import { useRadiusCircle } from './hooks/useRadiusCircle';
+import { usePrivacyCircle } from './hooks/usePrivacyCircle';
 import { useMapStyles } from './hooks/useMapStyles';
 import { useLocationHandling } from './hooks/useLocationHandling';
 import { useMeetingRequestHandler } from './hooks/useMeetingRequestHandler';
@@ -28,6 +29,7 @@ const FriendMapContainer: React.FC = () => {
     setRadiusInKm, 
     setCurrentUser, 
     updateUserLocation,
+    updateUserProfile,
     friendRequests 
   } = useAppContext();
   
@@ -65,6 +67,13 @@ const FriendMapContainer: React.FC = () => {
     vectorSource,
     currentUser,
     radiusInKm
+  );
+  
+  // Initialize privacy circle for the current user
+  const { privacyLayer, privacyFeature } = usePrivacyCircle(
+    map,
+    vectorSource,
+    currentUser
   );
 
   // Get marker styles and handle marker updates
@@ -124,6 +133,40 @@ const FriendMapContainer: React.FC = () => {
     nearbyUsers,
     animateUserToMeeting
   });
+  
+  // Function to toggle privacy mode
+  const togglePrivacyMode = async () => {
+    if (!currentUser) return;
+    
+    const currentPrivacySetting = currentUser.locationSettings?.hideExactLocation || 
+                                 currentUser.location_settings?.hide_exact_location || 
+                                 false;
+    
+    try {
+      await updateUserProfile(currentUser.id, {
+        locationSettings: {
+          ...currentUser.locationSettings,
+          hideExactLocation: !currentPrivacySetting
+        }
+      });
+      
+      // Update local state
+      setCurrentUser({
+        ...currentUser,
+        locationSettings: {
+          ...currentUser.locationSettings,
+          hideExactLocation: !currentPrivacySetting
+        }
+      });
+    } catch (error) {
+      console.error('Error toggling privacy mode:', error);
+    }
+  };
+
+  // Get the current privacy setting
+  const isPrivacyModeEnabled = currentUser?.locationSettings?.hideExactLocation || 
+                              currentUser?.location_settings?.hide_exact_location || 
+                              false;
 
   // Simplified JSX structure
   return (
@@ -140,6 +183,8 @@ const FriendMapContainer: React.FC = () => {
           isTracking={isTracking}
           isManualMode={isManualMode}
           toggleManualMode={toggleManualMode}
+          isPrivacyModeEnabled={isPrivacyModeEnabled}
+          togglePrivacyMode={togglePrivacyMode}
         />
         
         <LocationErrorMessage 

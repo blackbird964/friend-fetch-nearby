@@ -21,7 +21,8 @@ export const updateUserProfile = async (updatedProfile: Partial<Profile>) => {
     // Handle location settings - transform from camelCase to snake_case
     if (profileUpdate.locationSettings) {
       profileUpdate.location_settings = {
-        is_manual_mode: profileUpdate.locationSettings.isManualMode
+        is_manual_mode: profileUpdate.locationSettings.isManualMode,
+        hide_exact_location: profileUpdate.locationSettings.hideExactLocation
       };
       delete profileUpdate.locationSettings;
     }

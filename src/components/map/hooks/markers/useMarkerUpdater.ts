@@ -6,6 +6,7 @@ import Point from 'ol/geom/Point';
 import { fromLonLat } from 'ol/proj';
 import { Vector as VectorSource } from 'ol/source';
 import { calculateDistance } from '@/utils/locationUtils';
+import { getDisplayLocation, shouldObfuscateLocation } from '@/utils/privacyUtils';
 
 export const useMarkerUpdater = (
   vectorSource: React.MutableRefObject<VectorSource | null>,
@@ -44,10 +45,14 @@ export const useMarkerUpdater = (
           }
         }
         
+        // Get display location based on privacy settings
+        const displayLocation = getDisplayLocation(user);
+        
         const userFeature = new Feature({
-          geometry: new Point(fromLonLat([user.location.lng, user.location.lat])),
+          geometry: new Point(fromLonLat([displayLocation.lng, displayLocation.lat])),
           userId: user.id,
-          name: user.name || `User-${user.id.substring(0, 4)}`
+          name: user.name || `User-${user.id.substring(0, 4)}`,
+          isPrivacyEnabled: shouldObfuscateLocation(user)
         });
         vectorSource.current?.addFeature(userFeature);
       }
@@ -61,7 +66,7 @@ export const useMarkerUpdater = (
         vectorSource.current?.removeFeature(feature);
       });
 
-      // Add updated user marker
+      // Add updated user marker - always use actual location for current user
       const userFeature = new Feature({
         geometry: new Point(fromLonLat([currentUser.location.lng, currentUser.location.lat])),
         isCurrentUser: true,
@@ -69,5 +74,6 @@ export const useMarkerUpdater = (
       });
       vectorSource.current.addFeature(userFeature);
     }
-  }, [nearbyUsers, mapLoaded, currentUser?.location, vectorSource, radiusInKm]); // Add radiusInKm to dependencies
+  }, [nearbyUsers, mapLoaded, currentUser?.location, vectorSource, radiusInKm, 
+       currentUser?.locationSettings?.hideExactLocation, currentUser?.location_settings?.hide_exact_location]); 
 };

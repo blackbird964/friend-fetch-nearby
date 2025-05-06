@@ -53,10 +53,29 @@ export const useUserProfile = () => {
     }
   }, []);
 
+  // Update user location privacy (hide exact location)
+  const handleUpdateLocationPrivacy = useCallback(async (userId: string, hideExactLocation: boolean): Promise<void> => {
+    setLoading(true);
+    try {
+      // Create proper update object for location privacy settings
+      const updateData: any = { 
+        id: userId,
+        location_settings: { hide_exact_location: hideExactLocation } 
+      };
+      
+      await updateUserProfile(updateData);
+    } catch (error) {
+      console.error('Error updating location privacy:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     updateUserLocation: handleUpdateUserLocation,
     updateUserProfile: handleUpdateUserProfile,
     updateLocationMode: handleUpdateLocationMode,
+    updateLocationPrivacy: handleUpdateLocationPrivacy,
     loading
   };
 };

@@ -20,9 +20,11 @@ export interface AppUser {
   blockedUsers?: string[];
   locationSettings?: {
     isManualMode?: boolean;
+    hideExactLocation?: boolean;
   };
   location_settings?: {
     is_manual_mode?: boolean;
+    hide_exact_location?: boolean;
   };
   distance?: number;
   chat?: Chat; // Chat property for navigation purposes

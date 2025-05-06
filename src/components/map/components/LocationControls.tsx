@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Navigation, Locate, MapPin } from 'lucide-react';
+import { MapPin, Locate, Navigation } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import LocationPrivacyToggle from './LocationPrivacyToggle';
 
 type LocationControlsProps = {
   getUserLocation: () => void;
@@ -12,6 +13,8 @@ type LocationControlsProps = {
   isTracking: boolean;
   isManualMode: boolean;
   toggleManualMode: () => void;
+  isPrivacyModeEnabled: boolean;
+  togglePrivacyMode: () => void;
 };
 
 const LocationControls: React.FC<LocationControlsProps> = ({
@@ -20,50 +23,51 @@ const LocationControls: React.FC<LocationControlsProps> = ({
   toggleLocationTracking,
   isTracking,
   isManualMode,
-  toggleManualMode
+  toggleManualMode,
+  isPrivacyModeEnabled,
+  togglePrivacyMode
 }) => {
   return (
-    <div className="space-y-2">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <Switch 
-            id="manual-mode" 
-            checked={isManualMode}
-            onCheckedChange={toggleManualMode}
-          />
-          <Label htmlFor="manual-mode" className="text-xs">
-            <div className="flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
-              Manual location
-            </div>
-          </Label>
-        </div>
+    <div className="flex items-center space-x-4">
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="manual-mode"
+          checked={isManualMode}
+          onCheckedChange={toggleManualMode}
+        />
+        <Label htmlFor="manual-mode" className="text-xs">
+          <MapPin className="h-3 w-3 inline mr-1" />
+          Manual Location
+        </Label>
+      </div>
+
+      <div className="flex items-center space-x-2">
+        <Switch
+          id="tracking-mode"
+          checked={isTracking}
+          onCheckedChange={toggleLocationTracking}
+        />
+        <Label htmlFor="tracking-mode" className="text-xs">
+          <Locate className="h-3 w-3 inline mr-1" />
+          Track Location
+        </Label>
       </div>
       
-      <div className="flex gap-2">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={getUserLocation}
-          disabled={isLocating}
-          className="flex items-center gap-1 py-1 h-8"
-        >
-          <Navigation className={`h-3 w-3 ${isLocating ? 'animate-pulse' : ''}`} />
-          <span className="text-xs">{isManualMode ? 'Set Location' : 'Get Location'}</span>
-        </Button>
-        
-        {!isManualMode && (
-          <Button 
-            variant={isTracking ? "default" : "outline"} 
-            size="sm" 
-            onClick={toggleLocationTracking}
-            className={`flex items-center gap-1 py-1 h-8 ${isTracking ? 'bg-green-600 hover:bg-green-700' : ''}`}
-          >
-            <Locate className={`h-3 w-3 ${isTracking ? 'animate-pulse' : ''}`} />
-            <span className="text-xs">{isTracking ? 'Tracking On' : 'Track GPS'}</span>
-          </Button>
-        )}
-      </div>
+      <LocationPrivacyToggle 
+        isPrivacyModeEnabled={isPrivacyModeEnabled}
+        togglePrivacyMode={togglePrivacyMode}
+      />
+
+      <Button
+        variant="outline"
+        size="sm"
+        onClick={getUserLocation}
+        disabled={isLocating}
+        className="h-8 px-2"
+      >
+        <Navigation className={`h-4 w-4 mr-1 ${isLocating ? 'animate-spin' : ''}`} />
+        <span className="text-xs">Locate</span>
+      </Button>
     </div>
   );
 };

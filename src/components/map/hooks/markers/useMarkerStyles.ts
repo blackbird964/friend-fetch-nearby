@@ -16,6 +16,7 @@ export const useMarkerStyles = (
     const isMoving = movingUsers.has(userId);
     const isUser = feature.get('isCurrentUser');
     const hasMoved = completedMoves.has(userId);
+    const isPrivacyEnabled = feature.get('isPrivacyEnabled');
     
     // Check if there are any pending friend requests for this user
     const sentRequest = friendRequests.find(req => 
@@ -50,13 +51,16 @@ export const useMarkerStyles = (
       markerColor = '#6366f1'; // Purple for selected users
     }
     
+    // For users with privacy mode, use a slightly different style
     return new Style({
       image: new CircleStyle({
-        radius: isUser ? 10 : 8,
-        fill: new Fill({ color: markerColor }),
+        radius: isUser ? 10 : (isPrivacyEnabled ? 7 : 8),
+        fill: new Fill({ 
+          color: isPrivacyEnabled ? 'rgba(100, 149, 237, 0.7)' : markerColor 
+        }),
         stroke: new Stroke({ 
-          color: isUser ? '#0369a1' : 'white', 
-          width: isUser ? 3 : 2 
+          color: isUser ? '#0369a1' : (isPrivacyEnabled ? '#6495ED' : 'white'), 
+          width: isUser ? 3 : (isPrivacyEnabled ? 1.5 : 2)
         })
       }),
       text: new Text({
