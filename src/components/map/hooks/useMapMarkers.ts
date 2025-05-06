@@ -17,12 +17,12 @@ export const useMapMarkers = (
   completedMoves: Set<string>,
   mapLoaded: boolean,
   friendRequests: FriendRequest[],
-  radiusInKm: number // Add radius parameter
+  radiusInKm: number
 ) => {
   // Get marker styles
   const { getMarkerStyle } = useMarkerStyles(selectedUser, movingUsers, completedMoves, friendRequests);
   
-  // Update markers when data changes
+  // Update markers when data changes - make sure to pass radiusInKm
   useMarkerUpdater(vectorSource, nearbyUsers, currentUser, mapLoaded, radiusInKm);
 
   return { getMarkerStyle, WYNYARD_COORDS };

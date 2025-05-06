@@ -17,6 +17,8 @@ const RadiusControls: React.FC<RadiusControlsProps> = ({
   }, [radiusInKm]);
 
   const handleRadiusChange = (values: number[]) => {
+    if (values.length === 0) return;
+    
     const newRadius = values[0];
     console.log("Setting radius to:", newRadius);
     setRadiusInKm(newRadius);

@@ -55,7 +55,7 @@ const FriendMapContainer: React.FC = () => {
 
   // Log radius changes to help with debugging
   useEffect(() => {
-    console.log("FriendMapContainer - radiusInKm changed to:", radiusInKm);
+    console.log("FriendMapContainer - Current radiusInKm:", radiusInKm);
   }, [radiusInKm]);
 
   // Refresh nearby users when map is loaded and we have current user location

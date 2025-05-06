@@ -41,7 +41,7 @@ export const filterUsersByDistance = (users: AppUser[], maxDistanceKm: number): 
   
   const filteredUsers = users.filter(user => {
     // Skip users with no distance information (they'll be included by default)
-    if (user.distance === undefined || user.distance === Infinity) {
+    if (user.distance === undefined || user.distance === null) {
       console.log(`User ${user.id} has no distance info, including by default`);
       return true;
     }

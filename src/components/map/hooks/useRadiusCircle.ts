@@ -56,6 +56,8 @@ export const useRadiusCircle = (
   
   // Update radius circle when user location or radius changes
   useEffect(() => {
+    console.log("useRadiusCircle - Updating circle with radius:", radiusInKm);
+    
     if (!radiusLayer.current || !map.current) {
       console.log("Radius layer or map not available");
       return;
@@ -73,7 +75,7 @@ export const useRadiusCircle = (
     // Create a new radius circle if user has a location
     if (currentUser?.location) {
       const { lng, lat } = currentUser.location;
-      console.log("Creating radius circle at:", lng, lat);
+      console.log("Creating radius circle at:", lng, lat, "with radius:", radiusInKm, "km");
       
       const center = fromLonLat([lng, lat]);
       
@@ -96,25 +98,6 @@ export const useRadiusCircle = (
       } else {
         console.error("Radius layer source is null");
       }
-      
-      // Update the circle when the map view changes to maintain shape
-      const updateCircle = () => {
-        if (!map.current || !radiusFeature.current || !currentUser?.location) return;
-        
-        // Recreate circle with same center and radius
-        radiusFeature.current.setGeometry(
-          new Circle(fromLonLat([currentUser.location.lng, currentUser.location.lat]), radiusInKm * 1000)
-        );
-      };
-      
-      // Add listener to update circle when view changes
-      map.current.getView().on('change:resolution', updateCircle);
-      
-      return () => {
-        if (map.current) {
-          map.current.getView().un('change:resolution', updateCircle);
-        }
-      };
     } else {
       console.log("Current user has no location, not creating radius circle");
     }
