@@ -35,9 +35,9 @@ const LocationControls: React.FC<LocationControlsProps> = ({
           checked={isManualMode}
           onCheckedChange={toggleManualMode}
         />
-        <Label htmlFor="manual-mode" className="text-xs">
+        <Label htmlFor="manual-mode" className="text-xs whitespace-nowrap">
           <MapPin className="h-3 w-3 inline mr-1" />
-          Manual Location
+          Manual
         </Label>
       </div>
 
@@ -49,7 +49,7 @@ const LocationControls: React.FC<LocationControlsProps> = ({
         />
         <Label htmlFor="tracking-mode" className="text-xs">
           <Locate className="h-3 w-3 inline mr-1" />
-          Track Location
+          Track
         </Label>
       </div>
       

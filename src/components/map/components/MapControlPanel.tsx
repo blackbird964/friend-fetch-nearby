@@ -35,7 +35,7 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
           radiusInKm={radiusInKm} 
           setRadiusInKm={setRadiusInKm} 
         />
-        <div className="flex justify-end">
+        <div className="flex justify-between items-center flex-wrap gap-2">
           <LocationControls
             getUserLocation={getUserLocation}
             isLocating={isLocating}
