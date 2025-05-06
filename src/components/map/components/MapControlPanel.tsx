@@ -10,6 +10,8 @@ type MapControlPanelProps = {
   isLocating: boolean;
   toggleLocationTracking: () => void;
   isTracking: boolean;
+  isManualMode: boolean;
+  toggleManualMode: () => void;
 };
 
 const MapControlPanel: React.FC<MapControlPanelProps> = ({ 
@@ -18,7 +20,9 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
   getUserLocation, 
   isLocating,
   toggleLocationTracking,
-  isTracking
+  isTracking,
+  isManualMode,
+  toggleManualMode
 }) => {
   return (
     <div className="absolute bottom-4 left-0 right-0 mx-4 p-3 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg z-10">
@@ -33,6 +37,8 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
             isLocating={isLocating}
             toggleLocationTracking={toggleLocationTracking}
             isTracking={isTracking}
+            isManualMode={isManualMode}
+            toggleManualMode={toggleManualMode}
           />
         </div>
       </div>

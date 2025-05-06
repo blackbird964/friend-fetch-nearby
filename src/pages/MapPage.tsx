@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import FriendMap from '@/components/map/FriendMap';
 import UserList from '@/components/users/UserList';
@@ -39,6 +40,9 @@ const MapPage: React.FC = () => {
   const usersWithLocation = nearbyUsers.filter(user => user.location).length;
   const totalUsers = nearbyUsers.length;
 
+  // Check if user is in manual location mode
+  const isManualMode = currentUser?.locationSettings?.isManualMode;
+
   return (
     <div className="container mx-auto px-4 py-6 mb-20 max-w-4xl">
       <div className="flex justify-between items-center mb-6">
@@ -71,6 +75,7 @@ const MapPage: React.FC = () => {
         <div className="mb-4 text-sm text-gray-600 flex items-center">
           <Navigation className="h-4 w-4 mr-1" />
           <span>Your location: {currentUser.location.lat.toFixed(4)}, {currentUser.location.lng.toFixed(4)}</span>
+          {isManualMode && <span className="ml-2 text-blue-500 text-xs">(Manual mode)</span>}
         </div>
       )}
       

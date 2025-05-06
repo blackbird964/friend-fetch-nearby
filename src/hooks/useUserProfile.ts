@@ -33,9 +33,22 @@ export const useUserProfile = () => {
     }
   }, []);
 
+  // Update user location mode (manual or automatic)
+  const handleUpdateLocationMode = useCallback(async (userId: string, isManual: boolean): Promise<void> => {
+    setLoading(true);
+    try {
+      await updateUserProfile({ id: userId, locationSettings: { isManualMode: isManual } });
+    } catch (error) {
+      console.error('Error updating location mode:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
   return {
     updateUserLocation: handleUpdateUserLocation,
     updateUserProfile: handleUpdateUserProfile,
+    updateLocationMode: handleUpdateLocationMode,
     loading
   };
 };

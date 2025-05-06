@@ -7,19 +7,22 @@ export interface Location {
 
 export interface AppUser {
   id: string;
-  name: string;
+  name?: string;
   email: string;
   avatar?: string;
   location?: Location;
-  interests: string[];
+  interests?: string[];
   profile_pic?: string;
   bio?: string;
   age?: number;
   gender?: string;
+  blockedUsers?: string[];
+  locationSettings?: {
+    isManualMode?: boolean;
+  };
   distance?: number;
   chat?: Chat; // Chat property for navigation purposes
   isOnline?: boolean; // Adding isOnline property
-  blockedUsers?: string[]; // Array of blocked user IDs
 }
 
 export interface Chat {

@@ -54,7 +54,9 @@ const FriendMapContainer: React.FC = () => {
     permissionState,
     getSafariHelp,
     toggleLocationTracking,
-    isTracking
+    isTracking,
+    isManualMode,
+    toggleManualMode
   } = useGeolocation(map, currentUser, updateUserLocation, setCurrentUser);
 
   // Initialize radius circle
@@ -136,6 +138,8 @@ const FriendMapContainer: React.FC = () => {
           isLocating={isLocating}
           toggleLocationTracking={toggleLocationTracking}
           isTracking={isTracking}
+          isManualMode={isManualMode}
+          toggleManualMode={toggleManualMode}
         />
         
         <LocationErrorMessage 
