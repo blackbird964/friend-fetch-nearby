@@ -17,6 +17,34 @@ export const useMarkerStyles = (
     const isUser = feature.get('isCurrentUser');
     const hasMoved = completedMoves.has(userId);
     const isPrivacyEnabled = feature.get('isPrivacyEnabled');
+    const isCircle = feature.get('isCircle');
+    
+    // Special styles for radius or privacy circles
+    if (isCircle) {
+      const circleType = feature.get('circleType');
+      if (circleType === 'radius') {
+        return new Style({
+          stroke: new Stroke({
+            color: 'rgba(64, 99, 255, 0.5)',
+            width: 2,
+            lineDash: [5, 5]
+          }),
+          fill: new Fill({
+            color: 'rgba(64, 99, 255, 0.05)'
+          })
+        });
+      } else if (circleType === 'privacy') {
+        return new Style({
+          stroke: new Stroke({
+            color: 'rgba(229, 231, 235, 0.8)',
+            width: 2
+          }),
+          fill: new Fill({
+            color: 'rgba(229, 231, 235, 0.2)'
+          })
+        });
+      }
+    }
     
     // Check if there are any pending friend requests for this user
     const sentRequest = friendRequests.find(req => 
@@ -51,20 +79,25 @@ export const useMarkerStyles = (
       markerColor = '#6366f1'; // Purple for selected users
     }
     
-    // For privacy mode users, we'll only show the text label with no marker
+    // For privacy mode users, we'll show a text label with minimal marker
     if (isPrivacyEnabled && !isUser) {
       return new Style({
-        // Only include the text, no circle
         text: new Text({
           text: feature.get('name'),
           offsetY: -15,
           fill: new Fill({ color: '#374151' }),
           stroke: new Stroke({ color: 'white', width: 2 })
+        }),
+        // Add a small, subtle marker
+        image: new CircleStyle({
+          radius: 4,
+          fill: new Fill({ color: '#9CA3AF' }),
+          stroke: new Stroke({ color: 'white', width: 1 })
         })
       });
     }
     
-    // For regular users or the current user (even with privacy enabled)
+    // For regular users or the current user
     return new Style({
       image: new CircleStyle({
         radius: isUser ? 10 : 8,
