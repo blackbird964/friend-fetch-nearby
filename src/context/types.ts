@@ -1,3 +1,4 @@
+
 import { User } from '@supabase/supabase-js';
 
 export interface Location {
@@ -19,6 +20,9 @@ export interface AppUser {
   blockedUsers?: string[];
   locationSettings?: {
     isManualMode?: boolean;
+  };
+  location_settings?: {
+    is_manual_mode?: boolean;
   };
   distance?: number;
   chat?: Chat; // Chat property for navigation purposes

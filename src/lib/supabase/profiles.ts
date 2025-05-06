@@ -16,7 +16,13 @@ export type Profile = {
     lat: number;
     lng: number;
   } | null;
-  blockedUsers?: string[]; // Add the blockedUsers field
+  blockedUsers?: string[];
+  locationSettings?: {
+    isManualMode: boolean;
+  };
+  location_settings?: {
+    is_manual_mode: boolean;
+  };
 };
 
 export async function getProfile(userId: string): Promise<Profile | null> {

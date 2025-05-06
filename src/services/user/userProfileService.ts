@@ -13,7 +13,7 @@ export const updateUserProfile = async (updatedProfile: Partial<Profile>) => {
     }
     
     // Create a copy of the profile data without location
-    const profileUpdate = { ...updatedProfile };
+    const profileUpdate = { ...updatedProfile } as any;
     
     // Remove location from update to avoid format errors
     delete profileUpdate.location;
