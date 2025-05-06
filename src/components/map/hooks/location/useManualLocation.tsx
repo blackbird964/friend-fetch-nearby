@@ -1,5 +1,5 @@
 
-import { useCallback } from 'react';
+import { useCallback, useEffect } from 'react';
 import { toLonLat } from 'ol/proj';
 import Map from 'ol/Map';
 import { AppUser } from '@/context/types';
@@ -10,8 +10,19 @@ export const useManualLocation = (
   currentUser: AppUser | null,
   updateUserLocation: (userId: string, location: { lat: number, lng: number }) => Promise<any>,
   setCurrentUser: (user: AppUser | null) => void,
-  toast: any
+  toast: any,
+  permissionState?: string
 ) => {
+  // Show manual mode help toast when permission is denied
+  useEffect(() => {
+    if (isManualMode && permissionState === 'denied') {
+      toast({
+        title: "Manual Location Mode",
+        description: "You can set your location by clicking anywhere on the map."
+      });
+    }
+  }, [isManualMode, permissionState, toast]);
+
   const setupManualLocationHandler = useCallback(() => {
     if (!map.current || !currentUser) return () => {};
     

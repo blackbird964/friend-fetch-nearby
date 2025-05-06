@@ -23,6 +23,7 @@ export const useMarkerUpdater = (
 
     console.log("Updating markers with nearby users:", nearbyUsers.length);
     console.log("Current user:", currentUser);
+    console.log("Radius in km:", radiusInKm);
     
     // Clear existing user markers (but keep current user and circle markers)
     const features = vectorSource.current.getFeatures();

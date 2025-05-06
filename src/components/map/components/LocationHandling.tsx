@@ -100,6 +100,7 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
         locationError={locationError}
         permissionState={permissionState}
         getSafariHelp={getSafariHelp}
+        isManualMode={isManualMode}
       />
     </>
   );

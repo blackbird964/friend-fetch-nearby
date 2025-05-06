@@ -66,7 +66,8 @@ export const useGeolocation = (
     currentUser,
     updateUserLocation,
     setCurrentUser,
-    toast
+    toast,
+    permissionState
   );
 
   // Setup manual location handler
@@ -97,6 +98,11 @@ export const useGeolocation = (
         isManualMode: newMode
       }
     });
+    
+    // Clear location error when switching to manual mode when permission is denied
+    if (newMode && permissionState === 'denied') {
+      setLocationError(null);
+    }
     
     toast({
       title: newMode ? "Manual Location Mode" : "Automatic Location Mode",
