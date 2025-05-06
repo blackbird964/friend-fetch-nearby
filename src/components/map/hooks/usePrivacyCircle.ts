@@ -5,7 +5,7 @@ import { Vector as VectorSource } from 'ol/source';
 import { Vector as VectorLayer } from 'ol/layer';
 import Feature from 'ol/Feature';
 import { Circle } from 'ol/geom';
-import { Fill, Style } from 'ol/style';
+import { Fill, Style, Stroke } from 'ol/style';
 import Map from 'ol/Map';
 import { AppUser } from '@/context/types';
 import { shouldObfuscateLocation } from '@/utils/privacyUtils';
@@ -28,7 +28,11 @@ export const usePrivacyCircle = (
         source,
         style: new Style({
           fill: new Fill({
-            color: 'rgba(100, 149, 237, 0.4)', // More visible blue for privacy circles
+            color: 'rgba(100, 149, 237, 0.3)', // More visible blue for privacy circles
+          }),
+          stroke: new Stroke({
+            color: 'rgba(100, 149, 237, 0.7)',
+            width: 2,
           }),
         }),
         zIndex: 1, // Places the circle below the markers
@@ -67,6 +71,8 @@ export const usePrivacyCircle = (
       privacyFeature.current = new Feature({
         geometry: new Circle(center, radiusInMeters),
         name: 'privacyCircle',
+        isCircle: true,
+        circleType: 'privacy',
       });
       
       privacyLayer.current.getSource()?.addFeature(privacyFeature.current);

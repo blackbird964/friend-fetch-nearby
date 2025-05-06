@@ -36,11 +36,11 @@ export const useMarkerStyles = (
       } else if (circleType === 'privacy') {
         return new Style({
           stroke: new Stroke({
-            color: 'rgba(229, 231, 235, 0.8)',
+            color: 'rgba(100, 149, 237, 0.7)',
             width: 2
           }),
           fill: new Fill({
-            color: 'rgba(229, 231, 235, 0.2)'
+            color: 'rgba(100, 149, 237, 0.3)'
           })
         });
       }
@@ -79,7 +79,7 @@ export const useMarkerStyles = (
       markerColor = '#6366f1'; // Purple for selected users
     }
     
-    // For privacy mode users, we'll show a text label with minimal marker
+    // For privacy mode users, hide the marker and only show name (text)
     if (isPrivacyEnabled && !isUser) {
       return new Style({
         text: new Text({
@@ -88,12 +88,7 @@ export const useMarkerStyles = (
           fill: new Fill({ color: '#374151' }),
           stroke: new Stroke({ color: 'white', width: 2 })
         }),
-        // Add a small, subtle marker
-        image: new CircleStyle({
-          radius: 4,
-          fill: new Fill({ color: '#9CA3AF' }),
-          stroke: new Stroke({ color: 'white', width: 1 })
-        })
+        // No image/marker for privacy mode, the circle will show instead
       });
     }
     

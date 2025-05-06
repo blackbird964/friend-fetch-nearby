@@ -58,22 +58,15 @@ export const useMarkerUpdater = (
           console.log(`User ${user.id} is within radius (${distance.toFixed(2)}km)`);
         }
         
-        // Get display location based on privacy settings
+        // Always add a marker for other users, even with privacy enabled
+        // The marker style will handle whether to show it or not
         const isPrivacyEnabled = shouldObfuscateLocation(user);
-        const displayLocation = isPrivacyEnabled 
-          ? getDisplayLocation(user) 
-          : user.location;
         
-        if (!displayLocation) {
-          console.log(`User ${user.id} has no valid location to display`);
-          return;
-        }
-        
-        console.log(`Adding user ${user.id} to map at ${displayLocation.lat},${displayLocation.lng}`);
+        console.log(`Adding user ${user.id} to map (privacy: ${isPrivacyEnabled ? 'enabled' : 'disabled'})`);
         
         try {
           const userFeature = new Feature({
-            geometry: new Point(fromLonLat([displayLocation.lng, displayLocation.lat])),
+            geometry: new Point(fromLonLat([user.location.lng, user.location.lat])),
             userId: user.id,
             name: user.name || `User-${user.id.substring(0, 4)}`,
             isPrivacyEnabled: isPrivacyEnabled
@@ -110,6 +103,7 @@ export const useMarkerUpdater = (
         const userFeature = new Feature({
           geometry: new Point(fromLonLat([currentUser.location.lng, currentUser.location.lat])),
           isCurrentUser: true,
+          userId: currentUser.id,
           name: 'You',
           isPrivacyEnabled: isCurrentUserPrivacyEnabled
         });

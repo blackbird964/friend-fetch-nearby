@@ -24,18 +24,26 @@ const LocationPrivacyToggle: React.FC<LocationPrivacyToggleProps> = ({
             variant="outline"
             className={`ml-2 ${isPrivacyModeEnabled ? 'bg-blue-100 border-blue-300' : ''}`}
           >
-            {isPrivacyModeEnabled ? (
-              <EyeOff className="h-4 w-4 text-blue-600" />
-            ) : (
-              <Eye className="h-4 w-4" />
-            )}
+            <div className="flex items-center gap-1">
+              {isPrivacyModeEnabled ? (
+                <>
+                  <EyeOff className="h-4 w-4 text-blue-600" />
+                  <span className="text-xs text-blue-600">Approx</span>
+                </>
+              ) : (
+                <>
+                  <Eye className="h-4 w-4" />
+                  <span className="text-xs">Exact</span>
+                </>
+              )}
+            </div>
           </Toggle>
         </TooltipTrigger>
         <TooltipContent side="top">
           <p className="font-medium">{isPrivacyModeEnabled ? 'Privacy Mode: ON' : 'Privacy Mode: OFF'}</p>
           <p className="text-xs text-gray-500">
             {isPrivacyModeEnabled 
-              ? 'Others see only your name within a 50m radius' 
+              ? 'Others see approximate location within 50m' 
               : 'Others see your exact location'}
           </p>
         </TooltipContent>
