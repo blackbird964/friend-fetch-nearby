@@ -136,7 +136,7 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   if (isUserMoving || hasUserMoved) {
     return (
       <div 
-        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-slide-in-bottom"
+        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-slide-in-bottom user-popup-card"
         onClick={stopPropagation} // Stop click propagation at container level
       >
         <div className="flex justify-between items-center mb-3">
@@ -168,7 +168,7 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   if (existingRequest) {
     return (
       <div 
-        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-slide-in-bottom"
+        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-slide-in-bottom user-popup-card"
         onClick={stopPropagation} // Stop click propagation at container level
       >
         <div className="flex justify-between items-center mb-3">

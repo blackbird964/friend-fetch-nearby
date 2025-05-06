@@ -76,7 +76,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   
   return (
     <Card 
-      className="mt-4 shadow-md animate-slide-in-bottom"
+      className="mt-4 shadow-md animate-slide-in-bottom user-popup-card"
       onClick={stopPropagation} // Stop click propagation at the card level
     >
       <CardContent className="p-4">

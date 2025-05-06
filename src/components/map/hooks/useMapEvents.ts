@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { Map } from 'ol';
 import Feature from 'ol/Feature';
@@ -18,14 +19,51 @@ export const useMapEvents = (
   useEffect(() => {
     if (!mapLoaded || !map.current) return;
 
+    // Track whether we're inside a popup interaction
+    let isInsidePopupInteraction = false;
+
+    // Set up a listener for popup interactions
+    const handlePopupInteractionStart = () => {
+      isInsidePopupInteraction = true;
+      console.log("Popup interaction started");
+    };
+    
+    const handlePopupInteractionEnd = () => {
+      isInsidePopupInteraction = false;
+      console.log("Popup interaction ended");
+    };
+    
+    // Listen for mousedown events on the popup elements
+    document.addEventListener('mousedown', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('.user-popup-card')) {
+        handlePopupInteractionStart();
+      }
+    });
+    
+    document.addEventListener('mouseup', (e) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('.user-popup-card')) {
+        handlePopupInteractionEnd();
+      }
+    });
+
     const clickHandler = (event: any) => {
+      console.log("Map click detected");
+      
+      // Check if we're currently interacting with a popup
+      if (isInsidePopupInteraction) {
+        console.log("Inside popup interaction - ignoring map click");
+        event.stopPropagation();
+        return;
+      }
+      
       const clickedFeature = map.current?.forEachFeatureAtPixel(event.pixel, (f) => f);
       
       if (clickedFeature) {
         const userId = clickedFeature.get('userId');
         
         if (userId) {
-          // Always allow toggling selection, even for moving or completed users
           if (selectedUser === userId) {
             // If we click the same user again, we don't deselect - keep the selection
             // This makes the popup persist when clicking around the user
@@ -36,28 +74,27 @@ export const useMapEvents = (
             setSelectedUser(userId);
           }
           
-          // In either case, we need to update the vector layer
+          // Update the vector layer
           if (vectorLayer.current) {
             vectorLayer.current.changed();
           }
           
-          // Prevent map click event from bubbling up to avoid deselection
+          // Prevent map click event from bubbling up
           event.stopPropagation();
           return;
         }
       } 
       
-      // If we reach here, check if we need to deselect (clicked on map empty space)
-      // But only do it if we're more than 20 pixels away from any feature
-      // This creates a buffer zone around markers where clicking won't deselect
+      // If we're not clicking on a feature, and only if we are outside any popup interaction,
+      // check if we need to deselect (clicked on map empty space)
       if (selectedUser) {
-        // Check if there are any features within 20 pixels
+        // Use a larger hit tolerance (30px) to make it harder to accidentally deselect
         const featuresNearby = map.current?.getFeaturesAtPixel(event.pixel, {
-          hitTolerance: 20 // 20 pixel tolerance for keeping selection
+          hitTolerance: 30 // Increased from 20 to 30 pixel tolerance
         });
         
+        // Only deselect if there are absolutely no features nearby
         if (!featuresNearby || featuresNearby.length === 0) {
-          // If no features nearby, deselect
           console.log("Clicked away from users, deselecting");
           setSelectedUser(null);
           if (vectorLayer.current) {
@@ -73,6 +110,8 @@ export const useMapEvents = (
 
     return () => {
       map.current?.un('click', clickHandler);
+      document.removeEventListener('mousedown', handlePopupInteractionStart);
+      document.removeEventListener('mouseup', handlePopupInteractionEnd);
     };
   }, [mapLoaded, selectedUser, movingUsers, completedMoves, map, setSelectedUser, vectorLayer, friendRequests, currentUser]);
 };
