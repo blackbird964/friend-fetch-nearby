@@ -13,7 +13,7 @@ export const useMarkerUpdater = (
   nearbyUsers: AppUser[],
   currentUser: AppUser | null,
   mapLoaded: boolean,
-  radiusInKm: number // Add radius as a parameter
+  radiusInKm: number
 ) => {
   // Update map markers when user data changes
   useEffect(() => {
@@ -46,13 +46,17 @@ export const useMarkerUpdater = (
         }
         
         // Get display location based on privacy settings
+        // For other users, we need to respect their privacy settings
+        const isPrivacyEnabled = shouldObfuscateLocation(user);
         const displayLocation = getDisplayLocation(user);
+        
+        if (!displayLocation) return;
         
         const userFeature = new Feature({
           geometry: new Point(fromLonLat([displayLocation.lng, displayLocation.lat])),
           userId: user.id,
           name: user.name || `User-${user.id.substring(0, 4)}`,
-          isPrivacyEnabled: shouldObfuscateLocation(user)
+          isPrivacyEnabled: isPrivacyEnabled
         });
         vectorSource.current?.addFeature(userFeature);
       }

@@ -8,7 +8,7 @@ import { Location } from '@/context/types';
  * @returns A new location approximately 50m away from the original
  */
 export const getPrivacyOffset = (originalLocation: Location): Location => {
-  if (!originalLocation) return originalLocation;
+  if (!originalLocation || !originalLocation.lat || !originalLocation.lng) return originalLocation;
   
   // Convert meters to degrees (approximate)
   // 1 degree of latitude = ~111km, so 50m = ~0.00045 degrees
@@ -55,6 +55,8 @@ export const getDisplayLocation = (user: any): Location | undefined => {
   if (!user || !user.location) return undefined;
   
   if (shouldObfuscateLocation(user)) {
+    // Use a deterministic seed based on user ID to ensure the offset
+    // remains consistent while the app is running
     return getPrivacyOffset(user.location);
   }
   

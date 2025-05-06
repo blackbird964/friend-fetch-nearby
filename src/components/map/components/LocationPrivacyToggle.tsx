@@ -22,7 +22,7 @@ const LocationPrivacyToggle: React.FC<LocationPrivacyToggleProps> = ({
             pressed={isPrivacyModeEnabled}
             onClick={togglePrivacyMode}
             variant="outline"
-            className={`ml-2 ${isPrivacyModeEnabled ? 'bg-blue-100' : ''}`}
+            className={`ml-2 ${isPrivacyModeEnabled ? 'bg-blue-100 border-blue-300' : ''}`}
           >
             {isPrivacyModeEnabled ? (
               <EyeOff className="h-4 w-4 text-blue-600" />
@@ -32,7 +32,7 @@ const LocationPrivacyToggle: React.FC<LocationPrivacyToggleProps> = ({
           </Toggle>
         </TooltipTrigger>
         <TooltipContent side="top">
-          <p>{isPrivacyModeEnabled ? 'Exact location hidden' : 'Exact location visible'}</p>
+          <p className="font-medium">{isPrivacyModeEnabled ? 'Privacy Mode: ON' : 'Privacy Mode: OFF'}</p>
           <p className="text-xs text-gray-500">
             {isPrivacyModeEnabled 
               ? 'Others see you within 50m of your actual location' 
