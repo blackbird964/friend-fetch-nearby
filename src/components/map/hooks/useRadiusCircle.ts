@@ -1,5 +1,5 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { fromLonLat } from 'ol/proj';
 import { Vector as VectorSource } from 'ol/source';
 import { Vector as VectorLayer } from 'ol/layer';
@@ -17,15 +17,23 @@ export const useRadiusCircle = (
 ) => {
   const radiusLayer = useRef<VectorLayer<VectorSource> | null>(null);
   const radiusFeature = useRef<Feature | null>(null);
+  const [isLayerInitialized, setIsLayerInitialized] = useState(false);
   
-  // Create a layer for the radius circle if it doesn't exist
+  // Create a separate layer for the radius circle
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current) {
+      console.log("Map reference not available for radius circle");
+      return;
+    }
     
-    console.log("Initializing radius circle layer");
+    console.log("Initializing radius circle layer, map is available");
     
     if (!radiusLayer.current) {
+      console.log("Creating new radius circle layer");
+      
+      // Create a separate source for the radius circle
       const source = new VectorSource();
+      
       radiusLayer.current = new VectorLayer({
         source,
         style: new Style({
@@ -38,11 +46,12 @@ export const useRadiusCircle = (
             lineDash: [5, 5]
           }),
         }),
-        zIndex: 1, // Places the circle below the markers
+        zIndex: 2, // Make sure it's visible (higher than other layers)
       });
       
       console.log("Adding radius layer to map");
       map.current.addLayer(radiusLayer.current);
+      setIsLayerInitialized(true);
     }
     
     return () => {
@@ -50,16 +59,20 @@ export const useRadiusCircle = (
         console.log("Removing radius layer from map");
         map.current.removeLayer(radiusLayer.current);
         radiusLayer.current = null;
+        setIsLayerInitialized(false);
       }
     };
   }, [map]);
   
   // Update radius circle when user location or radius changes
   useEffect(() => {
-    console.log("useRadiusCircle - Updating circle with radius:", radiusInKm);
-    
     if (!radiusLayer.current || !map.current) {
-      console.log("Radius layer or map not available");
+      console.log("Radius layer or map not available for updating circle");
+      return;
+    }
+    
+    if (!isLayerInitialized) {
+      console.log("Layer not initialized yet, skipping radius update");
       return;
     }
     
@@ -82,9 +95,9 @@ export const useRadiusCircle = (
       // Convert km to map units (meters)
       const radiusInMeters = radiusInKm * 1000;
       
-      console.log("Creating radius circle with radius:", radiusInMeters, "meters");
+      console.log("Creating radius circle with radius in meters:", radiusInMeters);
       
-      // Create the circle feature
+      // Create the circle feature with proper naming for identification
       radiusFeature.current = new Feature({
         geometry: new Circle(center, radiusInMeters),
         name: 'radiusCircle',
@@ -95,6 +108,12 @@ export const useRadiusCircle = (
       if (radiusLayer.current.getSource()) {
         console.log("Adding radius feature to layer source");
         radiusLayer.current.getSource()?.addFeature(radiusFeature.current);
+        
+        // Force redraw of the layer
+        radiusLayer.current.changed();
+        
+        // Also update source directly to ensure rendering
+        radiusLayer.current.getSource()?.changed();
       } else {
         console.error("Radius layer source is null");
       }
@@ -106,6 +125,11 @@ export const useRadiusCircle = (
         // Recreate circle with same center and radius
         const center = fromLonLat([currentUser.location.lng, currentUser.location.lat]);
         radiusFeature.current.setGeometry(new Circle(center, radiusInKm * 1000));
+        
+        // Force redraw
+        if (radiusLayer.current) {
+          radiusLayer.current.changed();
+        }
       };
       
       // Add listener to update circle when view changes
@@ -119,7 +143,7 @@ export const useRadiusCircle = (
     } else {
       console.log("Current user has no location, not creating radius circle");
     }
-  }, [currentUser?.location, radiusInKm, map]);
+  }, [currentUser?.location, radiusInKm, map, isLayerInitialized]);
   
   return { radiusLayer, radiusFeature };
 };
