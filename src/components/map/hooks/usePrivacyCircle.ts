@@ -60,7 +60,7 @@ export const usePrivacyCircle = (
       const { lng, lat } = currentUser.location;
       const center = fromLonLat([lng, lat]);
       
-      // 50 meters radius
+      // 50 meters radius - this should match the privacy offset distance
       const radiusInMeters = 50;
       
       // Create the circle feature

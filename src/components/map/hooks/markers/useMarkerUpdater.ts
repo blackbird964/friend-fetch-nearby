@@ -69,12 +69,17 @@ export const useMarkerUpdater = (
       existingUserFeatures.forEach(feature => {
         vectorSource.current?.removeFeature(feature);
       });
+      
+      // Check if current user has privacy enabled
+      const isCurrentUserPrivacyEnabled = shouldObfuscateLocation(currentUser);
 
-      // Add updated user marker - always use actual location for current user
+      // For the current user's own view, always show actual location (not privacy-offset location)
+      // This ensures the user always sees their true position on their own device
       const userFeature = new Feature({
         geometry: new Point(fromLonLat([currentUser.location.lng, currentUser.location.lat])),
         isCurrentUser: true,
-        name: 'You'
+        name: 'You',
+        isPrivacyEnabled: isCurrentUserPrivacyEnabled
       });
       vectorSource.current.addFeature(userFeature);
     }

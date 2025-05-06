@@ -51,16 +51,16 @@ export const useMarkerStyles = (
       markerColor = '#6366f1'; // Purple for selected users
     }
     
-    // For users with privacy mode, use a slightly different style
+    // For users with privacy mode, use a slightly different style with more transparent fill
     return new Style({
       image: new CircleStyle({
         radius: isUser ? 10 : (isPrivacyEnabled ? 7 : 8),
         fill: new Fill({ 
-          color: isPrivacyEnabled ? 'rgba(100, 149, 237, 0.7)' : markerColor 
+          color: isPrivacyEnabled && !isUser ? 'rgba(100, 149, 237, 0.6)' : markerColor 
         }),
         stroke: new Stroke({ 
           color: isUser ? '#0369a1' : (isPrivacyEnabled ? '#6495ED' : 'white'), 
-          width: isUser ? 3 : (isPrivacyEnabled ? 1.5 : 2)
+          width: isUser ? 3 : (isPrivacyEnabled ? 2 : 2)
         })
       }),
       text: new Text({
