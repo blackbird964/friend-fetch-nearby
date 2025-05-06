@@ -22,7 +22,10 @@ const RadiusControls: React.FC<RadiusControlsProps> = ({
           min={1} 
           max={100}
           step={1}
-          onValueChange={([value]) => setRadiusInKm(value)} 
+          onValueChange={([value]) => {
+            console.log("Setting radius to:", value);
+            setRadiusInKm(value);
+          }} 
           className="py-1"
         />
       </div>

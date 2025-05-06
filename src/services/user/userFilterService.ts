@@ -24,6 +24,7 @@ export const processNearbyUsers = (
       user.location.lng
     );
     
+    console.log(`User ${user.id} is ${distance.toFixed(2)}km away`);
     userWithDistance.distance = distance;
     return userWithDistance;
   });
@@ -33,9 +34,20 @@ export const processNearbyUsers = (
  * Filter users by maximum distance in kilometers
  */
 export const filterUsersByDistance = (users: AppUser[], maxDistanceKm: number): AppUser[] => {
-  return users.filter(user => {
+  console.log(`Filtering users with max distance of ${maxDistanceKm}km`);
+  
+  const filteredUsers = users.filter(user => {
     // Only filter users that have location data
-    if (!user.distance || user.distance === Infinity) return true;
-    return user.distance <= maxDistanceKm;
+    if (!user.distance || user.distance === Infinity) {
+      console.log(`User ${user.id} has no distance info, including by default`);
+      return true;
+    }
+    
+    const isInRange = user.distance <= maxDistanceKm;
+    console.log(`User ${user.id} is ${user.distance.toFixed(2)}km away, in range: ${isInRange}`);
+    return isInRange;
   });
+  
+  console.log(`Found ${filteredUsers.length} users within ${maxDistanceKm}km radius`);
+  return filteredUsers;
 };

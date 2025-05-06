@@ -5,7 +5,7 @@ import { Vector as VectorSource } from 'ol/source';
 import { Vector as VectorLayer } from 'ol/layer';
 import Feature from 'ol/Feature';
 import { Circle } from 'ol/geom';
-import { Fill, Style } from 'ol/style';
+import { Fill, Style, Stroke } from 'ol/style';
 import Map from 'ol/Map';
 import { AppUser } from '@/context/types';
 
@@ -30,6 +30,11 @@ export const useRadiusCircle = (
           fill: new Fill({
             color: 'rgba(66, 133, 244, 0.2)', // Semi-transparent blue
           }),
+          stroke: new Stroke({
+            color: 'rgba(64, 99, 255, 0.5)',
+            width: 2,
+            lineDash: [5, 5]
+          }),
         }),
         zIndex: 1, // Places the circle below the markers
       });
@@ -49,6 +54,8 @@ export const useRadiusCircle = (
   useEffect(() => {
     if (!radiusLayer.current || !map.current) return;
     
+    console.log("Updating radius circle with radius:", radiusInKm, "km");
+    
     // Clear existing radius feature
     if (radiusFeature.current) {
       radiusLayer.current.getSource()?.removeFeature(radiusFeature.current);
@@ -63,10 +70,14 @@ export const useRadiusCircle = (
       // Convert km to map units (meters)
       const radiusInMeters = radiusInKm * 1000;
       
+      console.log("Creating radius circle at:", lng, lat, "with radius:", radiusInMeters, "meters");
+      
       // Create the circle feature
       radiusFeature.current = new Feature({
         geometry: new Circle(center, radiusInMeters),
         name: 'radiusCircle',
+        isCircle: true,
+        circleType: 'radius',
       });
       
       radiusLayer.current.getSource()?.addFeature(radiusFeature.current);
@@ -74,10 +85,6 @@ export const useRadiusCircle = (
       // Update the circle when the map view changes to maintain shape
       const updateCircle = () => {
         if (!map.current || !radiusFeature.current || !currentUser?.location) return;
-        
-        // Get current circle
-        const circleGeom = radiusFeature.current.getGeometry() as Circle;
-        if (!circleGeom) return;
         
         // Recreate circle with same center and radius
         radiusFeature.current.setGeometry(

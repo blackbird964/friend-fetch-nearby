@@ -53,6 +53,11 @@ const FriendMapContainer: React.FC = () => {
     radiusInKm
   );
 
+  // Log radius changes to help with debugging
+  useEffect(() => {
+    console.log("FriendMapContainer - radiusInKm:", radiusInKm);
+  }, [radiusInKm]);
+
   // Refresh nearby users when map is loaded and we have current user location
   useEffect(() => {
     if (mapLoaded && currentUser?.location) {
@@ -60,14 +65,6 @@ const FriendMapContainer: React.FC = () => {
       refreshNearbyUsers(false);
     }
   }, [mapLoaded, currentUser?.location, refreshNearbyUsers]);
-
-  // Additional refresh on initial component mount
-  useEffect(() => {
-    if (mapLoaded && currentUser) {
-      console.log("FriendMapContainer mounted, refreshing nearby users");
-      refreshNearbyUsers(false);
-    }
-  }, [mapLoaded, currentUser, refreshNearbyUsers]);
 
   // Force a refresh when radiusInKm changes
   useEffect(() => {

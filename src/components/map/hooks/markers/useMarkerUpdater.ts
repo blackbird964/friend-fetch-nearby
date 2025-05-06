@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { AppUser } from '@/context/types';
 import Feature from 'ol/Feature';
@@ -22,7 +23,7 @@ export const useMarkerUpdater = (
     }
 
     console.log("Updating markers with nearby users:", nearbyUsers.length);
-    console.log("Current user:", currentUser);
+    console.log("Current user:", currentUser?.id);
     console.log("Radius in km:", radiusInKm);
     
     // Clear existing user markers (but keep current user and circle markers)
@@ -51,11 +52,11 @@ export const useMarkerUpdater = (
           );
           
           if (distance > radiusInKm) {
-            console.log(`User ${user.id} is outside radius (${distance.toFixed(2)}km), not showing`);
+            console.log(`User ${user.id} is outside radius (${distance.toFixed(2)}km > ${radiusInKm}km), not showing`);
             return;
           }
           
-          console.log(`User ${user.id} is within radius (${distance.toFixed(2)}km)`);
+          console.log(`User ${user.id} is within radius (${distance.toFixed(2)}km <= ${radiusInKm}km)`);
         }
         
         // Always add a marker for other users, even with privacy enabled

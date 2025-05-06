@@ -55,6 +55,8 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
                                  currentUser.location_settings?.hide_exact_location || 
                                  false;
     
+    console.log("Toggling privacy mode from:", currentPrivacySetting, "to:", !currentPrivacySetting);
+    
     try {
       await updateUserProfile(currentUser.id, {
         locationSettings: {
@@ -82,6 +84,11 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
       getUserLocation();
     }
   }, [mapLoaded, currentUser, getUserLocation, isManualMode, isTracking]);
+
+  // Log radius changes to help with debugging
+  useEffect(() => {
+    console.log("LocationHandling - radiusInKm:", radiusInKm);
+  }, [radiusInKm]);
 
   return (
     <>

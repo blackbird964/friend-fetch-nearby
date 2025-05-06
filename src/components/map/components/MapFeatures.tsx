@@ -57,7 +57,7 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
     radiusInKm
   );
 
-  // Initialize radius circle
+  // Initialize radius circle - make sure we're passing the correct radiusInKm
   const { radiusLayer, radiusFeature } = useRadiusCircle(
     map,
     vectorSource,
@@ -71,6 +71,11 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
     vectorSource,
     currentUser
   );
+
+  // Log radius changes to help with debugging
+  useEffect(() => {
+    console.log("MapFeatures - radiusInKm changed:", radiusInKm);
+  }, [radiusInKm]);
 
   // Apply styling to map layers
   useMapStyles(
