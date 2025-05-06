@@ -57,9 +57,17 @@ const FriendMapContainer: React.FC = () => {
   useEffect(() => {
     if (mapLoaded && currentUser?.location) {
       console.log("Map loaded and user has location, refreshing nearby users");
-      refreshNearbyUsers();
+      refreshNearbyUsers(false);
     }
   }, [mapLoaded, currentUser?.location, refreshNearbyUsers]);
+
+  // Additional refresh on initial component mount
+  useEffect(() => {
+    if (mapLoaded && currentUser) {
+      console.log("FriendMapContainer mounted, refreshing nearby users");
+      refreshNearbyUsers(false);
+    }
+  }, []);
 
   return (
     <MapContainer>

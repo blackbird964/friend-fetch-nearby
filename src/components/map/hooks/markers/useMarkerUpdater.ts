@@ -23,12 +23,14 @@ export const useMarkerUpdater = (
 
     console.log("Updating markers with nearby users:", nearbyUsers.length);
     console.log("Current user:", currentUser);
-    console.log("Search radius:", radiusInKm, "km");
-
+    
     // Clear existing user markers (but keep current user and circle markers)
     const features = vectorSource.current.getFeatures();
     features.forEach(feature => {
-      if (!feature.get('isCurrentUser') && !feature.get('isCircle')) {
+      const isCurrentUser = feature.get('isCurrentUser');
+      const isCircle = feature.get('isCircle');
+      
+      if (!isCurrentUser && !isCircle) {
         vectorSource.current?.removeFeature(feature);
       }
     });
@@ -75,6 +77,7 @@ export const useMarkerUpdater = (
             name: user.name || `User-${user.id.substring(0, 4)}`,
             isPrivacyEnabled: isPrivacyEnabled
           });
+          
           vectorSource.current?.addFeature(userFeature);
         } catch (error) {
           console.error(`Error adding user ${user.id} to map:`, error);
@@ -86,7 +89,9 @@ export const useMarkerUpdater = (
 
     // Remove any existing current user marker
     if (vectorSource.current) {
-      const existingUserFeatures = vectorSource.current.getFeatures().filter(feature => feature.get('isCurrentUser'));
+      const existingUserFeatures = vectorSource.current.getFeatures().filter(feature => 
+        feature.get('isCurrentUser') === true
+      );
       existingUserFeatures.forEach(feature => {
         vectorSource.current?.removeFeature(feature);
       });
@@ -107,6 +112,7 @@ export const useMarkerUpdater = (
           name: 'You',
           isPrivacyEnabled: isCurrentUserPrivacyEnabled
         });
+        
         vectorSource.current?.addFeature(userFeature);
       } catch (error) {
         console.error("Error adding current user to map:", error);
@@ -115,5 +121,5 @@ export const useMarkerUpdater = (
       console.log("Current user has no location");
     }
   }, [nearbyUsers, mapLoaded, currentUser?.location, vectorSource, radiusInKm, 
-       currentUser?.locationSettings?.hideExactLocation, currentUser?.location_settings?.hide_exact_location]);
+      currentUser?.locationSettings?.hideExactLocation, currentUser?.location_settings?.hide_exact_location]);
 };
