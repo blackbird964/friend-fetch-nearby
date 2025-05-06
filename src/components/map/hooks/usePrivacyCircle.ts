@@ -28,7 +28,7 @@ export const usePrivacyCircle = (
         source,
         style: new Style({
           fill: new Fill({
-            color: 'rgba(100, 149, 237, 0.3)', // Semi-transparent cornflower blue
+            color: 'rgba(100, 149, 237, 0.4)', // More visible blue for privacy circles
           }),
         }),
         zIndex: 1, // Places the circle below the markers

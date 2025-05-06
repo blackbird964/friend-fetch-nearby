@@ -35,7 +35,7 @@ const LocationPrivacyToggle: React.FC<LocationPrivacyToggleProps> = ({
           <p className="font-medium">{isPrivacyModeEnabled ? 'Privacy Mode: ON' : 'Privacy Mode: OFF'}</p>
           <p className="text-xs text-gray-500">
             {isPrivacyModeEnabled 
-              ? 'Others see you within 50m of your actual location' 
+              ? 'Others see only your name within a 50m radius' 
               : 'Others see your exact location'}
           </p>
         </TooltipContent>

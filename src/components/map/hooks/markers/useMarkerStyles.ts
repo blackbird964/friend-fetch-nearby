@@ -51,16 +51,27 @@ export const useMarkerStyles = (
       markerColor = '#6366f1'; // Purple for selected users
     }
     
-    // For users with privacy mode, use a slightly different style with more transparent fill
+    // For privacy mode users, we'll only show the text label with no marker
+    if (isPrivacyEnabled && !isUser) {
+      return new Style({
+        // Only include the text, no circle
+        text: new Text({
+          text: feature.get('name'),
+          offsetY: -15,
+          fill: new Fill({ color: '#374151' }),
+          stroke: new Stroke({ color: 'white', width: 2 })
+        })
+      });
+    }
+    
+    // For regular users or the current user (even with privacy enabled)
     return new Style({
       image: new CircleStyle({
-        radius: isUser ? 10 : (isPrivacyEnabled ? 7 : 8),
-        fill: new Fill({ 
-          color: isPrivacyEnabled && !isUser ? 'rgba(100, 149, 237, 0.6)' : markerColor 
-        }),
+        radius: isUser ? 10 : 8,
+        fill: new Fill({ color: markerColor }),
         stroke: new Stroke({ 
-          color: isUser ? '#0369a1' : (isPrivacyEnabled ? '#6495ED' : 'white'), 
-          width: isUser ? 3 : (isPrivacyEnabled ? 2 : 2)
+          color: isUser ? '#0369a1' : 'white', 
+          width: isUser ? 3 : 2
         })
       }),
       text: new Text({
