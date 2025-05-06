@@ -25,7 +25,9 @@ export const useUserProfile = () => {
   const handleUpdateUserProfile = useCallback(async (userId: string, profileData: Partial<AppUser>): Promise<void> => {
     setLoading(true);
     try {
-      await updateUserProfile({ ...profileData, id: userId });
+      // Create a properly typed profile object
+      const profileUpdate: any = { ...profileData, id: userId };
+      await updateUserProfile(profileUpdate);
     } catch (error) {
       console.error('Error updating user profile:', error);
     } finally {

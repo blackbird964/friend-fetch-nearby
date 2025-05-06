@@ -18,10 +18,10 @@ export type Profile = {
   } | null;
   blockedUsers?: string[];
   locationSettings?: {
-    isManualMode: boolean;
+    isManualMode?: boolean;
   };
   location_settings?: {
-    is_manual_mode: boolean;
+    is_manual_mode?: boolean;
   };
 };
 
