@@ -18,6 +18,20 @@ export const updateUserProfile = async (updatedProfile: Partial<Profile>) => {
     // Remove location from update to avoid format errors
     delete profileUpdate.location;
     
+    // Handle location settings - transform from camelCase to snake_case
+    if (profileUpdate.locationSettings) {
+      profileUpdate.location_settings = {
+        is_manual_mode: profileUpdate.locationSettings.isManualMode
+      };
+      delete profileUpdate.locationSettings;
+    }
+    
+    // Handle direct location_settings update
+    if (profileUpdate.location_settings) {
+      // Make sure it's already in the right format
+      console.log("Updating location settings:", profileUpdate.location_settings);
+    }
+    
     const { error } = await supabase
       .from('profiles')
       .update(profileUpdate)

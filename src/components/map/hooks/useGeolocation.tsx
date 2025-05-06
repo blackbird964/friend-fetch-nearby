@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { AppUser } from '@/context/types';
-import { fromLonLat } from 'ol/proj';
+import { fromLonLat, toLonLat } from 'ol/proj';
 import Map from 'ol/Map';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useLocationPermission } from './location/useLocationPermission';
@@ -110,20 +110,24 @@ export const useGeolocation = (
 
   // Handle map click for manual location setting
   useEffect(() => {
-    if (!map.current || !isManualMode || !currentUser) return;
+    if (!map.current || !currentUser) return;
     
     const handleMapClick = (event: any) => {
       if (!isManualMode) return;
       
-      const clickCoordinate = map.current?.getEventCoordinate(event);
+      // Get the coordinates where the user clicked
+      const clickCoordinate = event.coordinate;
       if (!clickCoordinate) return;
       
-      // Convert from map projection to lat/lng
-      const lonLat = map.current?.getView().getProjection().getPointResolution(1, clickCoordinate);
-      const { x, y } = lonLat;
+      // Convert from map projection to lat/lng (EPSG:3857 to EPSG:4326)
+      const lonLat = toLonLat(clickCoordinate);
+      const lng = lonLat[0];
+      const lat = lonLat[1];
+      
+      console.log("Manual location set:", lat, lng);
       
       // Update user location
-      const newLocation = { lat: y, lng: x };
+      const newLocation = { lat, lng };
       updateUserLocation(currentUser.id, newLocation);
       
       // Update current user state
@@ -139,13 +143,16 @@ export const useGeolocation = (
     };
     
     // Add click event listener to the map
-    const mapElement = map.current.getTargetElement();
-    mapElement.addEventListener('click', handleMapClick);
+    if (isManualMode) {
+      map.current.on('click', handleMapClick);
+    }
     
     return () => {
-      mapElement.removeEventListener('click', handleMapClick);
+      if (map.current) {
+        map.current.un('click', handleMapClick);
+      }
     };
-  }, [map, isManualMode, currentUser]);
+  }, [map, isManualMode, currentUser, updateUserLocation, setCurrentUser, toast]);
 
   // Get a single location update
   const getUserLocation = () => {
