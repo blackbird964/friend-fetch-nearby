@@ -17,16 +17,21 @@ export const useMarkerUpdater = (
 ) => {
   // Update map markers when user data changes
   useEffect(() => {
-    if (!mapLoaded || !vectorSource.current) return;
+    if (!mapLoaded || !vectorSource.current) {
+      console.log("Map not loaded or vector source not available");
+      return;
+    }
 
     // Clear existing user markers
     const features = vectorSource.current.getFeatures();
     features.forEach(feature => {
-      if (!feature.get('isCurrentUser')) {
+      if (!feature.get('isCurrentUser') && !feature.get('isCircle')) {
         vectorSource.current?.removeFeature(feature);
       }
     });
 
+    console.log(`Adding ${nearbyUsers.length} users to map`);
+    
     // Add markers for nearby users with their locations, but only if they're within the radius
     nearbyUsers.forEach(user => {
       if (user.location && user.location.lat && user.location.lng) {
@@ -41,6 +46,7 @@ export const useMarkerUpdater = (
           
           // If user is outside the radius, don't add them to the map
           if (distance > radiusInKm) {
+            console.log(`User ${user.id} is outside radius (${distance.toFixed(2)}km), not showing`);
             return;
           }
         }
@@ -50,7 +56,12 @@ export const useMarkerUpdater = (
         const isPrivacyEnabled = shouldObfuscateLocation(user);
         const displayLocation = getDisplayLocation(user);
         
-        if (!displayLocation) return;
+        if (!displayLocation) {
+          console.log(`User ${user.id} has no valid location to display`);
+          return;
+        }
+        
+        console.log(`Adding user ${user.id} to map at ${displayLocation.lat},${displayLocation.lng}`);
         
         const userFeature = new Feature({
           geometry: new Point(fromLonLat([displayLocation.lng, displayLocation.lat])),
@@ -59,6 +70,8 @@ export const useMarkerUpdater = (
           isPrivacyEnabled: isPrivacyEnabled
         });
         vectorSource.current?.addFeature(userFeature);
+      } else {
+        console.log(`User ${user.id} has no location data`);
       }
     });
 
@@ -73,6 +86,8 @@ export const useMarkerUpdater = (
       // Check if current user has privacy enabled
       const isCurrentUserPrivacyEnabled = shouldObfuscateLocation(currentUser);
 
+      console.log(`Adding current user to map at ${currentUser.location.lat},${currentUser.location.lng}`);
+      
       // For the current user's own view, always show actual location (not privacy-offset location)
       // This ensures the user always sees their true position on their own device
       const userFeature = new Feature({
@@ -82,7 +97,9 @@ export const useMarkerUpdater = (
         isPrivacyEnabled: isCurrentUserPrivacyEnabled
       });
       vectorSource.current.addFeature(userFeature);
+    } else {
+      console.log("Current user has no location");
     }
   }, [nearbyUsers, mapLoaded, currentUser?.location, vectorSource, radiusInKm, 
-       currentUser?.locationSettings?.hideExactLocation, currentUser?.location_settings?.hide_exact_location]); 
+       currentUser?.locationSettings?.hideExactLocation, currentUser?.location_settings?.hide_exact_location]);
 };

@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { AppUser } from '@/context/types';
 import Map from 'ol/Map';
@@ -75,8 +76,12 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
     }
   };
 
-  // Handle initial location fetching
-  useLocationHandling(mapLoaded, getUserLocation);
+  // Automatically get user location when map is loaded
+  useEffect(() => {
+    if (mapLoaded && !isManualMode && !isTracking && currentUser) {
+      getUserLocation();
+    }
+  }, [mapLoaded, currentUser]);
 
   return (
     <>

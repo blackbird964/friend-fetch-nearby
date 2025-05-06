@@ -1,5 +1,5 @@
 
-import React, { useRef } from 'react';
+import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useMapInitialization } from '../hooks/useMapInitialization';
 
@@ -12,7 +12,7 @@ const MapContainer: React.FC<MapContainerProps> = ({ children }) => {
 
   return (
     <div className="flex flex-col h-full relative">
-      <div className="flex-1 relative bg-gray-100 rounded-lg overflow-hidden shadow-inner">
+      <div className="flex-1 relative bg-gray-100 rounded-lg overflow-hidden shadow-inner" style={{ minHeight: "400px" }}>
         <div ref={mapContainer} className="absolute inset-0" />
         {children}
       </div>

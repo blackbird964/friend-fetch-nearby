@@ -28,46 +28,52 @@ const LocationControls: React.FC<LocationControlsProps> = ({
   togglePrivacyMode
 }) => {
   return (
-    <div className="flex items-center space-x-4">
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="manual-mode"
-          checked={isManualMode}
-          onCheckedChange={toggleManualMode}
-        />
-        <Label htmlFor="manual-mode" className="text-xs whitespace-nowrap">
-          <MapPin className="h-3 w-3 inline mr-1" />
-          Manual
-        </Label>
-      </div>
+    <div className="grid grid-cols-3 gap-3 w-full items-center">
+      <div className="flex items-center gap-2 justify-start">
+        <div className="flex items-center space-x-1">
+          <Switch
+            id="manual-mode"
+            checked={isManualMode}
+            onCheckedChange={toggleManualMode}
+          />
+          <Label htmlFor="manual-mode" className="text-xs whitespace-nowrap">
+            <MapPin className="h-3 w-3 inline mr-1" />
+            Manual
+          </Label>
+        </div>
 
-      <div className="flex items-center space-x-2">
-        <Switch
-          id="tracking-mode"
-          checked={isTracking}
-          onCheckedChange={toggleLocationTracking}
-        />
-        <Label htmlFor="tracking-mode" className="text-xs">
-          <Locate className="h-3 w-3 inline mr-1" />
-          Track
-        </Label>
+        <div className="flex items-center space-x-1">
+          <Switch
+            id="tracking-mode"
+            checked={isTracking}
+            onCheckedChange={toggleLocationTracking}
+          />
+          <Label htmlFor="tracking-mode" className="text-xs whitespace-nowrap">
+            <Locate className="h-3 w-3 inline mr-1" />
+            Track
+          </Label>
+        </div>
       </div>
       
-      <LocationPrivacyToggle 
-        isPrivacyModeEnabled={isPrivacyModeEnabled}
-        togglePrivacyMode={togglePrivacyMode}
-      />
+      <div className="flex justify-center">
+        <LocationPrivacyToggle 
+          isPrivacyModeEnabled={isPrivacyModeEnabled}
+          togglePrivacyMode={togglePrivacyMode}
+        />
+      </div>
 
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={getUserLocation}
-        disabled={isLocating}
-        className="h-8 px-2"
-      >
-        <Navigation className={`h-4 w-4 mr-1 ${isLocating ? 'animate-spin' : ''}`} />
-        <span className="text-xs">Locate</span>
-      </Button>
+      <div className="flex justify-end">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={getUserLocation}
+          disabled={isLocating}
+          className="h-8 px-3"
+        >
+          <Navigation className={`h-4 w-4 mr-1 ${isLocating ? 'animate-spin' : ''}`} />
+          <span className="text-xs">Locate</span>
+        </Button>
+      </div>
     </div>
   );
 };
