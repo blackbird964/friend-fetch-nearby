@@ -1,14 +1,11 @@
 
 import React from 'react';
-import { MapPin, Locate, Navigation } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { MapPin, Eye } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import LocationPrivacyToggle from './LocationPrivacyToggle';
 
 type LocationControlsProps = {
-  getUserLocation: () => void;
-  isLocating: boolean;
   toggleLocationTracking: () => void;
   isTracking: boolean;
   isManualMode: boolean;
@@ -18,8 +15,6 @@ type LocationControlsProps = {
 };
 
 const LocationControls: React.FC<LocationControlsProps> = ({
-  getUserLocation,
-  isLocating,
   toggleLocationTracking,
   isTracking,
   isManualMode,
@@ -28,8 +23,8 @@ const LocationControls: React.FC<LocationControlsProps> = ({
   togglePrivacyMode
 }) => {
   return (
-    <div className="grid grid-cols-3 gap-3 w-full items-center">
-      <div className="flex items-center gap-2 justify-start">
+    <div className="grid grid-cols-3 gap-2 w-full items-center">
+      <div className="flex items-center space-x-2 justify-start">
         <div className="flex items-center space-x-1">
           <Switch
             id="manual-mode"
@@ -41,18 +36,6 @@ const LocationControls: React.FC<LocationControlsProps> = ({
             Manual
           </Label>
         </div>
-
-        <div className="flex items-center space-x-1">
-          <Switch
-            id="tracking-mode"
-            checked={isTracking}
-            onCheckedChange={toggleLocationTracking}
-          />
-          <Label htmlFor="tracking-mode" className="text-xs whitespace-nowrap">
-            <Locate className="h-3 w-3 inline mr-1" />
-            Track
-          </Label>
-        </div>
       </div>
       
       <div className="flex justify-center">
@@ -62,17 +45,16 @@ const LocationControls: React.FC<LocationControlsProps> = ({
         />
       </div>
 
-      <div className="flex justify-end">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={getUserLocation}
-          disabled={isLocating}
-          className="h-8 px-3"
-        >
-          <Navigation className={`h-4 w-4 mr-1 ${isLocating ? 'animate-spin' : ''}`} />
-          <span className="text-xs">Locate</span>
-        </Button>
+      <div className="flex items-center space-x-1 justify-end">
+        <Switch
+          id="tracking-mode"
+          checked={isTracking}
+          onCheckedChange={toggleLocationTracking}
+        />
+        <Label htmlFor="tracking-mode" className="text-xs whitespace-nowrap">
+          <Eye className="h-3 w-3 inline mr-1" />
+          Track
+        </Label>
       </div>
     </div>
   );

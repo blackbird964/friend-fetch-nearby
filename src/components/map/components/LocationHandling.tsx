@@ -81,15 +81,13 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
     if (mapLoaded && !isManualMode && !isTracking && currentUser) {
       getUserLocation();
     }
-  }, [mapLoaded, currentUser]);
+  }, [mapLoaded, currentUser, getUserLocation, isManualMode, isTracking]);
 
   return (
     <>
       <MapControlPanel 
         radiusInKm={radiusInKm}
         setRadiusInKm={setRadiusInKm}
-        getUserLocation={getUserLocation}
-        isLocating={isLocating}
         toggleLocationTracking={toggleLocationTracking}
         isTracking={isTracking}
         isManualMode={isManualMode}

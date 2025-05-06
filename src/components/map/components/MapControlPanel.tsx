@@ -6,8 +6,6 @@ import LocationControls from './LocationControls';
 type MapControlPanelProps = {
   radiusInKm: number;
   setRadiusInKm: (radius: number) => void;
-  getUserLocation: () => void;
-  isLocating: boolean;
   toggleLocationTracking: () => void;
   isTracking: boolean;
   isManualMode: boolean;
@@ -19,8 +17,6 @@ type MapControlPanelProps = {
 const MapControlPanel: React.FC<MapControlPanelProps> = ({ 
   radiusInKm, 
   setRadiusInKm, 
-  getUserLocation, 
-  isLocating,
   toggleLocationTracking,
   isTracking,
   isManualMode,
@@ -36,8 +32,6 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
           setRadiusInKm={setRadiusInKm} 
         />
         <LocationControls
-          getUserLocation={getUserLocation}
-          isLocating={isLocating}
           toggleLocationTracking={toggleLocationTracking}
           isTracking={isTracking}
           isManualMode={isManualMode}

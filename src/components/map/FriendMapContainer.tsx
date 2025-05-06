@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { useUserProfile } from '@/hooks/useUserProfile';
-import { useToast } from '@/hooks/use-toast';
 
 // Import custom hooks
 import { useMapInitialization } from './hooks/useMapInitialization';
@@ -21,7 +20,7 @@ const FriendMapContainer: React.FC = () => {
     setRadiusInKm, 
     setCurrentUser, 
     updateUserLocation,
-    updateUserProfile,
+    refreshNearbyUsers,
     friendRequests 
   } = useAppContext();
   
@@ -53,6 +52,14 @@ const FriendMapContainer: React.FC = () => {
     friendRequests,
     radiusInKm
   );
+
+  // Refresh nearby users when map is loaded and we have current user location
+  useEffect(() => {
+    if (mapLoaded && currentUser?.location) {
+      console.log("Map loaded and user has location, refreshing nearby users");
+      refreshNearbyUsers();
+    }
+  }, [mapLoaded, currentUser?.location, refreshNearbyUsers]);
 
   return (
     <MapContainer>
