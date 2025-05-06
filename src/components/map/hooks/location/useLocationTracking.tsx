@@ -1,8 +1,9 @@
 
-import { useRef } from 'react';
+import { useRef, useCallback } from 'react';
 import { fromLonLat } from 'ol/proj';
 import { AppUser } from '@/context/types';
 import Map from 'ol/Map';
+import { formatLocationErrorMessage } from './locationUtils';
 
 export const useLocationTracking = (
   map: React.MutableRefObject<Map | null>,
@@ -11,15 +12,31 @@ export const useLocationTracking = (
   setCurrentUser: (user: AppUser | null) => void,
   setLocationError: (error: string | null) => void,
   setPermissionState: (state: string) => void,
-  handleLocationError: (error: GeolocationPositionError) => void,
   isUpdatingRef: React.MutableRefObject<boolean>,
-  lastUpdateTime: React.MutableRefObject<number>
+  lastUpdateTime: React.MutableRefObject<number>,
+  toast: any
 ) => {
   const watchIdRef = useRef<number | null>(null);
   const continuousTrackingEnabled = useRef<boolean>(false);
   
+  // Handle location error
+  const handleLocationError = useCallback((error: GeolocationPositionError) => {
+    console.error("Error getting location:", error);
+    const errorMessage = formatLocationErrorMessage(error);
+    
+    if (error.code === 1) {
+      // Permission denied
+      setPermissionState('denied');
+    }
+    
+    setLocationError(errorMessage);
+    isUpdatingRef.current = false;
+    
+    // Don't set default location here as it's handled in the single location update
+  }, [setLocationError, setPermissionState, isUpdatingRef]);
+
   // Start continuous location tracking
-  const startLocationTracking = () => {
+  const startLocationTracking = useCallback(() => {
     if (!navigator.geolocation) {
       setLocationError("Geolocation is not supported by your browser");
       return;
@@ -78,29 +95,29 @@ export const useLocationTracking = (
       },
       positionOptions
     );
-  };
+  }, [currentUser, handleLocationError, lastUpdateTime, map, setCurrentUser, setLocationError, setPermissionState, updateUserLocation]);
 
   // Stop continuous location tracking
-  const stopLocationTracking = () => {
+  const stopLocationTracking = useCallback(() => {
     if (watchIdRef.current !== null) {
       navigator.geolocation.clearWatch(watchIdRef.current);
       watchIdRef.current = null;
       continuousTrackingEnabled.current = false;
       console.log("Continuous location tracking stopped");
     }
-  };
+  }, []);
 
   // Toggle GPS tracking on/off
-  const toggleLocationTracking = () => {
+  const toggleLocationTracking = useCallback(() => {
     if (watchIdRef.current === null) {
       startLocationTracking();
     } else {
       stopLocationTracking();
     }
-  };
+  }, [startLocationTracking, stopLocationTracking]);
 
   // Check if tracking is active
-  const isTracking = () => watchIdRef.current !== null;
+  const isTracking = useCallback(() => watchIdRef.current !== null, []);
 
   return {
     startLocationTracking,
