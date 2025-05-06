@@ -22,6 +22,8 @@ export const useRadiusCircle = (
   useEffect(() => {
     if (!map.current) return;
     
+    console.log("Initializing radius circle layer");
+    
     if (!radiusLayer.current) {
       const source = new VectorSource();
       radiusLayer.current = new VectorLayer({
@@ -39,11 +41,13 @@ export const useRadiusCircle = (
         zIndex: 1, // Places the circle below the markers
       });
       
+      console.log("Adding radius layer to map");
       map.current.addLayer(radiusLayer.current);
     }
     
     return () => {
       if (map.current && radiusLayer.current) {
+        console.log("Removing radius layer from map");
         map.current.removeLayer(radiusLayer.current);
         radiusLayer.current = null;
       }
@@ -52,12 +56,16 @@ export const useRadiusCircle = (
   
   // Update radius circle when user location or radius changes
   useEffect(() => {
-    if (!radiusLayer.current || !map.current) return;
+    if (!radiusLayer.current || !map.current) {
+      console.log("Radius layer or map not available");
+      return;
+    }
     
     console.log("Updating radius circle with radius:", radiusInKm, "km");
     
     // Clear existing radius feature
     if (radiusFeature.current) {
+      console.log("Removing existing radius feature");
       radiusLayer.current.getSource()?.removeFeature(radiusFeature.current);
       radiusFeature.current = null;
     }
@@ -65,12 +73,14 @@ export const useRadiusCircle = (
     // Create a new radius circle if user has a location
     if (currentUser?.location) {
       const { lng, lat } = currentUser.location;
+      console.log("Creating radius circle at:", lng, lat);
+      
       const center = fromLonLat([lng, lat]);
       
       // Convert km to map units (meters)
       const radiusInMeters = radiusInKm * 1000;
       
-      console.log("Creating radius circle at:", lng, lat, "with radius:", radiusInMeters, "meters");
+      console.log("Creating radius circle with radius:", radiusInMeters, "meters");
       
       // Create the circle feature
       radiusFeature.current = new Feature({
@@ -80,7 +90,12 @@ export const useRadiusCircle = (
         circleType: 'radius',
       });
       
-      radiusLayer.current.getSource()?.addFeature(radiusFeature.current);
+      if (radiusLayer.current.getSource()) {
+        console.log("Adding radius feature to layer source");
+        radiusLayer.current.getSource()?.addFeature(radiusFeature.current);
+      } else {
+        console.error("Radius layer source is null");
+      }
       
       // Update the circle when the map view changes to maintain shape
       const updateCircle = () => {
@@ -100,6 +115,8 @@ export const useRadiusCircle = (
           map.current.getView().un('change:resolution', updateCircle);
         }
       };
+    } else {
+      console.log("Current user has no location, not creating radius circle");
     }
   }, [currentUser?.location, radiusInKm, map]);
   

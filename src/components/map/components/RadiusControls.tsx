@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Slider } from "@/components/ui/slider";
 
 type RadiusControlsProps = {
@@ -11,6 +11,17 @@ const RadiusControls: React.FC<RadiusControlsProps> = ({
   radiusInKm, 
   setRadiusInKm
 }) => {
+  // Log radius changes for debugging
+  useEffect(() => {
+    console.log("RadiusControls - Current radius:", radiusInKm);
+  }, [radiusInKm]);
+
+  const handleRadiusChange = (values: number[]) => {
+    const newRadius = values[0];
+    console.log("Setting radius to:", newRadius);
+    setRadiusInKm(newRadius);
+  };
+
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between">
@@ -22,10 +33,7 @@ const RadiusControls: React.FC<RadiusControlsProps> = ({
           min={1} 
           max={100}
           step={1}
-          onValueChange={([value]) => {
-            console.log("Setting radius to:", value);
-            setRadiusInKm(value);
-          }} 
+          onValueChange={handleRadiusChange} 
           className="py-1"
         />
       </div>

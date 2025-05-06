@@ -43,6 +43,11 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
   completedMoves,
   friendRequests
 }) => {
+  // Log radius changes to help with debugging
+  useEffect(() => {
+    console.log("MapFeatures - radiusInKm changed:", radiusInKm);
+  }, [radiusInKm]);
+
   // Initialize map layers and features
   const { getMarkerStyle, WYNYARD_COORDS } = useMapMarkers(
     map,
@@ -71,11 +76,6 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
     vectorSource,
     currentUser
   );
-
-  // Log radius changes to help with debugging
-  useEffect(() => {
-    console.log("MapFeatures - radiusInKm changed:", radiusInKm);
-  }, [radiusInKm]);
 
   // Apply styling to map layers
   useMapStyles(

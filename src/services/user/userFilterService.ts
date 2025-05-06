@@ -9,10 +9,13 @@ export const processNearbyUsers = (
   otherUsers: AppUser[],
   userLocation: { lat: number, lng: number }
 ): AppUser[] => {
+  console.log(`Processing ${otherUsers.length} users against location:`, userLocation);
+  
   return otherUsers.map(user => {
     const userWithDistance = { ...user };
     
     if (!user.location || !user.location.lat || !user.location.lng) {
+      console.log(`User ${user.id} has no location data, setting distance to Infinity`);
       userWithDistance.distance = Infinity;
       return userWithDistance;
     }
@@ -34,11 +37,11 @@ export const processNearbyUsers = (
  * Filter users by maximum distance in kilometers
  */
 export const filterUsersByDistance = (users: AppUser[], maxDistanceKm: number): AppUser[] => {
-  console.log(`Filtering users with max distance of ${maxDistanceKm}km`);
+  console.log(`Filtering ${users.length} users with max distance of ${maxDistanceKm}km`);
   
   const filteredUsers = users.filter(user => {
-    // Only filter users that have location data
-    if (!user.distance || user.distance === Infinity) {
+    // Skip users with no distance information (they'll be included by default)
+    if (user.distance === undefined || user.distance === Infinity) {
       console.log(`User ${user.id} has no distance info, including by default`);
       return true;
     }
