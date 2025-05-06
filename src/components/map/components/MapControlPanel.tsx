@@ -29,7 +29,7 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
   togglePrivacyMode
 }) => {
   return (
-    <div className="absolute bottom-4 left-0 right-0 mx-4 p-3 bg-white/90 backdrop-blur-sm rounded-lg shadow-lg z-10">
+    <div className="absolute bottom-4 left-0 right-0 mx-4 p-3 bg-white rounded-lg shadow-lg z-10">
       <div className="flex flex-col gap-3">
         <RadiusControls 
           radiusInKm={radiusInKm} 
