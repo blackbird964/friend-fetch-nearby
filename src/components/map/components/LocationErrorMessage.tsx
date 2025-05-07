@@ -20,7 +20,7 @@ const LocationErrorMessage: React.FC<LocationErrorMessageProps> = ({
   // Show manual mode alternative message when location access is denied
   if (isManualMode && permissionState === 'denied') {
     return (
-      <div className="absolute top-16 right-4 left-4 z-10">
+      <div className="absolute top-4 right-4 left-4 z-10">
         <div className="bg-amber-50 border border-amber-200 p-3 rounded-md text-sm mb-4">
           <h4 className="font-medium flex items-center text-amber-800 mb-1">
             <MapPin className="h-4 w-4 mr-1" />
@@ -37,7 +37,7 @@ const LocationErrorMessage: React.FC<LocationErrorMessageProps> = ({
   return (
     <>
       {locationError && permissionState === 'denied' && !isManualMode && (
-        <div className="absolute top-16 right-4 left-4 z-10">
+        <div className="absolute top-4 right-4 left-4 z-10">
           <div className="bg-amber-50 border border-amber-200 p-3 rounded-md text-sm mb-4">
             <h4 className="font-medium flex items-center text-amber-800 mb-1">
               <AlertTriangle className="h-4 w-4 mr-1" />
@@ -54,7 +54,7 @@ const LocationErrorMessage: React.FC<LocationErrorMessageProps> = ({
             <p className="text-amber-700 mt-2">After enabling, refresh this page and try again.</p>
             <p className="text-amber-700 mt-3 font-medium">
               <MapPin className="h-4 w-4 inline mr-1" />
-              Alternatively, you can use the <strong>Manual</strong> toggle button below to set your location manually on the map.
+              Alternatively, you can use the <strong>Manual</strong> toggle button above to set your location manually on the map.
             </p>
           </div>
           {getSafariHelp()}
@@ -62,7 +62,7 @@ const LocationErrorMessage: React.FC<LocationErrorMessageProps> = ({
       )}
       
       {locationError && permissionState !== 'denied' && (
-        <div className="absolute top-16 right-4 z-10 bg-red-100 border border-red-200 text-red-800 px-4 py-2 rounded-md text-sm max-w-xs">
+        <div className="absolute top-4 right-4 z-10 bg-red-100 border border-red-200 text-red-800 px-4 py-2 rounded-md text-sm max-w-xs">
           {locationError}
         </div>
       )}

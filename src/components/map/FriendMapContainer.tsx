@@ -12,7 +12,17 @@ import MapFeatures from './components/MapFeatures';
 import LocationHandling from './components/LocationHandling';
 import MeetingHandler from './components/MeetingHandler';
 
-const FriendMapContainer: React.FC = () => {
+interface FriendMapContainerProps {
+  isManualMode: boolean;
+  isTracking: boolean;
+  isPrivacyModeEnabled: boolean;
+}
+
+const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
+  isManualMode,
+  isTracking,
+  isPrivacyModeEnabled
+}) => {
   const { 
     currentUser, 
     nearbyUsers, 
@@ -100,6 +110,9 @@ const FriendMapContainer: React.FC = () => {
         setCurrentUser={setCurrentUser}
         radiusInKm={radiusInKm}
         setRadiusInKm={setRadiusInKm}
+        isManualMode={isManualMode}
+        isTracking={isTracking}
+        isPrivacyModeEnabled={isPrivacyModeEnabled}
       />
       
       <MeetingHandler 

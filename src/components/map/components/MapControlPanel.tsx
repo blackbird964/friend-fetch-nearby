@@ -1,28 +1,15 @@
 
 import React from 'react';
 import RadiusControls from './RadiusControls';
-import LocationControls from './LocationControls';
 
 type MapControlPanelProps = {
   radiusInKm: number;
   setRadiusInKm: (radius: number) => void;
-  toggleLocationTracking: () => void;
-  isTracking: boolean;
-  isManualMode: boolean;
-  toggleManualMode: () => void;
-  isPrivacyModeEnabled: boolean;
-  togglePrivacyMode: () => void;
 };
 
 const MapControlPanel: React.FC<MapControlPanelProps> = ({ 
   radiusInKm, 
-  setRadiusInKm, 
-  toggleLocationTracking,
-  isTracking,
-  isManualMode,
-  toggleManualMode,
-  isPrivacyModeEnabled,
-  togglePrivacyMode
+  setRadiusInKm
 }) => {
   return (
     <div className="absolute bottom-4 left-0 right-0 mx-4 p-3 bg-white rounded-lg shadow-lg z-10">
@@ -30,14 +17,6 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
         <RadiusControls 
           radiusInKm={radiusInKm} 
           setRadiusInKm={setRadiusInKm} 
-        />
-        <LocationControls
-          toggleLocationTracking={toggleLocationTracking}
-          isTracking={isTracking}
-          isManualMode={isManualMode}
-          toggleManualMode={toggleManualMode}
-          isPrivacyModeEnabled={isPrivacyModeEnabled}
-          togglePrivacyMode={togglePrivacyMode}
         />
       </div>
     </div>

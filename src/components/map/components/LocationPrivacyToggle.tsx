@@ -1,54 +1,48 @@
 
 import React from 'react';
+import { Button } from '@/components/ui/button';
 import { EyeOff, Eye } from 'lucide-react';
-import { Toggle } from '@/components/ui/toggle';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Label } from '@/components/ui/label';
 
 type LocationPrivacyToggleProps = {
   isPrivacyModeEnabled: boolean;
   togglePrivacyMode: () => void;
+  showLabel?: boolean;
+  small?: boolean;
 };
 
 const LocationPrivacyToggle: React.FC<LocationPrivacyToggleProps> = ({
   isPrivacyModeEnabled,
-  togglePrivacyMode
+  togglePrivacyMode,
+  showLabel = false,
+  small = false
 }) => {
+  const iconSize = small ? 'h-3 w-3' : 'h-4 w-4';
+  const buttonSize = small ? 'h-6 w-6' : '';
+  
   return (
-    <TooltipProvider>
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Toggle
-            aria-label="Toggle location privacy"
-            pressed={isPrivacyModeEnabled}
-            onClick={togglePrivacyMode}
-            variant="outline"
-            className={`ml-2 ${isPrivacyModeEnabled ? 'bg-blue-100 border-blue-300' : ''}`}
-          >
-            <div className="flex items-center gap-1">
-              {isPrivacyModeEnabled ? (
-                <>
-                  <EyeOff className="h-4 w-4 text-blue-600" />
-                  <span className="text-xs text-blue-600">Approx</span>
-                </>
-              ) : (
-                <>
-                  <Eye className="h-4 w-4" />
-                  <span className="text-xs">Exact</span>
-                </>
-              )}
-            </div>
-          </Toggle>
-        </TooltipTrigger>
-        <TooltipContent side="top">
-          <p className="font-medium">{isPrivacyModeEnabled ? 'Privacy Mode: ON' : 'Privacy Mode: OFF'}</p>
-          <p className="text-xs text-gray-500">
-            {isPrivacyModeEnabled 
-              ? 'Others see approximate location within 50m' 
-              : 'Others see your exact location'}
-          </p>
-        </TooltipContent>
-      </Tooltip>
-    </TooltipProvider>
+    <div className="flex items-center space-x-1">
+      <Button
+        type="button"
+        size={small ? "sm" : "icon"}
+        variant="ghost"
+        className={`${buttonSize} p-0 aspect-square flex items-center justify-center`}
+        onClick={togglePrivacyMode}
+        title={isPrivacyModeEnabled ? "Disable Privacy Mode" : "Enable Privacy Mode"}
+      >
+        {isPrivacyModeEnabled ? (
+          <EyeOff className={iconSize} />
+        ) : (
+          <Eye className={iconSize} />
+        )}
+      </Button>
+      
+      {showLabel && (
+        <Label className="text-xs whitespace-nowrap">
+          Privacy
+        </Label>
+      )}
+    </div>
   );
 };
 

@@ -1,18 +1,31 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import FriendMap from '@/components/map/FriendMap';
 import UserList from '@/components/users/UserList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Users, RefreshCw } from 'lucide-react';
+import { MapPin, Users, RefreshCw, Eye } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import LocationPrivacyToggle from '@/components/map/components/LocationPrivacyToggle';
 
 const MapPage: React.FC = () => {
   const { refreshNearbyUsers, loading, currentUser, nearbyUsers } = useAppContext();
   const { toast } = useToast();
   const isMobile = useIsMobile();
+  
+  // Add state for manual mode and tracking
+  const [isManualMode, setIsManualMode] = useState(false);
+  const [isTracking, setIsTracking] = useState(false);
+  const [isPrivacyModeEnabled, setIsPrivacyModeEnabled] = useState(false);
+
+  // Toggle handlers
+  const toggleManualMode = () => setIsManualMode(prev => !prev);
+  const toggleLocationTracking = () => setIsTracking(prev => !prev);
+  const togglePrivacyMode = () => setIsPrivacyModeEnabled(prev => !prev);
   
   // Fetch nearby users on initial load - without toast notification
   useEffect(() => {
@@ -59,21 +72,66 @@ const MapPage: React.FC = () => {
       </div>
       
       <Tabs defaultValue="map" className="mb-6">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="map" className="flex items-center gap-2">
-            <MapPin className="h-4 w-4" /> Map View ({usersWithLocation})
-          </TabsTrigger>
-          <TabsTrigger value="list" className="flex items-center gap-2">
-            <Users className="h-4 w-4" /> List View ({totalUsers})
-          </TabsTrigger>
-        </TabsList>
+        <div className="flex flex-col gap-2">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="map" className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" /> Map View ({usersWithLocation})
+            </TabsTrigger>
+            <TabsTrigger value="list" className="flex items-center gap-2">
+              <Users className="h-4 w-4" /> List View ({totalUsers})
+            </TabsTrigger>
+          </TabsList>
+          
+          {/* New location controls row */}
+          <div className="flex items-center justify-between py-1 px-2 bg-gray-50 rounded-md">
+            <div className="flex items-center gap-3">
+              <div className="flex items-center space-x-1">
+                <Switch
+                  id="manual-mode"
+                  checked={isManualMode}
+                  onCheckedChange={toggleManualMode}
+                  className="scale-75"
+                />
+                <Label htmlFor="manual-mode" className="text-xs whitespace-nowrap">
+                  <MapPin className="h-3 w-3 inline mr-1" />
+                  Manual
+                </Label>
+              </div>
+
+              <LocationPrivacyToggle 
+                isPrivacyModeEnabled={isPrivacyModeEnabled}
+                togglePrivacyMode={togglePrivacyMode}
+                showLabel={true}
+                small={true}
+              />
+            </div>
+
+            <div className="flex items-center space-x-1">
+              <Switch
+                id="tracking-mode"
+                checked={isTracking}
+                onCheckedChange={toggleLocationTracking}
+                className="scale-75"
+              />
+              <Label htmlFor="tracking-mode" className="text-xs whitespace-nowrap">
+                <Eye className="h-3 w-3 inline mr-1" />
+                Track
+              </Label>
+            </div>
+          </div>
+        </div>
+        
         <TabsContent value="map" className="pt-4">
-          <div className="h-[calc(100vh-250px)] bg-white rounded-lg shadow-md overflow-hidden">
-            <FriendMap />
+          <div className="h-[calc(100vh-300px)] bg-white rounded-lg shadow-md overflow-hidden">
+            <FriendMap 
+              isManualMode={isManualMode}
+              isTracking={isTracking}
+              isPrivacyModeEnabled={isPrivacyModeEnabled}
+            />
           </div>
         </TabsContent>
         <TabsContent value="list" className="pt-4">
-          <div className="bg-white rounded-lg shadow-md p-4 overflow-auto max-h-[calc(100vh-250px)]">
+          <div className="bg-white rounded-lg shadow-md p-4 overflow-auto max-h-[calc(100vh-300px)]">
             <UserList />
           </div>
         </TabsContent>
