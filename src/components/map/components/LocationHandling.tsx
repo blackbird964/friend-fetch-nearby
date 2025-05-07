@@ -107,6 +107,7 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
       <MapControlPanel 
         radiusInKm={radiusInKm}
         setRadiusInKm={setRadiusInKm}
+        // Still passing these props for type compatibility, but they won't be used for rendering
         toggleLocationTracking={toggleLocationTracking}
         isTracking={isTracking}
         isManualMode={isManualMode}

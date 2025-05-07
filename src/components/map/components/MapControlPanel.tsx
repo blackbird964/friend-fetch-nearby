@@ -1,11 +1,10 @@
-
 import React from 'react';
 import RadiusControls from './RadiusControls';
-import LocationControls from './LocationControls';
 
 type MapControlPanelProps = {
   radiusInKm: number;
   setRadiusInKm: (radius: number) => void;
+  // We'll keep these props in the type definition but not use them in the component
   toggleLocationTracking?: () => void;
   isTracking?: boolean;
   isManualMode?: boolean;
@@ -17,6 +16,7 @@ type MapControlPanelProps = {
 const MapControlPanel: React.FC<MapControlPanelProps> = ({ 
   radiusInKm, 
   setRadiusInKm,
+  // Props below are kept for compatibility but not used
   toggleLocationTracking,
   isTracking = false,
   isManualMode = false,
@@ -31,17 +31,7 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
           radiusInKm={radiusInKm} 
           setRadiusInKm={setRadiusInKm} 
         />
-        
-        {toggleLocationTracking && toggleManualMode && togglePrivacyMode && (
-          <LocationControls 
-            toggleLocationTracking={toggleLocationTracking}
-            isTracking={isTracking}
-            isManualMode={isManualMode}
-            toggleManualMode={toggleManualMode}
-            isPrivacyModeEnabled={isPrivacyModeEnabled}
-            togglePrivacyMode={togglePrivacyMode}
-          />
-        )}
+        {/* Location controls removed from here to avoid duplication */}
       </div>
     </div>
   );
