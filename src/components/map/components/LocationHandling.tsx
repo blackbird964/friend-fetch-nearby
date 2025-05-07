@@ -1,6 +1,8 @@
+
 import React, { useEffect, useCallback } from 'react';
 import { AppUser, Location } from '@/context/types';
-import { useGeolocation } from '@/hooks/useGeolocation';
+// Fix the import path to use the correct location of the useGeolocation hook
+import { useGeolocation } from '@/components/map/hooks/useGeolocation';
 import Map from 'ol/Map';
 
 type LocationHandlingProps = {
