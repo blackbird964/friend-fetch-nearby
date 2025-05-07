@@ -13,9 +13,9 @@ export const useManualLocation = (
   toast: any,
   permissionState?: string
 ) => {
-  // Show manual mode help toast when permission is denied
+  // Show manual mode help toast when permission is denied or manual mode is activated
   useEffect(() => {
-    if (isManualMode && permissionState === 'denied') {
+    if (isManualMode) {
       toast({
         title: "Manual Location Mode",
         description: "You can set your location by tapping anywhere on the map."
@@ -24,7 +24,10 @@ export const useManualLocation = (
   }, [isManualMode, permissionState, toast]);
 
   const setupManualLocationHandler = useCallback(() => {
-    if (!map.current || !currentUser) return () => {};
+    if (!map.current || !currentUser) {
+      console.log("Cannot set up manual location handler: map or user unavailable");
+      return () => {};
+    }
     
     console.log("Setting up manual location handler, isManualMode:", isManualMode);
     
@@ -59,6 +62,9 @@ export const useManualLocation = (
         ...currentUser,
         location: newLocation
       });
+      
+      // Force UI update by dispatching a custom event
+      window.dispatchEvent(new CustomEvent('user-location-changed', { detail: newLocation }));
       
       // Then update in the database
       updateUserLocation(currentUser.id, newLocation)
@@ -95,11 +101,6 @@ export const useManualLocation = (
       // Use both click and singleclick for better cross-device compatibility
       map.current.on('click', handleMapInteraction);
       map.current.on('singleclick', handleMapInteraction);
-      
-      toast({
-        title: "Manual Location Mode",
-        description: "Tap anywhere on the map to set your location."
-      });
     }
     
     // Return cleanup function

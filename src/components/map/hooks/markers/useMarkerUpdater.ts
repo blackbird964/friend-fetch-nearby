@@ -110,6 +110,9 @@ export const useMarkerUpdater = (
         });
         
         vectorSource.current?.addFeature(userFeature);
+        
+        // Dispatch an event to notify that user's location has been updated on the map
+        window.dispatchEvent(new CustomEvent('user-marker-updated'));
       } catch (error) {
         console.error("Error adding current user to map:", error);
       }
@@ -118,4 +121,18 @@ export const useMarkerUpdater = (
     }
   }, [nearbyUsers, mapLoaded, currentUser?.location, vectorSource, radiusInKm, 
       currentUser?.locationSettings?.hideExactLocation, currentUser?.location_settings?.hide_exact_location]);
+
+  // Also listen for manual location updates
+  useEffect(() => {
+    const handleLocationChange = () => {
+      console.log("Location change event detected - will update markers");
+      // The next render cycle will update the markers
+    };
+    
+    window.addEventListener('user-location-changed', handleLocationChange);
+    
+    return () => {
+      window.removeEventListener('user-location-changed', handleLocationChange);
+    };
+  }, []);
 };

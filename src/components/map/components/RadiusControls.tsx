@@ -22,6 +22,9 @@ const RadiusControls: React.FC<RadiusControlsProps> = ({
     const newRadius = values[0];
     console.log("Setting radius to:", newRadius);
     setRadiusInKm(newRadius);
+    
+    // Dispatch event to notify radius changed
+    window.dispatchEvent(new CustomEvent('radius-changed', { detail: newRadius }));
   };
 
   return (

@@ -62,13 +62,41 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
     radiusInKm
   );
 
-  // Initialize radius circle with current radius value
+  // Initialize radius circle with current radius value and make it responsive to changes
   const { radiusLayer, radiusFeature } = useRadiusCircle(
     map,
     vectorSource,
     currentUser,
     radiusInKm
   );
+  
+  // Listen for radius changes from slider or other components
+  useEffect(() => {
+    const handleRadiusChange = (e: any) => {
+      console.log("Radius change event detected:", e.detail);
+      // The useRadiusCircle hook will handle the update based on the radiusInKm prop
+    };
+    
+    window.addEventListener('radius-changed', handleRadiusChange);
+    
+    return () => {
+      window.removeEventListener('radius-changed', handleRadiusChange);
+    };
+  }, [radiusInKm]);
+  
+  // Listen for user location changes 
+  useEffect(() => {
+    const handleLocationChange = () => {
+      console.log("User location changed event detected");
+      // The radius circle will update based on the currentUser.location change
+    };
+    
+    window.addEventListener('user-location-changed', handleLocationChange);
+    
+    return () => {
+      window.removeEventListener('user-location-changed', handleLocationChange);
+    };
+  }, []);
   
   // Initialize privacy circle for the current user
   const { privacyLayer, privacyFeature } = usePrivacyCircle(
