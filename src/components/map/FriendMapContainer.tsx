@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
+import { useToast } from '@/hooks/use-toast';
 
 // Import custom hooks
 import { useMapInitialization } from './hooks/useMapInitialization';
@@ -23,6 +24,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
   isTracking,
   isPrivacyModeEnabled
 }) => {
+  const { toast } = useToast();
   const { 
     currentUser, 
     nearbyUsers, 
@@ -83,6 +85,11 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
       refreshNearbyUsers(false);
     }
   }, [radiusInKm, mapLoaded, currentUser?.location, refreshNearbyUsers]);
+  
+  // Force a refresh when manual mode changes
+  useEffect(() => {
+    console.log("Manual mode changed:", isManualMode);
+  }, [isManualMode]);
 
   return (
     <MapContainer>

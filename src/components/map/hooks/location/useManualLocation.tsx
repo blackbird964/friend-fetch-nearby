@@ -26,11 +26,16 @@ export const useManualLocation = (
   const setupManualLocationHandler = useCallback(() => {
     if (!map.current || !currentUser) return () => {};
     
+    console.log("Setting up manual location handler, isManualMode:", isManualMode);
+    
     // Handle map clicks and taps (unified handler for both mouse and touch)
     const handleMapInteraction = (event: any) => {
-      if (!isManualMode) return;
+      if (!isManualMode) {
+        console.log("Manual mode is off, ignoring tap");
+        return;
+      }
       
-      console.log("Map tap/click detected in manual mode");
+      console.log("Map tap/click detected in manual mode", event);
       
       // Get the coordinates where the user clicked/tapped
       const clickCoordinate = event.coordinate;
@@ -48,13 +53,6 @@ export const useManualLocation = (
       
       // Update user location
       const newLocation = { lat, lng };
-      updateUserLocation(currentUser.id, newLocation)
-        .then(() => {
-          console.log("Location successfully updated in database");
-        })
-        .catch((error) => {
-          console.error("Error updating location in database:", error);
-        });
       
       // Immediately update current user state for UI responsiveness
       setCurrentUser({
@@ -62,29 +60,46 @@ export const useManualLocation = (
         location: newLocation
       });
       
-      toast({
-        title: "Location Updated",
-        description: "Your location has been set manually."
-      });
+      // Then update in the database
+      updateUserLocation(currentUser.id, newLocation)
+        .then(() => {
+          console.log("Location successfully updated in database");
+          
+          // Show toast notification
+          toast({
+            title: "Location Updated",
+            description: "Your location has been set manually."
+          });
+        })
+        .catch((error) => {
+          console.error("Error updating location in database:", error);
+          toast({
+            title: "Error",
+            description: "Failed to update your location. Please try again.",
+            variant: "destructive"
+          });
+        });
     };
     
-    const enableManualMode = () => {
-      if (!map.current || !isManualMode) return;
-      
-      console.log("Setting up manual location handlers");
-      
-      // Clean up any existing handlers first to prevent duplicates
+    // Clean up previous handlers to avoid duplicates
+    if (map.current) {
+      console.log("Removing existing manual location handlers");
       map.current.un('click', handleMapInteraction);
       map.current.un('singleclick', handleMapInteraction);
-      
-      // Add event listeners for both mouse and touch events
-      map.current.on('click', handleMapInteraction);
-      map.current.on('singleclick', handleMapInteraction); // For touch devices
-    };
+    }
     
-    // Set up the handlers immediately if manual mode is active
-    if (isManualMode) {
-      enableManualMode();
+    // Add event listeners but only if manual mode is active
+    if (isManualMode && map.current) {
+      console.log("Adding manual location handlers to map");
+      
+      // Use both click and singleclick for better cross-device compatibility
+      map.current.on('click', handleMapInteraction);
+      map.current.on('singleclick', handleMapInteraction);
+      
+      toast({
+        title: "Manual Location Mode",
+        description: "Tap anywhere on the map to set your location."
+      });
     }
     
     // Return cleanup function

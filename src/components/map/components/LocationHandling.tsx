@@ -2,9 +2,11 @@
 import React, { useEffect } from 'react';
 import { AppUser } from '@/context/types';
 import Map from 'ol/Map';
+import { useToast } from '@/hooks/use-toast';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { useLocationHandling } from '../hooks/useLocationHandling';
 import { useUserProfile } from '@/hooks/useUserProfile';
+import { useManualLocation } from '../hooks/location/useManualLocation';
 import MapControlPanel from './MapControlPanel';
 import LocationErrorMessage from './LocationErrorMessage';
 
@@ -33,6 +35,7 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
   isTracking: propIsTracking,
   isPrivacyModeEnabled: propIsPrivacyModeEnabled
 }) => {
+  const { toast } = useToast();
   const { updateUserProfile } = useUserProfile();
   
   // Handle geolocation
@@ -58,6 +61,17 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
     : (currentUser?.locationSettings?.hideExactLocation || 
        currentUser?.location_settings?.hide_exact_location || 
        false);
+
+  // Setup manual location mode handler
+  const { setupManualLocationHandler } = useManualLocation(
+    map,
+    isManualMode,
+    currentUser,
+    updateUserLocation,
+    setCurrentUser,
+    toast,
+    permissionState
+  );
 
   // Function to toggle privacy mode
   const togglePrivacyMode = async () => {
@@ -96,6 +110,15 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
       getUserLocation();
     }
   }, [mapLoaded, currentUser, getUserLocation, isManualMode, isTracking]);
+
+  // Set up manual location handler when manual mode is enabled
+  useEffect(() => {
+    if (mapLoaded && isManualMode && currentUser) {
+      console.log("Setting up manual location handler in LocationHandling component");
+      const cleanup = setupManualLocationHandler();
+      return cleanup;
+    }
+  }, [mapLoaded, isManualMode, currentUser, setupManualLocationHandler]);
 
   // Log radius changes to help with debugging
   useEffect(() => {

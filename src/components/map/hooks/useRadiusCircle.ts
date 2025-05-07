@@ -73,6 +73,7 @@ export const useRadiusCircle = (
   // Update radius circle when user location or radius changes
   useEffect(() => {
     console.log("Radius circle update triggered - radius:", radiusInKm, "km");
+    console.log("Current user location:", currentUser?.location);
     
     if (!radiusLayer.current || !map.current) {
       console.log("Radius layer or map not available for updating circle");
@@ -84,21 +85,21 @@ export const useRadiusCircle = (
       return;
     }
     
-    console.log("Updating radius circle with radius:", radiusInKm, "km");
-    
     // Make sure the source exists before trying to clear it
-    if (radiusLayer.current.getSource()) {
-      // Always clear all features from the source to avoid duplicates
-      radiusLayer.current.getSource()?.clear();
-    } else {
+    const source = radiusLayer.current.getSource();
+    if (!source) {
       console.error("Radius layer source is null");
       return;
     }
     
+    // Always clear all features from the source to avoid duplicates
+    source.clear();
+    console.log("Cleared existing radius features");
+    
     // Create a new radius circle if user has a location
     if (currentUser?.location?.lat && currentUser?.location?.lng) {
       const { lng, lat } = currentUser.location;
-      console.log("Creating radius circle at:", lng, lat, "with radius:", radiusInKm, "km");
+      console.log("Creating radius circle at:", lat, lng, "with radius:", radiusInKm, "km");
       
       const center = fromLonLat([lng, lat]);
       
@@ -115,17 +116,13 @@ export const useRadiusCircle = (
         circleType: 'radius',
       });
       
-      if (radiusLayer.current.getSource()) {
-        console.log("Adding radius feature to layer source");
-        radiusLayer.current.getSource()?.addFeature(radiusFeature.current);
-        
-        // Force redraw of the layer and the entire map
-        radiusLayer.current.changed();
-        radiusLayer.current.getSource()?.changed();
-        map.current.render(); // Force map rendering
-      } else {
-        console.error("Radius layer source is null");
-      }
+      console.log("Adding radius feature to layer source");
+      source.addFeature(radiusFeature.current);
+      
+      // Force redraw of the layer and the entire map
+      radiusLayer.current.changed();
+      source.changed();
+      map.current.render(); // Force map rendering
       
       // Update the circle when the map view changes to maintain shape
       const updateCircle = () => {
@@ -156,7 +153,7 @@ export const useRadiusCircle = (
     } else {
       console.log("Current user has no location, not creating radius circle");
     }
-  }, [currentUser?.location?.lat, currentUser?.location?.lng, radiusInKm, map, isLayerInitialized]);
+  }, [currentUser?.location, radiusInKm, map, isLayerInitialized]);
   
   return { radiusLayer, radiusFeature };
 };
