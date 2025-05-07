@@ -1,26 +1,19 @@
-
-import React, { useEffect } from 'react';
-import { AppUser } from '@/context/types';
+import React, { useEffect, useCallback } from 'react';
+import { AppUser, Location } from '@/context/types';
+import { useGeolocation } from '@/hooks/useGeolocation';
 import Map from 'ol/Map';
-import { useToast } from '@/hooks/use-toast';
-import { useGeolocation } from '../hooks/useGeolocation';
-import { useLocationHandling } from '../hooks/useLocationHandling';
-import { useUserProfile } from '@/hooks/useUserProfile';
-import { useManualLocation } from '../hooks/location/useManualLocation';
-import MapControlPanel from './MapControlPanel';
-import LocationErrorMessage from './LocationErrorMessage';
 
 type LocationHandlingProps = {
   map: React.MutableRefObject<Map | null>;
   mapLoaded: boolean;
   currentUser: AppUser | null;
-  updateUserLocation: (userId: string, location: { lat: number, lng: number }) => Promise<any>;
-  setCurrentUser: (user: AppUser | null) => void;
+  updateUserLocation: (userId: string, location: Location, options?: any) => Promise<void>;
+  setCurrentUser: (user: AppUser) => void;
   radiusInKm: number;
   setRadiusInKm: (radius: number) => void;
-  isManualMode?: boolean;
-  isTracking?: boolean;
-  isPrivacyModeEnabled?: boolean;
+  isManualMode: boolean;
+  isTracking: boolean;
+  isPrivacyModeEnabled: boolean;
 };
 
 const LocationHandling: React.FC<LocationHandlingProps> = ({
@@ -31,122 +24,102 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
   setCurrentUser,
   radiusInKm,
   setRadiusInKm,
-  isManualMode: propIsManualMode,
-  isTracking: propIsTracking,
-  isPrivacyModeEnabled: propIsPrivacyModeEnabled
+  isManualMode,
+  isTracking,
+  isPrivacyModeEnabled
 }) => {
-  const { toast } = useToast();
-  const { updateUserProfile } = useUserProfile();
+  const { location, error, startGeolocation, stopGeolocation } = useGeolocation();
   
-  // Handle geolocation
-  const {
-    getUserLocation,
-    isLocating,
-    locationError,
-    permissionState,
-    getSafariHelp,
-    toggleLocationTracking,
-    isTracking: geoIsTracking,
-    isManualMode: geoIsManualMode,
-    toggleManualMode
-  } = useGeolocation(map, currentUser, updateUserLocation, setCurrentUser);
-
-  // Use props values if provided, otherwise use the values from useGeolocation
-  const isManualMode = propIsManualMode !== undefined ? propIsManualMode : geoIsManualMode;
-  const isTracking = propIsTracking !== undefined ? propIsTracking : geoIsTracking;
-
-  // Get the current privacy setting
-  const isPrivacyModeEnabled = propIsPrivacyModeEnabled !== undefined 
-    ? propIsPrivacyModeEnabled
-    : (currentUser?.locationSettings?.hideExactLocation || 
-       currentUser?.location_settings?.hide_exact_location || 
-       false);
-
-  // Setup manual location mode handler
-  const { setupManualLocationHandler } = useManualLocation(
-    map,
-    isManualMode,
-    currentUser,
-    updateUserLocation,
-    setCurrentUser,
-    toast,
-    permissionState
-  );
-
-  // Function to toggle privacy mode
-  const togglePrivacyMode = async () => {
-    if (!currentUser) return;
+  // Start/stop geolocation based on tracking and manual mode
+  useEffect(() => {
+    if (mapLoaded) {
+      if (isTracking && !isManualMode) {
+        console.log("Starting geolocation tracking");
+        startGeolocation();
+      } else {
+        console.log("Stopping geolocation tracking");
+        stopGeolocation();
+      }
+    }
+  }, [isTracking, isManualMode, mapLoaded, startGeolocation, stopGeolocation]);
+  
+  // Update radius based on user interaction
+  const handleRadiusChange = useCallback((newRadius: number) => {
+    console.log("LocationHandling - Radius changed to:", newRadius);
+    setRadiusInKm(newRadius);
     
-    const currentPrivacySetting = currentUser.locationSettings?.hideExactLocation || 
-                                 currentUser.location_settings?.hide_exact_location || 
-                                 false;
-    
-    console.log("Toggling privacy mode from:", currentPrivacySetting, "to:", !currentPrivacySetting);
-    
-    try {
-      await updateUserProfile(currentUser.id, {
-        locationSettings: {
-          ...currentUser.locationSettings,
-          hideExactLocation: !currentPrivacySetting
-        }
+    // Dispatch event to notify radius changed
+    window.dispatchEvent(new CustomEvent('radius-changed', { detail: newRadius }));
+  }, [setRadiusInKm]);
+  
+  // Update user location in context
+  const handleLocationUpdate = useCallback((location: Location) => {
+    if (location && location.lat && location.lng && currentUser?.id) {
+      console.log("Updating location with privacy:", isPrivacyModeEnabled);
+      
+      // Update user with location and privacy setting
+      updateUserLocation(currentUser.id, location, {
+        // Pass privacy setting to be saved with location update
+        hideExactLocation: isPrivacyModeEnabled
       });
       
-      // Update local state
-      setCurrentUser({
-        ...currentUser,
-        locationSettings: {
-          ...currentUser.locationSettings,
-          hideExactLocation: !currentPrivacySetting
-        }
-      });
-    } catch (error) {
-      console.error('Error toggling privacy mode:', error);
-    }
-  };
-
-  // Automatically get user location when map is loaded
-  useEffect(() => {
-    if (mapLoaded && !isManualMode && !isTracking && currentUser) {
-      getUserLocation();
-    }
-  }, [mapLoaded, currentUser, getUserLocation, isManualMode, isTracking]);
-
-  // Set up manual location handler when manual mode is enabled
-  useEffect(() => {
-    if (mapLoaded && isManualMode && currentUser) {
-      console.log("Setting up manual location handler in LocationHandling component");
-      const cleanup = setupManualLocationHandler();
-      return cleanup;
-    }
-  }, [mapLoaded, isManualMode, currentUser, setupManualLocationHandler]);
-
-  // Log radius changes to help with debugging
-  useEffect(() => {
-    console.log("LocationHandling - radiusInKm:", radiusInKm);
-  }, [radiusInKm]);
-
-  return (
-    <>
-      <MapControlPanel 
-        radiusInKm={radiusInKm}
-        setRadiusInKm={setRadiusInKm}
-        // Still passing these props for type compatibility, but they won't be used for rendering
-        toggleLocationTracking={toggleLocationTracking}
-        isTracking={isTracking}
-        isManualMode={isManualMode}
-        toggleManualMode={toggleManualMode}
-        isPrivacyModeEnabled={isPrivacyModeEnabled}
-        togglePrivacyMode={togglePrivacyMode}
-      />
+      // Update local user state with new privacy setting
+      if (currentUser) {
+        const updatedUser = {
+          ...currentUser,
+          location,
+          locationSettings: {
+            ...currentUser.locationSettings,
+            hideExactLocation: isPrivacyModeEnabled
+          }
+        };
+        setCurrentUser(updatedUser);
+      }
       
-      <LocationErrorMessage 
-        locationError={locationError}
-        permissionState={permissionState}
-        getSafariHelp={getSafariHelp}
-        isManualMode={isManualMode}
-      />
-    </>
-  );
+      // Dispatch custom event to notify location change
+      window.dispatchEvent(new CustomEvent('user-location-changed'));
+    }
+  }, [currentUser, updateUserLocation, setCurrentUser, isPrivacyModeEnabled]);
+  
+  // Update location when geolocation changes (automatic mode)
+  useEffect(() => {
+    if (location && !isManualMode) {
+      console.log("Geolocation updated:", location);
+      handleLocationUpdate(location);
+    }
+  }, [location, isManualMode, handleLocationUpdate]);
+  
+  // Handle manual location updates
+  useEffect(() => {
+    const handleManualLocationUpdate = (event: any) => {
+      if (isManualMode && event.detail) {
+        console.log("Manual location update:", event.detail);
+        handleLocationUpdate(event.detail);
+      }
+    };
+    
+    window.addEventListener('manual-location-update', handleManualLocationUpdate);
+    
+    return () => {
+      window.removeEventListener('manual-location-update', handleManualLocationUpdate);
+    };
+  }, [isManualMode, handleLocationUpdate]);
+  
+  // Handle radius changes from slider or other components
+  useEffect(() => {
+    const handleRadiusChangeFromEvent = (e: any) => {
+      console.log("Radius change event detected:", e.detail);
+      handleRadiusChange(e.detail);
+    };
+    
+    window.addEventListener('radius-changed', handleRadiusChangeFromEvent);
+    
+    return () => {
+      window.removeEventListener('radius-changed', handleRadiusChangeFromEvent);
+    };
+  }, [handleRadiusChange]);
+
+  return null; // This component doesn't render any UI elements
 };
 
 export default LocationHandling;

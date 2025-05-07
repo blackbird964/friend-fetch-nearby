@@ -55,9 +55,34 @@ export const getDisplayLocation = (user: any): Location | undefined => {
   if (!user || !user.location) return undefined;
   
   if (shouldObfuscateLocation(user)) {
-    // Use a deterministic seed based on user ID to ensure the offset
-    // remains consistent while the app is running
-    return getPrivacyOffset(user.location);
+    // Use a consistent offset for a user to prevent flickering/jumping
+    // By using the user ID as part of the seed for randomization
+    const userId = user.id || '';
+    const seed = userId.length > 0 ? userId.charCodeAt(0) / 255 : Math.random();
+    
+    // Generate deterministic angle based on user ID
+    const angle = seed * 2 * Math.PI;
+    
+    // Fixed distance (30-50m) for consistency
+    const distance = 30 + (seed * 20); // Between 30-50m
+    
+    // Convert meters to degrees (approximate)
+    const metersToDegreesLat = 0.00045;
+    const metersToDegreesLng = 0.00045;
+    
+    // Calculate distance in lat/lng
+    const distanceInDegreesLat = (distance / 50) * metersToDegreesLat;
+    const distanceInDegreesLng = (distance / 50) * metersToDegreesLng;
+    
+    // Calculate offset based on angle
+    const latOffset = Math.sin(angle) * distanceInDegreesLat;
+    const lngOffset = Math.cos(angle) * distanceInDegreesLng;
+    
+    // Apply offset
+    return {
+      lat: user.location.lat + latOffset,
+      lng: user.location.lng + lngOffset
+    };
   }
   
   return user.location;

@@ -5,7 +5,6 @@ import { Vector as VectorSource } from 'ol/source';
 import { Vector as VectorLayer } from 'ol/layer';
 import Feature from 'ol/Feature';
 import { Circle } from 'ol/geom';
-import { Fill, Style, Stroke } from 'ol/style';
 import Map from 'ol/Map';
 import { AppUser } from '@/context/types';
 import { shouldObfuscateLocation } from '@/utils/privacyUtils';
@@ -26,15 +25,6 @@ export const usePrivacyCircle = (
       const source = new VectorSource();
       privacyLayer.current = new VectorLayer({
         source,
-        style: new Style({
-          fill: new Fill({
-            color: 'rgba(100, 149, 237, 0.3)', // More visible blue for privacy circles
-          }),
-          stroke: new Stroke({
-            color: 'rgba(100, 149, 237, 0.7)',
-            width: 2,
-          }),
-        }),
         zIndex: 1, // Places the circle below the markers
       });
       
@@ -77,27 +67,37 @@ export const usePrivacyCircle = (
       
       privacyLayer.current.getSource()?.addFeature(privacyFeature.current);
       
-      // Update the circle when the map view changes to maintain shape
+      // Important: Fix for circle scaling when zooming
+      const view = map.current.getView();
+      
+      // This function updates the circle geometry when the view resolution changes
       const updateCircle = () => {
-        if (!map.current || !privacyFeature.current || !currentUser?.location) return;
+        if (!privacyFeature.current || !currentUser?.location) return;
         
-        // Get current circle
-        const circleGeom = privacyFeature.current.getGeometry() as Circle;
-        if (!circleGeom) return;
+        // Get the current resolution
+        const resolution = view.getResolution();
+        if (!resolution) return;
         
-        // Recreate circle with same center and radius
+        // Get fixed meters per pixel at the circle's latitude
+        const metersPerPixel = resolution * Math.cos(currentUser.location.lat * Math.PI / 180);
+        
+        // Calculate how many pixels we need for a 50m radius
+        const pixelRadius = radiusInMeters / metersPerPixel;
+        
+        // Update the circle with a constant size in meters
         privacyFeature.current.setGeometry(
           new Circle(fromLonLat([currentUser.location.lng, currentUser.location.lat]), radiusInMeters)
         );
       };
       
-      // Add listener to update circle when view changes
-      map.current.getView().on('change:resolution', updateCircle);
+      // Call updateCircle when view resolution changes (zoom)
+      view.on('change:resolution', updateCircle);
+      
+      // Initial update
+      updateCircle();
       
       return () => {
-        if (map.current) {
-          map.current.getView().un('change:resolution', updateCircle);
-        }
+        view.un('change:resolution', updateCircle);
       };
     }
   }, [currentUser?.location, currentUser?.locationSettings, currentUser?.location_settings, map]);
