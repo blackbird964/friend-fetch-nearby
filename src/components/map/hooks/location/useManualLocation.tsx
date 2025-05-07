@@ -18,7 +18,7 @@ export const useManualLocation = (
     if (isManualMode && permissionState === 'denied') {
       toast({
         title: "Manual Location Mode",
-        description: "You can set your location by clicking anywhere on the map."
+        description: "You can set your location by tapping anywhere on the map."
       });
     }
   }, [isManualMode, permissionState, toast]);
@@ -26,10 +26,11 @@ export const useManualLocation = (
   const setupManualLocationHandler = useCallback(() => {
     if (!map.current || !currentUser) return () => {};
     
-    const handleMapClick = (event: any) => {
+    // Handle map clicks and taps (unified handler for both mouse and touch)
+    const handleMapInteraction = (event: any) => {
       if (!isManualMode) return;
       
-      // Get the coordinates where the user clicked
+      // Get the coordinates where the user clicked/tapped
       const clickCoordinate = event.coordinate;
       if (!clickCoordinate) return;
       
@@ -56,14 +57,17 @@ export const useManualLocation = (
       });
     };
     
-    // Add click event listener to the map
-    if (isManualMode) {
-      map.current.on('click', handleMapClick);
+    // Add event listeners to the map for both click and tap events
+    if (isManualMode && map.current) {
+      map.current.on('click', handleMapInteraction);
+      // Ensure singleclick is used for touch devices to avoid double-firing
+      map.current.on('singleclick', handleMapInteraction);
     }
     
     return () => {
       if (map.current) {
-        map.current.un('click', handleMapClick);
+        map.current.un('click', handleMapInteraction);
+        map.current.un('singleclick', handleMapInteraction);
       }
     };
   }, [map, isManualMode, currentUser, updateUserLocation, setCurrentUser, toast]);
