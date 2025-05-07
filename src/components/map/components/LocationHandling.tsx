@@ -16,6 +16,9 @@ type LocationHandlingProps = {
   setCurrentUser: (user: AppUser | null) => void;
   radiusInKm: number;
   setRadiusInKm: (radius: number) => void;
+  isManualMode?: boolean;
+  isTracking?: boolean;
+  isPrivacyModeEnabled?: boolean;
 };
 
 const LocationHandling: React.FC<LocationHandlingProps> = ({
@@ -25,7 +28,10 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
   updateUserLocation,
   setCurrentUser,
   radiusInKm,
-  setRadiusInKm
+  setRadiusInKm,
+  isManualMode: propIsManualMode,
+  isTracking: propIsTracking,
+  isPrivacyModeEnabled: propIsPrivacyModeEnabled
 }) => {
   const { updateUserProfile } = useUserProfile();
   
@@ -37,15 +43,21 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
     permissionState,
     getSafariHelp,
     toggleLocationTracking,
-    isTracking,
-    isManualMode,
+    isTracking: geoIsTracking,
+    isManualMode: geoIsManualMode,
     toggleManualMode
   } = useGeolocation(map, currentUser, updateUserLocation, setCurrentUser);
 
+  // Use props values if provided, otherwise use the values from useGeolocation
+  const isManualMode = propIsManualMode !== undefined ? propIsManualMode : geoIsManualMode;
+  const isTracking = propIsTracking !== undefined ? propIsTracking : geoIsTracking;
+
   // Get the current privacy setting
-  const isPrivacyModeEnabled = currentUser?.locationSettings?.hideExactLocation || 
-                               currentUser?.location_settings?.hide_exact_location || 
-                               false;
+  const isPrivacyModeEnabled = propIsPrivacyModeEnabled !== undefined 
+    ? propIsPrivacyModeEnabled
+    : (currentUser?.locationSettings?.hideExactLocation || 
+       currentUser?.location_settings?.hide_exact_location || 
+       false);
 
   // Function to toggle privacy mode
   const togglePrivacyMode = async () => {
