@@ -84,7 +84,7 @@ export const useMarkerStyles = (
       return new Style({
         text: new Text({
           text: feature.get('name'),
-          offsetY: -15,
+          offsetY: -20, // Increased offset to account for larger markers
           fill: new Fill({ color: '#374151' }),
           stroke: new Stroke({ color: 'white', width: 2 })
         }),
@@ -92,19 +92,19 @@ export const useMarkerStyles = (
       });
     }
     
-    // For regular users or the current user
+    // For regular users or the current user - DOUBLED SIZE
     return new Style({
       image: new CircleStyle({
-        radius: isUser ? 10 : 8,
+        radius: isUser ? 20 : 16, // Doubled from 10/8 to 20/16
         fill: new Fill({ color: markerColor }),
         stroke: new Stroke({ 
           color: isUser ? '#0369a1' : 'white', 
-          width: isUser ? 3 : 2
+          width: isUser ? 4 : 3 // Increased stroke width proportionally
         })
       }),
       text: new Text({
         text: feature.get('name'),
-        offsetY: -15,
+        offsetY: -25, // Increased offset to account for larger markers
         fill: new Fill({ color: '#374151' }),
         stroke: new Stroke({ color: 'white', width: 2 })
       })
@@ -113,3 +113,4 @@ export const useMarkerStyles = (
 
   return { getMarkerStyle };
 };
+
