@@ -30,9 +30,14 @@ export const useManualLocation = (
     const handleMapInteraction = (event: any) => {
       if (!isManualMode) return;
       
+      console.log("Map tap/click detected in manual mode");
+      
       // Get the coordinates where the user clicked/tapped
       const clickCoordinate = event.coordinate;
-      if (!clickCoordinate) return;
+      if (!clickCoordinate) {
+        console.error("No coordinate in map interaction event");
+        return;
+      }
       
       // Convert from map projection to lat/lng (EPSG:3857 to EPSG:4326)
       const lonLat = toLonLat(clickCoordinate);
@@ -43,9 +48,15 @@ export const useManualLocation = (
       
       // Update user location
       const newLocation = { lat, lng };
-      updateUserLocation(currentUser.id, newLocation);
+      updateUserLocation(currentUser.id, newLocation)
+        .then(() => {
+          console.log("Location successfully updated in database");
+        })
+        .catch((error) => {
+          console.error("Error updating location in database:", error);
+        });
       
-      // Update current user state
+      // Immediately update current user state for UI responsiveness
       setCurrentUser({
         ...currentUser,
         location: newLocation
@@ -57,15 +68,29 @@ export const useManualLocation = (
       });
     };
     
-    // Add event listeners to the map for both click and tap events
-    if (isManualMode && map.current) {
+    const enableManualMode = () => {
+      if (!map.current || !isManualMode) return;
+      
+      console.log("Setting up manual location handlers");
+      
+      // Clean up any existing handlers first to prevent duplicates
+      map.current.un('click', handleMapInteraction);
+      map.current.un('singleclick', handleMapInteraction);
+      
+      // Add event listeners for both mouse and touch events
       map.current.on('click', handleMapInteraction);
-      // Ensure singleclick is used for touch devices to avoid double-firing
-      map.current.on('singleclick', handleMapInteraction);
+      map.current.on('singleclick', handleMapInteraction); // For touch devices
+    };
+    
+    // Set up the handlers immediately if manual mode is active
+    if (isManualMode) {
+      enableManualMode();
     }
     
+    // Return cleanup function
     return () => {
       if (map.current) {
+        console.log("Cleaning up manual location handlers");
         map.current.un('click', handleMapInteraction);
         map.current.un('singleclick', handleMapInteraction);
       }

@@ -45,10 +45,10 @@ export const useRadiusCircle = (
       source,
       style: new Style({
         fill: new Fill({
-          color: 'rgba(66, 133, 244, 0.2)', // Semi-transparent blue
+          color: 'rgba(66, 133, 244, 0.15)', // Semi-transparent blue
         }),
         stroke: new Stroke({
-          color: 'rgba(64, 99, 255, 0.5)',
+          color: 'rgba(64, 99, 255, 0.7)',
           width: 2,
           lineDash: [5, 5]
         }),
@@ -86,18 +86,17 @@ export const useRadiusCircle = (
     
     console.log("Updating radius circle with radius:", radiusInKm, "km");
     
-    // Clear existing radius feature
-    if (radiusFeature.current) {
-      console.log("Removing existing radius feature");
-      radiusLayer.current.getSource()?.removeFeature(radiusFeature.current);
-      radiusFeature.current = null;
+    // Make sure the source exists before trying to clear it
+    if (radiusLayer.current.getSource()) {
+      // Always clear all features from the source to avoid duplicates
+      radiusLayer.current.getSource()?.clear();
+    } else {
+      console.error("Radius layer source is null");
+      return;
     }
     
-    // Always clear all features from the source to avoid duplicates
-    radiusLayer.current.getSource()?.clear();
-    
     // Create a new radius circle if user has a location
-    if (currentUser?.location) {
+    if (currentUser?.location?.lat && currentUser?.location?.lng) {
       const { lng, lat } = currentUser.location;
       console.log("Creating radius circle at:", lng, lat, "with radius:", radiusInKm, "km");
       
@@ -157,7 +156,7 @@ export const useRadiusCircle = (
     } else {
       console.log("Current user has no location, not creating radius circle");
     }
-  }, [currentUser?.location, radiusInKm, map, isLayerInitialized]);
+  }, [currentUser?.location?.lat, currentUser?.location?.lng, radiusInKm, map, isLayerInitialized]);
   
   return { radiusLayer, radiusFeature };
 };
