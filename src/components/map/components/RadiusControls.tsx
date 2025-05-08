@@ -32,16 +32,14 @@ const RadiusControls: React.FC<RadiusControlsProps> = ({
       <div className="flex items-center justify-between">
         <div className="text-sm font-medium">Search Radius: {radiusInKm} km</div>
       </div>
-      <div>
-        <Slider 
-          value={[radiusInKm]} 
-          min={1} 
-          max={100}
-          step={1}
-          onValueChange={handleRadiusChange} 
-          className="py-1"
-        />
-      </div>
+      <Slider 
+        value={[radiusInKm]} 
+        min={1} 
+        max={100}
+        step={1}
+        onValueChange={handleRadiusChange} 
+        className="py-1"
+      />
     </div>
   );
 };

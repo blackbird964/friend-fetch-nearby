@@ -20,12 +20,17 @@ const MapPage: React.FC = () => {
   // Add state for manual mode and tracking
   const [isManualMode, setIsManualMode] = useState(false);
   const [isTracking, setIsTracking] = useState(false);
-  const [isPrivacyModeEnabled, setIsPrivacyModeEnabled] = useState(false);
+  const [isPrivacyModeEnabled, setIsPrivacyModeEnabled] = useState(
+    currentUser?.locationSettings?.hideExactLocation || false
+  );
 
   // Toggle handlers
   const toggleManualMode = () => setIsManualMode(prev => !prev);
   const toggleLocationTracking = () => setIsTracking(prev => !prev);
-  const togglePrivacyMode = () => setIsPrivacyModeEnabled(prev => !prev);
+  const togglePrivacyMode = () => {
+    setIsPrivacyModeEnabled(prev => !prev);
+    // The actual privacy update is handled in FriendMapContainer
+  };
   
   // Fetch nearby users on initial load - without toast notification
   useEffect(() => {
@@ -34,6 +39,13 @@ const MapPage: React.FC = () => {
       refreshNearbyUsers(false);
     }
   }, [currentUser?.location, refreshNearbyUsers]);
+
+  // Update privacy mode based on user settings when they change
+  useEffect(() => {
+    if (currentUser?.locationSettings?.hideExactLocation !== undefined) {
+      setIsPrivacyModeEnabled(currentUser.locationSettings.hideExactLocation);
+    }
+  }, [currentUser?.locationSettings?.hideExactLocation]);
   
   const handleRefresh = async () => {
     try {

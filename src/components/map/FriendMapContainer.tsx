@@ -41,6 +41,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
   const [selectedDuration, setSelectedDuration] = useState<number>(30);
   const [movingUsers, setMovingUsers] = useState<Set<string>>(new Set());
   const [completedMoves, setCompletedMoves] = useState<Set<string>>(new Set());
+  const [togglePrivacy, setTogglePrivacy] = useState<boolean>(isPrivacyModeEnabled);
 
   // Initialize map with references
   const { 
@@ -94,7 +95,14 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
 
   // Function to toggle privacy mode
   const togglePrivacyMode = () => {
-    console.log("Privacy mode toggled, current value:", isPrivacyModeEnabled);
+    console.log("Privacy mode toggled, current value:", togglePrivacy);
+    setTogglePrivacy(!togglePrivacy);
+    // Update the user's location with the new privacy setting
+    if (currentUser?.location) {
+      updateUserLocation(currentUser.id, currentUser.location, {
+        hideExactLocation: !togglePrivacy
+      });
+    }
   };
 
   return (
@@ -125,7 +133,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         setRadiusInKm={setRadiusInKm}
         isManualMode={isManualMode}
         isTracking={isTracking}
-        isPrivacyModeEnabled={isPrivacyModeEnabled}
+        isPrivacyModeEnabled={togglePrivacy}
       />
       
       <MeetingHandler 
@@ -143,11 +151,11 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         WYNYARD_COORDS={WYNYARD_COORDS as [number, number]}
       />
 
-      {/* Add the MapControlPanel here */}
+      {/* Map Control Panel with radius slider and privacy toggle */}
       <MapControlPanel
         radiusInKm={radiusInKm}
         setRadiusInKm={setRadiusInKm}
-        isPrivacyModeEnabled={isPrivacyModeEnabled}
+        isPrivacyModeEnabled={togglePrivacy}
         togglePrivacyMode={togglePrivacyMode}
       />
     </MapContainer>
