@@ -1,5 +1,5 @@
 
-import React, { useEffect, useCallback } from 'react';
+import React, { useEffect, useCallback, useState } from 'react';
 import { AppUser, Location } from '@/context/types';
 // Fix the import path to use the correct location of the useGeolocation hook
 import { useGeolocation } from '@/components/map/hooks/useGeolocation';
@@ -30,20 +30,29 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
   isTracking,
   isPrivacyModeEnabled
 }) => {
-  const { location, error, startGeolocation, stopGeolocation } = useGeolocation();
+  const [currentLocation, setCurrentLocation] = useState<Location | null>(null);
+  
+  // Create a simplified version of the geolocation hook that works with our component
+  const {
+    getUserLocation,
+    locationError,
+    startLocationTracking,
+    stopLocationTracking,
+    isTracking: isCurrentlyTracking
+  } = useGeolocation(map, currentUser, updateUserLocation, setCurrentUser);
   
   // Start/stop geolocation based on tracking and manual mode
   useEffect(() => {
     if (mapLoaded) {
       if (isTracking && !isManualMode) {
         console.log("Starting geolocation tracking");
-        startGeolocation();
+        startLocationTracking();
       } else {
         console.log("Stopping geolocation tracking");
-        stopGeolocation();
+        stopLocationTracking();
       }
     }
-  }, [isTracking, isManualMode, mapLoaded, startGeolocation, stopGeolocation]);
+  }, [isTracking, isManualMode, mapLoaded, startLocationTracking, stopLocationTracking]);
   
   // Update radius based on user interaction
   const handleRadiusChange = useCallback((newRadius: number) => {
@@ -83,13 +92,13 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
     }
   }, [currentUser, updateUserLocation, setCurrentUser, isPrivacyModeEnabled]);
   
-  // Update location when geolocation changes (automatic mode)
+  // Update location when currentLocation changes
   useEffect(() => {
-    if (location && !isManualMode) {
-      console.log("Geolocation updated:", location);
-      handleLocationUpdate(location);
+    if (currentLocation && !isManualMode) {
+      console.log("Geolocation updated:", currentLocation);
+      handleLocationUpdate(currentLocation);
     }
-  }, [location, isManualMode, handleLocationUpdate]);
+  }, [currentLocation, isManualMode, handleLocationUpdate]);
   
   // Handle manual location updates
   useEffect(() => {
