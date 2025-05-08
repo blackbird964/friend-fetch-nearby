@@ -6,7 +6,11 @@ import { formatLocationForStorage } from '@/utils/locationUtils';
 /**
  * Update user location in Supabase and local state
  */
-export const updateUserLocation = async (userId: string, location: { lat: number, lng: number }) => {
+export const updateUserLocation = async (
+  userId: string, 
+  location: { lat: number, lng: number },
+  options?: { hideExactLocation?: boolean }
+) => {
   try {
     console.log("Updating user location in context:", userId, location);
     
@@ -15,9 +19,22 @@ export const updateUserLocation = async (userId: string, location: { lat: number
     
     console.log("Formatted location for PostgreSQL:", formattedLocation);
     
+    // Create the update payload
+    const updateData: any = {
+      location: formattedLocation
+    };
+
+    // If privacy setting is provided, update it
+    if (options?.hideExactLocation !== undefined) {
+      console.log("Updating privacy setting:", options.hideExactLocation);
+      updateData.location_settings = {
+        hide_exact_location: options.hideExactLocation
+      };
+    }
+    
     const { data, error } = await supabase
       .from('profiles')
-      .update({ location: formattedLocation })
+      .update(updateData)
       .eq('id', userId)
       .select();
       

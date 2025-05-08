@@ -99,6 +99,19 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     setTogglePrivacy(!togglePrivacy);
     // Update the user's location with the new privacy setting
     if (currentUser?.location) {
+      // First update the location settings in the current user object
+      const updatedUser = {
+        ...currentUser,
+        locationSettings: {
+          ...currentUser.locationSettings,
+          hideExactLocation: !togglePrivacy
+        }
+      };
+      
+      // Set the current user with updated settings
+      setCurrentUser(updatedUser);
+      
+      // Then update the location in the database with the privacy option
       updateUserLocation(currentUser.id, currentUser.location, {
         hideExactLocation: !togglePrivacy
       });
