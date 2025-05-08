@@ -41,7 +41,7 @@ const ProfileFormFields: React.FC<ProfileFormFieldsProps> = ({
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <label htmlFor="age" className="text-sm font-medium">
-            Age
+            Age (Optional)
           </label>
           <Input
             id="age"
@@ -49,7 +49,6 @@ const ProfileFormFields: React.FC<ProfileFormFieldsProps> = ({
             placeholder="Your age"
             value={age}
             onChange={(e) => setAge(e.target.value)}
-            required
             min={18}
             max={120}
           />

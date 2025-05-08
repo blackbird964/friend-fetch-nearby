@@ -79,7 +79,7 @@ export const useProfileSetup = () => {
       const profileData = {
         id: user.id,
         name: user.user_metadata?.name || '',
-        age: parseInt(age) || null,
+        age: age ? parseInt(age) : null,
         gender,
         bio,
         interests: interests.length > 0 ? interests : [], // Ensure interests is an array

@@ -96,12 +96,14 @@ const ProfilePage: React.FC = () => {
             <h2 className="text-2xl font-bold mt-4">{currentUser.name}</h2>
             
             <div className="flex items-center mt-1 text-gray-500 text-sm">
-              <span>{currentUser.age} years</span>
+              {currentUser.age && (
+                <span>{currentUser.age}</span>
+              )}
+              {currentUser.age && currentUser.gender && (
+                <span className="mx-2">•</span>
+              )}
               {currentUser.gender && (
-                <>
-                  <span className="mx-2">•</span>
-                  <span>{currentUser.gender}</span>
-                </>
+                <span>{currentUser.gender}</span>
               )}
             </div>
             

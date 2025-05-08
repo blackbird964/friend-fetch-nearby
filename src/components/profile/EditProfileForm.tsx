@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from "@/components/ui/button";
@@ -121,7 +122,7 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="age">Age</Label>
+            <Label htmlFor="age">Age (Optional)</Label>
             <Input
               id="age"
               name="age"
