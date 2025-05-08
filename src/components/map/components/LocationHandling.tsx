@@ -9,7 +9,7 @@ type LocationHandlingProps = {
   map: React.MutableRefObject<Map | null>;
   mapLoaded: boolean;
   currentUser: AppUser | null;
-  updateUserLocation: (userId: string, location: Location, options?: any) => Promise<void>;
+  updateUserLocation: (userId: string, location: Location) => Promise<void>;
   setCurrentUser: (user: AppUser) => void;
   radiusInKm: number;
   setRadiusInKm: (radius: number) => void;
@@ -68,11 +68,8 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
     if (location && location.lat && location.lng && currentUser?.id) {
       console.log("Updating location with privacy:", isPrivacyModeEnabled);
       
-      // Update user with location and privacy setting
-      updateUserLocation(currentUser.id, location, {
-        // Pass privacy setting to be saved with location update
-        hideExactLocation: isPrivacyModeEnabled
-      });
+      // Update user location - make sure we only pass the arguments that are expected
+      updateUserLocation(currentUser.id, location);
       
       // Update local user state with new privacy setting
       if (currentUser) {

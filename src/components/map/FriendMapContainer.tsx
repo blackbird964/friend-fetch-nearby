@@ -111,10 +111,11 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
       // Set the current user with updated settings
       setCurrentUser(updatedUser);
       
-      // Then update the location in the database with the privacy option
-      updateUserLocation(currentUser.id, currentUser.location, {
-        hideExactLocation: !togglePrivacy
-      });
+      // Then update the location in the database
+      // Make sure we're only passing the required arguments to match the function signature
+      if (currentUser.id && currentUser.location) {
+        updateUserLocation(currentUser.id, currentUser.location);
+      }
     }
   };
 
