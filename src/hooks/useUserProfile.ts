@@ -10,10 +10,10 @@ export const useUserProfile = () => {
   const [loading, setLoading] = useState(false);
 
   // Update user location
-  const handleUpdateUserLocation = useCallback(async (userId: string, location: Location): Promise<void> => {
+  const handleUpdateUserLocation = useCallback(async (userId: string, location: Location, options?: { hideExactLocation?: boolean }): Promise<void> => {
     setLoading(true);
     try {
-      await updateUserLocation(userId, location);
+      await updateUserLocation(userId, location, options);
     } catch (error) {
       console.error('Error updating user location:', error);
     } finally {
