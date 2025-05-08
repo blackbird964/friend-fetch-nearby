@@ -1,3 +1,4 @@
+
 import React from 'react';
 import RadiusControls from './RadiusControls';
 import LocationPrivacyToggle from './LocationPrivacyToggle';
@@ -27,7 +28,7 @@ const MapControlPanel: React.FC<MapControlPanelProps> = ({
   toggleManualMode,
 }) => {
   return (
-    <div className="absolute bottom-4 left-0 right-0 mx-4 p-3 bg-white rounded-lg shadow-lg z-10">
+    <div className="absolute bottom-4 left-0 right-0 mx-4 p-3 bg-white rounded-lg shadow-lg z-20">
       <div className="flex flex-col gap-3">
         <div className="flex justify-between items-center">
           <div className="font-medium text-sm">Adjust Search Radius</div>

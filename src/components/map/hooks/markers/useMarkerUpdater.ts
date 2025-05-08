@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { AppUser } from '@/context/types';
 import Feature from 'ol/Feature';
@@ -29,10 +28,9 @@ export const useMarkerUpdater = (
     // Clear existing user markers (but keep current user and circle markers)
     const features = vectorSource.current.getFeatures();
     features.forEach(feature => {
-      const isCurrentUser = feature.get('isCurrentUser');
       const isCircle = feature.get('isCircle');
       
-      if (!isCurrentUser && !isCircle) {
+      if (!isCircle) {
         vectorSource.current?.removeFeature(feature);
       }
     });

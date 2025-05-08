@@ -12,6 +12,7 @@ import MapContainer from './components/MapContainer';
 import MapFeatures from './components/MapFeatures';
 import LocationHandling from './components/LocationHandling';
 import MeetingHandler from './components/MeetingHandler';
+import MapControlPanel from './components/MapControlPanel';
 
 interface FriendMapContainerProps {
   isManualMode: boolean;
@@ -91,6 +92,11 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     console.log("Manual mode changed:", isManualMode);
   }, [isManualMode]);
 
+  // Function to toggle privacy mode
+  const togglePrivacyMode = () => {
+    console.log("Privacy mode toggled, current value:", isPrivacyModeEnabled);
+  };
+
   return (
     <MapContainer>
       <MapFeatures 
@@ -135,6 +141,14 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         setCompletedMoves={setCompletedMoves}
         nearbyUsers={nearbyUsers}
         WYNYARD_COORDS={WYNYARD_COORDS as [number, number]}
+      />
+
+      {/* Add the MapControlPanel here */}
+      <MapControlPanel
+        radiusInKm={radiusInKm}
+        setRadiusInKm={setRadiusInKm}
+        isPrivacyModeEnabled={isPrivacyModeEnabled}
+        togglePrivacyMode={togglePrivacyMode}
       />
     </MapContainer>
   );
