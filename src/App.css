@@ -47,8 +47,14 @@
   0% {
     background-position: 0% 50%;
   }
+  25% {
+    background-position: 50% 100%;
+  }
   50% {
     background-position: 100% 50%;
+  }
+  75% {
+    background-position: 50% 0%;
   }
   100% {
     background-position: 0% 50%;
@@ -56,9 +62,14 @@
 }
 
 body {
-  background: linear-gradient(-45deg, #F2FCE2, #FFFFFF, #eef7e8, #e6f3dd);
+  background: linear-gradient(-45deg, 
+    rgba(97, 218, 251, 0.2), 
+    rgba(232, 255, 232, 0.7), 
+    rgba(63, 181, 130, 0.2), 
+    rgba(100, 220, 140, 0.3),
+    rgba(170, 255, 170, 0.6));
   background-size: 400% 400%;
-  animation: gradient-animation 15s ease infinite;
+  animation: gradient-animation 20s ease infinite;
   min-height: 100vh;
   margin: 0;
   padding: 0;
