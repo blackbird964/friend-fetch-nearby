@@ -87,3 +87,11 @@ export const getDisplayLocation = (user: any): Location | undefined => {
   
   return user.location;
 };
+
+/**
+ * Get radius in meters for privacy circle
+ */
+export const getPrivacyCircleRadius = (): number => {
+  // 2km radius
+  return 2000;
+};

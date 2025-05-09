@@ -87,12 +87,7 @@ export const useMarkerStyles = (
           fill: new Fill({ color: markerColor }),
           stroke: new Stroke({ color: 'white', width: 2 })
         }),
-        text: new Text({
-          text: feature.get('name'),
-          offsetY: -16,
-          fill: new Fill({ color: '#374151' }),
-          stroke: new Stroke({ color: 'white', width: 2 })
-        })
+        // Privacy mode - no text
       });
     }
     

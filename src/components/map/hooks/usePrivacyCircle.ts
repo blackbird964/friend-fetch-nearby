@@ -7,7 +7,7 @@ import Feature from 'ol/Feature';
 import { Circle } from 'ol/geom';
 import Map from 'ol/Map';
 import { AppUser } from '@/context/types';
-import { shouldObfuscateLocation } from '@/utils/privacyUtils';
+import { shouldObfuscateLocation, getPrivacyCircleRadius } from '@/utils/privacyUtils';
 
 export const usePrivacyCircle = (
   map: React.MutableRefObject<Map | null>,
@@ -54,8 +54,8 @@ export const usePrivacyCircle = (
       const { lng, lat } = currentUser.location;
       const center = fromLonLat([lng, lat]);
       
-      // 50 meters radius - this should match the privacy offset distance
-      const radiusInMeters = 50;
+      // Use 2km radius for privacy circle
+      const radiusInMeters = getPrivacyCircleRadius();
       
       // Create the circle feature
       privacyFeature.current = new Feature({
@@ -78,13 +78,7 @@ export const usePrivacyCircle = (
         const resolution = view.getResolution();
         if (!resolution) return;
         
-        // Get fixed meters per pixel at the circle's latitude
-        const metersPerPixel = resolution * Math.cos(currentUser.location.lat * Math.PI / 180);
-        
-        // Calculate how many pixels we need for a 50m radius
-        const pixelRadius = radiusInMeters / metersPerPixel;
-        
-        // Update the circle with a constant size in meters
+        // Update the circle with the current user location
         privacyFeature.current.setGeometry(
           new Circle(fromLonLat([currentUser.location.lng, currentUser.location.lat]), radiusInMeters)
         );

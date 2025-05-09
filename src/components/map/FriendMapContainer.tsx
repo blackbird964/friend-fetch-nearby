@@ -83,6 +83,11 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     }
   }, [radiusInKm, mapLoaded, currentUser?.location, refreshNearbyUsers]);
 
+  // Update local state when prop changes
+  useEffect(() => {
+    setTogglePrivacy(isPrivacyModeEnabled);
+  }, [isPrivacyModeEnabled]);
+
   // Function to toggle privacy mode
   const togglePrivacyMode = () => {
     console.log("Privacy mode toggled, current value:", togglePrivacy);
@@ -92,7 +97,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
       const updatedUser = {
         ...currentUser,
         locationSettings: {
-          ...currentUser.locationSettings,
+          ...currentUser.locationSettings || {},
           hideExactLocation: !togglePrivacy
         }
       };
