@@ -53,7 +53,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
             <HoverCardTrigger asChild>
               <div>
                 <Avatar className="h-10 w-10 border-2 border-primary">
-                  <AvatarImage src={user.profilePic} />
+                  <AvatarImage src={user.profile_pic} />
                   <AvatarFallback>{getInitials(user.name || 'User')}</AvatarFallback>
                 </Avatar>
               </div>
@@ -61,7 +61,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
             <HoverCardContent className="w-80">
               <div className="flex justify-between space-x-4">
                 <Avatar className="h-12 w-12">
-                  <AvatarImage src={user.profilePic} />
+                  <AvatarImage src={user.profile_pic} />
                   <AvatarFallback>{getInitials(user.name || 'User')}</AvatarFallback>
                 </Avatar>
                 <div className="space-y-1">
