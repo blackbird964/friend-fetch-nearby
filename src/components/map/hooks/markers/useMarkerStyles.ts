@@ -79,32 +79,36 @@ export const useMarkerStyles = (
       markerColor = '#6366f1'; // Purple for selected users
     }
     
-    // For privacy mode users, hide the marker and only show name (text)
+    // For privacy mode users, show both text and a small marker
     if (isPrivacyEnabled && !isUser) {
       return new Style({
-        text: new Text({
-          text: feature.get('name'),
-          offsetY: -20, // Increased offset to account for larger markers
-          fill: new Fill({ color: '#374151' }),
+        image: new CircleStyle({
+          radius: 8, // Smaller marker for privacy users
+          fill: new Fill({ color: markerColor }),
           stroke: new Stroke({ color: 'white', width: 2 })
         }),
-        // No image/marker for privacy mode, the circle will show instead
+        text: new Text({
+          text: feature.get('name'),
+          offsetY: -16,
+          fill: new Fill({ color: '#374151' }),
+          stroke: new Stroke({ color: 'white', width: 2 })
+        })
       });
     }
     
-    // For regular users or the current user - DOUBLED SIZE
+    // For regular users or the current user
     return new Style({
       image: new CircleStyle({
-        radius: isUser ? 20 : 16, // Doubled from 10/8 to 20/16
+        radius: isUser ? 14 : 12,
         fill: new Fill({ color: markerColor }),
         stroke: new Stroke({ 
           color: isUser ? '#0369a1' : 'white', 
-          width: isUser ? 4 : 3 // Increased stroke width proportionally
+          width: isUser ? 3 : 2
         })
       }),
       text: new Text({
         text: feature.get('name'),
-        offsetY: -25, // Increased offset to account for larger markers
+        offsetY: -20,
         fill: new Fill({ color: '#374151' }),
         stroke: new Stroke({ color: 'white', width: 2 })
       })

@@ -67,11 +67,6 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     radiusInKm
   );
 
-  // Log radius changes to help with debugging
-  useEffect(() => {
-    console.log("FriendMapContainer - Current radiusInKm:", radiusInKm);
-  }, [radiusInKm]);
-
   // Refresh nearby users when map is loaded and we have current user location
   useEffect(() => {
     if (mapLoaded && currentUser?.location) {
@@ -87,19 +82,13 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
       refreshNearbyUsers(false);
     }
   }, [radiusInKm, mapLoaded, currentUser?.location, refreshNearbyUsers]);
-  
-  // Force a refresh when manual mode changes
-  useEffect(() => {
-    console.log("Manual mode changed:", isManualMode);
-  }, [isManualMode]);
 
   // Function to toggle privacy mode
   const togglePrivacyMode = () => {
     console.log("Privacy mode toggled, current value:", togglePrivacy);
     setTogglePrivacy(!togglePrivacy);
-    // Update the user's location with the new privacy setting
+    
     if (currentUser?.location) {
-      // First update the location settings in the current user object
       const updatedUser = {
         ...currentUser,
         locationSettings: {
@@ -108,11 +97,8 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         }
       };
       
-      // Set the current user with updated settings
       setCurrentUser(updatedUser);
       
-      // Then update the location in the database
-      // Make sure we're only passing the required arguments to match the function signature
       if (currentUser.id && currentUser.location) {
         updateUserLocation(currentUser.id, currentUser.location);
       }
@@ -165,7 +151,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         WYNYARD_COORDS={WYNYARD_COORDS as [number, number]}
       />
 
-      {/* Map Control Panel with radius slider and privacy toggle */}
+      {/* Map Control Panel with radius slider only */}
       <MapControlPanel
         radiusInKm={radiusInKm}
         setRadiusInKm={setRadiusInKm}
