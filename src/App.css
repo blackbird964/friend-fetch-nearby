@@ -1,3 +1,4 @@
+
 #root {
   max-width: 1280px;
   margin: 0 auto;
@@ -39,4 +40,31 @@
 
 .read-the-docs {
   color: #888;
+}
+
+/* Gradient animation background */
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+body {
+  background: linear-gradient(-45deg, #F2FCE2, #FFFFFF, #eef7e8, #e6f3dd);
+  background-size: 400% 400%;
+  animation: gradient-animation 15s ease infinite;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Additional smoothing for the animation */
+html {
+  scroll-behavior: smooth;
 }

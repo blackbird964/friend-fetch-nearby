@@ -72,7 +72,7 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
   
@@ -100,4 +100,26 @@
 
 .pulse-animation {
   animation: pulse-location 2s infinite;
+}
+
+/* Gradient animation background */
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+body {
+  background: linear-gradient(-45deg, #F2FCE2, #FFFFFF, #eef7e8, #e6f3dd);
+  background-size: 400% 400%;
+  animation: gradient-animation 15s ease infinite;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
 }

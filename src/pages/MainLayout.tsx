@@ -34,7 +34,7 @@ const MainLayout: React.FC = () => {
 
   return (
     <>
-      <main className="min-h-screen bg-gray-50">
+      <main className="min-h-screen">
         <Outlet />
       </main>
       <BottomNavigation />
