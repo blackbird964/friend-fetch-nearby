@@ -16,6 +16,7 @@ export function useUserPresence() {
     if (!updateStatusRef.current) {
       updateStatusRef.current = debounce(async (isOnline: boolean) => {
         try {
+          console.log(`Setting user ${currentUser.id} online status to ${isOnline}`);
           await supabase
             .from('profiles')
             .update({ 
@@ -34,10 +35,13 @@ export function useUserPresence() {
 
     // Set up event listeners to handle page visibility changes and before unload
     const handleVisibilityChange = () => {
-      updateStatusRef.current(document.visibilityState === 'visible');
+      const isVisible = document.visibilityState === 'visible';
+      console.log(`Visibility change: ${isVisible ? 'visible' : 'hidden'}`);
+      updateStatusRef.current(isVisible);
     };
 
     const handleBeforeUnload = () => {
+      console.log('User leaving page, updating status to offline');
       // Use the REST API URL instead of accessing the protected supabaseUrl property
       navigator.sendBeacon(
         `https://sqrlsxmwvmgmbmcyaxcq.supabase.co/rest/v1/profiles?id=eq.${currentUser.id}`,
@@ -63,13 +67,19 @@ export function useUserPresence() {
         },
         (payload) => {
           const updatedProfile = payload.new as any;
+          console.log('Profile update received:', updatedProfile);
           
           // Update nearbyUsers if the changed profile is in that list
           if (nearbyUsers.some(user => user.id === updatedProfile.id)) {
+            console.log(`Updating nearby user ${updatedProfile.id}, online status: ${updatedProfile.is_online}`);
             setNearbyUsers(
               nearbyUsers.map(user => 
                 user.id === updatedProfile.id 
-                  ? { ...user, isOnline: updatedProfile.is_online, location: updatedProfile.location ? parseLocationFromPostgres(updatedProfile.location) : user.location } 
+                  ? { 
+                      ...user, 
+                      isOnline: updatedProfile.is_online, 
+                      location: updatedProfile.location ? parseLocationFromPostgres(updatedProfile.location) : user.location 
+                    } 
                   : user
               )
             );

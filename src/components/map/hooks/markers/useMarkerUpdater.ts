@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { AppUser } from '@/context/types';
 import Feature from 'ol/Feature';
@@ -35,10 +36,14 @@ export const useMarkerUpdater = (
       }
     });
     
-    // Add markers for nearby users with their locations
-    nearbyUsers.forEach(user => {
+    // Filter to only show online users
+    const onlineUsers = nearbyUsers.filter(user => user.isOnline === true);
+    console.log(`Found ${onlineUsers.length} online users out of ${nearbyUsers.length} nearby users`);
+    
+    // Add markers for nearby ONLINE users with their locations
+    onlineUsers.forEach(user => {
       if (user.location && user.location.lat && user.location.lng) {
-        console.log(`Processing user ${user.id} with location:`, user.location);
+        console.log(`Processing online user ${user.id} with location:`, user.location);
         
         // Skip users outside the radius if we have user location
         if (currentUser?.location) {
@@ -66,7 +71,7 @@ export const useMarkerUpdater = (
         
         if (!displayLocation) return;
         
-        console.log(`Adding user ${user.id} to map (privacy: ${isPrivacyEnabled ? 'enabled' : 'disabled'})`);
+        console.log(`Adding online user ${user.id} to map (privacy: ${isPrivacyEnabled ? 'enabled' : 'disabled'})`);
         
         try {
           const userFeature = new Feature({
