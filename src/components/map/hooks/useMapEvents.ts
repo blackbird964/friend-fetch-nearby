@@ -47,6 +47,9 @@ export const useMapEvents = (
         handlePopupInteractionEnd();
       }
     });
+    
+    // Track the last clicked feature to prevent deselection when clicking the same feature again
+    let lastClickedFeatureId: string | null = null;
 
     const clickHandler = (event: any) => {
       console.log("Map click detected");
@@ -64,15 +67,11 @@ export const useMapEvents = (
         const userId = clickedFeature.get('userId');
         
         if (userId) {
-          if (selectedUser === userId) {
-            // If we click the same user again, we don't deselect - keep the selection
-            // This makes the popup persist when clicking around the user
-            console.log("Clicked on currently selected user, keeping selection");
-          } else {
-            // If clicking a different user, select them
-            console.log("Selecting new user:", userId);
-            setSelectedUser(userId);
-          }
+          console.log("Clicked on user feature:", userId);
+          lastClickedFeatureId = userId;
+          
+          // Always select the user when clicking on their marker
+          setSelectedUser(userId);
           
           // Update the vector layer
           if (vectorLayer.current) {
@@ -85,23 +84,35 @@ export const useMapEvents = (
         }
       } 
       
-      // If we're not clicking on a feature, and only if we are outside any popup interaction,
-      // check if we need to deselect (clicked on map empty space)
+      // If we're not clicking on a feature, check if we need to deselect
+      // Only deselect if we clicked somewhere away from the selected user and popups
       if (selectedUser) {
+        // Don't deselect if the user just clicked on a feature
+        if (lastClickedFeatureId === selectedUser) {
+          console.log("Clicked on selected user, not deselecting");
+          return;
+        }
+        
         // Use a larger hit tolerance (30px) to make it harder to accidentally deselect
         const featuresNearby = map.current?.getFeaturesAtPixel(event.pixel, {
           hitTolerance: 30 // Increased from 20 to 30 pixel tolerance
         });
         
-        // Only deselect if there are absolutely no features nearby
-        if (!featuresNearby || featuresNearby.length === 0) {
+        // Check if we clicked on something related to the selected user
+        const isNearSelectedFeature = featuresNearby?.some((f) => {
+          return f.get('userId') === selectedUser;
+        });
+        
+        // Only deselect if there are no features nearby or none related to the selected user
+        if (!featuresNearby || featuresNearby.length === 0 || !isNearSelectedFeature) {
           console.log("Clicked away from users, deselecting");
           setSelectedUser(null);
+          lastClickedFeatureId = null;
           if (vectorLayer.current) {
             vectorLayer.current.changed();
           }
         } else {
-          console.log("Clicked near a feature, keeping selection");
+          console.log("Clicked near the selected feature, keeping selection");
         }
       }
     };
