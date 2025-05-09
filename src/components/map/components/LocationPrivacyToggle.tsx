@@ -27,7 +27,11 @@ const LocationPrivacyToggle: React.FC<LocationPrivacyToggleProps> = ({
         size={small ? "sm" : "icon"}
         variant="ghost"
         className={`${buttonSize} p-0 aspect-square flex items-center justify-center`}
-        onClick={togglePrivacyMode}
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          togglePrivacyMode();
+        }}
         title={isPrivacyModeEnabled ? "Disable Privacy Mode" : "Enable Privacy Mode"}
       >
         {isPrivacyModeEnabled ? (

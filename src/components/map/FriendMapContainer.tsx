@@ -90,21 +90,32 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
 
   // Function to toggle privacy mode
   const togglePrivacyMode = () => {
-    console.log("Privacy mode toggled, current value:", togglePrivacy);
-    setTogglePrivacy(!togglePrivacy);
+    console.log("Privacy mode toggled, current value:", togglePrivacy, "changing to:", !togglePrivacy);
+    const newPrivacyValue = !togglePrivacy;
+    setTogglePrivacy(newPrivacyValue);
     
-    if (currentUser?.location) {
+    if (currentUser) {
       const updatedUser = {
         ...currentUser,
         locationSettings: {
           ...currentUser.locationSettings || {},
-          hideExactLocation: !togglePrivacy
+          hideExactLocation: newPrivacyValue
         }
       };
       
       setCurrentUser(updatedUser);
       
+      // Make sure to update in database
       if (currentUser.id && currentUser.location) {
+        toast({
+          title: newPrivacyValue ? "Privacy Mode Enabled" : "Privacy Mode Disabled",
+          description: newPrivacyValue 
+            ? "Your exact location is now hidden from others" 
+            : "Your exact location is now visible to others",
+          duration: 3000,
+        });
+        
+        // Update with current location and new privacy setting
         updateUserLocation(currentUser.id, currentUser.location);
       }
     }
@@ -156,7 +167,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         WYNYARD_COORDS={WYNYARD_COORDS as [number, number]}
       />
 
-      {/* Map Control Panel with radius slider only */}
+      {/* Map Control Panel with radius slider and privacy toggle */}
       <MapControlPanel
         radiusInKm={radiusInKm}
         setRadiusInKm={setRadiusInKm}
