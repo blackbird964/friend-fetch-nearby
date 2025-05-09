@@ -87,7 +87,12 @@ export const useMarkerStyles = (
           fill: new Fill({ color: markerColor }),
           stroke: new Stroke({ color: 'white', width: 2 })
         }),
-        // Privacy mode - no text
+        text: new Text({
+          text: "Someone in area online",
+          offsetY: -20,
+          fill: new Fill({ color: '#374151' }),
+          stroke: new Stroke({ color: 'white', width: 2 })
+        })
       });
     }
     
