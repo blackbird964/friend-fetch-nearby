@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import UserRequestCard from './UserRequestCard';
@@ -35,8 +35,30 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
 }) => {
   const { currentUser, friendRequests, setFriendRequests } = useAppContext();
   const { toast } = useToast();
+  const requestCardRef = useRef<HTMLDivElement>(null);
   
-  const handleSendRequest = () => {
+  // Prevent card from disappearing by adding click capture
+  useEffect(() => {
+    if (!requestCardRef.current || !selectedUser) return;
+    
+    const handleDocumentClick = (e: MouseEvent) => {
+      // If the click is inside the request card, prevent it from propagating
+      if (requestCardRef.current && requestCardRef.current.contains(e.target as Node)) {
+        e.stopPropagation();
+      }
+    };
+    
+    // Capture phase ensures our handler runs before the map click handler
+    document.addEventListener('click', handleDocumentClick, { capture: true });
+    
+    return () => {
+      document.removeEventListener('click', handleDocumentClick, { capture: true });
+    };
+  }, [selectedUser]);
+  
+  const handleSendRequest = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent event from reaching map
+    
     if (!currentUser) {
       toast({
         title: "Error",
@@ -136,7 +158,8 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   if (isUserMoving || hasUserMoved) {
     return (
       <div 
-        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-slide-in-bottom user-popup-card"
+        ref={requestCardRef}
+        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-slide-in-bottom user-popup-card fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
         onClick={stopPropagation} // Stop click propagation at container level
       >
         <div className="flex justify-between items-center mb-3">
@@ -168,7 +191,8 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   if (existingRequest) {
     return (
       <div 
-        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-slide-in-bottom user-popup-card"
+        ref={requestCardRef}
+        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-slide-in-bottom user-popup-card fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
         onClick={stopPropagation} // Stop click propagation at container level
       >
         <div className="flex justify-between items-center mb-3">
@@ -196,13 +220,18 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   
   // Otherwise, show the normal request card
   return (
-    <UserRequestCard 
-      user={user}
-      selectedDuration={selectedDuration}
-      setSelectedDuration={setSelectedDuration}
-      onSendRequest={handleSendRequest}
-      onCancel={onCancel}
-    />
+    <div ref={requestCardRef} className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md">
+      <UserRequestCard 
+        user={user}
+        selectedDuration={selectedDuration}
+        setSelectedDuration={setSelectedDuration}
+        onSendRequest={handleSendRequest}
+        onCancel={(e) => {
+          e.stopPropagation();
+          onCancel();
+        }}
+      />
+    </div>
   );
 };
 
