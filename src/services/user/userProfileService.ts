@@ -33,19 +33,28 @@ export const updateUserProfile = async (updatedProfile: Partial<Profile>) => {
       console.log("Updating location settings:", profileUpdate.location_settings);
     }
     
-    const { error } = await supabase
+    // Log the profile update being sent to Supabase
+    console.log("Sending profile update to Supabase:", profileUpdate);
+    
+    const { data, error } = await supabase
       .from('profiles')
       .update(profileUpdate)
-      .eq('id', updatedProfile.id);
+      .eq('id', updatedProfile.id)
+      .select();
       
     if (error) {
+      console.error('Supabase error updating user profile:', error);
       throw error;
     }
+
+    console.log("Profile update response:", data);
     
     // If location is provided, update it separately with the correct format
     if (updatedProfile.location) {
       await updateUserLocation(updatedProfile.id, updatedProfile.location);
     }
+    
+    return { data, error: null };
   } catch (error) {
     console.error('Error updating user profile:', error);
     throw error;

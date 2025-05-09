@@ -26,10 +26,19 @@ export const useUserProfile = () => {
     setLoading(true);
     try {
       // Create a properly typed profile object
-      const profileUpdate: any = { ...profileData, id: userId };
-      await updateUserProfile(profileUpdate);
+      const profileUpdate = { 
+        ...profileData, 
+        id: userId,
+        // Ensure all values are properly formatted
+        gender: profileData.gender?.toLowerCase(), // Ensure consistent case
+      };
+      console.log("Profile update in hook before sending:", profileUpdate);
+      
+      const result = await updateUserProfile(profileUpdate);
+      console.log("Profile update result:", result);
     } catch (error) {
       console.error('Error updating user profile:', error);
+      throw error; // Re-throw to allow handling in component
     } finally {
       setLoading(false);
     }

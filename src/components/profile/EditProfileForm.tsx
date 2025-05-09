@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from '@/hooks/use-toast';
 import { Profile } from '@/lib/supabase';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 // Define props interface for the component
 interface EditProfileFormProps {
@@ -31,13 +32,13 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
         name: currentUser.name || '',
         bio: currentUser.bio || '',
         age: currentUser.age || null,
-        gender: currentUser.gender || '',
+        gender: currentUser.gender?.toLowerCase() || '',
         interests: currentUser.interests || [],
       });
     }
   }, [currentUser]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     
     if (name === 'age') {
@@ -46,6 +47,10 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
   const handleInterestChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,6 +76,8 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
       
       // Remove location from the update payload to avoid format errors
       delete updatedProfile.location;
+      
+      console.log("Submitting profile update:", updatedProfile);
       
       await updateUserProfile(currentUser.id, updatedProfile);
       
@@ -137,20 +144,22 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
           
           <div>
             <Label htmlFor="gender">Gender</Label>
-            <select
-              id="gender"
-              name="gender"
+            <Select
               value={formData.gender || ''}
-              onChange={handleChange}
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              onValueChange={(value) => handleSelectChange('gender', value)}
             >
-              <option value="">Select gender</option>
-              <option value="male">Male</option>
-              <option value="female">Female</option>
-              <option value="non-binary">Non-binary</option>
-              <option value="other">Other</option>
-              <option value="prefer-not-to-say">Prefer not to say</option>
-            </select>
+              <SelectTrigger id="gender">
+                <SelectValue placeholder="Select gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Select gender</SelectItem>
+                <SelectItem value="male">Male</SelectItem>
+                <SelectItem value="female">Female</SelectItem>
+                <SelectItem value="non-binary">Non-binary</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
         

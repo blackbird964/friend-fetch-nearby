@@ -62,11 +62,11 @@ const ProfileFormFields: React.FC<ProfileFormFieldsProps> = ({
               <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="Male">Male</SelectItem>
-              <SelectItem value="Female">Female</SelectItem>
-              <SelectItem value="Non-Binary">Non-Binary</SelectItem>
-              <SelectItem value="Other">Other</SelectItem>
-              <SelectItem value="Prefer not to say">Prefer not to say</SelectItem>
+              <SelectItem value="male">Male</SelectItem>
+              <SelectItem value="female">Female</SelectItem>
+              <SelectItem value="non-binary">Non-Binary</SelectItem>
+              <SelectItem value="other">Other</SelectItem>
+              <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
             </SelectContent>
           </Select>
         </div>
