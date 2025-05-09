@@ -42,10 +42,16 @@ export const shouldObfuscateLocation = (user: any): boolean => {
   if (!user) return false;
   
   // Check both camelCase and snake_case versions of the setting
-  return !!(
+  const privacyEnabled = !!(
     (user.locationSettings?.hideExactLocation) || 
     (user.location_settings?.hide_exact_location)
   );
+  
+  console.log("Privacy check for user:", user.id, "Privacy mode:", privacyEnabled, 
+    "locationSettings:", user.locationSettings, 
+    "location_settings:", user.location_settings);
+    
+  return privacyEnabled;
 };
 
 /**

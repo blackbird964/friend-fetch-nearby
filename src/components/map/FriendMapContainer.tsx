@@ -83,10 +83,21 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     }
   }, [radiusInKm, mapLoaded, currentUser?.location, refreshNearbyUsers]);
 
-  // Update local state when prop changes
+  // Update local state when prop changes or when user settings change
   useEffect(() => {
-    setTogglePrivacy(isPrivacyModeEnabled);
-  }, [isPrivacyModeEnabled]);
+    // Check if current user has privacy settings and sync state
+    if (currentUser?.locationSettings?.hideExactLocation !== undefined) {
+      console.log("Syncing privacy toggle with user settings:", currentUser.locationSettings.hideExactLocation);
+      setTogglePrivacy(currentUser.locationSettings.hideExactLocation);
+    } else if (currentUser?.location_settings?.hide_exact_location !== undefined) {
+      console.log("Syncing privacy toggle with user settings (snake_case):", currentUser.location_settings.hide_exact_location);
+      setTogglePrivacy(currentUser.location_settings.hide_exact_location);
+    } else {
+      // If no settings, use prop value
+      console.log("Using prop value for privacy toggle:", isPrivacyModeEnabled);
+      setTogglePrivacy(isPrivacyModeEnabled);
+    }
+  }, [isPrivacyModeEnabled, currentUser?.locationSettings?.hideExactLocation, currentUser?.location_settings?.hide_exact_location]);
 
   // Function to toggle privacy mode
   const togglePrivacyMode = () => {

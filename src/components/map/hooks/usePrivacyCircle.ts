@@ -51,6 +51,7 @@ export const usePrivacyCircle = (
     
     // If user has location and privacy is enabled, create a privacy circle
     if (currentUser?.location && shouldObfuscateLocation(currentUser)) {
+      console.log("Creating privacy circle for user with privacy mode enabled");
       const { lng, lat } = currentUser.location;
       const center = fromLonLat([lng, lat]);
       
@@ -66,6 +67,7 @@ export const usePrivacyCircle = (
       });
       
       privacyLayer.current.getSource()?.addFeature(privacyFeature.current);
+      console.log("Added privacy circle to map");
       
       // Important: Fix for circle scaling when zooming
       const view = map.current.getView();

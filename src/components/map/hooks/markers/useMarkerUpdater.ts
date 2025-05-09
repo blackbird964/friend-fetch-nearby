@@ -64,6 +64,7 @@ export const useMarkerUpdater = (
         
         // Check if user has privacy enabled
         const isPrivacyEnabled = shouldObfuscateLocation(user);
+        console.log(`User ${user.id} privacy enabled:`, isPrivacyEnabled);
         
         // Get the appropriate display location
         // For privacy users, we'll use an obfuscated location
@@ -107,6 +108,7 @@ export const useMarkerUpdater = (
       try {
         // Check if current user has privacy enabled
         const isCurrentUserPrivacyEnabled = shouldObfuscateLocation(currentUser);
+        console.log("Current user privacy enabled:", isCurrentUserPrivacyEnabled);
         
         // For the current user's own view, always show actual location (not privacy-offset location)
         const userFeature = new Feature({
