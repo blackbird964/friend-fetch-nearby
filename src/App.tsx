@@ -4,7 +4,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { AppProvider } from "@/context/AppContext";
 
 // Import pages
@@ -27,21 +27,19 @@ const App: React.FC = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Auth />} />
-              
-              <Route element={<MainLayout />}>
-                <Route path="/home" element={<Home />} />
-                <Route path="/map" element={<MapPage />} />
-                <Route path="/chat" element={<ChatPage />} />
-                <Route path="/profile" element={<Profile />} />
-                <Route path="/friends" element={<FriendsPage />} />
-              </Route>
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Auth />} />
+            
+            <Route element={<MainLayout />}>
+              <Route path="/home" element={<Home />} />
+              <Route path="/map" element={<MapPage />} />
+              <Route path="/chat" element={<ChatPage />} />
+              <Route path="/profile" element={<Profile />} />
+              <Route path="/friends" element={<FriendsPage />} />
+            </Route>
+            
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </TooltipProvider>
       </AppProvider>
     </QueryClientProvider>
