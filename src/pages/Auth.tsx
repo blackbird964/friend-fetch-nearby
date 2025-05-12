@@ -7,6 +7,8 @@ import { useAppContext } from '@/context/AppContext';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Info } from 'lucide-react';
 
 const Auth: React.FC = () => {
   const [formState, setFormState] = useState<'login' | 'signup' | 'profile-setup'>('login');
@@ -17,6 +19,7 @@ const Auth: React.FC = () => {
   // Check for email confirmation parameters
   const confirmationToken = searchParams.get('token_hash');
   const type = searchParams.get('type');
+  const showReset = searchParams.get('reset') === 'true';
   
   // Debug authentication state
   useEffect(() => {
@@ -129,16 +132,40 @@ const Auth: React.FC = () => {
         <p className="text-gray-600">Connect with people nearby, right now.</p>
       </div>
 
+      {showReset && (
+        <div className="w-full max-w-md mb-6">
+          <Alert className="bg-green-50 border-green-200">
+            <Info className="h-4 w-4 text-green-500" />
+            <AlertDescription className="text-green-700">
+              Password reset link verified. You can now set a new password.
+            </AlertDescription>
+          </Alert>
+        </div>
+      )}
+
       {formState === 'login' ? (
         <LoginForm onToggleForm={() => setFormState('signup')} />
       ) : formState === 'signup' ? (
-        <SignUpForm 
-          onToggleForm={() => setFormState('login')} 
-          onContinue={() => {
-            console.log("User signed up, showing profile setup");
-            setFormState('profile-setup');
-          }}
-        />
+        <>
+          <div className="w-full max-w-md mb-6">
+            <Alert className="bg-blue-50 border-blue-200">
+              <Info className="h-4 w-4 text-blue-500" />
+              <AlertDescription>
+                <p className="text-sm text-blue-700">
+                  After signing up, you will receive an email from Supabase to verify your account.
+                  <strong> Please check your spam/junk folder</strong> if you don't see it in your inbox.
+                </p>
+              </AlertDescription>
+            </Alert>
+          </div>
+          <SignUpForm 
+            onToggleForm={() => setFormState('login')} 
+            onContinue={() => {
+              console.log("User signed up, showing profile setup");
+              setFormState('profile-setup');
+            }}
+          />
+        </>
       ) : null}
     </div>
   );
