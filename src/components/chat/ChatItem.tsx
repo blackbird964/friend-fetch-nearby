@@ -4,6 +4,7 @@ import { Chat } from '@/context/types';
 import { formatMessageTime } from '@/utils/dateFormatters';
 import { CircleDot, Circle } from 'lucide-react';
 import UserAvatar from '@/components/users/cards/UserAvatar';
+import { Badge } from '@/components/ui/badge';
 
 interface ChatItemProps {
   chat: Chat;
@@ -12,6 +13,8 @@ interface ChatItemProps {
 }
 
 const ChatItem: React.FC<ChatItemProps> = ({ chat, isSelected, onSelect }) => {
+  const hasUnreadMessages = (chat.unreadCount || 0) > 0;
+  
   return (
     <button
       className={`flex items-center w-full p-4 text-left transition-colors border-b last:border-b-0 ${
@@ -27,15 +30,26 @@ const ChatItem: React.FC<ChatItemProps> = ({ chat, isSelected, onSelect }) => {
           showStatus
           isOnline={chat.isOnline}
         />
+        {hasUnreadMessages && (
+          <div className="absolute -top-1 -right-1">
+            <Badge className="h-5 w-5 flex items-center justify-center p-0 text-xs">
+              {chat.unreadCount}
+            </Badge>
+          </div>
+        )}
       </div>
       <div className="flex-1 min-w-0 ml-3">
         <div className="flex justify-between items-baseline">
-          <h3 className="font-medium truncate">{chat.participantName}</h3>
+          <h3 className={`font-medium truncate ${hasUnreadMessages ? 'font-bold' : ''}`}>
+            {chat.participantName}
+          </h3>
           <span className="text-xs text-gray-500 whitespace-nowrap ml-2 flex-shrink-0">
             {formatMessageTime(chat.lastMessageTime)}
           </span>
         </div>
-        <p className="text-sm text-gray-600 truncate">{chat.lastMessage}</p>
+        <p className={`text-sm text-gray-600 truncate ${hasUnreadMessages ? 'font-semibold' : ''}`}>
+          {chat.lastMessage}
+        </p>
       </div>
     </button>
   );
