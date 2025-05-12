@@ -11,7 +11,7 @@ const UsersContext = createContext<UsersContextType | undefined>(undefined);
 export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { currentUser } = useAuthContext();
   const [nearbyUsers, setNearbyUsers] = useState<AppUser[]>([]);
-  const [radiusInKm, setRadiusInKm] = useState<number>(5);
+  const [radiusInKm, setRadiusInKm] = useState<number>(60); // Updated default radius to 60km
 
   // Filter out blocked users from nearby users
   const filterBlockedUsers = useCallback((users: AppUser[]): AppUser[] => {
