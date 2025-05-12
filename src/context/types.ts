@@ -1,4 +1,3 @@
-
 import { User } from '@supabase/supabase-js';
 
 export interface Location {
@@ -29,6 +28,7 @@ export interface AppUser {
   distance?: number;
   chat?: Chat; // Chat property for navigation purposes
   isOnline?: boolean; // Adding isOnline property
+  is_over_18?: boolean; // Added is_over_18 property
 }
 
 export interface Chat {

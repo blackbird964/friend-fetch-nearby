@@ -45,6 +45,7 @@ export type Database = {
           id: string
           interests: string[] | null
           is_online: boolean | null
+          is_over_18: boolean | null
           last_seen: string | null
           location: unknown | null
           name: string | null
@@ -59,6 +60,7 @@ export type Database = {
           id: string
           interests?: string[] | null
           is_online?: boolean | null
+          is_over_18?: boolean | null
           last_seen?: string | null
           location?: unknown | null
           name?: string | null
@@ -73,6 +75,7 @@ export type Database = {
           id?: string
           interests?: string[] | null
           is_online?: boolean | null
+          is_over_18?: boolean | null
           last_seen?: string | null
           location?: unknown | null
           name?: string | null

@@ -25,6 +25,7 @@ export type Profile = {
     is_manual_mode?: boolean;
     hide_exact_location?: boolean;
   };
+  is_over_18?: boolean; // Added is_over_18 field
 };
 
 export async function getProfile(userId: string): Promise<Profile | null> {
@@ -163,6 +164,11 @@ export async function createOrUpdateProfile(profile: Partial<Profile> & { id: st
     }
   } else {
     profileToUpsert.interests = [];
+  }
+  
+  // Ensure is_over_18 is included in the update
+  if (profileToUpsert.is_over_18 === undefined) {
+    profileToUpsert.is_over_18 = false;
   }
   
   console.log("Final profile data being sent to Supabase:", profileToUpsert);

@@ -32,6 +32,8 @@ export const useProfileSetup = () => {
       if (currentUser.interests && Array.isArray(currentUser.interests)) {
         setInterests(currentUser.interests);
       }
+      // Initialize isOver18 from user profile if available
+      setIsOver18(currentUser.is_over_18 || false);
     }
   }, [currentUser]);
 
@@ -95,6 +97,7 @@ export const useProfileSetup = () => {
         gender,
         bio,
         interests: interests.length > 0 ? interests : [], // Ensure interests is an array
+        is_over_18: isOver18, // Save the is_over_18 status to the database
       };
 
       console.log("Creating or updating profile with data:", profileData);
@@ -117,7 +120,8 @@ export const useProfileSetup = () => {
           interests: Array.isArray(data.interests) ? data.interests : [],
           profile_pic: data.profile_pic || null,
           email: user.email || '',
-          location: currentUser?.location
+          location: currentUser?.location,
+          is_over_18: data.is_over_18 || false, // Include is_over_18 in user object
         };
         
         setCurrentUser(updatedUser);
