@@ -13,7 +13,11 @@ interface UserCardProps {
   onClick?: () => void;
 }
 
-const UserCard: React.FC<UserCardProps> = ({ user, minimal = false, onClick }) => {
+const UserCard: React.FC<UserCardProps> = ({ 
+  user, 
+  minimal = false, 
+  onClick 
+}) => {
   return (
     <UserContextMenu user={user}>
       <Card 

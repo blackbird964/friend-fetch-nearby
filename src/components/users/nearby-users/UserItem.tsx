@@ -8,12 +8,21 @@ interface UserItemProps {
   user: AppUser;
   onAddFriend: (user: AppUser) => void;
   onStartChat: (user: AppUser) => void;
+  onSelect: (user: AppUser) => void;
 }
 
-const UserItem: React.FC<UserItemProps> = ({ user, onAddFriend, onStartChat }) => {
+const UserItem: React.FC<UserItemProps> = ({ 
+  user, 
+  onAddFriend, 
+  onStartChat,
+  onSelect
+}) => {
   return (
     <div className="border rounded-lg overflow-hidden">
-      <UserCard user={user} />
+      <UserCard 
+        user={user} 
+        onClick={() => onSelect(user)}
+      />
       <UserActions 
         user={user} 
         hasLocation={!!user.location} 
