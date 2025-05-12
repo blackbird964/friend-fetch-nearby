@@ -10,8 +10,7 @@ import {
 } from "@/components/ui/drawer";
 import { Button } from "@/components/ui/button";
 import UserAvatar from '../cards/UserAvatar';
-import UserBasicInfo from '../cards/UserBasicInfo';
-import UserInterests from '../cards/UserInterests';
+import { Badge } from "@/components/ui/badge";
 import { MessageCircle, UserPlus } from 'lucide-react';
 
 interface UserDetailsDrawerProps {
@@ -63,7 +62,13 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
           {user.interests && user.interests.length > 0 && (
             <div className="mb-6">
               <h3 className="text-sm font-medium text-gray-500 mb-2">Interests</h3>
-              <UserInterests interests={user.interests} />
+              <div className="flex flex-wrap gap-1.5">
+                {user.interests.map((interest) => (
+                  <Badge key={interest} variant="secondary" className="text-xs">
+                    {interest}
+                  </Badge>
+                ))}
+              </div>
             </div>
           )}
         </div>
