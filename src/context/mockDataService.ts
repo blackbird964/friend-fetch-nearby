@@ -1,5 +1,5 @@
 
-import { FriendRequest } from './types';
+import { FriendRequest, Chat } from './types';
 
 /**
  * Load mock friend requests for testing purposes
@@ -16,4 +16,3 @@ export const loadMockChats = (): Chat[] => {
   // Return an empty array instead of mock chats
   return [];
 };
-
