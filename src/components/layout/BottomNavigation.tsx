@@ -8,7 +8,12 @@ import { Badge } from "@/components/ui/badge";
 const BottomNavigation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { friendRequests, currentUser, refreshFriendRequests } = useAppContext();
+  const { 
+    friendRequests, 
+    currentUser, 
+    refreshFriendRequests,
+    unreadMessageCount 
+  } = useAppContext();
   
   // Refresh friend requests when component mounts
   useEffect(() => {
@@ -20,6 +25,10 @@ const BottomNavigation: React.FC = () => {
   const pendingRequests = friendRequests.filter(r => 
     r.status === 'pending' && r.receiverId === currentUser?.id
   ).length;
+  
+  const chatNotificationCount = location.pathname === '/chat' 
+    ? pendingRequests 
+    : pendingRequests + unreadMessageCount;
   
   const routes = [
     {
@@ -36,7 +45,7 @@ const BottomNavigation: React.FC = () => {
       path: '/chat',
       label: 'Chats',
       icon: <MessageSquare className="h-6 w-6" />,
-      badge: pendingRequests,
+      badge: chatNotificationCount,
     },
     {
       path: '/profile',
@@ -61,7 +70,7 @@ const BottomNavigation: React.FC = () => {
             <div className="relative">
               {route.icon}
               {route.badge > 0 && (
-                <Badge className="absolute -top-1 -right-1 px-1 h-4 min-w-4 flex items-center justify-center text-[10px]">
+                <Badge className="absolute -top-2 -right-2 px-1 min-h-5 min-w-5 h-5 w-5 flex items-center justify-center text-[10px] bg-blue-500 text-white rounded-full">
                   {route.badge}
                 </Badge>
               )}

@@ -6,7 +6,7 @@ import { Message, Chat } from '@/context/types';
 import { toast } from 'sonner';
 
 export function useChat(selectedChatId: string | null) {
-  const { selectedChat, setSelectedChat, chats, setChats, currentUser } = useAppContext();
+  const { selectedChat, setSelectedChat, chats, setChats, currentUser, setUnreadMessageCount } = useAppContext();
   const [message, setMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -57,13 +57,28 @@ export function useChat(selectedChatId: string | null) {
           .map(msg => msg.id);
           
         if (unreadMessageIds.length > 0) {
-          markMessagesAsRead(unreadMessageIds);
+          await markMessagesAsRead(unreadMessageIds);
+          
+          // Update the unread count for this chat
+          const updatedChats = chats.map(chat => {
+            if (chat.id === selectedChat.id) {
+              return { ...chat, unreadCount: 0 };
+            }
+            return chat;
+          });
+          
+          setChats(updatedChats);
+          
+          // Recalculate total unread messages
+          const totalUnread = updatedChats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
+          setUnreadMessageCount(totalUnread);
         }
         
         // Update selected chat with messages from the database
         const updatedChat: Chat = {
           ...selectedChat,
           messages: formattedMessages,
+          unreadCount: 0, // Set to zero since we're viewing this chat
         };
         
         if (formattedMessages.length > 0) {
@@ -107,7 +122,7 @@ export function useChat(selectedChatId: string | null) {
     return () => {
       isMounted = false;
     };
-  }, [selectedChatId, currentUser, selectedChat, setSelectedChat, chats, setChats]);
+  }, [selectedChatId, currentUser, selectedChat, setSelectedChat, chats, setChats, setUnreadMessageCount]);
 
   const handleSendMessage = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();

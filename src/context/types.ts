@@ -43,6 +43,7 @@ export interface Chat {
   lastMessage?: string;
   lastMessageTime?: number;
   isOnline?: boolean; // Added this property
+  unreadCount?: number; // Added this property for tracking unread messages
 }
 
 export interface Message {
@@ -95,6 +96,8 @@ export interface AppContextType {
   blockUser: (userId: string) => Promise<boolean>;
   unblockUser: (userId: string) => Promise<boolean>;
   reportUser: (userId: string, reason: string) => Promise<boolean>;
+  unreadMessageCount: number;
+  setUnreadMessageCount: (count: number) => void;
 }
 
 export type MessageStatus = 'sent' | 'received' | 'read';

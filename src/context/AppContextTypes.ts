@@ -1,3 +1,4 @@
+
 import { AppUser, Chat, FriendRequest, Location } from './types';
 import { User } from '@supabase/supabase-js';
 
@@ -34,6 +35,8 @@ export interface SocialContextType {
   showSidebar: boolean;
   setShowSidebar: (show: boolean) => void;
   refreshFriendRequests: () => Promise<void>;
+  unreadMessageCount: number;
+  setUnreadMessageCount: (count: number) => void;
 }
 
 // Combined context type

@@ -3,13 +3,14 @@ import { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getProfile } from '@/lib/supabase';
-import { Chat } from '@/context/types';
+import { Chat, Message as MessageType } from '@/context/types';
 import { toast } from 'sonner';
 
 export function useChatList() {
   const { currentUser, setChats } = useAppContext();
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   // Fetch chats for current user when component mounts
   useEffect(() => {
@@ -61,6 +62,7 @@ export function useChatList() {
         // Fetch profiles for all participants
         const participants = Array.from(chatParticipants);
         const chatsList: Chat[] = [];
+        let totalUnread = 0;
 
         console.log(`Found ${participants.length} chat participants`);
         
@@ -72,10 +74,23 @@ export function useChatList() {
           if (!isMounted) return;
           
           if (profile) {
-            // Find the latest message with this participant
-            const latestMessage = messages.find(msg => 
+            // Find all messages with this participant
+            const participantMessages = messages.filter(msg => 
               msg.sender_id === participantId || msg.receiver_id === participantId
             );
+            
+            // Count unread messages from this participant
+            const unreadMessages = participantMessages.filter(msg => 
+              msg.sender_id === participantId && 
+              msg.receiver_id === currentUser.id && 
+              !msg.read
+            );
+            
+            const unreadCount = unreadMessages.length;
+            totalUnread += unreadCount;
+            
+            // Find the latest message with this participant
+            const latestMessage = participantMessages[0];
             
             if (latestMessage) {
               // Create a chat object with required properties
@@ -88,7 +103,8 @@ export function useChatList() {
                 profilePic: profile.profile_pic || '',
                 lastMessage: latestMessage.content,
                 lastMessageTime: new Date(latestMessage.created_at).getTime(),
-                messages: [], // Messages will be loaded when chat is selected
+                messages: [],
+                unreadCount: unreadCount,
               });
             }
           }
@@ -104,6 +120,7 @@ export function useChatList() {
         
         // Update the chats state
         setChats(chatsList);
+        setUnreadCount(totalUnread);
         setLoadError(null);
       } catch (err) {
         console.error('Error loading chats:', err);
@@ -118,11 +135,32 @@ export function useChatList() {
 
     fetchChats();
     
+    // Set up a subscription for new messages
+    if (currentUser) {
+      const channel = supabase
+        .channel('public:messages')
+        .on('postgres_changes', 
+          { event: 'INSERT', schema: 'public', table: 'messages', filter: `receiver_id=eq.${currentUser.id}` },
+          (payload) => {
+            console.log('New message received:', payload);
+            // Refresh chats when a new message is received
+            fetchChats();
+          }
+        )
+        .subscribe();
+        
+      // Clean up subscription
+      return () => {
+        supabase.removeChannel(channel);
+        isMounted = false;
+      };
+    }
+    
     // Cleanup function to prevent state updates after unmount
     return () => {
       isMounted = false;
     };
   }, [currentUser, setChats]);
 
-  return { isLoading, loadError };
+  return { isLoading, loadError, unreadCount };
 }

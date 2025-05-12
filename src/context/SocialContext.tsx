@@ -15,6 +15,13 @@ export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ childr
   const [chats, setChats] = useState<Chat[]>([]);
   const [selectedChat, setSelectedChat] = useState<Chat | null>(null);
   const [showSidebar, setShowSidebar] = useState(false);
+  const [unreadMessageCount, setUnreadMessageCount] = useState(0);
+  
+  // Calculate total unread messages whenever chats change
+  useEffect(() => {
+    const total = chats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
+    setUnreadMessageCount(total);
+  }, [chats]);
   
   // Refresh friend requests
   const refreshFriendRequests = useCallback(async () => {
@@ -54,6 +61,7 @@ export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 messages: [],
                 lastMessage: "Say hello!",
                 lastMessageTime: Date.now(),
+                unreadCount: 0,
               });
             }
             
@@ -113,6 +121,8 @@ export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ childr
         showSidebar,
         setShowSidebar,
         refreshFriendRequests,
+        unreadMessageCount,
+        setUnreadMessageCount,
       }}
     >
       {children}
