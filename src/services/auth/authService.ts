@@ -1,6 +1,7 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { Session } from '@supabase/supabase-js';
-import { AppUser } from '@/context/types';
+import { AppUser, Location } from '@/context/types';
 
 /**
  * Sets up the auth state change listener
@@ -52,7 +53,7 @@ export const fetchUserProfile = async (userId: string): Promise<AppUser | null> 
       interests: Array.isArray(profile.interests) ? profile.interests : [],
       profile_pic: profile.profile_pic || null,
       email: '', // Email will be added from session
-      location: profile.location,
+      location: profile.location ? profile.location as Location : undefined,
       is_over_18: profile.is_over_18 || false,
     };
   } catch (error) {
