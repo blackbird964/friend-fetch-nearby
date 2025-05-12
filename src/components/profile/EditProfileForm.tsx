@@ -7,7 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from '@/hooks/use-toast';
 import { Profile } from '@/lib/supabase';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Info } from "lucide-react";
 
 // Define props interface for the component
 interface EditProfileFormProps {
@@ -19,10 +25,7 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<Partial<Profile>>({
-    name: '',
     bio: '',
-    age: null,
-    gender: '',
     interests: [],
   });
 
@@ -40,16 +43,6 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
-    
-    if (name === 'age') {
-      const ageValue = value ? parseInt(value, 10) : null;
-      setFormData(prev => ({ ...prev, [name]: ageValue }));
-    } else {
-      setFormData(prev => ({ ...prev, [name]: value }));
-    }
-  };
-
-  const handleSelectChange = (name: string, value: string) => {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
@@ -70,7 +63,8 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
       
       // Prepare profile data for update without location
       let updatedProfile: Partial<Profile> = {
-        ...formData,
+        bio: formData.bio,
+        interests: formData.interests,
         id: currentUser.id,
       };
       
@@ -103,15 +97,28 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
+        {/* Read-only name field with tooltip */}
         <div>
-          <Label htmlFor="name">Name</Label>
+          <div className="flex items-center space-x-2">
+            <Label htmlFor="name">Name</Label>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Info className="h-4 w-4 text-gray-400" />
+                </TooltipTrigger>
+                <TooltipContent className="max-w-xs">
+                  Please contact admin to update your name.
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          </div>
           <Input
             id="name"
             name="name"
             value={formData.name}
-            onChange={handleChange}
-            placeholder="Your name"
-            required
+            className="bg-gray-100"
+            disabled
+            readOnly
           />
         </div>
         
@@ -128,38 +135,55 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Read-only age field with tooltip */}
           <div>
-            <Label htmlFor="age">Age (Optional)</Label>
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="age">Age</Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-4 w-4 text-gray-400" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    Please contact admin to update your age.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <Input
               id="age"
               name="age"
               type="number"
-              min="18"
-              max="120"
               value={formData.age || ''}
-              onChange={handleChange}
-              placeholder="Your age"
+              className="bg-gray-100"
+              disabled
+              readOnly
             />
           </div>
           
+          {/* Read-only gender field with tooltip */}
           <div>
-            <Label htmlFor="gender">Gender</Label>
-            <Select
+            <div className="flex items-center space-x-2">
+              <Label htmlFor="gender">Gender</Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Info className="h-4 w-4 text-gray-400" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    Please contact admin to update your gender.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
+            <Input
+              id="gender"
+              name="gender"
               value={formData.gender || ''}
-              onValueChange={(value) => handleSelectChange('gender', value)}
-            >
-              <SelectTrigger id="gender">
-                <SelectValue placeholder="Select gender" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">Select gender</SelectItem>
-                <SelectItem value="male">Male</SelectItem>
-                <SelectItem value="female">Female</SelectItem>
-                <SelectItem value="non-binary">Non-binary</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
-                <SelectItem value="prefer-not-to-say">Prefer not to say</SelectItem>
-              </SelectContent>
-            </Select>
+              className="bg-gray-100 capitalize"
+              disabled
+              readOnly
+            />
           </div>
         </div>
         

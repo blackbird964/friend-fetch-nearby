@@ -4,9 +4,8 @@ import { useAppContext } from '@/context/AppContext';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, User, Edit, Camera } from 'lucide-react';
+import { LogOut, Edit, Camera } from 'lucide-react';
 import { signOut } from '@/lib/supabase';
 import EditProfileForm from './EditProfileForm';
 import ProfilePictureUpload from './ProfilePictureUpload';
@@ -57,7 +56,16 @@ const ProfilePage: React.FC = () => {
 
   if (isEditing) {
     return (
-      <EditProfileForm onCancel={() => setIsEditing(false)} />
+      <div className="space-y-4">
+        <Card className="shadow-md">
+          <CardHeader>
+            <CardTitle className="text-xl">Edit Profile</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <EditProfileForm onCancel={() => setIsEditing(false)} />
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
@@ -103,7 +111,7 @@ const ProfilePage: React.FC = () => {
                 <span className="mx-2">•</span>
               )}
               {currentUser.gender && (
-                <span>{currentUser.gender}</span>
+                <span className="capitalize">{currentUser.gender}</span>
               )}
             </div>
             
