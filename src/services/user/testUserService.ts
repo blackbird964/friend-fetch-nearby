@@ -1,5 +1,4 @@
 
-import { createTestUsers } from '@/utils/locationUtils';
 import { AppUser } from '@/context/types';
 
 /**
@@ -7,16 +6,12 @@ import { AppUser } from '@/context/types';
  */
 export const addTestUsersNearby = async (currentUserId: string, currentLocation: { lat: number, lng: number }) => {
   try {
-    // Create test users near the current user's location
-    const testUsers = createTestUsers(currentLocation, 5);
-    
-    console.log("Generated test users:", testUsers);
-    
-    // In a real app, we would save these users to the database
-    // For now, just return them
-    return testUsers;
+    // Return empty array instead of creating test users
+    console.log("Test user creation disabled");
+    return [];
   } catch (error) {
     console.error("Error adding test users:", error);
     return [];
   }
 };
+

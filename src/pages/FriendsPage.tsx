@@ -17,10 +17,7 @@ const FriendsPage: React.FC = () => {
     refreshFriendRequests();
   }, [refreshFriendRequests]);
 
-  // Get accepted friend requests
-  const acceptedRequests = friendRequests.filter(req => req.status === 'accepted');
-
-  // Extract friends from both chats and accepted requests
+  // Extract real friends from chats (no mock data)
   const friends = chats.map(chat => {
     // Create an AppUser compatible object from the chat participant info
     const friend: AppUser = {
@@ -34,7 +31,7 @@ const FriendsPage: React.FC = () => {
     };
     
     return friend;
-  });
+  }).filter(friend => friend.id !== ''); // Filter out any potentially invalid entries
 
   const handleFriendClick = (chat: Chat) => {
     setSelectedChat(chat);
