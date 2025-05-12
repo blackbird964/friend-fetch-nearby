@@ -6,6 +6,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import InterestSelector from '../interests/InterestSelector';
 import { INTERESTS } from '@/hooks/useProfileSetup';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
 
 interface ProfileFormFieldsProps {
   age: string;
@@ -20,6 +22,8 @@ interface ProfileFormFieldsProps {
   handleAddInterest: () => void;
   handleRemoveInterest: (interest: string) => void;
   isLoading: boolean;
+  isOver18: boolean;
+  setIsOver18: (isOver18: boolean) => void;
 }
 
 const ProfileFormFields: React.FC<ProfileFormFieldsProps> = ({
@@ -34,7 +38,9 @@ const ProfileFormFields: React.FC<ProfileFormFieldsProps> = ({
   setCurrentInterest,
   handleAddInterest,
   handleRemoveInterest,
-  isLoading
+  isLoading,
+  isOver18,
+  setIsOver18
 }) => {
   return (
     <>
@@ -93,6 +99,20 @@ const ProfileFormFields: React.FC<ProfileFormFieldsProps> = ({
           required
           className="min-h-[100px]"
         />
+      </div>
+
+      <div className="flex items-center space-x-2 my-4">
+        <Checkbox 
+          id="ageConfirmation" 
+          checked={isOver18} 
+          onCheckedChange={(checked) => setIsOver18(checked === true)}
+        />
+        <Label 
+          htmlFor="ageConfirmation" 
+          className="text-sm font-medium cursor-pointer"
+        >
+          I confirm that I am 18 years or older
+        </Label>
       </div>
 
       <Button type="submit" className="w-full" disabled={isLoading}>

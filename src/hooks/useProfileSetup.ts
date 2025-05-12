@@ -19,6 +19,7 @@ export const useProfileSetup = () => {
   const [interests, setInterests] = useState<string[]>([]);
   const [currentInterest, setCurrentInterest] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isOver18, setIsOver18] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -47,6 +48,17 @@ export const useProfileSetup = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate that user confirmed they are over 18
+    if (!isOver18) {
+      toast({
+        title: "Age confirmation required",
+        description: "You must confirm that you are over 18 years old to continue.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsLoading(true);
 
     try {
@@ -144,5 +156,7 @@ export const useProfileSetup = () => {
     handleRemoveInterest,
     handleSubmit,
     isLoading,
+    isOver18,
+    setIsOver18,
   };
 };

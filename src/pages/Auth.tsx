@@ -93,14 +93,14 @@ const Auth: React.FC = () => {
   }, [setIsAuthenticated, setSupabaseUser]);
 
   // If authenticated and has a complete profile, redirect to home
-  if (isAuthenticated && currentUser?.age && !loading) {
+  if (isAuthenticated && currentUser?.bio && !loading) {
     console.log("User has complete profile, redirecting to home");
     return <Navigate to="/home" replace />;
   }
   
   // If authenticated but profile is incomplete, show profile setup
   if (isAuthenticated && currentUser && !loading) {
-    if (!currentUser.age) {
+    if (!currentUser.bio) {
       console.log("User profile is incomplete, showing profile setup");
       return (
         <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">

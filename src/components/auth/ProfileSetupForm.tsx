@@ -22,6 +22,8 @@ const ProfileSetupForm: React.FC = () => {
     handleRemoveInterest,
     handleSubmit,
     isLoading,
+    isOver18,
+    setIsOver18,
   } = useProfileSetup();
 
   // Debug auth state
@@ -51,6 +53,8 @@ const ProfileSetupForm: React.FC = () => {
           handleAddInterest={handleAddInterest}
           handleRemoveInterest={handleRemoveInterest}
           isLoading={isLoading}
+          isOver18={isOver18}
+          setIsOver18={setIsOver18}
         />
       </form>
     </ProfileFormContainer>
