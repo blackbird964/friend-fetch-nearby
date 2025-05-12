@@ -23,10 +23,10 @@ serve(async (req) => {
     
     // Handle different types of emails
     if (type === 'signup') {
-      const { token, token_hash, redirect_to } = data;
+      const { token_hash, redirect_to } = data;
       
       const supabaseUrl = Deno.env.get("SUPABASE_URL") || "https://sqrlsxmwvmgmbmcyaxcq.supabase.co";
-      const confirmLink = `${supabaseUrl}/auth/v1/verify?token=${token_hash}&type=signup&redirect_to=${redirect_to}`;
+      const confirmLink = `${supabaseUrl}/auth/v1/verify?token_hash=${token_hash}&type=signup&redirect_to=${redirect_to}`;
       
       const emailResponse = await resend.emails.send({
         from: "meetkairo <onboarding@resend.dev>",
@@ -45,14 +45,15 @@ serve(async (req) => {
         `,
       });
       
+      console.log("Signup email sent via Resend:", emailResponse);
       return new Response(JSON.stringify(emailResponse), {
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     } else if (type === 'reset') {
-      const { token, token_hash, redirect_to } = data;
+      const { token_hash, redirect_to } = data;
       
       const supabaseUrl = Deno.env.get("SUPABASE_URL") || "https://sqrlsxmwvmgmbmcyaxcq.supabase.co";
-      const resetLink = `${supabaseUrl}/auth/v1/verify?token=${token_hash}&type=recovery&redirect_to=${redirect_to}`;
+      const resetLink = `${supabaseUrl}/auth/v1/verify?token_hash=${token_hash}&type=recovery&redirect_to=${redirect_to}`;
       
       const emailResponse = await resend.emails.send({
         from: "meetkairo <onboarding@resend.dev>",
@@ -71,6 +72,7 @@ serve(async (req) => {
         `,
       });
       
+      console.log("Reset password email sent via Resend:", emailResponse);
       return new Response(JSON.stringify(emailResponse), {
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });

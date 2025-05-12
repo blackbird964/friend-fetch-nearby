@@ -53,11 +53,30 @@ export const fetchUserProfile = async (userId: string): Promise<AppUser | null> 
       interests: Array.isArray(profile.interests) ? profile.interests : [],
       profile_pic: profile.profile_pic || null,
       email: '', // Email will be added from session
-      location: profile.location ? profile.location as Location : undefined,
+      location: profile.location as Location || undefined,
       is_over_18: profile.is_over_18 || false,
     };
   } catch (error) {
     console.error('Error in fetchUserProfile:', error);
     return null;
+  }
+};
+
+/**
+ * Request password reset email
+ */
+export const requestPasswordReset = async (email: string): Promise<{ success: boolean, error?: string }> => {
+  try {
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: window.location.origin + '/?reset=true',
+    });
+    
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    
+    return { success: true };
+  } catch (error: any) {
+    return { success: false, error: error.message || 'Failed to send password reset email' };
   }
 };

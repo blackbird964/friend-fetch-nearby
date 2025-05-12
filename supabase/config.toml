@@ -11,4 +11,3 @@ action_url = "{{ .ConfirmationURL }}"
 
 [functions.send-email]
 verify_jwt = false
-
