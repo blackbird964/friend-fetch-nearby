@@ -1,5 +1,4 @@
-
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import { Message } from '@/context/types';
 import { Loader2 } from 'lucide-react';
 import { formatMessageTime } from '@/utils/dateFormatters';
@@ -13,27 +12,26 @@ interface MessageListProps {
 
 const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchError }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrolledManually = useRef(false);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [userScrolled, setUserScrolled] = useState(false);
   
-  // Scroll to bottom when messages change, but only if user hasn't manually scrolled up
+  // Scroll to bottom on first load or when new messages are added (if not manually scrolled)
   useEffect(() => {
-    if (messages.length > 0 && !isLoading && !scrolledManually.current) {
-      // Use a short delay to ensure rendering is complete
+    if (messages.length > 0 && !isLoading && !userScrolled) {
       const timeoutId = setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       }, 100);
       
       return () => clearTimeout(timeoutId);
     }
-  }, [messages, isLoading]);
+  }, [messages, isLoading, userScrolled]);
   
-  // Reset manual scroll flag when messages change (new message received)
+  // Reset user scrolled state when sending a new message
   useEffect(() => {
     if (messages.length > 0) {
-      // Check if last message is from current user
       const lastMessage = messages[messages.length - 1];
       if (lastMessage && lastMessage.senderId === 'current') {
-        scrolledManually.current = false; // Reset when user sends a message
+        setUserScrolled(false);
       }
     }
   }, [messages]);
@@ -41,12 +39,17 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
   // Handle scroll events
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const element = e.currentTarget;
-    const isScrolledToBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 20;
+    const scrollPosition = element.scrollHeight - element.scrollTop - element.clientHeight;
     
-    if (!isScrolledToBottom) {
-      scrolledManually.current = true;
-    } else {
-      scrolledManually.current = false;
+    // If user has scrolled up more than 50px, consider it a manual scroll
+    // Small threshold helps prevent false detection due to slight scroll variations
+    if (scrollPosition > 50) {
+      setUserScrolled(true);
+    }
+    
+    // When user scrolls back to bottom, reset the flag
+    if (scrollPosition < 10) {
+      setUserScrolled(false);
     }
   };
   
@@ -112,38 +115,40 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
   };
   
   return (
-    <div className="h-full" onScroll={handleScroll}>
-      <ScrollArea className="h-full pr-3">
-        <div className="p-4 space-y-4 pb-2">
-          {messages.map((msg) => {
-            const isCurrentUser = msg.senderId === 'current';
-            // Convert timestamp to number if it's a string
-            const timestamp = typeof msg.timestamp === 'string' ? parseInt(msg.timestamp, 10) : msg.timestamp;
-            
-            return (
-              <div 
-                key={msg.id} 
-                className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
-              >
-                <div className={`
-                  max-w-[75%] rounded-2xl p-3 
-                  ${isCurrentUser 
-                    ? 'bg-primary text-white rounded-tr-none' 
-                    : 'bg-gray-100 text-gray-800 rounded-tl-none'}
-                `}>
-                  {renderMessageContent(msg)}
-                  <p className={`text-xs mt-1 text-right ${
-                    isCurrentUser ? 'text-white/70' : 'text-gray-500'
-                  }`}>
-                    {formatMessageTime(timestamp)}
-                  </p>
-                </div>
+    <div 
+      className="h-full overflow-y-auto" 
+      onScroll={handleScroll}
+      ref={scrollContainerRef}
+    >
+      <div className="p-4 space-y-4 pb-2">
+        {messages.map((msg) => {
+          const isCurrentUser = msg.senderId === 'current';
+          // Convert timestamp to number if it's a string
+          const timestamp = typeof msg.timestamp === 'string' ? parseInt(msg.timestamp, 10) : msg.timestamp;
+          
+          return (
+            <div 
+              key={msg.id} 
+              className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+            >
+              <div className={`
+                max-w-[75%] rounded-2xl p-3 
+                ${isCurrentUser 
+                  ? 'bg-primary text-white rounded-tr-none' 
+                  : 'bg-gray-100 text-gray-800 rounded-tl-none'}
+              `}>
+                {renderMessageContent(msg)}
+                <p className={`text-xs mt-1 text-right ${
+                  isCurrentUser ? 'text-white/70' : 'text-gray-500'
+                }`}>
+                  {formatMessageTime(timestamp)}
+                </p>
               </div>
-            );
-          })}
-          <div ref={messagesEndRef} />
-        </div>
-      </ScrollArea>
+            </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
     </div>
   );
 };
