@@ -57,8 +57,8 @@ const ChatWindow: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full bg-background">
-      <div className="flex-grow h-full">
+    <div className="flex flex-col h-full">
+      <div className="flex-grow overflow-hidden">
         {isLoading && selectedChat.messages.length === 0 ? (
           <div className="flex-grow flex items-center justify-center h-full">
             <div className="flex flex-col items-center">

@@ -13,10 +13,11 @@ interface MessageListProps {
 
 const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchError }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrolledManually = useRef(false);
   
-  // Scroll to bottom when messages change
+  // Scroll to bottom when messages change, but only if user hasn't manually scrolled up
   useEffect(() => {
-    if (messages.length > 0 && !isLoading) {
+    if (messages.length > 0 && !isLoading && !scrolledManually.current) {
       // Use a short delay to ensure rendering is complete
       const timeoutId = setTimeout(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -25,6 +26,29 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
       return () => clearTimeout(timeoutId);
     }
   }, [messages, isLoading]);
+  
+  // Reset manual scroll flag when messages change (new message received)
+  useEffect(() => {
+    if (messages.length > 0) {
+      // Check if last message is from current user
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage && lastMessage.senderId === 'current') {
+        scrolledManually.current = false; // Reset when user sends a message
+      }
+    }
+  }, [messages]);
+  
+  // Handle scroll events
+  const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
+    const element = e.currentTarget;
+    const isScrolledToBottom = element.scrollHeight - element.scrollTop <= element.clientHeight + 20;
+    
+    if (!isScrolledToBottom) {
+      scrolledManually.current = true;
+    } else {
+      scrolledManually.current = false;
+    }
+  };
   
   if (isLoading) {
     return (
@@ -88,8 +112,8 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
   };
   
   return (
-    <div className="h-full overflow-y-auto">
-      <ScrollArea className="h-full">
+    <div className="h-full" onScroll={handleScroll}>
+      <ScrollArea className="h-full pr-3">
         <div className="p-4 space-y-4 pb-2">
           {messages.map((msg) => {
             const isCurrentUser = msg.senderId === 'current';
