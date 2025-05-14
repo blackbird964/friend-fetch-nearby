@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect } from 'react';
 import { Message } from '@/context/types';
 import { Loader2 } from 'lucide-react';
@@ -13,7 +12,6 @@ interface MessageListProps {
 
 const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchError }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -89,10 +87,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
   };
   
   return (
-    <ScrollArea 
-      ref={scrollAreaRef}
-      className="flex-1 h-full"
-    >
+    <ScrollArea className="flex-1 h-full">
       <div className="p-4 space-y-4">
         {messages.map((msg) => {
           const isCurrentUser = msg.senderId === 'current';
