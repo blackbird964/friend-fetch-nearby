@@ -3,6 +3,7 @@ import React, { useRef, useEffect } from 'react';
 import { Message } from '@/context/types';
 import { Loader2 } from 'lucide-react';
 import { formatMessageTime } from '@/utils/dateFormatters';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 interface MessageListProps {
   messages: Message[];
@@ -12,12 +13,17 @@ interface MessageListProps {
 
 const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchError }) => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const messagesContainerRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   
   // Scroll to bottom when messages change
   useEffect(() => {
     if (messages.length > 0 && !isLoading) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      // Use a short delay to ensure rendering is complete
+      const timeoutId = setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+      
+      return () => clearTimeout(timeoutId);
     }
   }, [messages, isLoading]);
   
@@ -83,38 +89,40 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
   };
   
   return (
-    <div 
-      ref={messagesContainerRef}
-      className="flex-1 overflow-y-auto p-4 space-y-4"
+    <ScrollArea 
+      ref={scrollAreaRef}
+      className="flex-1 h-full"
     >
-      {messages.map((msg) => {
-        const isCurrentUser = msg.senderId === 'current';
-        // Convert timestamp to number if it's a string
-        const timestamp = typeof msg.timestamp === 'string' ? parseInt(msg.timestamp, 10) : msg.timestamp;
-        
-        return (
-          <div 
-            key={msg.id} 
-            className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
-          >
-            <div className={`
-              max-w-[75%] rounded-2xl p-3 
-              ${isCurrentUser 
-                ? 'bg-primary text-white rounded-tr-none' 
-                : 'bg-gray-100 text-gray-800 rounded-tl-none'}
-            `}>
-              {renderMessageContent(msg)}
-              <p className={`text-xs mt-1 text-right ${
-                isCurrentUser ? 'text-white/70' : 'text-gray-500'
-              }`}>
-                {formatMessageTime(timestamp)}
-              </p>
+      <div className="p-4 space-y-4">
+        {messages.map((msg) => {
+          const isCurrentUser = msg.senderId === 'current';
+          // Convert timestamp to number if it's a string
+          const timestamp = typeof msg.timestamp === 'string' ? parseInt(msg.timestamp, 10) : msg.timestamp;
+          
+          return (
+            <div 
+              key={msg.id} 
+              className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+            >
+              <div className={`
+                max-w-[75%] rounded-2xl p-3 
+                ${isCurrentUser 
+                  ? 'bg-primary text-white rounded-tr-none' 
+                  : 'bg-gray-100 text-gray-800 rounded-tl-none'}
+              `}>
+                {renderMessageContent(msg)}
+                <p className={`text-xs mt-1 text-right ${
+                  isCurrentUser ? 'text-white/70' : 'text-gray-500'
+                }`}>
+                  {formatMessageTime(timestamp)}
+                </p>
+              </div>
             </div>
-          </div>
-        );
-      })}
-      <div ref={messagesEndRef} />
-    </div>
+          );
+        })}
+        <div ref={messagesEndRef} />
+      </div>
+    </ScrollArea>
   );
 };
 

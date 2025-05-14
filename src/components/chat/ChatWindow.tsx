@@ -58,20 +58,22 @@ const ChatWindow: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full bg-background overflow-hidden">
-      {isLoading && selectedChat.messages.length === 0 ? (
-        <div className="flex-grow flex items-center justify-center">
-          <div className="flex flex-col items-center">
-            <Loader2 className="h-10 w-10 animate-spin text-primary mb-2" />
-            <p className="text-gray-500">Loading messages...</p>
+      <div className="flex-grow overflow-hidden">
+        {isLoading && selectedChat.messages.length === 0 ? (
+          <div className="flex-grow flex items-center justify-center">
+            <div className="flex flex-col items-center">
+              <Loader2 className="h-10 w-10 animate-spin text-primary mb-2" />
+              <p className="text-gray-500">Loading messages...</p>
+            </div>
           </div>
-        </div>
-      ) : (
-        <MessageList 
-          messages={selectedChat.messages}
-          isLoading={isLoading}
-          fetchError={fetchError}
-        />
-      )}
+        ) : (
+          <MessageList 
+            messages={selectedChat.messages}
+            isLoading={isLoading}
+            fetchError={fetchError}
+          />
+        )}
+      </div>
       
       <MessageInput 
         message={message}
