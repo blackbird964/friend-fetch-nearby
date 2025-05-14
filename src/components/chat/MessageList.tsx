@@ -88,8 +88,8 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
   };
   
   return (
-    <div className="h-full w-full overflow-hidden">
-      <ScrollArea className="h-full w-full pr-4">
+    <div className="h-full overflow-y-auto">
+      <ScrollArea className="h-full">
         <div className="p-4 space-y-4 pb-2">
           {messages.map((msg) => {
             const isCurrentUser = msg.senderId === 'current';
