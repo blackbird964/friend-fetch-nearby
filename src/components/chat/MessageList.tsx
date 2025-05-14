@@ -1,3 +1,4 @@
+
 import React, { useRef, useEffect } from 'react';
 import { Message } from '@/context/types';
 import { Loader2 } from 'lucide-react';
@@ -27,7 +28,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
   
   if (isLoading) {
     return (
-      <div className="flex justify-center items-center py-4 flex-grow">
+      <div className="flex justify-center items-center py-4 h-full">
         <div className="flex flex-col items-center">
           <Loader2 className="h-8 w-8 animate-spin text-primary mb-2" />
           <p className="text-gray-500">Loading messages...</p>
@@ -38,7 +39,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
   
   if (fetchError) {
     return (
-      <div className="flex justify-center items-center py-4 flex-grow">
+      <div className="flex justify-center items-center py-4 h-full">
         <div className="flex flex-col items-center">
           <p className="text-red-500 mb-2">{fetchError}</p>
           <p className="text-gray-500">Please try again later</p>
@@ -49,7 +50,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
   
   if (!messages || messages.length === 0) {
     return (
-      <div className="flex justify-center items-center py-4 flex-grow">
+      <div className="flex justify-center items-center py-4 h-full">
         <p className="text-gray-500">No messages yet. Say hello!</p>
       </div>
     );
@@ -87,37 +88,39 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
   };
   
   return (
-    <ScrollArea className="flex-1 h-full">
-      <div className="p-4 space-y-4">
-        {messages.map((msg) => {
-          const isCurrentUser = msg.senderId === 'current';
-          // Convert timestamp to number if it's a string
-          const timestamp = typeof msg.timestamp === 'string' ? parseInt(msg.timestamp, 10) : msg.timestamp;
-          
-          return (
-            <div 
-              key={msg.id} 
-              className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
-            >
-              <div className={`
-                max-w-[75%] rounded-2xl p-3 
-                ${isCurrentUser 
-                  ? 'bg-primary text-white rounded-tr-none' 
-                  : 'bg-gray-100 text-gray-800 rounded-tl-none'}
-              `}>
-                {renderMessageContent(msg)}
-                <p className={`text-xs mt-1 text-right ${
-                  isCurrentUser ? 'text-white/70' : 'text-gray-500'
-                }`}>
-                  {formatMessageTime(timestamp)}
-                </p>
+    <div className="h-full w-full overflow-hidden">
+      <ScrollArea className="h-full w-full pr-4">
+        <div className="p-4 space-y-4 pb-2">
+          {messages.map((msg) => {
+            const isCurrentUser = msg.senderId === 'current';
+            // Convert timestamp to number if it's a string
+            const timestamp = typeof msg.timestamp === 'string' ? parseInt(msg.timestamp, 10) : msg.timestamp;
+            
+            return (
+              <div 
+                key={msg.id} 
+                className={`flex ${isCurrentUser ? 'justify-end' : 'justify-start'}`}
+              >
+                <div className={`
+                  max-w-[75%] rounded-2xl p-3 
+                  ${isCurrentUser 
+                    ? 'bg-primary text-white rounded-tr-none' 
+                    : 'bg-gray-100 text-gray-800 rounded-tl-none'}
+                `}>
+                  {renderMessageContent(msg)}
+                  <p className={`text-xs mt-1 text-right ${
+                    isCurrentUser ? 'text-white/70' : 'text-gray-500'
+                  }`}>
+                    {formatMessageTime(timestamp)}
+                  </p>
+                </div>
               </div>
-            </div>
-          );
-        })}
-        <div ref={messagesEndRef} />
-      </div>
-    </ScrollArea>
+            );
+          })}
+          <div ref={messagesEndRef} />
+        </div>
+      </ScrollArea>
+    </div>
   );
 };
 
