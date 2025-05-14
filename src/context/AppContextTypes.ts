@@ -1,5 +1,5 @@
 
-import { AppUser, Chat, FriendRequest, Location } from './types';
+import { AppUser, Chat, FriendRequest, MeetupRequest, Location } from './types';
 import { User } from '@supabase/supabase-js';
 
 export interface AuthContextType {
@@ -28,6 +28,8 @@ export interface UsersContextType {
 export interface SocialContextType {
   friendRequests: FriendRequest[];
   setFriendRequests: (requests: FriendRequest[]) => void;
+  meetupRequests: MeetupRequest[];
+  setMeetupRequests: (requests: MeetupRequest[]) => void;
   chats: Chat[];
   setChats: (chats: Chat[]) => void;
   selectedChat: Chat | null;
@@ -35,6 +37,7 @@ export interface SocialContextType {
   showSidebar: boolean;
   setShowSidebar: (show: boolean) => void;
   refreshFriendRequests: () => Promise<void>;
+  refreshMeetupRequests: () => Promise<void>;
   unreadMessageCount: number;
   setUnreadMessageCount: (count: number) => void;
 }

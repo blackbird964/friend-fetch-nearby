@@ -23,3 +23,14 @@ export interface FriendRequestMessageContent {
   status: 'pending' | 'accepted' | 'rejected';
   timestamp: number;
 }
+
+export interface MeetupRequestInput {
+  senderId: string;
+  senderName: string;
+  senderProfilePic: string | null;
+  receiverId: string;
+  receiverName: string;
+  receiverProfilePic: string | null;
+  duration: number;
+  meetLocation?: string;
+}

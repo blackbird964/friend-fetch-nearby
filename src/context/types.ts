@@ -1,3 +1,4 @@
+
 import { User } from '@supabase/supabase-js';
 
 export interface Location {
@@ -56,7 +57,7 @@ export interface Message {
   status?: MessageStatus;  // Made optional for compatibility
 }
 
-export interface FriendRequest {
+export interface BaseRequest {
   id: string;
   senderId: string;
   receiverId: string;
@@ -65,9 +66,21 @@ export interface FriendRequest {
   senderProfilePic?: string;
   receiverName?: string;
   receiverProfilePic?: string;
-  duration?: number;
   timestamp?: number;
 }
+
+export interface FriendRequest extends BaseRequest {
+  duration?: number;
+  type?: 'friend';
+}
+
+export interface MeetupRequest extends BaseRequest {
+  duration: number;
+  type: 'meetup';
+  meetLocation?: string;
+}
+
+export type RequestType = FriendRequest | MeetupRequest;
 
 export interface AppContextType {
   isAuthenticated: boolean;
@@ -80,6 +93,8 @@ export interface AppContextType {
   setRadiusInKm: (radius: number) => void;
   friendRequests: FriendRequest[];
   setFriendRequests: (requests: FriendRequest[]) => void;
+  meetupRequests: MeetupRequest[];
+  setMeetupRequests: (requests: MeetupRequest[]) => void;
   chats: Chat[];
   setChats: (chats: Chat[]) => void;
   selectedChat: Chat | null;
@@ -93,6 +108,7 @@ export interface AppContextType {
   updateUserLocation: (userId: string, location: Location) => Promise<void>;
   updateUserProfile: (userId: string, profileData: Partial<AppUser>) => Promise<void>;
   refreshFriendRequests: () => Promise<void>;
+  refreshMeetupRequests: () => Promise<void>;
   blockUser: (userId: string) => Promise<boolean>;
   unblockUser: (userId: string) => Promise<boolean>;
   reportUser: (userId: string, reason: string) => Promise<boolean>;

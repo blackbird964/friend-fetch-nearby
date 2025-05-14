@@ -5,18 +5,32 @@ import ChatList from '@/components/chat/ChatList';
 import ChatWindow from '@/components/chat/ChatWindow';
 import ChatHeader from '@/components/chat/ChatHeader';
 import FriendRequestList from '@/components/users/FriendRequestList';
+import MeetupRequestsList from '@/components/users/meet-requests/MeetupRequestsList';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Bell, Loader2, UserPlus } from 'lucide-react';
+import { Bell, Loader2, UserPlus, Calendar } from 'lucide-react';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const ChatPage: React.FC = () => {
-  const { friendRequests, selectedChat, setSelectedChat, loading, refreshFriendRequests } = useAppContext();
+  const { 
+    friendRequests, 
+    meetupRequests, 
+    selectedChat, 
+    setSelectedChat, 
+    loading, 
+    refreshFriendRequests, 
+    refreshMeetupRequests 
+  } = useAppContext();
   const [activeTab, setActiveTab] = useState('chats');
+  const [activeRequestsTab, setActiveRequestsTab] = useState('friends');
   const isMobile = useIsMobile();
   
-  const pendingRequests = friendRequests.filter(r => 
+  const pendingFriendRequests = friendRequests.filter(r => 
     r.status === 'pending' && r.receiverId === friendRequests[0]?.receiverId
+  ).length;
+
+  const pendingMeetupRequests = meetupRequests.filter(r => 
+    r.status === 'pending' && r.receiverId === meetupRequests[0]?.receiverId
   ).length;
 
   // Reset selected chat when navigating away on mobile
@@ -28,10 +42,11 @@ const ChatPage: React.FC = () => {
     };
   }, [isMobile, setSelectedChat]);
   
-  // Refresh friend requests when component mounts
+  // Refresh requests when component mounts
   useEffect(() => {
     refreshFriendRequests();
-  }, [refreshFriendRequests]);
+    refreshMeetupRequests();
+  }, [refreshFriendRequests, refreshMeetupRequests]);
 
   // Prevent viewport scaling on mobile
   useEffect(() => {
@@ -85,9 +100,9 @@ const ChatPage: React.FC = () => {
                   </TabsTrigger>
                   <TabsTrigger value="requests" className="relative">
                     Requests
-                    {pendingRequests > 0 && (
+                    {(pendingFriendRequests + pendingMeetupRequests) > 0 && (
                       <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                        {pendingRequests}
+                        {pendingFriendRequests + pendingMeetupRequests}
                       </span>
                     )}
                   </TabsTrigger>
@@ -100,17 +115,65 @@ const ChatPage: React.FC = () => {
                 </TabsContent>
                 
                 <TabsContent value="requests" className="h-[calc(100%-48px)] space-y-4 overflow-y-auto p-4 rounded-md border">
-                  <Card>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-xl flex items-center">
-                        <UserPlus className="mr-2 h-5 w-5 text-primary" />
-                        Friend Requests
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <FriendRequestList />
-                    </CardContent>
-                  </Card>
+                  <Tabs
+                    defaultValue="friends"
+                    value={activeRequestsTab}
+                    onValueChange={setActiveRequestsTab}
+                    className="w-full"
+                  >
+                    <TabsList className="grid w-full grid-cols-2 mb-4">
+                      <TabsTrigger value="friends" className="relative">
+                        <div className="flex items-center gap-1">
+                          <UserPlus className="h-4 w-4" />
+                          <span>Friend</span>
+                        </div>
+                        {pendingFriendRequests > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                            {pendingFriendRequests}
+                          </span>
+                        )}
+                      </TabsTrigger>
+                      <TabsTrigger value="meetups" className="relative">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          <span>Meetups</span>
+                        </div>
+                        {pendingMeetupRequests > 0 && (
+                          <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                            {pendingMeetupRequests}
+                          </span>
+                        )}
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="friends">
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-xl flex items-center">
+                            <UserPlus className="mr-2 h-5 w-5 text-primary" />
+                            Friend Requests
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <FriendRequestList />
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+
+                    <TabsContent value="meetups">
+                      <Card>
+                        <CardHeader className="pb-3">
+                          <CardTitle className="text-xl flex items-center">
+                            <Calendar className="mr-2 h-5 w-5 text-primary" />
+                            Meetup Requests
+                          </CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                          <MeetupRequestsList />
+                        </CardContent>
+                      </Card>
+                    </TabsContent>
+                  </Tabs>
                 </TabsContent>
               </Tabs>
             </div>
