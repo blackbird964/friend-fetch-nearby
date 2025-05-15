@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { getProfile } from '@/lib/supabase';
 import { AppUser, Chat } from '@/context/types';
@@ -16,7 +15,13 @@ export async function fetchConversations(userId: string) {
   
   try {
     // Get only the most recent message for each conversation
-    const { data: conversations, error: convError } = await supabase.rpc<Conversation>(
+    // Define the parameter types and return type for the RPC function
+    interface RpcParams {
+      user_id: string;
+      limit_per_conversation: number;
+    }
+    
+    const { data: conversations, error: convError } = await supabase.rpc<Conversation[], RpcParams>(
       'get_unique_conversations',
       { user_id: userId, limit_per_conversation: 1 }
     );
@@ -54,23 +59,28 @@ export async function fetchConversations(userId: string) {
       return Array.from(participantMessages.entries());
     } else {
       // Process conversations from RPC function
-      console.log(`Fetched ${conversations?.length || 0} conversations`);
-      
-      if (!conversations || conversations.length === 0) {
+      if (Array.isArray(conversations)) {
+        console.log(`Fetched ${conversations.length} conversations`);
+        
+        if (conversations.length === 0) {
+          return [];
+        }
+        
+        // Group by participant
+        const participantMessages = new Map<string, any[]>();
+        conversations.forEach((conv: Conversation) => {
+          const participantId = conv.other_user_id;
+          if (!participantMessages.has(participantId)) {
+            participantMessages.set(participantId, []);
+          }
+          participantMessages.get(participantId)?.push(conv);
+        });
+        
+        return Array.from(participantMessages.entries());
+      } else {
+        console.log("No conversations found or invalid format returned");
         return [];
       }
-      
-      // Group by participant
-      const participantMessages = new Map<string, any[]>();
-      conversations?.forEach((conv: Conversation) => {
-        const participantId = conv.other_user_id;
-        if (!participantMessages.has(participantId)) {
-          participantMessages.set(participantId, []);
-        }
-        participantMessages.get(participantId)?.push(conv);
-      });
-      
-      return Array.from(participantMessages.entries());
     }
   } catch (err) {
     console.error('Error loading chats:', err);
