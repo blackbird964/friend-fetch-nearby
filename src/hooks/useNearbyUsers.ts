@@ -1,132 +1,95 @@
 
-import { useState, useRef } from 'react';
-import { getAllProfiles } from '@/lib/supabase';
-import { AppUser } from '@/context/types';
-import { processNearbyUsers, addTestUsersNearby } from '@/services/user';
-import { DEFAULT_LOCATION } from '@/utils/locationUtils';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useState, useCallback, useEffect } from 'react';
+import { nearbyUsersService } from '@/services/user';
+import { useAuthContext } from '@/context/AuthContext';
+import { AppUser, Location } from '@/context/types';
+import { toast } from 'sonner';
 
 /**
- * Hook to manage nearby users functionality
+ * Hook for managing nearby users
  */
-export const useNearbyUsers = (currentUser: AppUser | null) => {
-  const [nearbyUsers, setNearbyUsers] = useState<AppUser[]>([]);
+export const useNearbyUsers = () => {
+  const [users, setUsers] = useState<AppUser[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
-  const [lastFetchTime, setLastFetchTime] = useState<number>(0);
-  const { toast } = useToast();
-  const isMobile = useIsMobile();
-  const hasInitiallyFetched = useRef<boolean>(false);
-  const toastShownRef = useRef<boolean>(false);
+  const [error, setError] = useState<string | null>(null);
+  const { currentUser } = useAuthContext();
 
   /**
-   * Refresh nearby users list
-   * @param showToast Whether to show a toast notification (default: false)
+   * Fetch nearby users based on user location and radius
    */
-  const refreshNearbyUsers = async (showToast: boolean = false) => {
-    if (!currentUser) return;
+  const fetchNearbyUsers = useCallback(
+    async (
+      location: Location | undefined | null = currentUser?.location,
+      radiusInKm: number = 2,
+      showToast: boolean = false
+    ) => {
+      if (!location) {
+        console.warn('No location provided for fetching nearby users');
+        setError('No location available');
+        return [];
+      }
 
-    try {
-      // Throttle refreshes even more aggressively on mobile - wait at least 10 seconds
-      const now = Date.now();
-      const throttleTime = isMobile ? 10000 : 5000;
-      
-      if (now - lastFetchTime < throttleTime) {
-        console.log("Skipping refresh - throttled");
-        return;
-      }
-      
-      // On mobile, only show one toast per session for automatic updates
-      if (isMobile && showToast && toastShownRef.current) {
-        console.log("Skipping toast on mobile - already shown once");
-        showToast = false;
-      }
-      
       setLoading(true);
-      setLastFetchTime(now);
-      console.log("Refreshing nearby users for:", currentUser.name, "with ID:", currentUser.id);
-      
-      // Set default location if user doesn't have one
-      const userLocation = currentUser.location || DEFAULT_LOCATION;
-      
-      // Fetch all profiles from the database
-      const profiles = await getAllProfiles();
-      console.log("Fetched profiles:", profiles);
-      
-      // Filter out the current user and convert to AppUser type
-      const otherUsers = profiles
-        .filter(profile => profile.id !== currentUser.id)
-        .map(profile => ({
-          ...profile,
-          email: '', // We don't have emails for other users
-          interests: Array.isArray(profile.interests) ? profile.interests : [],
-          // Handle is_online property with type safety - use typecasting for accessing non-standard properties
-          isOnline: (profile as any).is_online !== undefined ? (profile as any).is_online : false
-        }));
+      setError(null);
 
-      console.log("Processed other users:", otherUsers);
-      
-      // Calculate distance for each user if location is available
-      const usersWithDistance = userLocation ? 
-        processNearbyUsers(otherUsers, userLocation) : 
-        otherUsers;
-      
-      console.log("Users with distance calculation:", usersWithDistance);
-      
-      // Set all users, including those without location
-      setNearbyUsers(usersWithDistance as AppUser[]);
-      
-      // If there are no users with location data, we could add some test users
-      if (usersWithDistance.every(user => {
-        const appUser = user as AppUser;
-        return !appUser.location || appUser.distance === undefined || appUser.distance === Infinity;
-      })) {
-        console.log("No users with valid location data found");
+      try {
+        console.log('Fetching nearby users with radius:', radiusInKm);
+
+        // Get users from database
+        const fetchedUsers = await nearbyUsersService.getNearbyUsers(
+          location,
+          radiusInKm
+        );
+
+        // Filter out the current user and map profiles to AppUser format
+        if (!fetchedUsers || !Array.isArray(fetchedUsers)) {
+          console.error('Invalid users data received:', fetchedUsers);
+          throw new Error('Failed to fetch nearby users');
+        }
+
+        console.log('Raw fetched users:', fetchedUsers);
+
+        // Filter out the current user
+        const otherUsers = fetchedUsers
+          .filter(profile => profile.id !== currentUser?.id)
+          .map(profile => ({
+            ...profile,
+            email: '', // We don't have emails for other users
+            interests: Array.isArray(profile.interests) ? profile.interests : [],
+            // Handle is_online property with type safety
+            isOnline: profile.is_online !== undefined ? Boolean(profile.is_online) : false
+          }));
+
+        console.log("Processed other users:", otherUsers);
+        setUsers(otherUsers);
+
+        if (showToast) {
+          toast.success('Found ' + otherUsers.length + ' people nearby');
+        }
+
+        setLoading(false);
+        return otherUsers;
+      } catch (err) {
+        console.error('Error fetching nearby users:', err);
+        setError(err instanceof Error ? err.message : 'Failed to fetch nearby users');
+        setLoading(false);
         
-        // For testing only: simulate adding these users with location data
-        if (process.env.NODE_ENV === 'development') {
-          const testUsers = await addTestUsersNearby(currentUser.id, userLocation);
-          console.log("Added test users:", testUsers);
-          
-          // Only show test users in dev mode
-          if (testUsers.length > 0) {
-            setNearbyUsers([...usersWithDistance as AppUser[], ...testUsers]);
-          }
+        if (showToast) {
+          toast.error('Failed to find people nearby');
         }
+        
+        return [];
       }
-      
-      // Set the initial fetch flag to true
-      hasInitiallyFetched.current = true;
-      
-      // Only show toast if explicitly requested AND not on mobile (or first time on mobile)
-      if (showToast) {
-        if (!isMobile || !toastShownRef.current) {
-          toast({
-            title: "Users Updated",
-            description: `Found ${usersWithDistance.length} users nearby.`,
-          });
-          
-          // Track that we've shown a toast on mobile
-          if (isMobile) {
-            toastShownRef.current = true;
-          }
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching nearby users:", error);
-      // Only show error toast if explicitly requested by the user through manual refresh
-      if (showToast) {
-        toast({
-          title: "Error",
-          description: "Failed to refresh nearby users.",
-          variant: "destructive"
-        });
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    [currentUser]
+  );
 
-  return { nearbyUsers, setNearbyUsers, loading, refreshNearbyUsers, lastFetchTime };
+  return {
+    nearbyUsers: users,
+    loading,
+    error,
+    fetchNearbyUsers
+  };
 };
+
+export default useNearbyUsers;

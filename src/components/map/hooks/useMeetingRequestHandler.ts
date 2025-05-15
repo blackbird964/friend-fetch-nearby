@@ -1,9 +1,10 @@
 
 import { useRef } from 'react';
-import { useToast } from '@/hooks/use-toast';
+import { useToast } from '@/components/ui/use-toast';
 import { AppUser } from '@/context/types';
 import { sendMeetupRequest } from '@/services/meet-requests';
 import { useAppContext } from '@/context/AppContext';
+import { useSocialContext } from '@/context/SocialContext';
 
 type MeetingRequestHandlerProps = {
   selectedUser: string | null;
@@ -17,6 +18,7 @@ export const useMeetingRequestHandler = ({
   animateUserToMeeting
 }: MeetingRequestHandlerProps) => {
   const { currentUser } = useAppContext();
+  const { refreshMeetupRequests } = useSocialContext();
   const { toast } = useToast();
   const requestSentToastRef = useRef<boolean>(false);
   
@@ -28,6 +30,8 @@ export const useMeetingRequestHandler = ({
     if (!user) return;
     
     try {
+      console.log(`Sending a ${selectedDuration} minute meetup request to ${user.name}`);
+      
       // Send the meetup request
       const request = await sendMeetupRequest(
         currentUser.id,
@@ -41,6 +45,9 @@ export const useMeetingRequestHandler = ({
       );
       
       if (request) {
+        // Refresh the meetup requests list to show the new request
+        await refreshMeetupRequests();
+        
         // In a real implementation, we would update the local state
         // For now, we'll just animate to simulate acceptance
         animateUserToMeeting(user, selectedDuration);

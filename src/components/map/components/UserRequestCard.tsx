@@ -2,7 +2,8 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Radio, RadioGroup } from "@/components/ui/radio";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { X } from 'lucide-react';
 import { AppUser } from '@/context/types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -94,20 +95,20 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
         onClick={stopPropagation}
       >
         <div className="flex items-center space-x-2">
-          <Radio value="15" id="r1" />
-          <label htmlFor="r1" className="text-sm">15 min</label>
+          <RadioGroupItem value="15" id="r1" />
+          <Label htmlFor="r1" className="text-sm">15 min</Label>
         </div>
         <div className="flex items-center space-x-2">
-          <Radio value="30" id="r2" />
-          <label htmlFor="r2" className="text-sm">30 min</label>
+          <RadioGroupItem value="30" id="r2" />
+          <Label htmlFor="r2" className="text-sm">30 min</Label>
         </div>
         <div className="flex items-center space-x-2">
-          <Radio value="45" id="r3" />
-          <label htmlFor="r3" className="text-sm">45 min</label>
+          <RadioGroupItem value="45" id="r3" />
+          <Label htmlFor="r3" className="text-sm">45 min</Label>
         </div>
         <div className="flex items-center space-x-2">
-          <Radio value="60" id="r4" />
-          <label htmlFor="r4" className="text-sm">60 min</label>
+          <RadioGroupItem value="60" id="r4" />
+          <Label htmlFor="r4" className="text-sm">60 min</Label>
         </div>
       </RadioGroup>
       

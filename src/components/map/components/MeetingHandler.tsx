@@ -53,12 +53,18 @@ const MeetingHandler: React.FC<MeetingHandlerProps> = ({
     animateUserToMeeting
   });
 
+  // Handle when user clicks send request
+  const onSendRequest = () => {
+    console.log(`Sending request for selected duration: ${selectedDuration} minutes`);
+    handleSendRequest(selectedDuration);
+  };
+
   return (
     <MeetingRequestHandler
       selectedUser={selectedUser}
       selectedDuration={selectedDuration}
       setSelectedDuration={setSelectedDuration}
-      onSendRequest={() => handleSendRequest(selectedDuration)}
+      onSendRequest={onSendRequest}
       onCancel={() => setSelectedUser(null)}
       nearbyUsers={nearbyUsers}
       movingUsers={movingUsers}
