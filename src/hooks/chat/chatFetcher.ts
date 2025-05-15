@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { getProfile } from '@/lib/supabase';
 import { AppUser, Chat } from '@/context/types';
@@ -16,13 +15,10 @@ export async function fetchConversations(userId: string) {
   
   try {
     // Get only the most recent message for each conversation
-    const { data: conversations, error: convError } = await supabase.rpc<
-      Conversation, 
-      { user_id: string, limit_per_conversation: number }
-    >(
+    const { data: conversations, error: convError } = await supabase.rpc(
       'get_unique_conversations',
       { user_id: userId, limit_per_conversation: 1 }
-    ) as { data: Conversation[] | null, error: any };
+    );
     
     if (convError) {
       // Fallback to manual query if RPC function doesn't exist

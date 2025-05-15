@@ -83,9 +83,10 @@ export const useToast = () => {
   return { toast: toastWithHelpers, toasts, dismiss };
 };
 
-// Export a singleton instance for easier imports
-export { useToast as default, useToast };
+// Create a singleton instance for easier imports
+const { toast: singletonToast, toasts: singletonToasts, dismiss: singletonDismiss } = useToast();
 
-// Create a singleton toast instance for use outside of React components
-const { toast } = useToast();
-export { toast };
+// Export the singleton for use outside of React components
+export const toast = singletonToast;
+export const toasts = singletonToasts;
+export const dismiss = singletonDismiss;
