@@ -26,9 +26,8 @@ const BottomNavigation: React.FC = () => {
     r.status === 'pending' && r.receiverId === currentUser?.id
   ).length;
   
-  const chatNotificationCount = location.pathname === '/chat' 
-    ? pendingRequests 
-    : pendingRequests + unreadMessageCount;
+  // Total notifications for the chat tab
+  const totalNotifications = pendingRequests + unreadMessageCount;
   
   const routes = [
     {
@@ -45,7 +44,7 @@ const BottomNavigation: React.FC = () => {
       path: '/chat',
       label: 'Chats',
       icon: <MessageSquare className="h-6 w-6" />,
-      badge: chatNotificationCount,
+      badge: totalNotifications,
     },
     {
       path: '/profile',
@@ -70,7 +69,7 @@ const BottomNavigation: React.FC = () => {
             <div className="relative">
               {route.icon}
               {route.badge > 0 && (
-                <Badge className="absolute -top-2 -right-2 px-1 min-h-5 min-w-5 h-5 w-5 flex items-center justify-center text-[10px] bg-blue-500 text-white rounded-full">
+                <Badge className="absolute -top-2 -right-2 px-1 min-h-5 min-w-5 h-5 w-5 flex items-center justify-center text-[10px] bg-red-500 text-white rounded-full">
                   {route.badge}
                 </Badge>
               )}
