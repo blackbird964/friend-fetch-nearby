@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { getConversation, sendMessage, markMessagesAsRead } from '@/lib/supabase';
-import { Message, Chat } from '@/context/types';
+import { Message, Chat, MessageStatus } from '@/context/types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -60,7 +60,7 @@ export function useChat(selectedChatId: string | null) {
               text: newDbMessage.content,
               content: newDbMessage.content,
               timestamp: new Date(newDbMessage.created_at).getTime(),
-              status: 'received',
+              status: 'received' as MessageStatus,
             };
             
             // Update cache
@@ -165,7 +165,7 @@ export function useChat(selectedChatId: string | null) {
           text: dbMsg.content,
           content: dbMsg.content,
           timestamp: new Date(dbMsg.created_at).getTime(),
-          status: dbMsg.sender_id === currentUser.id ? 'sent' : 'received',
+          status: dbMsg.sender_id === currentUser.id ? 'sent' as MessageStatus : 'received' as MessageStatus,
         })).reverse(); // Reverse to get chronological order
         
         // On first page, replace cache. On subsequent pages, append to existing messages
@@ -300,7 +300,7 @@ export function useChat(selectedChatId: string | null) {
         text: sentMessage.content,
         content: sentMessage.content,
         timestamp: new Date(sentMessage.created_at).getTime(),
-        status: 'sent',
+        status: 'sent' as MessageStatus,
       };
       
       // Update the messages cache

@@ -98,7 +98,7 @@ export function useChatList() {
         
         // Group by participant
         const participantMessages = new Map<string, any[]>();
-        conversations.forEach(conv => {
+        conversations.forEach((conv: any) => {
           const participantId = conv.other_user_id;
           if (!participantMessages.has(participantId)) {
             participantMessages.set(participantId, []);
