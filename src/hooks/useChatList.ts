@@ -57,7 +57,7 @@ export function useChatList() {
       console.log("Fetching messages for user:", currentUser.id);
       
       // Get only the most recent message for each conversation
-      const { data: conversations, error: convError } = await supabase.rpc<Conversation>(
+      const { data: conversations, error: convError } = await supabase.rpc<Conversation, { user_id: string, limit_per_conversation: number }>(
         'get_unique_conversations',
         { user_id: currentUser.id, limit_per_conversation: 1 }
       );
@@ -109,7 +109,7 @@ export function useChatList() {
         
         // Group by participant
         const participantMessages = new Map<string, any[]>();
-        conversations.forEach((conv: Conversation) => {
+        conversations?.forEach((conv: Conversation) => {
           const participantId = conv.other_user_id;
           if (!participantMessages.has(participantId)) {
             participantMessages.set(participantId, []);
