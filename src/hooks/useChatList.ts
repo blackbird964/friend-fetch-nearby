@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { debounce } from 'lodash';
-import { toast } from 'sonner';
+import { toast } from '@/hooks/use-toast';
 import { ChatCacheItem } from './chat/types';
 import { fetchConversations, processChatParticipants } from './chat/chatFetcher';
 import { useMessageSubscription } from './chat/useSubscription';

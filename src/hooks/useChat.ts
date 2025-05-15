@@ -1,7 +1,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { Message, Chat } from '@/context/types';
+import { Message, Chat, MessageStatus } from '@/context/types';
 import { useMessageLoader } from './chat/useMessageLoader';
 import { useMessageSender } from './chat/useMessageSender';
 import { useMessageSubscription } from './chat/useMessageSubscription';
@@ -56,7 +56,7 @@ export function useChat(selectedChatId: string | null): UseMessagesResult {
               content: lastMessage,
               text: lastMessage,
               timestamp: lastMessageTime,
-              status: 'sent',
+              status: 'sent' as MessageStatus,
             }]
           };
           setSelectedChat(updatedSelectedChat);

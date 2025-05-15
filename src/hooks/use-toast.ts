@@ -63,22 +63,29 @@ export const useToast = () => {
     [dismiss]
   );
 
-  // Helper methods
-  toast.success = (message: string, options: ToastOptions = {}) => 
-    toast({ title: "Success", description: message, type: "success", ...options });
-  
-  toast.error = (message: string, options: ToastOptions = {}) => 
-    toast({ title: "Error", description: message, type: "error", ...options });
-  
-  toast.warning = (message: string, options: ToastOptions = {}) => 
-    toast({ title: "Warning", description: message, type: "warning", ...options });
-  
-  toast.info = (message: string, options: ToastOptions = {}) => 
-    toast({ title: "Info", description: message, type: "info", ...options });
+  // Add helper methods to the toast function
+  const toastWithHelpers = Object.assign(toast, {
+    success: (message: string, options: ToastOptions = {}) => 
+      toast({ title: "Success", description: message, type: "success", ...options }),
     
-  toast.dismiss = dismiss;
+    error: (message: string, options: ToastOptions = {}) => 
+      toast({ title: "Error", description: message, type: "error", ...options }),
+    
+    warning: (message: string, options: ToastOptions = {}) => 
+      toast({ title: "Warning", description: message, type: "warning", ...options }),
+    
+    info: (message: string, options: ToastOptions = {}) => 
+      toast({ title: "Info", description: message, type: "info", ...options }),
+      
+    dismiss
+  });
 
-  return { toast, toasts, dismiss };
+  return { toast: toastWithHelpers, toasts, dismiss };
 };
 
-export { useToast as default, toast };
+// Export a singleton instance for easier imports
+export { useToast as default, useToast };
+
+// Create a singleton toast instance for use outside of React components
+const { toast } = useToast();
+export { toast };
