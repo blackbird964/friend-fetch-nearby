@@ -7,6 +7,17 @@ import { Chat, Message as MessageType } from '@/context/types';
 import { toast } from 'sonner';
 import { debounce } from 'lodash';
 
+// Define proper types for conversation objects
+interface Conversation {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  created_at: string;
+  read: boolean;
+  other_user_id: string;
+}
+
 export function useChatList() {
   const { currentUser, setChats } = useAppContext();
   const [isLoading, setIsLoading] = useState(true);
@@ -46,7 +57,7 @@ export function useChatList() {
       console.log("Fetching messages for user:", currentUser.id);
       
       // Get only the most recent message for each conversation
-      const { data: conversations, error: convError } = await supabase.rpc(
+      const { data: conversations, error: convError } = await supabase.rpc<Conversation>(
         'get_unique_conversations',
         { user_id: currentUser.id, limit_per_conversation: 1 }
       );
@@ -98,7 +109,7 @@ export function useChatList() {
         
         // Group by participant
         const participantMessages = new Map<string, any[]>();
-        conversations.forEach((conv: any) => {
+        conversations.forEach((conv: Conversation) => {
           const participantId = conv.other_user_id;
           if (!participantMessages.has(participantId)) {
             participantMessages.set(participantId, []);

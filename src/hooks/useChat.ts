@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { getConversation, sendMessage, markMessagesAsRead } from '@/lib/supabase';
@@ -28,7 +27,7 @@ export function useChat(selectedChatId: string | null) {
     setPage(0);
     setHasMoreMessages(false);
   }, [selectedChatId]);
-
+  
   // Setup realtime subscription for the selected chat
   useEffect(() => {
     if (!selectedChat || !currentUser) return;
