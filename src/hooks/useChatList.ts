@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getProfile } from '@/lib/supabase';
@@ -11,10 +11,12 @@ export function useChatList() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const chatCacheRef = useRef<Map<string, { profile: any, lastMessage: any }>>(new Map());
 
   // Fetch chats for current user when component mounts
   useEffect(() => {
     let isMounted = true;
+    const MESSAGE_BATCH_SIZE = 50;
     
     const fetchChats = async () => {
       if (!currentUser) {
@@ -27,12 +29,14 @@ export function useChatList() {
         
         console.log("Fetching messages for user:", currentUser.id);
         
-        // Get all messages involving the current user
+        // Get only the latest messages for each conversation to reduce data transfer
+        // This query needs to be optimized on the database side ideally
         const { data: messages, error } = await supabase
           .from('messages')
-          .select('*')
+          .select('id, sender_id, receiver_id, content, created_at, read')
           .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-          .order('created_at', { ascending: false });
+          .order('created_at', { ascending: false })
+          .limit(MESSAGE_BATCH_SIZE);
         
         if (error) {
           console.error('Error fetching messages:', error);
@@ -53,34 +57,43 @@ export function useChatList() {
         }
         
         // Group messages by the other participant
-        const chatParticipants = new Set<string>();
+        const participantMessages = new Map<string, any[]>();
         messages.forEach(msg => {
           const participantId = msg.sender_id === currentUser.id ? msg.receiver_id : msg.sender_id;
-          chatParticipants.add(participantId);
+          if (!participantMessages.has(participantId)) {
+            participantMessages.set(participantId, []);
+          }
+          participantMessages.get(participantId)?.push(msg);
         });
         
-        // Fetch profiles for all participants
-        const participants = Array.from(chatParticipants);
+        // Create a chat object for each participant
         const chatsList: Chat[] = [];
         let totalUnread = 0;
 
-        console.log(`Found ${participants.length} chat participants`);
+        console.log(`Found ${participantMessages.size} chat participants`);
         
-        // Create a chat object for each participant
-        for (const participantId of participants) {
-          // Get the profile for this participant
-          const profile = await getProfile(participantId);
+        // Process each participant
+        for (const [participantId, participantMsgs] of participantMessages.entries()) {
+          // Use cached profile if available
+          let profile;
+          if (chatCacheRef.current.has(participantId)) {
+            profile = chatCacheRef.current.get(participantId)?.profile;
+            console.log("Using cached profile for:", participantId);
+          } else {
+            profile = await getProfile(participantId);
+            if (profile) {
+              chatCacheRef.current.set(participantId, { 
+                profile, 
+                lastMessage: participantMsgs[0] 
+              });
+            }
+          }
           
           if (!isMounted) return;
           
           if (profile) {
-            // Find all messages with this participant
-            const participantMessages = messages.filter(msg => 
-              msg.sender_id === participantId || msg.receiver_id === participantId
-            );
-            
             // Count unread messages from this participant
-            const unreadMessages = participantMessages.filter(msg => 
+            const unreadMessages = participantMsgs.filter(msg => 
               msg.sender_id === participantId && 
               msg.receiver_id === currentUser.id && 
               !msg.read
@@ -90,7 +103,7 @@ export function useChatList() {
             totalUnread += unreadCount;
             
             // Find the latest message with this participant
-            const latestMessage = participantMessages[0];
+            const latestMessage = participantMsgs[0];
             
             if (latestMessage) {
               // Create a chat object with required properties
@@ -103,8 +116,9 @@ export function useChatList() {
                 profilePic: profile.profile_pic || '',
                 lastMessage: latestMessage.content,
                 lastMessageTime: new Date(latestMessage.created_at).getTime(),
-                messages: [],
+                messages: [], // Don't load all messages immediately
                 unreadCount: unreadCount,
+                isOnline: profile.is_online || false
               });
             }
           }

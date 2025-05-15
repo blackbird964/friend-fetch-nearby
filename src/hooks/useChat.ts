@@ -1,5 +1,5 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { getConversation, sendMessage, markMessagesAsRead } from '@/lib/supabase';
 import { Message, Chat } from '@/context/types';
@@ -11,6 +11,8 @@ export function useChat(selectedChatId: string | null) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const messagesCache = useRef<Record<string, Message[]>>({});
+  const lastFetchTime = useRef<Record<string, number>>({});
 
   // Reset state when selectedChatId changes
   useEffect(() => {
@@ -19,9 +21,10 @@ export function useChat(selectedChatId: string | null) {
     setFetchError(null);
   }, [selectedChatId]);
 
-  // Fetch conversation when selected chat changes
+  // Fetch conversation when selected chat changes, with caching
   useEffect(() => {
     let isMounted = true;
+    const CACHE_TTL = 60000; // 1 minute cache validity
     
     const fetchConversation = async () => {
       if (!selectedChat || !currentUser) {
@@ -32,7 +35,30 @@ export function useChat(selectedChatId: string | null) {
       try {
         console.log("Fetching conversation for chat:", selectedChat.id, selectedChat.participantId);
         
-        // Fetch messages from the database
+        const now = Date.now();
+        const lastFetch = lastFetchTime.current[selectedChat.id] || 0;
+        const cachedMessages = messagesCache.current[selectedChat.id] || [];
+        
+        // Use cached messages if they're recent enough
+        if (cachedMessages.length > 0 && now - lastFetch < CACHE_TTL) {
+          console.log("Using cached messages for chat:", selectedChat.id);
+          
+          // Update selected chat with cached messages
+          const updatedChat: Chat = {
+            ...selectedChat,
+            messages: cachedMessages,
+            unreadCount: 0, // Set to zero since we're viewing this chat
+          };
+          
+          setSelectedChat(updatedChat);
+          setIsLoading(false);
+          
+          // Still mark messages as read in the background
+          markUnreadMessagesAsRead(cachedMessages);
+          return;
+        }
+        
+        // Only fetch essential data
         const dbMessages = await getConversation(selectedChat.participantId);
         
         // Check if component is still mounted
@@ -51,28 +77,12 @@ export function useChat(selectedChatId: string | null) {
           status: dbMsg.sender_id === currentUser.id ? 'sent' : 'received',
         }));
         
+        // Cache the messages
+        messagesCache.current[selectedChat.id] = formattedMessages;
+        lastFetchTime.current[selectedChat.id] = now;
+        
         // Mark unread messages as read
-        const unreadMessageIds = dbMessages
-          .filter(msg => !msg.read && msg.receiver_id === currentUser.id)
-          .map(msg => msg.id);
-          
-        if (unreadMessageIds.length > 0) {
-          await markMessagesAsRead(unreadMessageIds);
-          
-          // Update the unread count for this chat
-          const updatedChats = chats.map(chat => {
-            if (chat.id === selectedChat.id) {
-              return { ...chat, unreadCount: 0 };
-            }
-            return chat;
-          });
-          
-          setChats(updatedChats);
-          
-          // Recalculate total unread messages
-          const totalUnread = updatedChats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
-          setUnreadMessageCount(totalUnread);
-        }
+        markUnreadMessagesAsRead(dbMessages);
         
         // Update selected chat with messages from the database
         const updatedChat: Chat = {
@@ -108,6 +118,32 @@ export function useChat(selectedChatId: string | null) {
         if (isMounted) {
           setIsLoading(false);
         }
+      }
+    };
+    
+    const markUnreadMessagesAsRead = async (messages: any[]) => {
+      if (!currentUser) return;
+      
+      const unreadMessageIds = messages
+        .filter(msg => !msg.read && msg.receiver_id === currentUser.id)
+        .map(msg => msg.id);
+        
+      if (unreadMessageIds.length > 0) {
+        await markMessagesAsRead(unreadMessageIds);
+        
+        // Update the unread count for this chat
+        const updatedChats = chats.map(chat => {
+          if (chat.id === selectedChat?.id) {
+            return { ...chat, unreadCount: 0 };
+          }
+          return chat;
+        });
+        
+        setChats(updatedChats);
+        
+        // Recalculate total unread messages
+        const totalUnread = updatedChats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
+        setUnreadMessageCount(totalUnread);
       }
     };
 
@@ -157,6 +193,11 @@ export function useChat(selectedChatId: string | null) {
         timestamp: new Date(sentMessage.created_at).getTime(),
         status: 'sent',
       };
+      
+      // Update the messages cache
+      const currentCachedMessages = messagesCache.current[selectedChat.id] || [];
+      messagesCache.current[selectedChat.id] = [...currentCachedMessages, newMessage];
+      lastFetchTime.current[selectedChat.id] = Date.now();
       
       // Update selected chat
       const updatedChat: Chat = {

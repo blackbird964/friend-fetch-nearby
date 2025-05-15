@@ -9,7 +9,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 /**
- * Hook to manage nearby users functionality
+ * Hook to manage nearby users functionality with optimized data fetching
  */
 export const useNearbyUsers = (currentUser: AppUser | null) => {
   const [nearbyUsers, setNearbyUsers] = useState<AppUser[]>([]);
@@ -19,9 +19,10 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
   const isMobile = useIsMobile();
   const hasInitiallyFetched = useRef<boolean>(false);
   const toastShownRef = useRef<boolean>(false);
+  const PAGE_SIZE = 20; // Limit the number of users fetched at once
 
   /**
-   * Refresh nearby users list
+   * Refresh nearby users list with optimized data fetching
    * @param showToast Whether to show a toast notification (default: false)
    */
   const refreshNearbyUsers = async (showToast: boolean = false) => {
@@ -50,18 +51,33 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
       // Set default location if user doesn't have one
       const userLocation = currentUser.location || DEFAULT_LOCATION;
       
-      // Fetch all profiles from the database
-      const profiles = await getAllProfiles();
+      // Only fetch required fields to reduce data transfer
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('id, name, location, profile_pic, interests, is_online, bio, gender, age')
+        .neq('id', currentUser.id)
+        .order('is_online', { ascending: false })
+        .limit(PAGE_SIZE);
+      
+      if (error) {
+        throw error;
+      }
+      
       console.log("Fetched profiles:", profiles);
       
-      // Filter out the current user and convert to AppUser type
-      const otherUsers = profiles
-        .filter(profile => profile.id !== currentUser.id)
-        .map(profile => ({
-          ...profile,
-          email: '', // We don't have emails for other users
-          interests: Array.isArray(profile.interests) ? profile.interests : []
-        }));
+      // Convert to AppUser type with minimal data
+      const otherUsers = profiles.map(profile => ({
+        id: profile.id,
+        name: profile.name || '',
+        email: '', // We don't need emails for other users
+        interests: Array.isArray(profile.interests) ? profile.interests : [],
+        location: profile.location ? parseLocationFromPostgres(profile.location) : null,
+        profile_pic: profile.profile_pic || null,
+        bio: profile.bio || null,
+        gender: profile.gender || null,
+        age: profile.age || null,
+        isOnline: profile.is_online || false
+      }));
 
       console.log("Other users:", otherUsers);
       
@@ -115,6 +131,37 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
       setLoading(false);
     }
   };
+
+  // Helper function to parse location from PostgreSQL point format
+  function parseLocationFromPostgres(pgLocation: any): { lat: number, lng: number } | null {
+    if (!pgLocation) return null;
+    
+    try {
+      // Handle string format from Postgres: "(lng,lat)"
+      if (typeof pgLocation === 'string' && pgLocation.startsWith('(')) {
+        const match = pgLocation.match(/\(([^,]+),([^)]+)\)/);
+        if (match) {
+          return {
+            lng: parseFloat(match[1]),
+            lat: parseFloat(match[2])
+          };
+        }
+      }
+      // Handle if it's already parsed as an object
+      else if (typeof pgLocation === 'object' && pgLocation !== null) {
+        if ('lat' in pgLocation && 'lng' in pgLocation) {
+          return {
+            lat: pgLocation.lat,
+            lng: pgLocation.lng
+          };
+        }
+      }
+    } catch (e) {
+      console.error('Error parsing location data:', e);
+    }
+    
+    return null;
+  }
 
   return { nearbyUsers, setNearbyUsers, loading, refreshNearbyUsers, lastFetchTime };
 };
