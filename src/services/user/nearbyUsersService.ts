@@ -6,29 +6,34 @@ import { extractLocationFromPgPoint } from './userLocationService';
 import { addTestUsersNearby } from './testUserService';
 
 /**
- * Get nearby users for a user based on their location and radius
+ * Service for managing nearby users functionality
  */
-export const getNearbyUsers = async (userId: string, location: { lat: number, lng: number }, radiusKm: number): Promise<AppUser[]> => {
-  try {
-    console.log(`Getting nearby users for user ${userId} within ${radiusKm}km radius`);
-    
-    // Fetch all profiles from the database
-    const { data: profiles, error } = await supabase
-      .from('profiles')
-      .select('*');
+export const nearbyUsersService = {
+  /**
+   * Get nearby users for a specific location and radius
+   */
+  getNearbyUsers: async (
+    location: { lat: number, lng: number }, 
+    radiusKm: number
+  ): Promise<AppUser[]> => {
+    try {
+      console.log(`Getting nearby users within ${radiusKm}km radius`);
       
-    if (error) {
-      console.error("Error fetching profiles:", error);
-      throw error;
-    }
+      // Fetch all profiles from the database
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('*');
+        
+      if (error) {
+        console.error("Error fetching profiles:", error);
+        throw error;
+      }
 
-    console.log("All fetched profiles:", profiles);
-    
-    // Filter out the current user and convert to AppUser type
-    const otherUsers = profiles
-      .filter(profile => profile.id !== userId)
-      .map(profile => {
-        // Use type assertion to handle the blockedUsers property
+      console.log("All fetched profiles:", profiles);
+      
+      // Convert to AppUser type
+      const otherUsers = profiles.map(profile => {
+        // Use type assertion to handle properties that might not be in the type
         const typedProfile = profile as any;
         const userData: AppUser = {
           id: profile.id,
@@ -49,25 +54,29 @@ export const getNearbyUsers = async (userId: string, location: { lat: number, ln
         return userData;
       });
 
-    console.log(`Found ${otherUsers.length} other users`, otherUsers);
-    
-    // If we have a location, calculate distance and filter by radius
-    if (location && location.lat && location.lng) {
-      // Calculate distance for each user
-      const usersWithDistance = processNearbyUsers(otherUsers, location);
+      console.log(`Found ${otherUsers.length} users`, otherUsers);
       
-      // Filter users by distance
-      const nearbyUsers = filterUsersByDistance(usersWithDistance, radiusKm);
-      
-      console.log(`After distance filtering: ${nearbyUsers.length} users within ${radiusKm}km`);
-      return nearbyUsers;
-    } else {
-      // If no location provided, return all users without distance filtering
-      console.log("No location provided, returning all users without distance filtering");
-      return otherUsers;
+      // If we have a location, calculate distance and filter by radius
+      if (location && location.lat && location.lng) {
+        // Calculate distance for each user
+        const usersWithDistance = processNearbyUsers(otherUsers, location);
+        
+        // Filter users by distance
+        const nearbyUsers = filterUsersByDistance(usersWithDistance, radiusKm);
+        
+        console.log(`After distance filtering: ${nearbyUsers.length} users within ${radiusKm}km`);
+        return nearbyUsers;
+      } else {
+        // If no location provided, return all users without distance filtering
+        console.log("No location provided, returning all users without distance filtering");
+        return otherUsers;
+      }
+    } catch (error) {
+      console.error("Error getting nearby users:", error);
+      return [];
     }
-  } catch (error) {
-    console.error("Error getting nearby users:", error);
-    return [];
   }
 };
+
+// Also export individual functions for direct access if needed
+export { processNearbyUsers, filterUsersByDistance };
