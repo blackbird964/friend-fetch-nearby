@@ -61,7 +61,7 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
           ...profile,
           email: '', // We don't have emails for other users
           interests: Array.isArray(profile.interests) ? profile.interests : [],
-          isOnline: profile.is_online || false
+          isOnline: profile.is_online !== undefined ? profile.is_online : false
         }));
 
       console.log("Processed other users:", otherUsers);
@@ -74,10 +74,13 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
       console.log("Users with distance calculation:", usersWithDistance);
       
       // Set all users, including those without location
-      setNearbyUsers(usersWithDistance);
+      setNearbyUsers(usersWithDistance as AppUser[]);
       
       // If there are no users with location data, we could add some test users
-      if (usersWithDistance.every(user => !user.location || user.distance === Infinity)) {
+      if (usersWithDistance.every(user => {
+        const appUser = user as AppUser;
+        return !appUser.location || appUser.distance === undefined || appUser.distance === Infinity;
+      })) {
         console.log("No users with valid location data found");
         
         // For testing only: simulate adding these users with location data
@@ -87,7 +90,7 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
           
           // Only show test users in dev mode
           if (testUsers.length > 0) {
-            setNearbyUsers([...usersWithDistance, ...testUsers]);
+            setNearbyUsers([...usersWithDistance as AppUser[], ...testUsers]);
           }
         }
       }

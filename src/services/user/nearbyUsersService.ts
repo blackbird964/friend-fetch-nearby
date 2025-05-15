@@ -30,7 +30,7 @@ export const getNearbyUsers = async (userId: string, location: { lat: number, ln
       .map(profile => {
         // Use type assertion to handle the blockedUsers property
         const typedProfile = profile as any;
-        const userData = {
+        const userData: AppUser = {
           id: profile.id,
           name: profile.name || 'User',
           email: '', // We don't have emails for other users
