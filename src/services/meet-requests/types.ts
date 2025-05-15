@@ -1,8 +1,20 @@
 
 import { FriendRequest } from '@/context/types';
 
-export interface MeetupRequest extends FriendRequest {
+// We shouldn't extend FriendRequest if the type is incompatible
+// Instead, let's use the common parent type from context/types.ts
+export interface MeetupRequest {
   type: 'meetup';
+  id: string;
+  senderId: string;
+  receiverId: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  senderName?: string;
+  senderProfilePic?: string;
+  receiverName?: string;
+  receiverProfilePic?: string;
+  timestamp?: number;
+  duration: number;
   meetLocation?: string;
 }
 
