@@ -1,8 +1,7 @@
 
-import React from 'react';
 import { Navigate } from "react-router-dom";
 
-const Index: React.FC = () => {
+const Index = () => {
   return <Navigate to="/" replace />;
 };
 
