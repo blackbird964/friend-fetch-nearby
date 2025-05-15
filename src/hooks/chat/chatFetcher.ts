@@ -18,7 +18,7 @@ export async function fetchConversations(userId: string) {
     // Get only the most recent message for each conversation
     // Use a more explicit type definition to avoid the 'never' type issue
     const { data: conversations, error: convError } = await supabase
-      .rpc<Conversation[]>('get_unique_conversations', { 
+      .rpc<Conversation[], { user_id: string, limit_per_conversation: number }>('get_unique_conversations', { 
         user_id: userId, 
         limit_per_conversation: 1 
       });
