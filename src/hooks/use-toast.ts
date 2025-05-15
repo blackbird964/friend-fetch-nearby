@@ -1,162 +1,84 @@
-import * as React from "react"
-import { toast as sonnerToast } from "sonner"
 
-const TOAST_LIMIT = 5
-const TOAST_REMOVE_DELAY = 1000000
+import { useState, useCallback } from "react";
 
-type ToasterToast = {
-  id: string
-  title?: React.ReactNode
-  description?: React.ReactNode
-  action?: React.ReactNode
-  variant?: "default" | "destructive" | "success"
+export interface ToastProps {
+  id?: string;
+  title?: React.ReactNode;
+  description?: React.ReactNode;
+  duration?: number;
+  action?: React.ReactElement;
+  type?: "default" | "success" | "error" | "warning" | "info";
+  // The variant is used by shadcn/ui toast
+  variant?: "default" | "destructive";
 }
 
-const actionTypes = {
-  ADD_TOAST: "ADD_TOAST",
-  UPDATE_TOAST: "UPDATE_TOAST",
-  DISMISS_TOAST: "DISMISS_TOAST",
-  REMOVE_TOAST: "REMOVE_TOAST",
-} as const
+type ToastOptions = Omit<ToastProps, "message">;
 
-let count = 0
-
-function genId() {
-  count = (count + 1) % Number.MAX_VALUE
-  return count.toString()
+interface Toast extends ToastProps {
+  id: string;
+  dismiss: () => void;
 }
 
-type ActionType = typeof actionTypes
+const DEFAULT_TOAST_DURATION = 5000;
 
-type Action =
-  | {
-      type: ActionType["ADD_TOAST"]
-      toast: ToasterToast
-    }
-  | {
-      type: ActionType["UPDATE_TOAST"]
-      toast: Partial<ToasterToast>
-    }
-  | {
-      type: ActionType["DISMISS_TOAST"]
-      toastId?: string
-    }
-  | {
-      type: ActionType["REMOVE_TOAST"]
-      toastId?: string
-    }
+export const useToast = () => {
+  const [toasts, setToasts] = useState<Toast[]>([]);
 
-interface State {
-  toasts: ToasterToast[]
-}
+  const dismiss = useCallback((toastId?: string) => {
+    setToasts((prevToasts) =>
+      toastId
+        ? prevToasts.filter((toast) => toast.id !== toastId)
+        : []
+    );
+  }, []);
 
-const toastTimeouts = new Map<string, ReturnType<typeof setTimeout>>()
+  const toast = useCallback(
+    ({ title, description, type, duration = DEFAULT_TOAST_DURATION, ...props }: ToastProps) => {
+      const id = props.id || String(Date.now());
+      
+      // Map type to variant for shadcn/ui compatibility
+      const variant = type === "error" ? "destructive" : "default";
 
-const reducer = (state: State, action: Action): State => {
-  switch (action.type) {
-    case "ADD_TOAST":
-      return {
-        ...state,
-        toasts: [action.toast, ...state.toasts].slice(0, TOAST_LIMIT),
+      setToasts((prevToasts) => [
+        ...prevToasts,
+        {
+          id,
+          title,
+          description,
+          duration,
+          variant,
+          ...props,
+          dismiss: () => dismiss(id),
+        },
+      ]);
+
+      if (duration !== Infinity) {
+        setTimeout(() => {
+          dismiss(id);
+        }, duration);
       }
 
-    case "UPDATE_TOAST":
-      return {
-        ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === action.toast.id ? { ...t, ...action.toast } : t
-        ),
-      }
-
-    case "DISMISS_TOAST": {
-      const { toastId } = action
-
-      // ! Side effects ! - This could be extracted into a dismissToast() action,
-      // but I'll keep it here for simplicity
-      if (toastId) {
-        setToastTimeout(toastId)
-      } else {
-        state.toasts.forEach((toast) => {
-          setToastTimeout(toast.id)
-        })
-      }
-
-      return {
-        ...state,
-        toasts: state.toasts.map((t) =>
-          t.id === toastId || toastId === undefined
-            ? {
-                ...t,
-              }
-            : t
-        ),
-      }
-    }
-    case "REMOVE_TOAST":
-      if (action.toastId === undefined) {
-        return {
-          ...state,
-          toasts: [],
-        }
-      }
-      return {
-        ...state,
-        toasts: state.toasts.filter((t) => t.id !== action.toastId),
-      }
-  }
-}
-
-function setToastTimeout(id: string) {
-  if (toastTimeouts.has(id)) {
-    clearTimeout(toastTimeouts.get(id))
-  }
-
-  const timeout = setTimeout(() => {
-    toastTimeouts.delete(id)
-  }, TOAST_REMOVE_DELAY)
-
-  toastTimeouts.set(id, timeout)
-}
-
-export function useToast() {
-  return {
-    toast,
-    dismiss: (toastId?: string) => {
-      sonnerToast.dismiss(toastId);
+      return id;
     },
-  }
-}
+    [dismiss]
+  );
 
-type ToastProps = {
-  title?: React.ReactNode
-  description?: React.ReactNode
-  type?: "default" | "destructive" | "success"
-  duration?: number
-}
+  // Helper methods
+  toast.success = (message: string, options: ToastOptions = {}) => 
+    toast({ title: "Success", description: message, type: "success", ...options });
+  
+  toast.error = (message: string, options: ToastOptions = {}) => 
+    toast({ title: "Error", description: message, type: "error", ...options });
+  
+  toast.warning = (message: string, options: ToastOptions = {}) => 
+    toast({ title: "Warning", description: message, type: "warning", ...options });
+  
+  toast.info = (message: string, options: ToastOptions = {}) => 
+    toast({ title: "Info", description: message, type: "info", ...options });
+    
+  toast.dismiss = dismiss;
 
-export const toast = ({ title, description, type, duration }: ToastProps) => {
-  sonnerToast(title, {
-    description,
-    duration,
-  });
+  return { toast, toasts, dismiss };
 };
 
-toast.success = (message: string, options?: ToastProps) => {
-  sonnerToast.success(message, options);
-};
-
-toast.error = (message: string, options?: ToastProps) => {
-  sonnerToast.error(message, options);
-};
-
-toast.warning = (message: string, options?: ToastProps) => {
-  sonnerToast.warning(message, options);
-};
-
-toast.info = (message: string, options?: ToastProps) => {
-  sonnerToast.info(message, options);
-};
-
-toast.dismiss = (toastId?: string) => {
-  sonnerToast.dismiss(toastId);
-};
+export { useToast as default, toast };

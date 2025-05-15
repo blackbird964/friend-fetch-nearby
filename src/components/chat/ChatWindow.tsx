@@ -12,7 +12,15 @@ const ChatWindow: React.FC = () => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const isMobile = useIsMobile();
   
-  const { message, setMessage, isLoading, fetchError, handleSendMessage } = useChat(selectedChat?.id || null);
+  const { 
+    message, 
+    setMessage, 
+    isLoading, 
+    fetchError, 
+    handleSendMessage, 
+    hasMoreMessages,
+    loadMoreMessages
+  } = useChat(selectedChat?.id || null);
 
   // Focus textarea when chat is selected and not loading
   useEffect(() => {
@@ -71,6 +79,8 @@ const ChatWindow: React.FC = () => {
             messages={selectedChat.messages}
             isLoading={isLoading}
             fetchError={fetchError}
+            hasMoreMessages={hasMoreMessages}
+            loadMoreMessages={loadMoreMessages}
           />
         )}
       </div>
@@ -84,6 +94,6 @@ const ChatWindow: React.FC = () => {
       />
     </div>
   );
-};
+}
 
 export default ChatWindow;
