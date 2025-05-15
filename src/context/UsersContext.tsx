@@ -3,7 +3,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { AppUser, Location } from './types';
 import { UsersContextType } from './AppContextTypes';
 import { useAuthContext } from './AuthContext';
-import { getNearbyUsers } from '@/services/user';
+import { nearbyUsersService } from '@/services/user';
 import { toast } from "sonner";
 
 const UsersContext = createContext<UsersContextType | undefined>(undefined);
@@ -32,8 +32,8 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       console.log(`Fetching nearby users within ${radiusInKm}km radius`);
       
-      // Get all users nearby first
-      const allUsers = await getNearbyUsers(currentUser.id, currentUser.location, radiusInKm);
+      // Get all users nearby first using the updated nearbyUsersService
+      const allUsers = await nearbyUsersService.getNearbyUsers(currentUser.location, radiusInKm);
       
       // Filter out blocked users
       const filteredUsers = filterBlockedUsers(allUsers);
