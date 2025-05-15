@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { debounce } from 'lodash';
-import { toast } from '@/hooks/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { ChatCacheItem } from './chat/types';
 import { fetchConversations, processChatParticipants } from './chat/chatFetcher';
 import { useMessageSubscription } from './chat/useSubscription';
@@ -15,6 +15,7 @@ export function useChatList() {
   const chatCacheRef = useRef<Map<string, ChatCacheItem>>(new Map());
   const lastFetchRef = useRef<number>(0);
   const CACHE_TTL = 600000; // 10 minutes cache validity
+  const { toast } = useToast(); // Get toast from the useToast hook
 
   // Debounced fetch function to prevent multiple rapid fetches
   const debouncedFetch = useCallback(

@@ -16,7 +16,7 @@ export async function fetchConversations(userId: string) {
   
   try {
     // Get only the most recent message for each conversation
-    const { data: conversations, error: convError } = await supabase.rpc(
+    const { data: conversations, error: convError } = await supabase.rpc<Conversation>(
       'get_unique_conversations',
       { user_id: userId, limit_per_conversation: 1 }
     );
@@ -62,7 +62,7 @@ export async function fetchConversations(userId: string) {
       
       // Group by participant
       const participantMessages = new Map<string, any[]>();
-      (conversations as Conversation[])?.forEach((conv: Conversation) => {
+      conversations?.forEach((conv: Conversation) => {
         const participantId = conv.other_user_id;
         if (!participantMessages.has(participantId)) {
           participantMessages.set(participantId, []);
