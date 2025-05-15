@@ -20,7 +20,7 @@ export async function fetchConversations(userId: string) {
       .rpc('get_unique_conversations', { 
         user_id: userId, 
         limit_per_conversation: 1 
-      });
+      }) as { data: Conversation[] | null, error: any };
     
     if (convError) {
       // Fallback to manual query if RPC function doesn't exist
@@ -65,7 +65,7 @@ export async function fetchConversations(userId: string) {
         // Group by participant
         const participantMessages = new Map<string, any[]>();
         if (conversations) {
-          conversations.forEach((conv: any) => {
+          conversations.forEach((conv: Conversation) => {
             const participantId = conv.other_user_id;
             if (!participantMessages.has(participantId)) {
               participantMessages.set(participantId, []);
