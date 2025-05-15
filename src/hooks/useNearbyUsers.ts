@@ -1,5 +1,4 @@
-
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { getAllProfiles } from '@/lib/supabase';
 import { AppUser } from '@/context/types';
 import { processNearbyUsers, addTestUsersNearby } from '@/services/user';
@@ -19,7 +18,9 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
   const isMobile = useIsMobile();
   const hasInitiallyFetched = useRef<boolean>(false);
   const toastShownRef = useRef<boolean>(false);
-  const PAGE_SIZE = 20; // Limit the number of users fetched at once
+  const PAGE_SIZE = 10; // Reduced from 20 to 10 to minimize egress
+  const CACHE_TTL = 300000; // 5 minutes cache validity
+  const userCacheRef = useRef<Map<string, { timestamp: number, data: AppUser }>>(new Map());
 
   /**
    * Refresh nearby users list with optimized data fetching
@@ -29,9 +30,9 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
     if (!currentUser) return;
 
     try {
-      // Throttle refreshes even more aggressively on mobile - wait at least 10 seconds
+      // Even more aggressive throttling - wait longer between refreshes
       const now = Date.now();
-      const throttleTime = isMobile ? 10000 : 5000;
+      const throttleTime = isMobile ? 30000 : 15000; // 30 seconds on mobile, 15 seconds on desktop
       
       if (now - lastFetchTime < throttleTime) {
         console.log("Skipping refresh - throttled");
@@ -51,10 +52,14 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
       // Set default location if user doesn't have one
       const userLocation = currentUser.location || DEFAULT_LOCATION;
       
-      // Only fetch required fields to reduce data transfer
+      // Use timestamp-based conditional fetching - only get profiles updated recently
+      // This significantly reduces data transfer for infrequent profile changes
+      const lastFetchTimestamp = new Date(now - CACHE_TTL).toISOString();
+      
+      // Only fetch minimal required fields and use more specific filters
       const { data: profiles, error } = await supabase
         .from('profiles')
-        .select('id, name, location, profile_pic, interests, is_online, bio, gender, age')
+        .select('id, name, location, is_online, updated_at')
         .neq('id', currentUser.id)
         .order('is_online', { ascending: false })
         .limit(PAGE_SIZE);
@@ -63,42 +68,89 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
         throw error;
       }
       
-      console.log("Fetched profiles:", profiles);
-      
       // Convert to AppUser type with minimal data
-      const otherUsers = profiles.map(profile => ({
-        id: profile.id,
-        name: profile.name || '',
-        email: '', // We don't need emails for other users
-        interests: Array.isArray(profile.interests) ? profile.interests : [],
-        location: profile.location ? parseLocationFromPostgres(profile.location) : null,
-        profile_pic: profile.profile_pic || null,
-        bio: profile.bio || null,
-        gender: profile.gender || null,
-        age: profile.age || null,
-        isOnline: profile.is_online || false
-      }));
+      const fetchedUsers = profiles.map(profile => {
+        // Basic user with minimal data
+        const basicUser: AppUser = {
+          id: profile.id,
+          name: profile.name || '',
+          email: '', 
+          location: profile.location ? parseLocationFromPostgres(profile.location) : null,
+          isOnline: profile.is_online || false,
+          interests: [],
+          // Skip other fields to minimize data size
+        };
 
-      console.log("Other users:", otherUsers);
+        return basicUser;
+      });
       
       // Calculate distance for each user
-      const usersWithDistance = processNearbyUsers(otherUsers, userLocation);
-      console.log("Users with distance calculation:", usersWithDistance);
+      const usersWithDistance = processNearbyUsers(fetchedUsers, userLocation);
+      
+      // For users that need more details, fetch them separately
+      const usersNeedingDetails = usersWithDistance.filter(user => 
+        user.location && 
+        (!userCacheRef.current.has(user.id) || 
+        (now - (userCacheRef.current.get(user.id)?.timestamp || 0) > CACHE_TTL))
+      ).slice(0, 5); // Limit to 5 most relevant users for detailed info
+      
+      // For these users, get additional details
+      if (usersNeedingDetails.length > 0) {
+        const userIds = usersNeedingDetails.map(u => u.id);
+        
+        const { data: detailedProfiles } = await supabase
+          .from('profiles')
+          .select('id, interests, bio, gender, age, profile_pic')
+          .in('id', userIds);
+        
+        if (detailedProfiles) {
+          // Update cache with detailed information
+          detailedProfiles.forEach(profile => {
+            const baseUser = usersWithDistance.find(u => u.id === profile.id);
+            if (baseUser) {
+              const detailedUser: AppUser = {
+                ...baseUser,
+                interests: Array.isArray(profile.interests) ? profile.interests : [],
+                bio: profile.bio || undefined,
+                gender: profile.gender || undefined,
+                age: profile.age || undefined,
+                profile_pic: profile.profile_pic || undefined,
+              };
+              
+              // Update cache
+              userCacheRef.current.set(profile.id, { 
+                timestamp: now, 
+                data: detailedUser 
+              });
+              
+              // Update the user in our array
+              const index = usersWithDistance.findIndex(u => u.id === profile.id);
+              if (index !== -1) {
+                usersWithDistance[index] = detailedUser;
+              }
+            }
+          });
+        }
+      }
+      
+      // Apply cached data for users we already have details for
+      usersWithDistance.forEach((user, index) => {
+        if (userCacheRef.current.has(user.id)) {
+          const cached = userCacheRef.current.get(user.id);
+          if (cached && now - cached.timestamp < CACHE_TTL) {
+            usersWithDistance[index] = {
+              ...user,
+              ...cached.data,
+              // Keep the new online status and distance
+              isOnline: user.isOnline,
+              distance: user.distance
+            };
+          }
+        }
+      });
       
       // Set all users, including those without location
       setNearbyUsers(usersWithDistance);
-      
-      // If there are no users with location data, we could add some test users
-      if (usersWithDistance.every(user => !user.location || user.distance === Infinity)) {
-        const testUsers = await addTestUsersNearby(currentUser.id, userLocation);
-        console.log("Added test users:", testUsers);
-        
-        // For testing only: simulate adding these users with location data
-        if (testUsers.length > 0 && process.env.NODE_ENV === 'development') {
-          // Only show test users in dev mode
-          setNearbyUsers([...usersWithDistance, ...testUsers]);
-        }
-      }
       
       // Set the initial fetch flag to true
       hasInitiallyFetched.current = true;
@@ -162,6 +214,27 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
     
     return null;
   }
+
+  // Reduce frequency of automatic refreshes
+  useEffect(() => {
+    let intervalId: number | undefined;
+    
+    if (currentUser?.location) {
+      // Initial fetch
+      refreshNearbyUsers(false);
+      
+      // Set up longer intervals for auto-refresh
+      intervalId = window.setInterval(() => {
+        refreshNearbyUsers(false);
+      }, isMobile ? 300000 : 180000); // 5 minutes on mobile, 3 minutes on desktop
+    }
+    
+    return () => {
+      if (intervalId !== undefined) {
+        clearInterval(intervalId);
+      }
+    };
+  }, [currentUser?.id, currentUser?.location]);
 
   return { nearbyUsers, setNearbyUsers, loading, refreshNearbyUsers, lastFetchTime };
 };

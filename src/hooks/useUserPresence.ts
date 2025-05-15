@@ -8,25 +8,37 @@ export function useUserPresence() {
   const { currentUser, nearbyUsers, setNearbyUsers, chats, setChats } = useAppContext();
   const updateStatusRef = useRef<any>(null);
   const channelRef = useRef<any>(null);
+  const lastStatusUpdate = useRef<number>(0);
+  const PRESENCE_THROTTLE = 60000; // Only update presence every minute
+  const RELEVANT_USER_CACHE_TIME = 300000; // 5 minutes
+  const relevantUserIdsRef = useRef<Set<string>>(new Set());
+  const lastRelevantUserUpdate = useRef<number>(0);
   
-  // Debounced update function to prevent excessive database calls
+  // Even more aggressively debounced update function
   const updateStatus = useCallback(
     debounce(async (isOnline: boolean) => {
       if (!currentUser?.id) return;
       
-      try {
-        console.log(`Setting user ${currentUser.id} online status to ${isOnline}`);
-        await supabase
-          .from('profiles')
-          .update({ 
-            is_online: isOnline,
-            last_seen: new Date().toISOString() 
-          })
-          .eq('id', currentUser.id);
-      } catch (error) {
-        console.error('Error updating online status:', error);
+      const now = Date.now();
+      if (!isOnline || now - lastStatusUpdate.current > PRESENCE_THROTTLE) {
+        try {
+          console.log(`Setting user ${currentUser.id} online status to ${isOnline}`);
+          await supabase
+            .from('profiles')
+            .update({ 
+              is_online: isOnline,
+              last_seen: new Date().toISOString() 
+            })
+            .eq('id', currentUser.id);
+          
+          lastStatusUpdate.current = now;
+        } catch (error) {
+          console.error('Error updating online status:', error);
+        }
+      } else {
+        console.log("Skipping online status update - throttled");
       }
-    }, 300),
+    }, 500),
     [currentUser?.id]
   );
   
@@ -40,7 +52,7 @@ export function useUserPresence() {
     // Mark user as online when they load the app
     updateStatusRef.current(true);
 
-    // Set up event listeners to handle page visibility changes and before unload
+    // Set up event listeners with reduced event handling
     const handleVisibilityChange = () => {
       const isVisible = document.visibilityState === 'visible';
       console.log(`Visibility change: ${isVisible ? 'visible' : 'hidden'}`);
@@ -61,23 +73,47 @@ export function useUserPresence() {
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeunload', handleBeforeUnload);
 
-    // Create an optimized subscription that only tracks the profiles we care about
-    const setupRealtimeSubscription = () => {
-      // Get IDs of users we're interested in (nearby users and chat participants)
-      const relevantUserIds = new Set<string>();
+    // Get only the most relevant user IDs to track
+    const getRelevantUserIds = (): string[] => {
+      const now = Date.now();
       
-      // Add nearby users
-      nearbyUsers.forEach(user => {
-        if (user.id) relevantUserIds.add(user.id);
-      });
-      
-      // Add chat participants
-      chats.forEach(chat => {
-        if (chat.participantId) relevantUserIds.add(chat.participantId);
-      });
+      // Only recalculate relevant users every 5 minutes to reduce processing
+      if (relevantUserIdsRef.current.size === 0 || 
+          now - lastRelevantUserUpdate.current > RELEVANT_USER_CACHE_TIME) {
+        
+        const userIdsSet = new Set<string>();
+        
+        // Add only nearby users that are visible on screen or most relevant
+        // Limit to 10 users maximum based on distance
+        const closestUsers = [...nearbyUsers]
+          .sort((a, b) => (a.distance || Infinity) - (b.distance || Infinity))
+          .slice(0, 10);
+          
+        closestUsers.forEach(user => {
+          if (user.id) userIdsSet.add(user.id);
+        });
+        
+        // Add only active chat participants (recent conversations)
+        const recentChats = chats
+          .sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0))
+          .slice(0, 5); // Only track the 5 most recent conversations
+          
+        recentChats.forEach(chat => {
+          if (chat.participantId) userIdsSet.add(chat.participantId);
+        });
+        
+        // Update the ref
+        relevantUserIdsRef.current = userIdsSet;
+        lastRelevantUserUpdate.current = now;
+      }
       
       // Convert to array and remove current user
-      const userIdsArray = Array.from(relevantUserIds).filter(id => id !== currentUser.id);
+      return Array.from(relevantUserIdsRef.current).filter(id => id !== currentUser.id);
+    };
+    
+    // Create an extremely optimized subscription that only tracks the most relevant profiles
+    const setupRealtimeSubscription = () => {
+      const userIdsArray = getRelevantUserIds();
       
       if (userIdsArray.length === 0) {
         console.log('No relevant users to track, skipping realtime subscription');
@@ -95,37 +131,32 @@ export function useUserPresence() {
       }
       
       // Subscribe to real-time changes only for relevant profiles
+      // Only track is_online field updates to minimize data transfer
       channelRef.current = supabase
-        .channel('filtered-profiles')
+        .channel('minimal-profile-updates')
         .on(
           'postgres_changes',
           {
             event: 'UPDATE',
             schema: 'public',
             table: 'profiles',
-            filter: `or(${filterCondition})`
+            filter: `or(${filterCondition})`,
           },
           (payload) => {
             const updatedProfile = payload.new as any;
-            console.log('Profile update received:', updatedProfile);
+            console.log('Profile update received:', updatedProfile.id, 'online:', updatedProfile.is_online);
             
-            // Update nearbyUsers if the changed profile is in that list
+            // Update only online status in the corresponding lists
             if (nearbyUsers.some(user => user.id === updatedProfile.id)) {
-              console.log(`Updating nearby user ${updatedProfile.id}, online status: ${updatedProfile.is_online}`);
               setNearbyUsers(
                 nearbyUsers.map(user => 
                   user.id === updatedProfile.id 
-                    ? { 
-                        ...user, 
-                        isOnline: updatedProfile.is_online, 
-                        location: updatedProfile.location ? parseLocationFromPostgres(updatedProfile.location) : user.location 
-                      } 
+                    ? { ...user, isOnline: updatedProfile.is_online } 
                     : user
                 )
               );
             }
             
-            // Update chats if the changed profile is a chat participant
             const chatWithUser = chats.find(chat => chat.participantId === updatedProfile.id);
             if (chatWithUser) {
               setChats(
@@ -141,47 +172,22 @@ export function useUserPresence() {
         .subscribe();
     };
     
-    // Set up the subscription with a small delay to allow initial data to load
+    // Set up the subscription with a delay to allow initial data to load
     const subscriptionTimer = setTimeout(() => {
       setupRealtimeSubscription();
-    }, 2000);
-
-    // Helper function to parse location from PostgreSQL point format
-    function parseLocationFromPostgres(pgLocation: any): { lat: number, lng: number } | null {
-      if (!pgLocation) return null;
-      
-      try {
-        // Handle string format from Postgres: "(lng,lat)"
-        if (typeof pgLocation === 'string' && pgLocation.startsWith('(')) {
-          const match = pgLocation.match(/\(([^,]+),([^)]+)\)/);
-          if (match) {
-            return {
-              lng: parseFloat(match[1]),
-              lat: parseFloat(match[2])
-            };
-          }
-        }
-        // Handle if it's already parsed as an object
-        else if (typeof pgLocation === 'object' && pgLocation !== null) {
-          if ('lat' in pgLocation && 'lng' in pgLocation) {
-            return {
-              lat: pgLocation.lat,
-              lng: pgLocation.lng
-            };
-          }
-        }
-      } catch (e) {
-        console.error('Error parsing location data:', e);
-      }
-      
-      return null;
-    }
+    }, 3000);
+    
+    // Periodically refresh the subscription to update the list of relevant users
+    const refreshSubscriptionTimer = setInterval(() => {
+      setupRealtimeSubscription();
+    }, RELEVANT_USER_CACHE_TIME); // Refresh every 5 minutes
 
     // Clean up function
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
       clearTimeout(subscriptionTimer);
+      clearInterval(refreshSubscriptionTimer);
       if (updateStatusRef.current && updateStatusRef.current.cancel) {
         updateStatusRef.current.cancel(); // Cancel any pending debounced calls
       }

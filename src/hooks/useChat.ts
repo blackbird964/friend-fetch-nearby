@@ -4,6 +4,7 @@ import { useAppContext } from '@/context/AppContext';
 import { getConversation, sendMessage, markMessagesAsRead } from '@/lib/supabase';
 import { Message, Chat } from '@/context/types';
 import { toast } from 'sonner';
+import { supabase } from '@/integrations/supabase/client';
 
 export function useChat(selectedChatId: string | null) {
   const { selectedChat, setSelectedChat, chats, setChats, currentUser, setUnreadMessageCount } = useAppContext();
@@ -11,20 +12,90 @@ export function useChat(selectedChatId: string | null) {
   const [isLoading, setIsLoading] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [hasMoreMessages, setHasMoreMessages] = useState(false);
+  const [page, setPage] = useState(0);
   const messagesCache = useRef<Record<string, Message[]>>({});
   const lastFetchTime = useRef<Record<string, number>>({});
+  const channelRef = useRef<any>(null);
+  const initialMessageCount = 10; // Initial number of messages to load
+  const PAGE_SIZE = 10; // Number of additional messages to load when paginating
 
   // Reset state when selectedChatId changes
   useEffect(() => {
     setMessage('');
     setIsLoading(selectedChatId !== null);
     setFetchError(null);
+    setPage(0);
+    setHasMoreMessages(false);
   }, [selectedChatId]);
 
-  // Fetch conversation when selected chat changes, with caching
+  // Setup realtime subscription for the selected chat
+  useEffect(() => {
+    if (!selectedChat || !currentUser) return;
+    
+    console.log("Setting up chat subscription for:", selectedChat.participantId);
+    
+    if (channelRef.current) {
+      supabase.removeChannel(channelRef.current);
+    }
+    
+    channelRef.current = supabase
+      .channel(`chat-${selectedChat.participantId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `or(and(sender_id.eq.${currentUser.id},receiver_id.eq.${selectedChat.participantId}),and(sender_id.eq.${selectedChat.participantId},receiver_id.eq.${currentUser.id}))`
+        },
+        (payload) => {
+          const newDbMessage = payload.new as any;
+          if (newDbMessage.sender_id !== currentUser.id) {
+            // Message from the other user - add to our chat
+            const newMessage: Message = {
+              id: newDbMessage.id,
+              chatId: selectedChat.id,
+              senderId: selectedChat.participantId,
+              text: newDbMessage.content,
+              content: newDbMessage.content,
+              timestamp: new Date(newDbMessage.created_at).getTime(),
+              status: 'received',
+            };
+            
+            // Update cache
+            const currentCachedMessages = messagesCache.current[selectedChat.id] || [];
+            messagesCache.current[selectedChat.id] = [...currentCachedMessages, newMessage];
+            
+            // Update selected chat
+            if (selectedChat.messages) {
+              const updatedChat: Chat = {
+                ...selectedChat,
+                messages: [...selectedChat.messages, newMessage],
+                lastMessage: newDbMessage.content,
+                lastMessageTime: new Date(newDbMessage.created_at).getTime(),
+              };
+              setSelectedChat(updatedChat);
+            }
+            
+            // Mark as read since we're viewing this chat
+            markMessagesAsRead([newDbMessage.id]);
+          }
+        }
+      )
+      .subscribe();
+    
+    return () => {
+      if (channelRef.current) {
+        supabase.removeChannel(channelRef.current);
+      }
+    };
+  }, [selectedChat, currentUser, setSelectedChat]);
+
+  // Fetch conversation when selected chat changes, with caching and pagination
   useEffect(() => {
     let isMounted = true;
-    const CACHE_TTL = 60000; // 1 minute cache validity
+    const CACHE_TTL = 120000; // 2 minutes cache validity
     
     const fetchConversation = async () => {
       if (!selectedChat || !currentUser) {
@@ -40,7 +111,7 @@ export function useChat(selectedChatId: string | null) {
         const cachedMessages = messagesCache.current[selectedChat.id] || [];
         
         // Use cached messages if they're recent enough
-        if (cachedMessages.length > 0 && now - lastFetch < CACHE_TTL) {
+        if (cachedMessages.length > 0 && now - lastFetch < CACHE_TTL && page === 0) {
           console.log("Using cached messages for chat:", selectedChat.id);
           
           // Update selected chat with cached messages
@@ -54,15 +125,35 @@ export function useChat(selectedChatId: string | null) {
           setIsLoading(false);
           
           // Still mark messages as read in the background
-          markUnreadMessagesAsRead(cachedMessages);
+          markUnreadMessagesAsRead(selectedChat.participantId);
           return;
         }
         
-        // Only fetch essential data
-        const dbMessages = await getConversation(selectedChat.participantId);
+        // Calculate message range based on current page
+        const messageCount = page === 0 ? initialMessageCount : PAGE_SIZE;
+        const from = page * PAGE_SIZE;
+        const to = from + messageCount - 1;
+        
+        // Fetch paginated messages with a specific range
+        console.log(`Fetching messages for chat ${selectedChat.id}, range: ${from}-${to}`);
+        
+        // Get conversation with pagination - only essential fields
+        const { data: dbMessages, error, count } = await supabase
+          .from('messages')
+          .select('id, sender_id, receiver_id, content, created_at, read', { count: 'exact' })
+          .or(`and(sender_id.eq.${currentUser.id},receiver_id.eq.${selectedChat.participantId}),and(sender_id.eq.${selectedChat.participantId},receiver_id.eq.${currentUser.id})`)
+          .order('created_at', { ascending: false })
+          .range(from, to);
+        
+        if (error) throw error;
         
         // Check if component is still mounted
         if (!isMounted) return;
+        
+        // Check if there are more messages to load
+        if (count) {
+          setHasMoreMessages(from + messageCount < count);
+        }
         
         console.log(`Fetched ${dbMessages.length} messages for chat:`, selectedChat.id);
         
@@ -75,38 +166,41 @@ export function useChat(selectedChatId: string | null) {
           content: dbMsg.content,
           timestamp: new Date(dbMsg.created_at).getTime(),
           status: dbMsg.sender_id === currentUser.id ? 'sent' : 'received',
-        }));
+        })).reverse(); // Reverse to get chronological order
         
-        // Cache the messages
-        messagesCache.current[selectedChat.id] = formattedMessages;
-        lastFetchTime.current[selectedChat.id] = now;
-        
-        // Mark unread messages as read
-        markUnreadMessagesAsRead(dbMessages);
-        
-        // Update selected chat with messages from the database
-        const updatedChat: Chat = {
-          ...selectedChat,
-          messages: formattedMessages,
-          unreadCount: 0, // Set to zero since we're viewing this chat
-        };
-        
-        if (formattedMessages.length > 0) {
-          const lastMsg = formattedMessages[formattedMessages.length - 1];
-          updatedChat.lastMessage = lastMsg.text || lastMsg.content || '';
-          updatedChat.lastMessageTime = typeof lastMsg.timestamp === 'string' 
-            ? parseInt(lastMsg.timestamp, 10) 
-            : lastMsg.timestamp;
+        // On first page, replace cache. On subsequent pages, append to existing messages
+        if (page === 0) {
+          messagesCache.current[selectedChat.id] = formattedMessages;
+          lastFetchTime.current[selectedChat.id] = now;
+          
+          // Update selected chat with new messages
+          const updatedChat: Chat = {
+            ...selectedChat,
+            messages: formattedMessages,
+            unreadCount: 0, // Set to zero since we're viewing this chat
+          };
+          
+          setSelectedChat(updatedChat);
+        } else {
+          // For additional pages, prepend the older messages to the cached and displayed messages
+          const existingMessages = selectedChat.messages || [];
+          const allMessages = [...formattedMessages, ...existingMessages];
+          
+          // Update cache
+          messagesCache.current[selectedChat.id] = allMessages;
+          
+          // Update selected chat
+          const updatedChat: Chat = {
+            ...selectedChat,
+            messages: allMessages,
+          };
+          
+          setSelectedChat(updatedChat);
         }
         
-        setSelectedChat(updatedChat);
+        // Mark unread messages as read
+        markUnreadMessagesAsRead(selectedChat.participantId);
         
-        // Update chat in the list
-        setChats(
-          chats.map(chat => 
-            chat.id === selectedChat.id ? updatedChat : chat
-          )
-        );
         setFetchError(null);
       } catch (err) {
         console.error("Error fetching conversation:", err);
@@ -121,29 +215,38 @@ export function useChat(selectedChatId: string | null) {
       }
     };
     
-    const markUnreadMessagesAsRead = async (messages: any[]) => {
+    const markUnreadMessagesAsRead = async (participantId: string) => {
       if (!currentUser) return;
       
-      const unreadMessageIds = messages
-        .filter(msg => !msg.read && msg.receiver_id === currentUser.id)
-        .map(msg => msg.id);
-        
-      if (unreadMessageIds.length > 0) {
-        await markMessagesAsRead(unreadMessageIds);
-        
-        // Update the unread count for this chat
-        const updatedChats = chats.map(chat => {
-          if (chat.id === selectedChat?.id) {
-            return { ...chat, unreadCount: 0 };
-          }
-          return chat;
-        });
-        
-        setChats(updatedChats);
-        
-        // Recalculate total unread messages
-        const totalUnread = updatedChats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
-        setUnreadMessageCount(totalUnread);
+      try {
+        // Only get message IDs to mark as read
+        const { data: unreadIds } = await supabase
+          .from('messages')
+          .select('id')
+          .eq('sender_id', participantId)
+          .eq('receiver_id', currentUser.id)
+          .eq('read', false);
+          
+        if (unreadIds && unreadIds.length > 0) {
+          const ids = unreadIds.map(item => item.id);
+          await markMessagesAsRead(ids);
+          
+          // Update the unread count for this chat
+          const updatedChats = chats.map(chat => {
+            if (chat.id === selectedChat?.id) {
+              return { ...chat, unreadCount: 0 };
+            }
+            return chat;
+          });
+          
+          setChats(updatedChats);
+          
+          // Recalculate total unread messages
+          const totalUnread = updatedChats.reduce((sum, chat) => sum + (chat.unreadCount || 0), 0);
+          setUnreadMessageCount(totalUnread);
+        }
+      } catch (err) {
+        console.error("Error marking messages as read:", err);
       }
     };
 
@@ -158,7 +261,13 @@ export function useChat(selectedChatId: string | null) {
     return () => {
       isMounted = false;
     };
-  }, [selectedChatId, currentUser, selectedChat, setSelectedChat, chats, setChats, setUnreadMessageCount]);
+  }, [selectedChatId, currentUser, selectedChat, setSelectedChat, chats, setChats, setUnreadMessageCount, page]);
+
+  const loadMoreMessages = () => {
+    if (hasMoreMessages && !isLoading) {
+      setPage(prev => prev + 1);
+    }
+  };
 
   const handleSendMessage = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -227,7 +336,9 @@ export function useChat(selectedChatId: string | null) {
     setMessage,
     isLoading,
     fetchError,
-    handleSendMessage
+    handleSendMessage,
+    hasMoreMessages,
+    loadMoreMessages
   };
 }
 
