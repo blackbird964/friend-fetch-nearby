@@ -15,16 +15,11 @@ export async function fetchConversations(userId: string) {
   
   try {
     // Get only the most recent message for each conversation
-    // Define the parameter types and return type for the RPC function
-    interface RpcParams {
-      user_id: string;
-      limit_per_conversation: number;
-    }
-    
-    const { data: conversations, error: convError } = await supabase.rpc<Conversation[], RpcParams>(
-      'get_unique_conversations',
-      { user_id: userId, limit_per_conversation: 1 }
-    );
+    const { data: conversations, error: convError } = await supabase
+      .rpc('get_unique_conversations', { 
+        user_id: userId, 
+        limit_per_conversation: 1 
+      });
     
     if (convError) {
       // Fallback to manual query if RPC function doesn't exist
@@ -68,7 +63,7 @@ export async function fetchConversations(userId: string) {
         
         // Group by participant
         const participantMessages = new Map<string, any[]>();
-        conversations.forEach((conv: Conversation) => {
+        conversations.forEach((conv: any) => {
           const participantId = conv.other_user_id;
           if (!participantMessages.has(participantId)) {
             participantMessages.set(participantId, []);
