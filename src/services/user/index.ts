@@ -1,8 +1,7 @@
 
-// Export all user related services from a central location
-export { updateUserLocation } from './userLocationService';
-export { extractLocationFromPgPoint } from './userLocationService';
-export { updateUserProfile } from './userProfileService';
-export { addTestUsersNearby } from './testUserService';
-export { processNearbyUsers, filterUsersByDistance } from './userFilterService';
-export { getNearbyUsers } from './nearbyUsersService';
+// If this file doesn't export nearbyUsersService, we need to add it.
+export * from './nearbyUsersService';
+export * from './testUserService';
+export * from './userFilterService';
+export * from './userLocationService';
+export * from './userProfileService';
