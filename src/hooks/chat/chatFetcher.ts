@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { getProfile } from '@/lib/supabase';
 import { AppUser, Chat } from '@/context/types';
@@ -54,7 +55,7 @@ export async function fetchConversations(userId: string) {
       return Array.from(participantMessages.entries());
     } else {
       // Process conversations from RPC function
-      if (Array.isArray(conversations)) {
+      if (conversations && Array.isArray(conversations)) {
         console.log(`Fetched ${conversations.length} conversations`);
         
         if (conversations.length === 0) {
@@ -63,13 +64,15 @@ export async function fetchConversations(userId: string) {
         
         // Group by participant
         const participantMessages = new Map<string, any[]>();
-        conversations.forEach((conv: any) => {
-          const participantId = conv.other_user_id;
-          if (!participantMessages.has(participantId)) {
-            participantMessages.set(participantId, []);
-          }
-          participantMessages.get(participantId)?.push(conv);
-        });
+        if (conversations) {
+          conversations.forEach((conv: any) => {
+            const participantId = conv.other_user_id;
+            if (!participantMessages.has(participantId)) {
+              participantMessages.set(participantId, []);
+            }
+            participantMessages.get(participantId)?.push(conv);
+          });
+        }
         
         return Array.from(participantMessages.entries());
       } else {

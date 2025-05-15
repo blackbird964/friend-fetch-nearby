@@ -61,7 +61,11 @@ export function useChatList() {
     } catch (err) {
       console.error('Error loading chats:', err);
       setLoadError('Failed to load chats');
-      toast.error('Failed to load chats');
+      toast({
+        title: "Error",
+        description: "Failed to load chats",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
