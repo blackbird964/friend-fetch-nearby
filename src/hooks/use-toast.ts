@@ -1,5 +1,7 @@
 
-import { useState, useCallback } from "react";
+// This file implements a toast hook that can be used inside React components
+import * as React from "react";
+import { createContext, useContext, useState, useCallback } from "react";
 
 export interface ToastProps {
   id?: string;
@@ -19,12 +21,23 @@ interface Toast extends ToastProps {
   dismiss: () => void;
 }
 
+interface ToastContextState {
+  toasts: Toast[];
+  addToast: (props: ToastProps) => string;
+  dismissToast: (toastId?: string) => void;
+  dismissAll: () => void;
+}
+
 const DEFAULT_TOAST_DURATION = 5000;
 
-export const useToast = () => {
-  const [toasts, setToasts] = useState<Toast[]>([]);
+// Create a React Context for the toast state
+const ToastContext = createContext<ToastContextState | undefined>(undefined);
 
-  const dismiss = useCallback((toastId?: string) => {
+// Provider component that wraps your app and makes toast functions available
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+  
+  const dismissToast = useCallback((toastId?: string) => {
     setToasts((prevToasts) =>
       toastId
         ? prevToasts.filter((toast) => toast.id !== toastId)
@@ -32,7 +45,11 @@ export const useToast = () => {
     );
   }, []);
 
-  const toast = useCallback(
+  const dismissAll = useCallback(() => {
+    setToasts([]);
+  }, []);
+  
+  const addToast = useCallback(
     ({ title, description, type, duration = DEFAULT_TOAST_DURATION, ...props }: ToastProps) => {
       const id = props.id || String(Date.now());
       
@@ -48,45 +65,72 @@ export const useToast = () => {
           duration,
           variant,
           ...props,
-          dismiss: () => dismiss(id),
+          dismiss: () => dismissToast(id),
         },
       ]);
 
       if (duration !== Infinity) {
         setTimeout(() => {
-          dismiss(id);
+          dismissToast(id);
         }, duration);
       }
 
       return id;
     },
-    [dismiss]
+    [dismissToast]
   );
+  
+  return (
+    <ToastContext.Provider
+      value={{
+        toasts,
+        addToast,
+        dismissToast,
+        dismissAll,
+      }}
+    >
+      {children}
+    </ToastContext.Provider>
+  );
+}
 
-  // Add helper methods to the toast function
-  const toastWithHelpers = Object.assign(toast, {
-    success: (message: string, options: ToastOptions = {}) => 
-      toast({ title: "Success", description: message, type: "success", ...options }),
-    
-    error: (message: string, options: ToastOptions = {}) => 
-      toast({ title: "Error", description: message, type: "error", ...options }),
-    
-    warning: (message: string, options: ToastOptions = {}) => 
-      toast({ title: "Warning", description: message, type: "warning", ...options }),
-    
-    info: (message: string, options: ToastOptions = {}) => 
-      toast({ title: "Info", description: message, type: "info", ...options }),
+// Hook to use the toast context
+export function useToast() {
+  const context = useContext(ToastContext);
+  
+  if (context === undefined) {
+    throw new Error("useToast must be used within a ToastProvider");
+  }
+  
+  const { addToast, dismissToast, dismissAll, toasts } = context;
+  
+  // Create a more convenient toast function with helper methods
+  const toast = Object.assign(
+    (props: ToastProps) => addToast(props),
+    {
+      success: (message: string, options: ToastOptions = {}) => 
+        addToast({ title: "Success", description: message, type: "success", ...options }),
       
-    dismiss
-  });
+      error: (message: string, options: ToastOptions = {}) => 
+        addToast({ title: "Error", description: message, type: "error", ...options }),
+      
+      warning: (message: string, options: ToastOptions = {}) => 
+        addToast({ title: "Warning", description: message, type: "warning", ...options }),
+      
+      info: (message: string, options: ToastOptions = {}) => 
+        addToast({ title: "Info", description: message, type: "info", ...options }),
+        
+      dismiss: dismissToast,
+      dismissAll: dismissAll
+    }
+  );
+  
+  return {
+    toast,
+    toasts,
+    dismiss: dismissToast,
+  };
+}
 
-  return { toast: toastWithHelpers, toasts, dismiss };
-};
-
-// Create a singleton instance for easier imports
-const { toast: singletonToast, toasts: singletonToasts, dismiss: singletonDismiss } = useToast();
-
-// Export the singleton for use outside of React components
-export const toast = singletonToast;
-export const toasts = singletonToasts;
-export const dismiss = singletonDismiss;
+// Export just the types for external use
+export type { Toast };
