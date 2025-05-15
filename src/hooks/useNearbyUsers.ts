@@ -60,13 +60,17 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
         .map(profile => ({
           ...profile,
           email: '', // We don't have emails for other users
-          interests: Array.isArray(profile.interests) ? profile.interests : []
+          interests: Array.isArray(profile.interests) ? profile.interests : [],
+          isOnline: profile.is_online || false
         }));
 
-      console.log("Other users:", otherUsers);
+      console.log("Processed other users:", otherUsers);
       
-      // Calculate distance for each user
-      const usersWithDistance = processNearbyUsers(otherUsers, userLocation);
+      // Calculate distance for each user if location is available
+      const usersWithDistance = userLocation ? 
+        processNearbyUsers(otherUsers, userLocation) : 
+        otherUsers;
+      
       console.log("Users with distance calculation:", usersWithDistance);
       
       // Set all users, including those without location
@@ -74,13 +78,17 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
       
       // If there are no users with location data, we could add some test users
       if (usersWithDistance.every(user => !user.location || user.distance === Infinity)) {
-        const testUsers = await addTestUsersNearby(currentUser.id, userLocation);
-        console.log("Added test users:", testUsers);
+        console.log("No users with valid location data found");
         
         // For testing only: simulate adding these users with location data
-        if (testUsers.length > 0 && process.env.NODE_ENV === 'development') {
+        if (process.env.NODE_ENV === 'development') {
+          const testUsers = await addTestUsersNearby(currentUser.id, userLocation);
+          console.log("Added test users:", testUsers);
+          
           // Only show test users in dev mode
-          setNearbyUsers([...usersWithDistance, ...testUsers]);
+          if (testUsers.length > 0) {
+            setNearbyUsers([...usersWithDistance, ...testUsers]);
+          }
         }
       }
       

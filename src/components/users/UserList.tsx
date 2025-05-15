@@ -7,7 +7,7 @@ import UsersList from './nearby-users/UsersList';
 import { useUserActions } from './hooks/useUserActions';
 
 const UserList: React.FC = () => {
-  const { nearbyUsers, radiusInKm, currentUser, loading } = useAppContext();
+  const { nearbyUsers, radiusInKm, currentUser, loading, refreshNearbyUsers } = useAppContext();
   const { startChat, handleAddFriend, handleRefresh, loading: actionLoading } = useUserActions();
 
   // Get only real users (filter out any test users if they somehow remain)
@@ -15,6 +15,8 @@ const UserList: React.FC = () => {
     // Filter out users that don't have a valid ID or have test/mock in their ID
     user.id && !String(user.id).includes('test') && !String(user.id).includes('mock')
   );
+
+  console.log("UserList component - Displaying users:", realUsers);
 
   return (
     <div className="space-y-6">

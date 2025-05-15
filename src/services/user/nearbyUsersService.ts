@@ -21,6 +21,8 @@ export const getNearbyUsers = async (userId: string, location: { lat: number, ln
       console.error("Error fetching profiles:", error);
       throw error;
     }
+
+    console.log("All fetched profiles:", profiles);
     
     // Filter out the current user and convert to AppUser type
     const otherUsers = profiles
@@ -28,7 +30,7 @@ export const getNearbyUsers = async (userId: string, location: { lat: number, ln
       .map(profile => {
         // Use type assertion to handle the blockedUsers property
         const typedProfile = profile as any;
-        return {
+        const userData = {
           id: profile.id,
           name: profile.name || 'User',
           email: '', // We don't have emails for other users
@@ -39,17 +41,31 @@ export const getNearbyUsers = async (userId: string, location: { lat: number, ln
           bio: profile.bio || undefined,
           age: profile.age || undefined,
           gender: profile.gender || undefined,
+          isOnline: typedProfile.is_online || false,
           blockedUsers: typedProfile.blockedUsers || [] // Use type assertion to access blockedUsers
         };
+        
+        console.log(`Processed user: ${profile.id}, name: ${userData.name}`);
+        return userData;
       });
 
-    // Calculate distance for each user
-    const usersWithDistance = processNearbyUsers(otherUsers, location);
+    console.log(`Found ${otherUsers.length} other users`, otherUsers);
     
-    // Filter users by distance
-    const nearbyUsers = filterUsersByDistance(usersWithDistance, radiusKm);
-    
-    return nearbyUsers;
+    // If we have a location, calculate distance and filter by radius
+    if (location && location.lat && location.lng) {
+      // Calculate distance for each user
+      const usersWithDistance = processNearbyUsers(otherUsers, location);
+      
+      // Filter users by distance
+      const nearbyUsers = filterUsersByDistance(usersWithDistance, radiusKm);
+      
+      console.log(`After distance filtering: ${nearbyUsers.length} users within ${radiusKm}km`);
+      return nearbyUsers;
+    } else {
+      // If no location provided, return all users without distance filtering
+      console.log("No location provided, returning all users without distance filtering");
+      return otherUsers;
+    }
   } catch (error) {
     console.error("Error getting nearby users:", error);
     return [];
