@@ -15,7 +15,7 @@ export async function fetchConversations(userId: string) {
   
   try {
     // Get only the most recent message for each conversation
-    const { data: conversations, error: convError } = await supabase.rpc(
+    const { data: conversations, error: convError } = await supabase.rpc<Conversation[]>(
       'get_unique_conversations',
       { user_id: userId, limit_per_conversation: 1 }
     );
