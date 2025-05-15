@@ -61,7 +61,8 @@ export const useNearbyUsers = (currentUser: AppUser | null) => {
           ...profile,
           email: '', // We don't have emails for other users
           interests: Array.isArray(profile.interests) ? profile.interests : [],
-          isOnline: profile.is_online !== undefined ? profile.is_online : false
+          // Handle is_online property with type safety - use typecasting for accessing non-standard properties
+          isOnline: (profile as any).is_online !== undefined ? (profile as any).is_online : false
         }));
 
       console.log("Processed other users:", otherUsers);
