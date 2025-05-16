@@ -1,5 +1,13 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { v4 as uuidv4 } from 'uuid';
+
+// Define extended profile type that includes blocked_users
+interface ProfileWithBlockedUsers {
+  id: string;
+  blocked_users?: string[];
+  [key: string]: any; // Allow other properties
+}
 
 /**
  * Add a user to the current user's blocked list
@@ -18,8 +26,11 @@ export async function blockUser(currentUserId: string, blockedUserId: string): P
       return false;
     }
     
+    // Cast to our extended profile type
+    const profileWithBlocked = profile as ProfileWithBlockedUsers;
+    
     // Get current blocked users or initialize empty array
-    const currentBlockedUsers = profile.blockedUsers || [];
+    const currentBlockedUsers = profileWithBlocked.blocked_users || [];
     
     // Add new blocked user if not already blocked
     if (!currentBlockedUsers.includes(blockedUserId)) {
@@ -29,7 +40,7 @@ export async function blockUser(currentUserId: string, blockedUserId: string): P
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          blockedUsers: currentBlockedUsers
+          blocked_users: currentBlockedUsers
         })
         .eq('id', currentUserId);
         
@@ -66,8 +77,11 @@ export async function unblockUser(currentUserId: string, blockedUserId: string):
       return false;
     }
     
+    // Cast to our extended profile type
+    const profileWithBlocked = profile as ProfileWithBlockedUsers;
+    
     // Get current blocked users or initialize empty array
-    const currentBlockedUsers = profile.blockedUsers || [];
+    const currentBlockedUsers = profileWithBlocked.blocked_users || [];
     
     // Remove the blocked user
     const updatedBlockedUsers = currentBlockedUsers.filter(id => id !== blockedUserId);
@@ -76,7 +90,7 @@ export async function unblockUser(currentUserId: string, blockedUserId: string):
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
-        blockedUsers: updatedBlockedUsers
+        blocked_users: updatedBlockedUsers
       })
       .eq('id', currentUserId);
       
@@ -97,17 +111,20 @@ export async function unblockUser(currentUserId: string, blockedUserId: string):
  */
 export async function reportUser(reporterId: string, reportedUserId: string, reason: string): Promise<boolean> {
   try {
+    const reportId = uuidv4();
+    
     // Store report as a message for admin review
     const { error } = await supabase
       .from('messages')
       .insert({
+        id: reportId,
         sender_id: reporterId,
         receiver_id: 'admin', // Special receiver ID for admin reports
         content: JSON.stringify({
           type: 'user_report',
           reported_user_id: reportedUserId,
           reason: reason,
-          timestamp: new Date().toISOString()
+          timestamp: Date.now()
         }),
         read: false
       });

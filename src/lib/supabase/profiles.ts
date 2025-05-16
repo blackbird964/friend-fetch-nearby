@@ -17,6 +17,7 @@ export type Profile = {
     lng: number;
   } | null;
   blockedUsers?: string[];
+  blocked_users?: string[];
   locationSettings?: {
     isManualMode?: boolean;
     hideExactLocation?: boolean;
@@ -73,6 +74,14 @@ export async function getProfile(userId: string): Promise<Profile | null> {
       // If interests is not an array, convert it to one
       data.interests = data.interests ? [String(data.interests)] : [];
     }
+    
+    // Map blocked_users to blockedUsers for consistency in our app
+    if (data.blocked_users) {
+      data.blockedUsers = data.blocked_users;
+    } else {
+      data.blockedUsers = [];
+      data.blocked_users = [];
+    }
   }
   
   return data as Profile;
@@ -120,6 +129,14 @@ export async function getAllProfiles(): Promise<Profile[]> {
       profile.interests = profile.interests ? [String(profile.interests)] : [];
     }
     
+    // Map blocked_users to blockedUsers for consistency in our app
+    if (profile.blocked_users) {
+      profile.blockedUsers = profile.blocked_users;
+    } else {
+      profile.blockedUsers = [];
+      profile.blocked_users = [];
+    }
+    
     return profile as Profile;
   });
 }
@@ -129,6 +146,12 @@ export async function createOrUpdateProfile(profile: Partial<Profile> & { id: st
   
   // Handle location conversion for PostgreSQL
   let profileToUpsert = { ...profile };
+  
+  // Map blockedUsers to blocked_users for database storage
+  if (profile.blockedUsers) {
+    profileToUpsert.blocked_users = profile.blockedUsers;
+    delete profileToUpsert.blockedUsers;
+  }
   
   // If location exists, format it for PostgreSQL storage
   if (profile.location) {

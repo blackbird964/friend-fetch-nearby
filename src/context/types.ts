@@ -18,6 +18,7 @@ export interface AppUser {
   age?: number;
   gender?: string;
   blockedUsers?: string[];
+  blocked_users?: string[];
   locationSettings?: {
     isManualMode?: boolean;
     hideExactLocation?: boolean;
