@@ -75,12 +75,12 @@ export async function getProfile(userId: string): Promise<Profile | null> {
       data.interests = data.interests ? [String(data.interests)] : [];
     }
     
-    // Map blocked_users to blockedUsers for consistency in our app
+    // Map blocked_users from database to both properties for consistency
     if (data.blocked_users) {
-      data.blockedUsers = data.blocked_users;
+      data.blockedUsers = [...data.blocked_users];
     } else {
-      data.blockedUsers = [];
       data.blocked_users = [];
+      data.blockedUsers = [];
     }
   }
   
@@ -129,10 +129,11 @@ export async function getAllProfiles(): Promise<Profile[]> {
       profile.interests = profile.interests ? [String(profile.interests)] : [];
     }
     
-    // Map blocked_users to blockedUsers for consistency in our app
+    // Map blocked_users from database to both properties for consistency
     if (profile.blocked_users) {
-      profile.blockedUsers = profile.blocked_users;
+      profile.blockedUsers = [...profile.blocked_users];
     } else {
+      // Initialize empty arrays for both properties
       profile.blockedUsers = [];
       profile.blocked_users = [];
     }
@@ -149,7 +150,7 @@ export async function createOrUpdateProfile(profile: Partial<Profile> & { id: st
   
   // Map blockedUsers to blocked_users for database storage
   if (profile.blockedUsers) {
-    profileToUpsert.blocked_users = profile.blockedUsers;
+    profileToUpsert.blocked_users = [...profile.blockedUsers];
     delete profileToUpsert.blockedUsers;
   }
   

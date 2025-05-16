@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { AppUser } from '@/context/types';
-import { blockUser, unblockUser, reportUser as reportUserService } from '@/services/userActionsService';
+import { blockUser, unblockUser, reportUser as reportUserService } from '@/services/user/userActionsService';
 import { toast } from "sonner";
 
 /**
@@ -22,7 +22,8 @@ export const useUserActions = (currentUser: AppUser | null, setCurrentUser: (use
         // Update the current user in state with the new blocked users array
         const updatedCurrentUser = { 
           ...currentUser,
-          blockedUsers: [...(currentUser.blockedUsers || []), userId]
+          blockedUsers: [...(currentUser.blockedUsers || []), userId],
+          blocked_users: [...(currentUser.blocked_users || []), userId]
         };
         setCurrentUser(updatedCurrentUser);
         
@@ -58,7 +59,8 @@ export const useUserActions = (currentUser: AppUser | null, setCurrentUser: (use
         // Update the current user in state with the new blocked users array
         const updatedCurrentUser = { 
           ...currentUser,
-          blockedUsers: currentUser.blockedUsers.filter(id => id !== userId)
+          blockedUsers: currentUser.blockedUsers.filter(id => id !== userId),
+          blocked_users: currentUser.blocked_users?.filter(id => id !== userId) || []
         };
         setCurrentUser(updatedCurrentUser);
         

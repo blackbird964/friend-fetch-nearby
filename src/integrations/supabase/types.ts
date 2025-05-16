@@ -40,6 +40,7 @@ export type Database = {
         Row: {
           age: number | null
           bio: string | null
+          blocked_users: string[] | null
           created_at: string | null
           gender: string | null
           id: string
@@ -55,6 +56,7 @@ export type Database = {
         Insert: {
           age?: number | null
           bio?: string | null
+          blocked_users?: string[] | null
           created_at?: string | null
           gender?: string | null
           id: string
@@ -70,6 +72,7 @@ export type Database = {
         Update: {
           age?: number | null
           bio?: string | null
+          blocked_users?: string[] | null
           created_at?: string | null
           gender?: string | null
           id?: string
