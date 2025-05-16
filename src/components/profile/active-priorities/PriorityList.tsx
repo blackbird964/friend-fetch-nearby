@@ -1,8 +1,8 @@
 
 import React from 'react';
-import { Button } from "@/components/ui/button";
 import { ActivePriority } from '@/lib/supabase/profiles/types';
-import PriorityDisplay from './PriorityDisplay';
+import PriorityItem from './PriorityItem';
+import PriorityLimitMessage from './PriorityLimitMessage';
 
 interface PriorityListProps {
   priorities: ActivePriority[];
@@ -20,26 +20,14 @@ const PriorityList: React.FC<PriorityListProps> = ({
   return (
     <div>
       {priorities.map((priority) => (
-        <div key={priority.id} className="flex items-center justify-between mb-2">
-          <div className="flex-1 mr-2">
-            <PriorityDisplay priority={priority} variant="compact" />
-          </div>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => onRemovePriority(priority.id)}
-            className="flex-shrink-0"
-          >
-            Remove
-          </Button>
-        </div>
+        <PriorityItem
+          key={priority.id}
+          priority={priority}
+          onRemovePriority={onRemovePriority}
+        />
       ))}
       
-      {priorities.length >= 5 && (
-        <p className="text-sm text-muted-foreground mt-2">
-          You've reached the maximum of 5 priorities. Remove one to add another.
-        </p>
-      )}
+      <PriorityLimitMessage show={priorities.length >= 5} />
     </div>
   );
 };
