@@ -35,12 +35,18 @@ export const useMarkerUpdater = (
     // Add markers for nearby ONLINE users with their locations
     addNearbyUserMarkers(onlineUsers, currentUser, radiusInKm, vectorSource.current);
 
-    // Only add current user marker if tracking is enabled, we have a current user, and privacy mode is disabled
-    if (isTracking && currentUser && !shouldObfuscateLocation(currentUser)) {
+    // Only add current user marker if:
+    // 1. Tracking is enabled
+    // 2. We have a current user
+    // 3. Privacy mode is disabled
+    const isPrivacyEnabled = currentUser ? shouldObfuscateLocation(currentUser) : false;
+    
+    if (isTracking && currentUser && !isPrivacyEnabled) {
       addCurrentUserMarker(currentUser, vectorSource.current);
     }
   }, [nearbyUsers, mapLoaded, currentUser?.location, vectorSource, radiusInKm, 
-      currentUser?.locationSettings?.hideExactLocation, currentUser?.blockedUsers, isTracking]);
+      currentUser?.locationSettings?.hideExactLocation, currentUser?.location_settings?.hide_exact_location, 
+      currentUser?.blockedUsers, isTracking]);
 
   // Also listen for manual location updates
   useEffect(() => {
@@ -48,12 +54,37 @@ export const useMarkerUpdater = (
       // The next render cycle will update the markers
     };
     
+    // Listen for privacy mode changes
+    const handlePrivacyModeChange = (event: CustomEvent) => {
+      if (event.detail && event.detail.isPrivacyEnabled !== undefined) {
+        // If privacy mode changed, update markers
+        if (vectorSource.current && currentUser) {
+          // Clear current user marker when privacy is enabled
+          if (event.detail.isPrivacyEnabled) {
+            const features = vectorSource.current.getFeatures();
+            features.forEach(feature => {
+              if (feature.get('isCurrentUser')) {
+                vectorSource.current?.removeFeature(feature);
+              }
+            });
+          } else {
+            // Re-add current user marker when privacy is disabled
+            if (isTracking && currentUser.location) {
+              addCurrentUserMarker(currentUser, vectorSource.current);
+            }
+          }
+        }
+      }
+    };
+    
     window.addEventListener('user-location-changed', handleLocationChange);
+    window.addEventListener('privacy-mode-changed', handlePrivacyModeChange as EventListener);
     
     return () => {
       window.removeEventListener('user-location-changed', handleLocationChange);
+      window.removeEventListener('privacy-mode-changed', handlePrivacyModeChange as EventListener);
     };
-  }, []);
+  }, [currentUser, isTracking, vectorSource]);
 };
 
 // Helper functions to clean up main effect

@@ -141,7 +141,7 @@ export const useRadiusCircle = (
     }
   }, [currentUser?.location, radiusInKm, map, isLayerInitialized, lastRadius]);
   
-  // Listen for view changes and ensure the circle is not affected by zoom
+  // Listen for view changes and maintain fixed radius size regardless of zoom level
   useEffect(() => {
     if (!map.current || !currentUser?.location || !isLayerInitialized) {
       return;

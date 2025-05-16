@@ -26,6 +26,10 @@ export const usePrivacyCircle = (
       privacyLayer.current = new VectorLayer({
         source,
         zIndex: 1, // Places the circle below the markers
+        properties: {
+          updateWhileAnimating: true,
+          updateWhileInteracting: true
+        }
       });
       
       map.current.addLayer(privacyLayer.current);
@@ -55,8 +59,8 @@ export const usePrivacyCircle = (
       const { lng, lat } = currentUser.location;
       const center = fromLonLat([lng, lat]);
       
-      // Use fixed radius for privacy circle (2km)
-      const radiusInMeters = getPrivacyCircleRadius();
+      // Use fixed radius for privacy circle (~500m)
+      const radiusInMeters = getPrivacyCircleRadius(); // ~500m
       
       // Create the circle feature
       privacyFeature.current = new Feature({
@@ -68,6 +72,36 @@ export const usePrivacyCircle = (
       
       privacyLayer.current.getSource()?.addFeature(privacyFeature.current);
       console.log("Added privacy circle to map");
+      
+      // Fix the circle size to remain consistent regardless of zoom level
+      const view = map.current.getView();
+      
+      const fixCircleOnZoomChange = () => {
+        if (!currentUser?.location || !privacyFeature.current || !privacyLayer.current) return;
+        
+        // Get the center in map projection
+        const center = fromLonLat([currentUser.location.lng, currentUser.location.lat]);
+        
+        // Update the circle with the fixed radius
+        const geometry = new Circle(center, radiusInMeters);
+        privacyFeature.current.setGeometry(geometry);
+        
+        // Force redraw
+        if (privacyLayer.current) {
+          privacyLayer.current.changed();
+        }
+      };
+      
+      // Add listener for resolution (zoom) changes
+      view.on('change:resolution', fixCircleOnZoomChange);
+      
+      // Initial update to ensure correct size
+      fixCircleOnZoomChange();
+      
+      return () => {
+        // Clean up listener
+        view.un('change:resolution', fixCircleOnZoomChange);
+      };
     }
   }, [currentUser?.location, currentUser?.locationSettings, currentUser?.location_settings, map]);
   
