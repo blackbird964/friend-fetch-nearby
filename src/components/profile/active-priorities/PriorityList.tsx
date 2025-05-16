@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ActivePriority } from '@/lib/supabase/profiles/types';
+import PriorityDisplay from './PriorityDisplay';
 
 interface PriorityListProps {
   priorities: ActivePriority[];
@@ -19,15 +20,15 @@ const PriorityList: React.FC<PriorityListProps> = ({
   return (
     <div>
       {priorities.map((priority) => (
-        <div key={priority.id} className="flex items-center justify-between bg-muted/40 rounded-lg p-3 mb-2">
-          <div>
-            <p className="font-medium text-sm">{priority.activity}</p>
-            <p className="text-xs text-muted-foreground">{priority.category}</p>
+        <div key={priority.id} className="flex items-center justify-between mb-2">
+          <div className="flex-1 mr-2">
+            <PriorityDisplay priority={priority} variant="compact" />
           </div>
           <Button 
             variant="ghost" 
             size="sm" 
             onClick={() => onRemovePriority(priority.id)}
+            className="flex-shrink-0"
           >
             Remove
           </Button>
