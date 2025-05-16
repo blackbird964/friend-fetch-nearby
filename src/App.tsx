@@ -14,6 +14,7 @@ import MapPage from "@/pages/MapPage";
 import ChatPage from "@/pages/ChatPage";
 import Profile from "@/pages/ProfilePage";
 import FriendsPage from "@/pages/FriendsPage";
+import AdminPage from "@/pages/AdminPage";
 import MainLayout from "@/pages/MainLayout";
 import NotFound from "./pages/NotFound";
 
@@ -36,6 +37,7 @@ const App: React.FC = () => {
               <Route path="/chat" element={<ChatPage />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/friends" element={<FriendsPage />} />
+              <Route path="/admin" element={<AdminPage />} />
             </Route>
             
             <Route path="*" element={<NotFound />} />

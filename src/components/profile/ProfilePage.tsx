@@ -5,17 +5,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Edit, Camera } from 'lucide-react';
+import { LogOut, Edit, Camera, ShieldCheck } from 'lucide-react';
 import { signOut } from '@/lib/supabase';
 import EditProfileForm from './EditProfileForm';
 import ProfilePictureUpload from './ProfilePictureUpload';
 import UserAvatar from '../users/cards/UserAvatar';
+import { Link } from 'react-router-dom';
+
+// List of authorized admin emails
+const ADMIN_EMAILS = ['harp.dylan@gmail.com', 'aaron.stathi@gmail.com'];
 
 const ProfilePage: React.FC = () => {
   const { currentUser, setCurrentUser, setIsAuthenticated } = useAppContext();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [showPictureUpload, setShowPictureUpload] = useState(false);
+
+  // Check if current user is an admin
+  const isAdmin = currentUser?.email && ADMIN_EMAILS.includes(currentUser.email);
 
   const handleLogout = async () => {
     try {
@@ -131,7 +138,7 @@ const ProfilePage: React.FC = () => {
               )}
             </div>
             
-            <div className="flex space-x-3 mt-6">
+            <div className="flex flex-wrap gap-3 mt-6 justify-center">
               <Button 
                 variant="outline" 
                 className="flex items-center" 
@@ -140,6 +147,20 @@ const ProfilePage: React.FC = () => {
                 <Edit className="mr-2 h-4 w-4" />
                 Edit Profile
               </Button>
+              
+              {isAdmin && (
+                <Button 
+                  variant="outline" 
+                  className="flex items-center text-amber-600 border-amber-600 hover:bg-amber-50" 
+                  asChild
+                >
+                  <Link to="/admin">
+                    <ShieldCheck className="mr-2 h-4 w-4" />
+                    Admin Panel
+                  </Link>
+                </Button>
+              )}
+              
               <Button 
                 variant="destructive" 
                 className="flex items-center" 
