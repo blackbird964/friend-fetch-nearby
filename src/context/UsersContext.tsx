@@ -32,7 +32,7 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     try {
       console.log(`Fetching nearby users within ${radiusInKm}km radius`);
       
-      // Get all users nearby first using the updated nearbyUsersService
+      // Get all users nearby first using the nearbyUsersService
       const allUsers = await nearbyUsersService.getNearbyUsers(currentUser.location, radiusInKm);
       
       // Filter out blocked users

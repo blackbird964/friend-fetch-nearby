@@ -4,6 +4,7 @@ import { AuthProvider, useAuthContext } from './AuthContext';
 import { UsersProvider, useUsersContext } from './UsersContext';
 import { SocialProvider, useSocialContext } from './SocialContext';
 import { AppContextType } from './AppContextTypes';
+import { useUserActions } from '@/hooks/useUserActions';
 
 // Create a combined context
 const AppContext = React.createContext<AppContextType | undefined>(undefined);
@@ -27,12 +28,20 @@ const CombinedContextProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const authContext = useAuthContext();
   const usersContext = useUsersContext();
   const socialContext = useSocialContext();
+  
+  // Add user actions
+  const { blockUser, unblockUser, reportUser, loading: userActionsLoading } = 
+    useUserActions(authContext.currentUser, authContext.setCurrentUser);
 
   // Combine all context values
   const combinedValue: AppContextType = {
     ...authContext,
     ...usersContext,
     ...socialContext,
+    blockUser,
+    unblockUser,
+    reportUser,
+    userActionsLoading
   };
 
   return <AppContext.Provider value={combinedValue}>{children}</AppContext.Provider>;

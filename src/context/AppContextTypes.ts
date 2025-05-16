@@ -1,4 +1,3 @@
-
 import { AppUser, Chat, FriendRequest, MeetupRequest, Location } from './types';
 import { User } from '@supabase/supabase-js';
 
@@ -15,6 +14,7 @@ export interface AuthContextType {
   blockUser: (userId: string) => Promise<boolean>;
   unblockUser: (userId: string) => Promise<boolean>;
   reportUser: (userId: string, reason: string) => Promise<boolean>;
+  userActionsLoading?: boolean;
 }
 
 export interface UsersContextType {

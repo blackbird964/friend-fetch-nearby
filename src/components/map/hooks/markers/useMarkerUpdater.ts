@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { AppUser } from '@/context/types';
 import Feature from 'ol/Feature';
@@ -36,8 +35,18 @@ export const useMarkerUpdater = (
       }
     });
     
-    // Filter to only show online users
-    const onlineUsers = nearbyUsers.filter(user => user.isOnline === true);
+    // Filter to only show online users that aren't blocked
+    const onlineUsers = nearbyUsers
+      .filter(user => user.isOnline === true)
+      .filter(user => {
+        // Filter out users that the current user has blocked
+        if (currentUser?.blockedUsers?.includes(user.id)) {
+          console.log(`User ${user.id} is blocked, not showing on map`);
+          return false;
+        }
+        return true;
+      });
+    
     console.log(`Found ${onlineUsers.length} online users out of ${nearbyUsers.length} nearby users`);
     
     // Add markers for nearby ONLINE users with their locations
@@ -130,7 +139,7 @@ export const useMarkerUpdater = (
       console.log("Current user has no location");
     }
   }, [nearbyUsers, mapLoaded, currentUser?.location, vectorSource, radiusInKm, 
-      currentUser?.locationSettings?.hideExactLocation, currentUser?.location_settings?.hide_exact_location]);
+      currentUser?.locationSettings?.hideExactLocation, currentUser?.blockedUsers]);
 
   // Also listen for manual location updates
   useEffect(() => {

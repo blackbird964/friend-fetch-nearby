@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Ban, UserMinus, AlertTriangle } from 'lucide-react';
+import { Ban, AlertTriangle } from 'lucide-react';
 import { 
   ContextMenu,
   ContextMenuContent,

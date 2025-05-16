@@ -107,7 +107,7 @@ export const useUserActions = (currentUser: AppUser | null, setCurrentUser: (use
     } finally {
       setLoading(false);
     }
-  }, [currentUser, setCurrentUser]);
+  }, [currentUser]);
 
   return {
     blockUser: blockUserAction,
