@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { Profile, ActivePriority } from '@/lib/supabase/profiles/types';
-import ActivePriorityForm from './ActivePriorityForm';
+import { ActivePriorityForm } from './active-priorities';
 import ProfileFormTabs from './form-tabs/ProfileFormTabs';
 import BasicInfoFields from './form-sections/BasicInfoFields';
 import FormActions from './form-sections/FormActions';
