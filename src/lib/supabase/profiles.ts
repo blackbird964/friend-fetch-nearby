@@ -20,6 +20,5 @@ export type {
 } from './profiles/types';
 
 // For backward compatibility, export types - but no longer re-export Profile type with same name
-import { ProfileWithBlockedUsers } from './profiles/types';
-export type { ProfileWithBlockedUsers };
-
+// We already exported ProfileWithBlockedUsers from './profiles/types' above,
+// so we don't need to export it again here
