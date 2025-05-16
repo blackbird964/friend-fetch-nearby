@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { AppUser } from '@/context/types';
 import Feature from 'ol/Feature';
@@ -30,8 +31,8 @@ export const useMarkerUpdater = (
     // Add markers for nearby ONLINE users with their locations
     addNearbyUserMarkers(onlineUsers, currentUser, radiusInKm, vectorSource.current);
 
-    // Add current user marker if tracking is enabled
-    if (isTracking) {
+    // Only add current user marker if tracking is enabled
+    if (isTracking && currentUser) {
       addCurrentUserMarker(currentUser, vectorSource.current);
     }
   }, [nearbyUsers, mapLoaded, currentUser?.location, vectorSource, radiusInKm, 
@@ -171,3 +172,4 @@ const addCurrentUserMarker = (currentUser: AppUser | null, vectorSource: VectorS
     }
   }
 };
+

@@ -79,6 +79,9 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
       } else {
         console.log("Stopping geolocation tracking");
         stopLocationTracking();
+        
+        // When tracking is turned off, trigger an event to force marker update
+        window.dispatchEvent(new CustomEvent('user-location-changed'));
       }
     }
   }, [isTracking, isManualMode, mapLoaded, startLocationTracking, stopLocationTracking]);
@@ -86,7 +89,6 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
   // Handle radius changes from external components
   useEffect(() => {
     const handleRadiusChangeFromEvent = (e: any) => {
-      console.log("Radius change event detected:", e.detail);
       handleRadiusChange(e.detail);
     };
     
@@ -101,3 +103,4 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
 };
 
 export default LocationHandling;
+
