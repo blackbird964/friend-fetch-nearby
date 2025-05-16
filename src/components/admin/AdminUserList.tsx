@@ -49,7 +49,7 @@ const AdminUserList: React.FC = () => {
           } : undefined,
           is_over_18: profile.is_over_18 || false,
           isOnline: profile.is_online || false, // Corrected to match AppUser type
-          lastSeen: profile.last_seen || null, // Corrected to match AppUser type
+          last_seen: profile.last_seen || null, // Using last_seen as we'll check this below
           created_at: profile.created_at || null,
           blockedUsers: profile.blocked_users || [],
         })) as AppUser[];
@@ -72,7 +72,7 @@ const AdminUserList: React.FC = () => {
 
   const getLastActive = (user: AppUser) => {
     if (user.isOnline) return 'Online now'; // Corrected from is_online to isOnline
-    if (user.lastSeen) return formatDistanceToNow(new Date(user.lastSeen), { addSuffix: true }); // Corrected from last_seen to lastSeen
+    if (user.last_seen) return formatDistanceToNow(new Date(user.last_seen), { addSuffix: true }); // Using last_seen which is in the AppUser type
     return 'Unknown';
   };
 
