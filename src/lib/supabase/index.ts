@@ -16,6 +16,7 @@ export {
 // Re-export profile types and functions
 export {
   type Profile,
+  type ProfileWithBlockedUsers,
   getProfile,
   getAllProfiles,
   createOrUpdateProfile,
