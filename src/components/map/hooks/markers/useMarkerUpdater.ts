@@ -25,13 +25,18 @@ export const useMarkerUpdater = (
     // Clear existing user markers (but keep circle markers)
     clearExistingUserMarkers(vectorSource.current);
     
+    // If tracking is disabled, don't show any users at all
+    if (!isTracking) {
+      return;
+    }
+    
     // Filter to only show online users that aren't blocked
     const onlineUsers = filterOnlineAndUnblockedUsers(nearbyUsers, currentUser);
     
     // Add markers for nearby ONLINE users with their locations
     addNearbyUserMarkers(onlineUsers, currentUser, radiusInKm, vectorSource.current);
 
-    // Only add current user marker if tracking is enabled
+    // Only add current user marker if tracking is enabled and we have a current user
     if (isTracking && currentUser) {
       addCurrentUserMarker(currentUser, vectorSource.current);
     }

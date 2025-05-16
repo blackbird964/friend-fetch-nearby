@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { AppUser, FriendRequest } from '@/context/types';
 import Map from 'ol/Map';
@@ -45,11 +44,6 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
   friendRequests,
   isTracking
 }) => {
-  // Log radius changes to help with debugging
-  useEffect(() => {
-    console.log("MapFeatures - radiusInKm changed:", radiusInKm);
-  }, [radiusInKm]);
-
   // Log tracking changes to debug the marker visibility issue
   useEffect(() => {
     console.log("MapFeatures - isTracking changed:", isTracking);
@@ -78,6 +72,21 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
     radiusInKm
   );
   
+  // Listen for tracking changes to update markers visibility
+  useEffect(() => {
+    if (isTracking === false && vectorSource.current) {
+      // When tracking is turned off, clear all user markers
+      const features = vectorSource.current.getFeatures();
+      features.forEach(feature => {
+        const isCircle = feature.get('isCircle');
+        const isUserMarker = feature.get('isCurrentUser') || feature.get('userId');
+        if (!isCircle && isUserMarker) {
+          vectorSource.current?.removeFeature(feature);
+        }
+      });
+    }
+  }, [isTracking, vectorSource]);
+
   // Listen for radius changes from slider or other components
   useEffect(() => {
     const handleRadiusChange = (e: any) => {

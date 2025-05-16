@@ -103,4 +103,3 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
 };
 
 export default LocationHandling;
-
