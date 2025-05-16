@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { AppUser } from '@/context/types';
 import { 
   Drawer, 
@@ -24,6 +24,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from '@/components/ui/label';
 
 interface UserDetailsDrawerProps {
   user: AppUser | null;
@@ -32,6 +40,15 @@ interface UserDetailsDrawerProps {
   onAddFriend: (user: AppUser) => void;
   onStartChat: (user: AppUser) => void;
 }
+
+const REPORT_REASONS = [
+  "Inappropriate behavior",
+  "Harassment",
+  "Spam messages",
+  "Fake profile",
+  "Offensive content",
+  "Other"
+];
 
 const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({ 
   user, 
@@ -43,6 +60,7 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
   const { currentUser, blockUser, unblockUser, reportUser } = useAppContext();
   const [showBlockDialog, setShowBlockDialog] = React.useState(false);
   const [showReportDialog, setShowReportDialog] = React.useState(false);
+  const [reportReason, setReportReason] = useState<string>(REPORT_REASONS[0]);
   
   if (!user || !currentUser) return null;
 
@@ -62,8 +80,7 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
   
   const handleReportUser = async () => {
     if (user.id) {
-      // For now we'll just use a generic reason
-      await reportUser(user.id, "Inappropriate behavior");
+      await reportUser(user.id, reportReason);
       setShowReportDialog(false);
     }
   };
@@ -191,16 +208,38 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
             <AlertDialogTitle>Report this user?</AlertDialogTitle>
             <AlertDialogDescription>
               This will send a report to our admins for review. 
-              Abuse of this feature may result in account restrictions.
+              Please select a reason for reporting this user.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          
+          <div className="py-4">
+            <Label htmlFor="drawer-report-reason" className="text-sm font-medium mb-2 block">
+              Reason for report
+            </Label>
+            <Select 
+              value={reportReason} 
+              onValueChange={setReportReason}
+            >
+              <SelectTrigger id="drawer-report-reason" className="w-full">
+                <SelectValue placeholder="Select a reason" />
+              </SelectTrigger>
+              <SelectContent>
+                {REPORT_REASONS.map((reason) => (
+                  <SelectItem key={reason} value={reason}>
+                    {reason}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleReportUser}
               className="bg-amber-600 text-white hover:bg-amber-700"
             >
-              Report
+              Submit Report
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

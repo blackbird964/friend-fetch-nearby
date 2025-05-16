@@ -48,8 +48,9 @@ const AdminUserList: React.FC = () => {
             lng: (profile.location as { x?: number, y?: number })?.x || 0 
           } : undefined,
           is_over_18: profile.is_over_18 || false,
-          isOnline: profile.is_online || false, // Corrected to match AppUser type
-          last_seen: profile.last_seen || null, // Using last_seen as we'll check this below
+          isOnline: profile.is_online || false,
+          // Use the property as it's defined in the AppUser type
+          last_seen: profile.last_seen || null,
           created_at: profile.created_at || null,
           blockedUsers: profile.blocked_users || [],
         })) as AppUser[];
@@ -71,8 +72,9 @@ const AdminUserList: React.FC = () => {
   }, [toast]);
 
   const getLastActive = (user: AppUser) => {
-    if (user.isOnline) return 'Online now'; // Corrected from is_online to isOnline
-    if (user.last_seen) return formatDistanceToNow(new Date(user.last_seen), { addSuffix: true }); // Using last_seen which is in the AppUser type
+    if (user.isOnline) return 'Online now';
+    // Check if last_seen exists in the user object (it's defined in AppUser type)
+    if (user.last_seen) return formatDistanceToNow(new Date(user.last_seen), { addSuffix: true });
     return 'Unknown';
   };
 

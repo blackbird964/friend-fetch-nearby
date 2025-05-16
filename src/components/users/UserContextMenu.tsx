@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Ban, AlertTriangle } from 'lucide-react';
 import { 
   ContextMenu,
@@ -18,19 +18,36 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useAppContext } from '@/context/AppContext';
 import { AppUser } from '@/context/types';
-import { useState } from 'react';
+import { Label } from '@/components/ui/label';
 
 interface UserContextMenuProps {
   user: AppUser;
   children: React.ReactNode;
 }
 
+const REPORT_REASONS = [
+  "Inappropriate behavior",
+  "Harassment",
+  "Spam messages",
+  "Fake profile",
+  "Offensive content",
+  "Other"
+];
+
 const UserContextMenu: React.FC<UserContextMenuProps> = ({ user, children }) => {
   const { currentUser, blockUser, unblockUser, reportUser } = useAppContext();
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const [reportReason, setReportReason] = useState<string>(REPORT_REASONS[0]);
   
   // Don't show block/report options for your own profile
   if (currentUser?.id === user.id) {
@@ -50,8 +67,7 @@ const UserContextMenu: React.FC<UserContextMenuProps> = ({ user, children }) => 
   
   const handleReportUser = async () => {
     if (user.id) {
-      // For now we'll just use a generic reason
-      await reportUser(user.id, "Inappropriate behavior");
+      await reportUser(user.id, reportReason);
       setShowReportDialog(false);
     }
   };
@@ -112,16 +128,38 @@ const UserContextMenu: React.FC<UserContextMenuProps> = ({ user, children }) => 
             <AlertDialogTitle>Report this user?</AlertDialogTitle>
             <AlertDialogDescription>
               This will send a report to our admins for review. 
-              Abuse of this feature may result in account restrictions.
+              Please select a reason for reporting this user.
             </AlertDialogDescription>
           </AlertDialogHeader>
+          
+          <div className="py-4">
+            <Label htmlFor="report-reason" className="text-sm font-medium mb-2 block">
+              Reason for report
+            </Label>
+            <Select 
+              value={reportReason} 
+              onValueChange={setReportReason}
+            >
+              <SelectTrigger id="report-reason" className="w-full">
+                <SelectValue placeholder="Select a reason" />
+              </SelectTrigger>
+              <SelectContent>
+                {REPORT_REASONS.map((reason) => (
+                  <SelectItem key={reason} value={reason}>
+                    {reason}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction 
               onClick={handleReportUser}
               className="bg-amber-600 text-white hover:bg-amber-700"
             >
-              Report
+              Submit Report
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

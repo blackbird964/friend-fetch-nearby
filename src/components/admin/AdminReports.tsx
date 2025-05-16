@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { format } from 'date-fns';
 
 interface UserReport {
   id: string;
@@ -21,6 +22,7 @@ interface UserReport {
   reported_user_id: string;
   reason: string;
   status: 'pending' | 'resolved' | 'dismissed';
+  timestamp: number;
   created_at: string;
   reporter_name?: string;
   reported_user_name?: string;
@@ -31,81 +33,134 @@ const AdminReports: React.FC = () => {
   const [reports, setReports] = useState<UserReport[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // For demonstration purposes, using mock data
   useEffect(() => {
-    const mockReports: UserReport[] = [
-      {
-        id: '1',
-        reporter_id: 'user1',
-        reported_user_id: 'user2',
-        reason: 'Inappropriate behavior',
-        status: 'pending',
-        created_at: '2025-05-10T09:00:00Z',
-        reporter_name: 'John Doe',
-        reported_user_name: 'Jane Smith'
-      },
-      {
-        id: '2',
-        reporter_id: 'user3',
-        reported_user_id: 'user4',
-        reason: 'Spam messages',
-        status: 'resolved',
-        created_at: '2025-05-09T14:30:00Z',
-        reporter_name: 'Robert Johnson',
-        reported_user_name: 'Michael Brown'
-      },
-      {
-        id: '3',
-        reporter_id: 'user5',
-        reported_user_id: 'user6',
-        reason: 'Fake profile',
-        status: 'dismissed',
-        created_at: '2025-05-08T11:20:00Z',
-        reporter_name: 'Emily Wilson',
-        reported_user_name: 'David Taylor'
-      },
-      {
-        id: '4',
-        reporter_id: 'user7',
-        reported_user_id: 'user8',
-        reason: 'Harassment',
-        status: 'pending',
-        created_at: '2025-05-10T16:45:00Z',
-        reporter_name: 'Sophie Miller',
-        reported_user_name: 'Thomas Anderson'
+    const fetchReports = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch all messages with type 'user_report'
+        const { data: reportMessages, error } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('receiver_id', 'admin')
+          .order('created_at', { ascending: false });
+          
+        if (error) throw error;
+        
+        if (!reportMessages || reportMessages.length === 0) {
+          setReports([]);
+          return;
+        }
+        
+        const fetchedReports: UserReport[] = [];
+        
+        // Process each report message
+        for (const message of reportMessages) {
+          try {
+            const content = JSON.parse(message.content);
+            
+            if (content.type === 'user_report') {
+              // Fetch reporter name
+              const { data: reporter } = await supabase
+                .from('profiles')
+                .select('name')
+                .eq('id', message.sender_id)
+                .single();
+                
+              // Fetch reported user name
+              const { data: reportedUser } = await supabase
+                .from('profiles')
+                .select('name')
+                .eq('id', content.reported_user_id)
+                .single();
+              
+              fetchedReports.push({
+                id: message.id,
+                reporter_id: message.sender_id,
+                reported_user_id: content.reported_user_id,
+                reason: content.reason,
+                status: content.status || 'pending',
+                timestamp: content.timestamp,
+                created_at: message.created_at,
+                reporter_name: reporter?.name || 'Unknown User',
+                reported_user_name: reportedUser?.name || 'Unknown User'
+              });
+            }
+          } catch (parseError) {
+            console.error('Error parsing report message:', parseError);
+          }
+        }
+        
+        setReports(fetchedReports);
+      } catch (error) {
+        console.error('Error fetching reports:', error);
+        toast({
+          title: "Failed to load reports",
+          description: "There was an error loading the user reports",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
       }
-    ];
+    };
 
-    // Simulate loading
-    setTimeout(() => {
-      setReports(mockReports);
-      setLoading(false);
-    }, 800);
-  }, []);
+    fetchReports();
+  }, [toast]);
 
-  const handleStatusChange = (reportId: string, newStatus: 'resolved' | 'dismissed') => {
-    // In a real application, we would update the database
-    setReports(prevReports => 
-      prevReports.map(report => 
-        report.id === reportId ? { ...report, status: newStatus } : report
-      )
-    );
-
-    toast({
-      title: "Report updated",
-      description: `Report has been marked as ${newStatus}`,
-    });
+  const handleStatusChange = async (reportId: string, newStatus: 'resolved' | 'dismissed') => {
+    try {
+      // Find the report message
+      const report = reports.find(r => r.id === reportId);
+      if (!report) return;
+      
+      // Get the original message to update
+      const { data: message, error: fetchError } = await supabase
+        .from('messages')
+        .select('content')
+        .eq('id', reportId)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
+      // Parse the content, update the status
+      const content = JSON.parse(message.content);
+      content.status = newStatus;
+      
+      // Update the message with the new status
+      const { error: updateError } = await supabase
+        .from('messages')
+        .update({ 
+          content: JSON.stringify(content),
+          read: true
+        })
+        .eq('id', reportId);
+        
+      if (updateError) throw updateError;
+      
+      // Update local state
+      setReports(prevReports => 
+        prevReports.map(report => 
+          report.id === reportId ? { ...report, status: newStatus } : report
+        )
+      );
+      
+      toast({
+        title: "Report updated",
+        description: `Report has been marked as ${newStatus}`,
+      });
+    } catch (error) {
+      console.error('Error updating report status:', error);
+      toast({
+        title: "Failed to update report",
+        description: "There was an error updating the report status",
+        variant: "destructive",
+      });
+    }
   };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
-    return new Intl.DateTimeFormat('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    }).format(date);
+    return format(date, 'MMM d, yyyy h:mm a');
   };
 
   const getStatusBadge = (status: string) => {

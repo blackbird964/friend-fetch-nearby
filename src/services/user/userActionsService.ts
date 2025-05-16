@@ -119,6 +119,7 @@ export async function reportUser(reporterId: string, reportedUserId: string, rea
           type: 'user_report',
           reported_user_id: reportedUserId,
           reason: reason,
+          status: 'pending',
           timestamp: Date.now()
         }),
         read: false
