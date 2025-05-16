@@ -1,18 +1,14 @@
 
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { ActivePriority } from '@/lib/supabase/profiles/types';
 import PRIORITY_CATEGORIES from './PriorityCategories';
 import { v4 as uuidv4 } from 'uuid';
+import { 
+  PriorityCategorySelector,
+  PriorityActivitySelector,
+  PriorityDetailsForm 
+} from './form';
 
 interface PriorityFormFieldsProps {
   onAddPriority: (priority: ActivePriority) => void;
@@ -70,143 +66,35 @@ const PriorityFormFields: React.FC<PriorityFormFieldsProps> = ({
   return (
     <div className="border rounded-lg p-4 space-y-4 mt-4">
       <div className="grid grid-cols-1 gap-4">
-        <div>
-          <Label htmlFor="category">Category</Label>
-          <Select 
-            value={category} 
-            onValueChange={setCategory}
-          >
-            <SelectTrigger id="category">
-              <SelectValue placeholder="Select a category" />
-            </SelectTrigger>
-            <SelectContent>
-              {PRIORITY_CATEGORIES.map((cat) => (
-                <SelectItem key={cat.name} value={cat.name}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <PriorityCategorySelector 
+          value={category} 
+          onChange={setCategory} 
+        />
 
         {category && (
-          <div>
-            <Label htmlFor="activity">Activity</Label>
-            <Select 
-              value={activity} 
-              onValueChange={(val) => setActivity(val)}
-            >
-              <SelectTrigger id="activity">
-                <SelectValue placeholder="Select an activity" />
-              </SelectTrigger>
-              <SelectContent>
-                {activities.map((act) => (
-                  <SelectItem key={act} value={act}>
-                    {act}
-                  </SelectItem>
-                ))}
-                <SelectItem value="Custom">Custom activity</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            {activity === "Custom" && (
-              <div className="mt-2">
-                <Input
-                  placeholder="Describe your activity"
-                  value={customActivity}
-                  onChange={(e) => setCustomActivity(e.target.value)}
-                />
-              </div>
-            )}
-          </div>
+          <PriorityActivitySelector 
+            activities={activities}
+            value={activity}
+            customActivity={customActivity}
+            onActivityChange={setActivity}
+            onCustomActivityChange={setCustomActivity}
+          />
         )}
       </div>
       
       {category && activity && (
-        <>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="frequency">Frequency</Label>
-              <Select 
-                value={frequency} 
-                onValueChange={setFrequency}
-              >
-                <SelectTrigger id="frequency">
-                  <SelectValue placeholder="How often?" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="daily">Daily</SelectItem>
-                  <SelectItem value="weekly">Weekly</SelectItem>
-                  <SelectItem value="weekends">Weekends only</SelectItem>
-                  <SelectItem value="monthly">Monthly</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="timePreference">Time Preference</Label>
-              <Select 
-                value={timePreference} 
-                onValueChange={setTimePreference}
-              >
-                <SelectTrigger id="timePreference">
-                  <SelectValue placeholder="When?" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="morning">Morning</SelectItem>
-                  <SelectItem value="afternoon">Afternoon</SelectItem>
-                  <SelectItem value="evening">Evening</SelectItem>
-                  <SelectItem value="night">Night</SelectItem>
-                  <SelectItem value="flexible">Flexible</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="urgency">Timing</Label>
-              <Select 
-                value={urgency} 
-                onValueChange={setUrgency}
-              >
-                <SelectTrigger id="urgency">
-                  <SelectValue placeholder="When are you starting?" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="now">Starting now</SelectItem>
-                  <SelectItem value="soon">Starting soon</SelectItem>
-                  <SelectItem value="ongoing">Ongoing project</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="experienceLevel">Experience Level</Label>
-              <Select 
-                value={experienceLevel} 
-                onValueChange={setExperienceLevel}
-              >
-                <SelectTrigger id="experienceLevel">
-                  <SelectValue placeholder="Your experience level" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="beginner">Beginner</SelectItem>
-                  <SelectItem value="intermediate">Intermediate</SelectItem>
-                  <SelectItem value="advanced">Advanced</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          <div>
-            <Label htmlFor="location">Preferred Location</Label>
-            <Input 
-              id="location" 
-              placeholder="e.g., Surry Hills, CBD, Northern Beaches" 
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-            />
-          </div>
-        </>
+        <PriorityDetailsForm 
+          frequency={frequency}
+          timePreference={timePreference}
+          urgency={urgency}
+          experienceLevel={experienceLevel}
+          location={location}
+          onFrequencyChange={setFrequency}
+          onTimePreferenceChange={setTimePreference}
+          onUrgencyChange={setUrgency}
+          onExperienceLevelChange={setExperienceLevel}
+          onLocationChange={(e) => setLocation(e.target.value)}
+        />
       )}
       
       <div className="flex justify-end">
