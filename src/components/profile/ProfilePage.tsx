@@ -5,12 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Edit, Camera, ShieldCheck } from 'lucide-react';
+import { LogOut, Edit, Camera, ShieldCheck, Clock, Activity, MapPin } from 'lucide-react';
 import { signOut } from '@/lib/supabase';
 import EditProfileForm from './EditProfileForm';
 import ProfilePictureUpload from './ProfilePictureUpload';
 import UserAvatar from '../users/cards/UserAvatar';
 import { Link } from 'react-router-dom';
+import { Separator } from "@/components/ui/separator";
 
 // List of authorized admin emails
 const ADMIN_EMAILS = ['harp.dylan@gmail.com', 'aaron.stathi@gmail.com'];
@@ -75,6 +76,8 @@ const ProfilePage: React.FC = () => {
       </div>
     );
   }
+  
+  const hasActivePriorities = currentUser.active_priorities && currentUser.active_priorities.length > 0;
 
   return (
     <div className="space-y-4">
@@ -126,19 +129,63 @@ const ProfilePage: React.FC = () => {
               {currentUser.bio || "No bio provided yet."}
             </p>
             
-            <div className="flex flex-wrap justify-center gap-2 mt-4">
-              {currentUser.interests && currentUser.interests.length > 0 ? (
-                currentUser.interests.map((interest) => (
-                  <Badge key={interest} variant="secondary">
-                    {interest}
-                  </Badge>
-                ))
-              ) : (
-                <span className="text-gray-500 text-sm">No interests added yet.</span>
-              )}
-            </div>
+            {hasActivePriorities ? (
+              <div className="w-full mt-6">
+                <h3 className="text-sm font-medium text-center mb-3">Current Priorities</h3>
+                <div className="space-y-3 max-w-md mx-auto">
+                  {currentUser.active_priorities.map((priority) => (
+                    <div key={priority.id} className="bg-muted/40 rounded-lg p-3">
+                      <div className="flex items-center mb-1">
+                        <Activity className="w-4 h-4 mr-1 text-primary" />
+                        <h4 className="font-medium text-sm">{priority.activity}</h4>
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        <span className="block">{priority.category}</span>
+                        <div className="flex flex-wrap gap-2 mt-1.5">
+                          {priority.frequency && (
+                            <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                              <Clock className="w-3 h-3" />
+                              {priority.frequency}
+                              {priority.timePreference && ` • ${priority.timePreference}`}
+                            </Badge>
+                          )}
+                          {priority.urgency && (
+                            <Badge variant="secondary" className="text-xs">
+                              {priority.urgency}
+                            </Badge>
+                          )}
+                          {priority.location && (
+                            <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                              <MapPin className="w-3 h-3" />
+                              {priority.location}
+                            </Badge>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-wrap justify-center gap-2 mt-4">
+                {currentUser.interests && currentUser.interests.length > 0 ? (
+                  <>
+                    <h3 className="w-full text-sm font-medium text-center text-gray-500 mb-2">Interests</h3>
+                    {currentUser.interests.map((interest) => (
+                      <Badge key={interest} variant="secondary" className="text-xs">
+                        {interest}
+                      </Badge>
+                    ))}
+                  </>
+                ) : (
+                  <span className="text-gray-500 text-sm">No interests or priorities added yet.</span>
+                )}
+              </div>
+            )}
             
-            <div className="flex flex-wrap gap-3 mt-6 justify-center">
+            <Separator className="my-6" />
+            
+            <div className="flex flex-wrap gap-3 justify-center">
               <Button 
                 variant="outline" 
                 className="flex items-center" 

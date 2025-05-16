@@ -26,6 +26,7 @@ export type Profile = {
     hide_exact_location?: boolean;
   };
   is_over_18?: boolean;
+  active_priorities?: ActivePriority[];
 };
 
 /**
@@ -33,4 +34,26 @@ export type Profile = {
  */
 export type ProfileWithBlockedUsers = Profile & {
   blockedUsers?: string[];
+};
+
+/**
+ * Active Priority data structure
+ */
+export type ActivePriority = {
+  id: string;
+  category: string;
+  activity: string;
+  frequency?: 'daily' | 'weekly' | 'weekends' | 'monthly';
+  timePreference?: 'morning' | 'afternoon' | 'evening' | 'night' | 'flexible';
+  urgency?: 'now' | 'soon' | 'ongoing';
+  location?: string;
+  experienceLevel?: 'beginner' | 'intermediate' | 'advanced';
+};
+
+/**
+ * Priority category with associated activities
+ */
+export type PriorityCategory = {
+  name: string;
+  activities: string[];
 };

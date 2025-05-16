@@ -18,6 +18,7 @@ import {
   BlockUserDialog,
   ReportUserDialog
 } from './user-details';
+import ActivePriorities from './user-details/ActivePriorities';
 
 interface UserDetailsDrawerProps {
   user: AppUser | null;
@@ -72,7 +73,14 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
           <div className="px-4 pb-0">
             <ProfileHeader user={user} />
             <ProfileBio bio={user.bio} />
-            <ProfileInterests interests={user.interests} />
+            
+            {/* Show active priorities first if they exist */}
+            <ActivePriorities priorities={user.active_priorities} />
+            
+            {/* Legacy interests as fallback */}
+            {(!user.active_priorities || user.active_priorities.length === 0) && (
+              <ProfileInterests interests={user.interests} />
+            )}
           </div>
 
           <DrawerFooter className="flex-col gap-3 pt-2">

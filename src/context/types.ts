@@ -1,5 +1,5 @@
-
 import { User } from '@supabase/supabase-js';
+import { ActivePriority } from '@/lib/supabase/profiles/types';
 
 export interface Location {
   lat: number;
@@ -31,6 +31,7 @@ export interface AppUser {
   chat?: Chat; // Chat property for navigation purposes
   isOnline?: boolean; // Adding isOnline property
   is_over_18?: boolean; // Added is_over_18 property
+  active_priorities?: ActivePriority[]; // Added active_priorities property
 }
 
 export interface Chat {
