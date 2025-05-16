@@ -8,30 +8,16 @@ import {
   DrawerTitle,
   DrawerFooter
 } from "@/components/ui/drawer";
-import { Button } from "@/components/ui/button";
-import UserAvatar from '../cards/UserAvatar';
-import { Badge } from "@/components/ui/badge";
-import { MessageCircle, UserPlus, Ban, Flag } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
-import { Separator } from '@/components/ui/separator';
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Label } from '@/components/ui/label';
+  ProfileHeader,
+  ProfileBio,
+  ProfileInterests,
+  ProfileActions,
+  ModerationActions,
+  BlockUserDialog,
+  ReportUserDialog
+} from './user-details';
 
 interface UserDetailsDrawerProps {
   user: AppUser | null;
@@ -41,15 +27,6 @@ interface UserDetailsDrawerProps {
   onStartChat: (user: AppUser) => void;
 }
 
-const REPORT_REASONS = [
-  "Inappropriate behavior",
-  "Harassment",
-  "Spam messages",
-  "Fake profile",
-  "Offensive content",
-  "Other"
-];
-
 const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({ 
   user, 
   isOpen, 
@@ -58,9 +35,8 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
   onStartChat
 }) => {
   const { currentUser, blockUser, unblockUser, reportUser } = useAppContext();
-  const [showBlockDialog, setShowBlockDialog] = React.useState(false);
-  const [showReportDialog, setShowReportDialog] = React.useState(false);
-  const [reportReason, setReportReason] = useState<string>(REPORT_REASONS[0]);
+  const [showBlockDialog, setShowBlockDialog] = useState(false);
+  const [showReportDialog, setShowReportDialog] = useState(false);
   
   if (!user || !currentUser) return null;
 
@@ -78,9 +54,9 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
     }
   };
   
-  const handleReportUser = async () => {
+  const handleReportUser = async (reason: string) => {
     if (user.id) {
-      await reportUser(user.id, reportReason);
+      await reportUser(user.id, reason);
       setShowReportDialog(false);
     }
   };
@@ -94,156 +70,39 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
           </DrawerHeader>
           
           <div className="px-4 pb-0">
-            <div className="flex items-center gap-4 mb-4">
-              <UserAvatar 
-                src={user.profile_pic} 
-                alt={user.name || 'User'} 
-                size="xl" 
-              />
-              <div>
-                <h2 className="text-xl font-bold">{user.name}</h2>
-                {user.age && user.gender && (
-                  <p className="text-gray-500">{user.age} • {user.gender}</p>
-                )}
-              </div>
-            </div>
-            
-            {user.bio && (
-              <div className="mb-6">
-                <h3 className="text-sm font-medium text-gray-500 mb-1">Bio</h3>
-                <p className="text-base">{user.bio}</p>
-              </div>
-            )}
-            
-            {user.interests && user.interests.length > 0 && (
-              <div className="mb-6">
-                <h3 className="text-sm font-medium text-gray-500 mb-2">Interests</h3>
-                <div className="flex flex-wrap gap-1.5">
-                  {user.interests.map((interest) => (
-                    <Badge key={interest} variant="secondary" className="text-xs">
-                      {interest}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-            )}
+            <ProfileHeader user={user} />
+            <ProfileBio bio={user.bio} />
+            <ProfileInterests interests={user.interests} />
           </div>
 
           <DrawerFooter className="flex-col gap-3 pt-2">
-            <div className="flex gap-3 w-full">
-              <Button 
-                onClick={() => onStartChat(user)}
-                variant="outline" 
-                className="flex-1"
-              >
-                <MessageCircle className="mr-2 h-4 w-4" />
-                Chat
-              </Button>
-              <Button 
-                onClick={() => onAddFriend(user)}
-                className="flex-1"
-              >
-                <UserPlus className="mr-2 h-4 w-4" />
-                Add Friend
-              </Button>
-            </div>
+            <ProfileActions 
+              onStartChat={() => onStartChat(user)}
+              onAddFriend={() => onAddFriend(user)}
+            />
             
-            {!isSelf && (
-              <>
-                <Separator className="my-2" />
-                <div className="flex gap-3 w-full">
-                  <Button 
-                    onClick={() => setShowBlockDialog(true)} 
-                    variant="outline"
-                    className="flex-1 text-destructive border-destructive hover:bg-destructive/10"
-                  >
-                    <Ban className="mr-2 h-4 w-4" />
-                    {isBlocked ? "Unblock" : "Block"}
-                  </Button>
-                  <Button 
-                    onClick={() => setShowReportDialog(true)} 
-                    variant="outline" 
-                    className="flex-1 text-amber-600 border-amber-600 hover:bg-amber-600/10"
-                  >
-                    <Flag className="mr-2 h-4 w-4" />
-                    Report
-                  </Button>
-                </div>
-              </>
-            )}
+            <ModerationActions 
+              isBlocked={isBlocked}
+              onBlock={() => setShowBlockDialog(true)}
+              onReport={() => setShowReportDialog(true)}
+              show={!isSelf}
+            />
           </DrawerFooter>
         </DrawerContent>
       </Drawer>
       
-      {/* Block User Dialog */}
-      <AlertDialog open={showBlockDialog} onOpenChange={setShowBlockDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {isBlocked ? "Unblock this user?" : "Block this user?"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {isBlocked 
-                ? "You'll start seeing them in the app again."
-                : "They will be removed from your views. You can unblock them later."
-              }
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleBlockUser}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isBlocked ? "Unblock" : "Block"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <BlockUserDialog 
+        isOpen={showBlockDialog}
+        onOpenChange={setShowBlockDialog}
+        isBlocked={isBlocked}
+        onBlockUser={handleBlockUser}
+      />
       
-      {/* Report User Dialog */}
-      <AlertDialog open={showReportDialog} onOpenChange={setShowReportDialog}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Report this user?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will send a report to our admins for review. 
-              Please select a reason for reporting this user.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          
-          <div className="py-4">
-            <Label htmlFor="drawer-report-reason" className="text-sm font-medium mb-2 block">
-              Reason for report
-            </Label>
-            <Select 
-              value={reportReason} 
-              onValueChange={setReportReason}
-            >
-              <SelectTrigger id="drawer-report-reason" className="w-full">
-                <SelectValue placeholder="Select a reason" />
-              </SelectTrigger>
-              <SelectContent>
-                {REPORT_REASONS.map((reason) => (
-                  <SelectItem key={reason} value={reason}>
-                    {reason}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleReportUser}
-              className="bg-amber-600 text-white hover:bg-amber-700"
-            >
-              Submit Report
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <ReportUserDialog 
+        isOpen={showReportDialog}
+        onOpenChange={setShowReportDialog}
+        onReportUser={handleReportUser}
+      />
     </>
   );
 };

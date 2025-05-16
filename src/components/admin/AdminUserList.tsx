@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -49,8 +48,7 @@ const AdminUserList: React.FC = () => {
           } : undefined,
           is_over_18: profile.is_over_18 || false,
           isOnline: profile.is_online || false,
-          // Use the property as it's defined in the AppUser type
-          last_seen: profile.last_seen || null,
+          lastSeen: profile.last_seen || null,
           created_at: profile.created_at || null,
           blockedUsers: profile.blocked_users || [],
         })) as AppUser[];
@@ -73,8 +71,8 @@ const AdminUserList: React.FC = () => {
 
   const getLastActive = (user: AppUser) => {
     if (user.isOnline) return 'Online now';
-    // Check if last_seen exists in the user object (it's defined in AppUser type)
-    if (user.last_seen) return formatDistanceToNow(new Date(user.last_seen), { addSuffix: true });
+    // Check if lastSeen exists in the user object
+    if (user.lastSeen) return formatDistanceToNow(new Date(user.lastSeen), { addSuffix: true });
     return 'Unknown';
   };
 
