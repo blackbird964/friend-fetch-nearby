@@ -49,9 +49,10 @@ const AdminUserList: React.FC = () => {
           } : undefined,
           is_over_18: profile.is_over_18 || false,
           isOnline: profile.is_online || false,
-          last_seen: profile.last_seen || null,
           created_at: profile.created_at || null,
           blockedUsers: profile.blocked_users || [],
+          // Store last_seen in a property the AppUser interface knows
+          lastSeen: profile.last_seen || null,
         })) as AppUser[];
         
         setUsers(appUsers);
@@ -72,11 +73,10 @@ const AdminUserList: React.FC = () => {
 
   const getLastActive = (user: AppUser) => {
     if (user.isOnline) return 'Online now';
-    // Access the last_seen property from the AppUser type
-    // The property exists in the context/types.ts interface
-    if (user.last_seen) {
+    // Use the lastSeen property that exists in the AppUser type
+    if (user.lastSeen) {
       // Type assertion to string because we know it's a string when it exists
-      return formatDistanceToNow(new Date(user.last_seen as unknown as string), { addSuffix: true });
+      return formatDistanceToNow(new Date(user.lastSeen as unknown as string), { addSuffix: true });
     }
     return 'Unknown';
   };
