@@ -13,7 +13,7 @@ import { Label } from "@/components/ui/label";
 import LocationPrivacyToggle from '@/components/map/components/LocationPrivacyToggle';
 
 const MapPage: React.FC = () => {
-  const { refreshNearbyUsers, loading, currentUser, nearbyUsers } = useAppContext();
+  const { refreshNearbyUsers, loading, currentUser, nearbyUsers, updateUserLocation, setCurrentUser } = useAppContext();
   const { toast } = useToast();
   const isMobile = useIsMobile();
   
@@ -27,9 +27,42 @@ const MapPage: React.FC = () => {
   // Toggle handlers
   const toggleManualMode = () => setIsManualMode(prev => !prev);
   const toggleLocationTracking = () => setIsTracking(prev => !prev);
+  
+  // Privacy mode toggle handler - now directly updates the user's settings
   const togglePrivacyMode = () => {
-    setIsPrivacyModeEnabled(prev => !prev);
-    // The actual privacy update is handled in FriendMapContainer
+    const newPrivacyValue = !isPrivacyModeEnabled;
+    setIsPrivacyModeEnabled(newPrivacyValue);
+    
+    if (currentUser) {
+      const updatedUser = {
+        ...currentUser,
+        locationSettings: {
+          ...currentUser.locationSettings || {},
+          hideExactLocation: newPrivacyValue
+        }
+      };
+      
+      setCurrentUser(updatedUser);
+      
+      // Make sure to update in database
+      if (currentUser.id && currentUser.location) {
+        toast({
+          title: newPrivacyValue ? "Privacy Mode Enabled" : "Privacy Mode Disabled",
+          description: newPrivacyValue 
+            ? "Your exact location is now hidden from others" 
+            : "Your exact location is now visible to others",
+          duration: 3000,
+        });
+        
+        // Update with current location and new privacy setting
+        updateUserLocation(currentUser.id, currentUser.location);
+        
+        // Dispatch privacy mode change event
+        window.dispatchEvent(new CustomEvent('privacy-mode-changed', { 
+          detail: { isPrivacyEnabled: newPrivacyValue } 
+        }));
+      }
+    }
   };
   
   // Fetch nearby users on initial load - without toast notification

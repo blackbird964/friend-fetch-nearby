@@ -116,7 +116,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     };
   }, []);
 
-  // Function to toggle privacy mode
+  // Function to toggle privacy mode - this will be used by the toggle in the MapPage component
   const togglePrivacyMode = () => {
     console.log("Privacy mode toggled, current value:", togglePrivacy, "changing to:", !togglePrivacy);
     const newPrivacyValue = !togglePrivacy;
@@ -201,12 +201,10 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         WYNYARD_COORDS={WYNYARD_COORDS as [number, number]}
       />
 
-      {/* Map Control Panel with radius slider and privacy toggle */}
+      {/* Map Control Panel with radius slider only, no privacy toggle */}
       <MapControlPanel
         radiusInKm={radiusInKm}
         setRadiusInKm={setRadiusInKm}
-        isPrivacyModeEnabled={togglePrivacy}
-        togglePrivacyMode={togglePrivacyMode}
       />
     </MapContainer>
   );
