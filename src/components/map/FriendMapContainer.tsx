@@ -64,7 +64,8 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     completedMoves, 
     mapLoaded,
     friendRequests,
-    radiusInKm
+    radiusInKm,
+    isTracking
   );
 
   // Refresh nearby users when map is loaded and we have current user location

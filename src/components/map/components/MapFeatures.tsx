@@ -50,6 +50,11 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
     console.log("MapFeatures - radiusInKm changed:", radiusInKm);
   }, [radiusInKm]);
 
+  // Log tracking changes to debug the marker visibility issue
+  useEffect(() => {
+    console.log("MapFeatures - isTracking changed:", isTracking);
+  }, [isTracking]);
+
   // Initialize map layers and features
   const { getMarkerStyle, WYNYARD_COORDS } = useMapMarkers(
     map,
