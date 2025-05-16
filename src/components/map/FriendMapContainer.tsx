@@ -148,6 +148,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         movingUsers={movingUsers}
         completedMoves={completedMoves}
         friendRequests={friendRequests}
+        isTracking={isTracking}
       />
       
       <LocationHandling 

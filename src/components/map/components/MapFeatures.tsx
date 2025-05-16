@@ -26,6 +26,7 @@ type MapFeaturesProps = {
   movingUsers: Set<string>;
   completedMoves: Set<string>;
   friendRequests: FriendRequest[];
+  isTracking: boolean;
 };
 
 const MapFeatures: React.FC<MapFeaturesProps> = ({
@@ -41,7 +42,8 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
   setSelectedUser,
   movingUsers,
   completedMoves,
-  friendRequests
+  friendRequests,
+  isTracking
 }) => {
   // Log radius changes to help with debugging
   useEffect(() => {
@@ -59,7 +61,8 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
     completedMoves,
     mapLoaded,
     friendRequests,
-    radiusInKm
+    radiusInKm,
+    isTracking
   );
 
   // Initialize radius circle with current radius value and make it responsive to changes

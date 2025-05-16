@@ -12,7 +12,8 @@ export const useMarkerUpdater = (
   nearbyUsers: AppUser[],
   currentUser: AppUser | null,
   mapLoaded: boolean,
-  radiusInKm: number
+  radiusInKm: number,
+  isTracking: boolean = true
 ) => {
   // Update map markers when user data changes
   useEffect(() => {
@@ -24,13 +25,15 @@ export const useMarkerUpdater = (
     console.log("Updating markers with nearby users:", nearbyUsers.length);
     console.log("Current user:", currentUser?.id);
     console.log("Radius in km:", radiusInKm);
+    console.log("Tracking enabled:", isTracking);
     
-    // Clear existing user markers (but keep current user and circle markers)
+    // Clear existing user markers (but keep circle markers)
     const features = vectorSource.current.getFeatures();
     features.forEach(feature => {
       const isCircle = feature.get('isCircle');
+      const isUserMarker = feature.get('isCurrentUser') || feature.get('userId');
       
-      if (!isCircle) {
+      if (!isCircle && isUserMarker) {
         vectorSource.current?.removeFeature(feature);
       }
     });
@@ -100,18 +103,8 @@ export const useMarkerUpdater = (
       }
     });
 
-    // Remove any existing current user marker
-    if (vectorSource.current) {
-      const existingUserFeatures = vectorSource.current.getFeatures().filter(feature => 
-        feature.get('isCurrentUser') === true
-      );
-      existingUserFeatures.forEach(feature => {
-        vectorSource.current?.removeFeature(feature);
-      });
-    }
-
-    // Add current user marker with the updated location
-    if (currentUser?.location?.lat && currentUser?.location?.lng) {
+    // Add current user marker with the updated location, but only if tracking is enabled
+    if (currentUser?.location?.lat && currentUser?.location?.lng && isTracking) {
       console.log(`Adding current user to map at ${currentUser.location.lat},${currentUser.location.lng}`);
       
       try {
@@ -135,11 +128,13 @@ export const useMarkerUpdater = (
       } catch (error) {
         console.error("Error adding current user to map:", error);
       }
+    } else if (!isTracking) {
+      console.log("Tracking disabled, not adding current user marker");
     } else {
       console.log("Current user has no location");
     }
   }, [nearbyUsers, mapLoaded, currentUser?.location, vectorSource, radiusInKm, 
-      currentUser?.locationSettings?.hideExactLocation, currentUser?.blockedUsers]);
+      currentUser?.locationSettings?.hideExactLocation, currentUser?.blockedUsers, isTracking]);
 
   // Also listen for manual location updates
   useEffect(() => {
