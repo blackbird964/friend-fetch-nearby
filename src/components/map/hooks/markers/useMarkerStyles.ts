@@ -18,6 +18,19 @@ export const useMarkerStyles = (
     const hasMoved = completedMoves.has(userId);
     const isPrivacyEnabled = feature.get('isPrivacyEnabled');
     const isCircle = feature.get('isCircle');
+    const isHeatMap = feature.get('isHeatMap');
+    
+    // Special style for heatmap marker (privacy mode)
+    if (isHeatMap) {
+      return new Style({
+        image: new CircleStyle({
+          radius: 120, // 10 times larger than normal marker (12px)
+          fill: new Fill({ color: 'rgba(99, 102, 241, 0.2)' }), // Semi-transparent purple
+          stroke: new Stroke({ color: 'rgba(99, 102, 241, 0.4)', width: 1 })
+        }),
+        zIndex: 5 // Ensure it appears below the actual marker
+      });
+    }
     
     // Special styles for radius or privacy circles
     if (isCircle) {

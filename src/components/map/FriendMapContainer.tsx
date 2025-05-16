@@ -100,6 +100,22 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     }
   }, [isPrivacyModeEnabled, currentUser?.locationSettings?.hideExactLocation, currentUser?.location_settings?.hide_exact_location]);
 
+  // Listen for privacy mode changes
+  useEffect(() => {
+    const handlePrivacyChange = (e: CustomEvent) => {
+      const { isPrivacyEnabled } = e.detail;
+      console.log("Privacy change event detected:", isPrivacyEnabled);
+      // Trigger marker updates based on the new privacy setting
+      window.dispatchEvent(new CustomEvent('user-location-changed'));
+    };
+    
+    window.addEventListener('privacy-mode-changed', handlePrivacyChange as EventListener);
+    
+    return () => {
+      window.removeEventListener('privacy-mode-changed', handlePrivacyChange as EventListener);
+    };
+  }, []);
+
   // Function to toggle privacy mode
   const togglePrivacyMode = () => {
     console.log("Privacy mode toggled, current value:", togglePrivacy, "changing to:", !togglePrivacy);
@@ -129,6 +145,11 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         
         // Update with current location and new privacy setting
         updateUserLocation(currentUser.id, currentUser.location);
+        
+        // Dispatch privacy mode change event
+        window.dispatchEvent(new CustomEvent('privacy-mode-changed', { 
+          detail: { isPrivacyEnabled: newPrivacyValue } 
+        }));
       }
     }
   };

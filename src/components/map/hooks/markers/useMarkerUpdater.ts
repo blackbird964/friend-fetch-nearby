@@ -1,3 +1,4 @@
+
 import { useEffect } from 'react';
 import { AppUser } from '@/context/types';
 import Feature from 'ol/Feature';
@@ -32,8 +33,9 @@ export const useMarkerUpdater = (
     features.forEach(feature => {
       const isCircle = feature.get('isCircle');
       const isUserMarker = feature.get('isCurrentUser') || feature.get('userId');
+      const isHeatMap = feature.get('isHeatMap');
       
-      if (!isCircle && isUserMarker) {
+      if ((!isCircle && isUserMarker) || isHeatMap) {
         vectorSource.current?.removeFeature(feature);
       }
     });
@@ -87,6 +89,7 @@ export const useMarkerUpdater = (
         console.log(`Adding online user ${user.id} to map (privacy: ${isPrivacyEnabled ? 'enabled' : 'disabled'})`);
         
         try {
+          // Create the standard marker
           const userFeature = new Feature({
             geometry: new Point(fromLonLat([displayLocation.lng, displayLocation.lat])),
             userId: user.id,
@@ -95,6 +98,18 @@ export const useMarkerUpdater = (
           });
           
           vectorSource.current?.addFeature(userFeature);
+          
+          // If privacy enabled, also add a heatmap-style marker (larger, semi-transparent)
+          if (isPrivacyEnabled) {
+            const heatMapFeature = new Feature({
+              geometry: new Point(fromLonLat([displayLocation.lng, displayLocation.lat])),
+              userId: user.id,
+              isHeatMap: true,
+            });
+            
+            vectorSource.current?.addFeature(heatMapFeature);
+            console.log(`Added heatmap for user ${user.id} with privacy enabled`);
+          }
         } catch (error) {
           console.error(`Error adding user ${user.id} to map:`, error);
         }
@@ -122,6 +137,19 @@ export const useMarkerUpdater = (
         });
         
         vectorSource.current?.addFeature(userFeature);
+        
+        // If privacy enabled for current user, add a heatmap for them too
+        if (isCurrentUserPrivacyEnabled) {
+          const heatMapFeature = new Feature({
+            geometry: new Point(fromLonLat([currentUser.location.lng, currentUser.location.lat])),
+            userId: currentUser.id,
+            isCurrentUser: true,
+            isHeatMap: true,
+          });
+          
+          vectorSource.current?.addFeature(heatMapFeature);
+          console.log(`Added heatmap for current user with privacy enabled`);
+        }
         
         // Dispatch an event to notify that user's location has been updated on the map
         window.dispatchEvent(new CustomEvent('user-marker-updated'));

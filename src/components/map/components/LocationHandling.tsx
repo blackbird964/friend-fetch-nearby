@@ -86,6 +86,11 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
       
       // Dispatch custom event to notify location change
       window.dispatchEvent(new CustomEvent('user-location-changed'));
+      
+      // Also dispatch a privacy-changed event when privacy mode changes
+      window.dispatchEvent(new CustomEvent('privacy-mode-changed', { 
+        detail: { isPrivacyEnabled: isPrivacyModeEnabled } 
+      }));
     }
   }, [currentUser, updateUserLocation, setCurrentUser, isPrivacyModeEnabled]);
   
@@ -126,6 +131,20 @@ const LocationHandling: React.FC<LocationHandlingProps> = ({
       window.removeEventListener('radius-changed', handleRadiusChangeFromEvent);
     };
   }, [handleRadiusChange]);
+
+  // Handle privacy mode changes
+  useEffect(() => {
+    console.log("Privacy mode changed:", isPrivacyModeEnabled);
+    // If current user exists and has location, update markers when privacy changes
+    if (currentUser?.location) {
+      // Dispatch privacy mode changed event
+      window.dispatchEvent(new CustomEvent('privacy-mode-changed', { 
+        detail: { isPrivacyEnabled: isPrivacyModeEnabled } 
+      }));
+      // Also update user location to reflect changes immediately
+      window.dispatchEvent(new CustomEvent('user-location-changed'));
+    }
+  }, [isPrivacyModeEnabled, currentUser]);
 
   return null; // This component doesn't render any UI elements
 };
