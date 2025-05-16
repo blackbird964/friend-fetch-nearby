@@ -72,8 +72,11 @@ const AdminUserList: React.FC = () => {
 
   const getLastActive = (user: AppUser) => {
     if (user.isOnline) return 'Online now';
+    // Access the last_seen property from the AppUser type
+    // The property exists in the context/types.ts interface
     if (user.last_seen) {
-      return formatDistanceToNow(new Date(user.last_seen as string), { addSuffix: true });
+      // Type assertion to string because we know it's a string when it exists
+      return formatDistanceToNow(new Date(user.last_seen as unknown as string), { addSuffix: true });
     }
     return 'Unknown';
   };
