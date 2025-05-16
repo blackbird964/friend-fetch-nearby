@@ -1,13 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-
-// Define extended profile type that includes blockedUsers
-interface ProfileWithBlockedUsers {
-  id: string;
-  blockedUsers?: string[];
-  [key: string]: any; // Allow other properties
-}
+import { ProfileWithBlockedUsers } from '@/lib/supabase/profiles';
 
 /**
  * Add a user to the current user's blocked list
@@ -26,11 +20,12 @@ export async function blockUser(currentUserId: string, blockedUserId: string): P
       return false;
     }
     
-    // Cast to our extended profile type
+    // Cast to our profile type
     const profileWithBlocked = profile as ProfileWithBlockedUsers;
     
-    // Get current blocked users or initialize empty array
-    const currentBlockedUsers = profileWithBlocked.blockedUsers || [];
+    // Get current blocked users array or initialize empty array
+    // Process with backward compatibility for both property names
+    const currentBlockedUsers = profileWithBlocked.blocked_users || [];
     
     // Add new blocked user if not already blocked
     if (!currentBlockedUsers.includes(blockedUserId)) {
@@ -40,8 +35,8 @@ export async function blockUser(currentUserId: string, blockedUserId: string): P
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          blockedUsers: currentBlockedUsers
-        } as any) // Use type assertion since blockedUsers may not be in the type
+          blocked_users: currentBlockedUsers
+        })
         .eq('id', currentUserId);
         
       if (updateError) {
@@ -77,11 +72,11 @@ export async function unblockUser(currentUserId: string, blockedUserId: string):
       return false;
     }
     
-    // Cast to our extended profile type
+    // Cast to our profile type
     const profileWithBlocked = profile as ProfileWithBlockedUsers;
     
     // Get current blocked users or initialize empty array
-    const currentBlockedUsers = profileWithBlocked.blockedUsers || [];
+    const currentBlockedUsers = profileWithBlocked.blocked_users || [];
     
     // Remove the blocked user
     const updatedBlockedUsers = currentBlockedUsers.filter(id => id !== blockedUserId);
@@ -90,8 +85,8 @@ export async function unblockUser(currentUserId: string, blockedUserId: string):
     const { error: updateError } = await supabase
       .from('profiles')
       .update({
-        blockedUsers: updatedBlockedUsers
-      } as any) // Use type assertion since blockedUsers may not be in the type
+        blocked_users: updatedBlockedUsers
+      })
       .eq('id', currentUserId);
       
     if (updateError) {

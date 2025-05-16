@@ -19,6 +19,7 @@ export type {
   ProfileWithBlockedUsers
 } from './profiles/types';
 
-// For backward compatibility, export the Profile type as the main type
-import { ProfileWithBlockedUsers as ProfileType } from './profiles/types';
-export type Profile = ProfileType;
+// For backward compatibility, export types - but no longer re-export Profile type with same name
+import { ProfileWithBlockedUsers } from './profiles/types';
+export type { ProfileWithBlockedUsers };
+

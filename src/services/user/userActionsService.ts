@@ -1,13 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-
-// Define extended profile type that includes blocked_users
-interface ProfileWithBlockedUsers {
-  id: string;
-  blocked_users?: string[];
-  [key: string]: any; // Allow other properties
-}
+import { ProfileWithBlockedUsers } from '@/lib/supabase/profiles';
 
 /**
  * Add a user to the current user's blocked list
@@ -26,7 +20,7 @@ export async function blockUser(currentUserId: string, blockedUserId: string): P
       return false;
     }
     
-    // Cast to our extended profile type
+    // Cast to our profile type
     const profileWithBlocked = profile as ProfileWithBlockedUsers;
     
     // Get current blocked users or initialize empty array
@@ -34,13 +28,14 @@ export async function blockUser(currentUserId: string, blockedUserId: string): P
     
     // Add new blocked user if not already blocked
     if (!currentBlockedUsers.includes(blockedUserId)) {
-      currentBlockedUsers.push(blockedUserId);
+      // Add to the blocked_users array
+      const updatedBlockedUsers = [...currentBlockedUsers, blockedUserId];
       
       // Update the profile with new blocked users array
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          blocked_users: currentBlockedUsers
+          blocked_users: updatedBlockedUsers
         })
         .eq('id', currentUserId);
         
@@ -77,7 +72,7 @@ export async function unblockUser(currentUserId: string, blockedUserId: string):
       return false;
     }
     
-    // Cast to our extended profile type
+    // Cast to our profile type
     const profileWithBlocked = profile as ProfileWithBlockedUsers;
     
     // Get current blocked users or initialize empty array
