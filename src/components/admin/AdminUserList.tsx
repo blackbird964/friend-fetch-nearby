@@ -43,12 +43,13 @@ const AdminUserList: React.FC = () => {
           profile_pic: profile.profile_pic || null,
           email: '', // Email not stored in profiles table
           location: profile.location ? { 
-            lat: profile.location.x, 
-            lng: profile.location.y 
+            // Safely type cast the location object and access properties
+            lat: (profile.location as { x?: number, y?: number })?.y || 0, 
+            lng: (profile.location as { x?: number, y?: number })?.x || 0 
           } : undefined,
           is_over_18: profile.is_over_18 || false,
-          last_seen: profile.last_seen || null,
-          is_online: profile.is_online || false,
+          isOnline: profile.is_online || false, // Corrected to match AppUser type
+          lastSeen: profile.last_seen || null, // Corrected to match AppUser type
           created_at: profile.created_at || null,
           blockedUsers: profile.blocked_users || [],
         })) as AppUser[];
@@ -70,8 +71,8 @@ const AdminUserList: React.FC = () => {
   }, [toast]);
 
   const getLastActive = (user: AppUser) => {
-    if (user.is_online) return 'Online now';
-    if (user.last_seen) return formatDistanceToNow(new Date(user.last_seen), { addSuffix: true });
+    if (user.isOnline) return 'Online now'; // Corrected from is_online to isOnline
+    if (user.lastSeen) return formatDistanceToNow(new Date(user.lastSeen), { addSuffix: true }); // Corrected from last_seen to lastSeen
     return 'Unknown';
   };
 
@@ -137,12 +138,12 @@ const AdminUserList: React.FC = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className={`text-sm ${user.is_online ? 'text-green-600' : 'text-gray-600'}`}>
+                    <div className={`text-sm ${user.isOnline ? 'text-green-600' : 'text-gray-600'}`}>
                       {getLastActive(user)}
                     </div>
                   </TableCell>
                   <TableCell>
-                    {user.is_online ? (
+                    {user.isOnline ? (
                       <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Online</Badge>
                     ) : (
                       <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200">Offline</Badge>
