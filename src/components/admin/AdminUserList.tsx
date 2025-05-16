@@ -72,10 +72,8 @@ const AdminUserList: React.FC = () => {
 
   const getLastActive = (user: AppUser) => {
     if (user.isOnline) return 'Online now';
-    // Check if last_seen exists in the user object
-    if (user.last_seen || user.lastSeen) {
-      const lastSeenTime = user.last_seen || user.lastSeen;
-      return formatDistanceToNow(new Date(lastSeenTime as string), { addSuffix: true });
+    if (user.last_seen) {
+      return formatDistanceToNow(new Date(user.last_seen as string), { addSuffix: true });
     }
     return 'Unknown';
   };
