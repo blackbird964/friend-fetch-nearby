@@ -55,7 +55,7 @@ export const usePrivacyCircle = (
       const { lng, lat } = currentUser.location;
       const center = fromLonLat([lng, lat]);
       
-      // Use 2km radius for privacy circle
+      // Use fixed radius for privacy circle (2km)
       const radiusInMeters = getPrivacyCircleRadius();
       
       // Create the circle feature
@@ -68,33 +68,6 @@ export const usePrivacyCircle = (
       
       privacyLayer.current.getSource()?.addFeature(privacyFeature.current);
       console.log("Added privacy circle to map");
-      
-      // Important: Fix for circle scaling when zooming
-      const view = map.current.getView();
-      
-      // This function updates the circle geometry when the view resolution changes
-      const updateCircle = () => {
-        if (!privacyFeature.current || !currentUser?.location) return;
-        
-        // Get the current resolution
-        const resolution = view.getResolution();
-        if (!resolution) return;
-        
-        // Update the circle with the current user location
-        privacyFeature.current.setGeometry(
-          new Circle(fromLonLat([currentUser.location.lng, currentUser.location.lat]), radiusInMeters)
-        );
-      };
-      
-      // Call updateCircle when view resolution changes (zoom)
-      view.on('change:resolution', updateCircle);
-      
-      // Initial update
-      updateCircle();
-      
-      return () => {
-        view.un('change:resolution', updateCircle);
-      };
     }
   }, [currentUser?.location, currentUser?.locationSettings, currentUser?.location_settings, map]);
   

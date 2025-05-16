@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { AppUser } from '@/context/types';
 import Feature from 'ol/Feature';
@@ -36,8 +35,8 @@ export const useMarkerUpdater = (
     // Add markers for nearby ONLINE users with their locations
     addNearbyUserMarkers(onlineUsers, currentUser, radiusInKm, vectorSource.current);
 
-    // Only add current user marker if tracking is enabled and we have a current user
-    if (isTracking && currentUser) {
+    // Only add current user marker if tracking is enabled, we have a current user, and privacy mode is disabled
+    if (isTracking && currentUser && !shouldObfuscateLocation(currentUser)) {
       addCurrentUserMarker(currentUser, vectorSource.current);
     }
   }, [nearbyUsers, mapLoaded, currentUser?.location, vectorSource, radiusInKm, 
@@ -147,28 +146,21 @@ const addCurrentUserMarker = (currentUser: AppUser | null, vectorSource: VectorS
       // Check if current user has privacy enabled
       const isCurrentUserPrivacyEnabled = shouldObfuscateLocation(currentUser);
       
-      // For the current user's own view, always show actual location (not privacy-offset location)
+      // Skip adding the marker if privacy mode is enabled
+      if (isCurrentUserPrivacyEnabled) {
+        return;
+      }
+      
+      // Only add marker if privacy mode is disabled
       const userFeature = new Feature({
         geometry: new Point(fromLonLat([currentUser.location.lng, currentUser.location.lat])),
         isCurrentUser: true,
         userId: currentUser.id,
         name: 'You',
-        isPrivacyEnabled: isCurrentUserPrivacyEnabled
+        isPrivacyEnabled: false
       });
       
       vectorSource.addFeature(userFeature);
-      
-      // If privacy enabled for current user, add a heatmap for them too
-      if (isCurrentUserPrivacyEnabled) {
-        const heatMapFeature = new Feature({
-          geometry: new Point(fromLonLat([currentUser.location.lng, currentUser.location.lat])),
-          userId: currentUser.id,
-          isCurrentUser: true,
-          isHeatMap: true,
-        });
-        
-        vectorSource.addFeature(heatMapFeature);
-      }
       
       // Dispatch an event to notify that user's location has been updated on the map
       window.dispatchEvent(new CustomEvent('user-marker-updated'));
@@ -177,4 +169,3 @@ const addCurrentUserMarker = (currentUser: AppUser | null, vectorSource: VectorS
     }
   }
 };
-

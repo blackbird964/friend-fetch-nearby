@@ -57,6 +57,10 @@ export const useRadiusCircle = (
       source,
       style: radiusStyle,
       zIndex: 99, // Much higher zIndex to ensure visibility
+      properties: {
+        updateWhileAnimating: true,
+        updateWhileInteracting: true
+      }
     });
     
     console.log("Adding radius layer to map");
@@ -134,27 +138,49 @@ export const useRadiusCircle = (
     // Update the circle if we have a location and either the radius changed or location changed
     if (lat && lng && (radiusInKm !== lastRadius || isLayerInitialized)) {
       updateRadiusCircle(currentUser.location, radiusInKm);
-      
-      // Add listeners to update circle when view changes (to maintain shape)
-      if (map.current) {
-        const updateCircleOnViewChange = () => {
-          if (currentUser?.location) {
-            updateRadiusCircle(currentUser.location, radiusInKm);
-          }
-        };
-        
-        map.current.getView().on('change:resolution', updateCircleOnViewChange);
-        map.current.getView().on('change:center', updateCircleOnViewChange);
-        
-        return () => {
-          if (map.current) {
-            map.current.getView().un('change:resolution', updateCircleOnViewChange);
-            map.current.getView().un('change:center', updateCircleOnViewChange);
-          }
-        };
-      }
     }
   }, [currentUser?.location, radiusInKm, map, isLayerInitialized, lastRadius]);
+  
+  // Listen for view changes and ensure the circle is not affected by zoom
+  useEffect(() => {
+    if (!map.current || !currentUser?.location || !isLayerInitialized) {
+      return;
+    }
+    
+    const { lat, lng } = currentUser.location;
+    if (!lat || !lng) return;
+    
+    // Get the map's view
+    const view = map.current.getView();
+    
+    // This function maintains the fixed size on zoom changes
+    const fixRadiusOnZoomChange = () => {
+      if (!currentUser?.location || !radiusFeature.current || !radiusLayer.current) return;
+      
+      // Get the center in map projection
+      const center = fromLonLat([currentUser.location.lng, currentUser.location.lat]);
+      
+      // Update the circle with the fixed radius
+      const geometry = new Circle(center, radiusInKm * 1000);
+      radiusFeature.current.setGeometry(geometry);
+      
+      // Force redraw
+      if (radiusLayer.current) {
+        radiusLayer.current.changed();
+      }
+    };
+    
+    // Add listener for resolution (zoom) changes
+    view.on('change:resolution', fixRadiusOnZoomChange);
+    
+    // Initial update to ensure correct size
+    fixRadiusOnZoomChange();
+    
+    return () => {
+      // Clean up listener
+      view.un('change:resolution', fixRadiusOnZoomChange);
+    };
+  }, [map, currentUser?.location, radiusInKm, isLayerInitialized]);
   
   return { radiusLayer, radiusFeature };
 };
