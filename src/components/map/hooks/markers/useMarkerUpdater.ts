@@ -1,4 +1,3 @@
-
 import { useEffect } from 'react';
 import { AppUser } from '@/context/types';
 import Feature from 'ol/Feature';
@@ -19,147 +18,21 @@ export const useMarkerUpdater = (
   // Update map markers when user data changes
   useEffect(() => {
     if (!mapLoaded || !vectorSource.current) {
-      console.log("Map not loaded or vector source not available");
       return;
     }
 
-    console.log("Updating markers with nearby users:", nearbyUsers.length);
-    console.log("Current user:", currentUser?.id);
-    console.log("Radius in km:", radiusInKm);
-    console.log("Tracking enabled:", isTracking);
-    
     // Clear existing user markers (but keep circle markers)
-    const features = vectorSource.current.getFeatures();
-    features.forEach(feature => {
-      const isCircle = feature.get('isCircle');
-      const isUserMarker = feature.get('isCurrentUser') || feature.get('userId');
-      const isHeatMap = feature.get('isHeatMap');
-      
-      if ((!isCircle && isUserMarker) || isHeatMap) {
-        vectorSource.current?.removeFeature(feature);
-      }
-    });
+    clearExistingUserMarkers(vectorSource.current);
     
     // Filter to only show online users that aren't blocked
-    const onlineUsers = nearbyUsers
-      .filter(user => user.isOnline === true)
-      .filter(user => {
-        // Filter out users that the current user has blocked
-        if (currentUser?.blockedUsers?.includes(user.id)) {
-          console.log(`User ${user.id} is blocked, not showing on map`);
-          return false;
-        }
-        return true;
-      });
-    
-    console.log(`Found ${onlineUsers.length} online users out of ${nearbyUsers.length} nearby users`);
+    const onlineUsers = filterOnlineAndUnblockedUsers(nearbyUsers, currentUser);
     
     // Add markers for nearby ONLINE users with their locations
-    onlineUsers.forEach(user => {
-      if (user.location && user.location.lat && user.location.lng) {
-        console.log(`Processing online user ${user.id} with location:`, user.location);
-        
-        // Skip users outside the radius if we have user location
-        if (currentUser?.location) {
-          const distance = calculateDistance(
-            currentUser.location.lat,
-            currentUser.location.lng,
-            user.location.lat,
-            user.location.lng
-          );
-          
-          if (distance > radiusInKm) {
-            console.log(`User ${user.id} is outside radius (${distance.toFixed(2)}km > ${radiusInKm}km), not showing`);
-            return;
-          }
-          
-          console.log(`User ${user.id} is within radius (${distance.toFixed(2)}km <= ${radiusInKm}km)`);
-        }
-        
-        // Check if user has privacy enabled
-        const isPrivacyEnabled = shouldObfuscateLocation(user);
-        console.log(`User ${user.id} privacy enabled:`, isPrivacyEnabled);
-        
-        // Get the appropriate display location
-        // For privacy users, we'll use an obfuscated location
-        const displayLocation = isPrivacyEnabled ? getDisplayLocation(user) : user.location;
-        
-        if (!displayLocation) return;
-        
-        console.log(`Adding online user ${user.id} to map (privacy: ${isPrivacyEnabled ? 'enabled' : 'disabled'})`);
-        
-        try {
-          // Create the standard marker
-          const userFeature = new Feature({
-            geometry: new Point(fromLonLat([displayLocation.lng, displayLocation.lat])),
-            userId: user.id,
-            name: user.name || `User-${user.id.substring(0, 4)}`,
-            isPrivacyEnabled: isPrivacyEnabled
-          });
-          
-          vectorSource.current?.addFeature(userFeature);
-          
-          // If privacy enabled, also add a heatmap-style marker (larger, semi-transparent)
-          if (isPrivacyEnabled) {
-            const heatMapFeature = new Feature({
-              geometry: new Point(fromLonLat([displayLocation.lng, displayLocation.lat])),
-              userId: user.id,
-              isHeatMap: true,
-            });
-            
-            vectorSource.current?.addFeature(heatMapFeature);
-            console.log(`Added heatmap for user ${user.id} with privacy enabled`);
-          }
-        } catch (error) {
-          console.error(`Error adding user ${user.id} to map:`, error);
-        }
-      } else {
-        console.log(`User ${user.id} has no location data`);
-      }
-    });
+    addNearbyUserMarkers(onlineUsers, currentUser, radiusInKm, vectorSource.current);
 
-    // Add current user marker with the updated location, but only if tracking is enabled
-    if (currentUser?.location?.lat && currentUser?.location?.lng && isTracking) {
-      console.log(`Adding current user to map at ${currentUser.location.lat},${currentUser.location.lng}`);
-      
-      try {
-        // Check if current user has privacy enabled
-        const isCurrentUserPrivacyEnabled = shouldObfuscateLocation(currentUser);
-        console.log("Current user privacy enabled:", isCurrentUserPrivacyEnabled);
-        
-        // For the current user's own view, always show actual location (not privacy-offset location)
-        const userFeature = new Feature({
-          geometry: new Point(fromLonLat([currentUser.location.lng, currentUser.location.lat])),
-          isCurrentUser: true,
-          userId: currentUser.id,
-          name: 'You',
-          isPrivacyEnabled: isCurrentUserPrivacyEnabled
-        });
-        
-        vectorSource.current?.addFeature(userFeature);
-        
-        // If privacy enabled for current user, add a heatmap for them too
-        if (isCurrentUserPrivacyEnabled) {
-          const heatMapFeature = new Feature({
-            geometry: new Point(fromLonLat([currentUser.location.lng, currentUser.location.lat])),
-            userId: currentUser.id,
-            isCurrentUser: true,
-            isHeatMap: true,
-          });
-          
-          vectorSource.current?.addFeature(heatMapFeature);
-          console.log(`Added heatmap for current user with privacy enabled`);
-        }
-        
-        // Dispatch an event to notify that user's location has been updated on the map
-        window.dispatchEvent(new CustomEvent('user-marker-updated'));
-      } catch (error) {
-        console.error("Error adding current user to map:", error);
-      }
-    } else if (!isTracking) {
-      console.log("Tracking disabled, not adding current user marker");
-    } else {
-      console.log("Current user has no location");
+    // Add current user marker if tracking is enabled
+    if (isTracking) {
+      addCurrentUserMarker(currentUser, vectorSource.current);
     }
   }, [nearbyUsers, mapLoaded, currentUser?.location, vectorSource, radiusInKm, 
       currentUser?.locationSettings?.hideExactLocation, currentUser?.blockedUsers, isTracking]);
@@ -167,7 +40,6 @@ export const useMarkerUpdater = (
   // Also listen for manual location updates
   useEffect(() => {
     const handleLocationChange = () => {
-      console.log("Location change event detected - will update markers");
       // The next render cycle will update the markers
     };
     
@@ -177,4 +49,125 @@ export const useMarkerUpdater = (
       window.removeEventListener('user-location-changed', handleLocationChange);
     };
   }, []);
+};
+
+// Helper functions to clean up main effect
+const clearExistingUserMarkers = (vectorSource: VectorSource) => {
+  const features = vectorSource.getFeatures();
+  features.forEach(feature => {
+    const isCircle = feature.get('isCircle');
+    const isUserMarker = feature.get('isCurrentUser') || feature.get('userId');
+    const isHeatMap = feature.get('isHeatMap');
+    
+    if ((!isCircle && isUserMarker) || isHeatMap) {
+      vectorSource.removeFeature(feature);
+    }
+  });
+};
+
+const filterOnlineAndUnblockedUsers = (nearbyUsers: AppUser[], currentUser: AppUser | null): AppUser[] => {
+  return nearbyUsers
+    .filter(user => user.isOnline === true)
+    .filter(user => {
+      // Filter out users that the current user has blocked
+      if (currentUser?.blockedUsers?.includes(user.id)) {
+        return false;
+      }
+      return true;
+    });
+};
+
+const addNearbyUserMarkers = (
+  onlineUsers: AppUser[], 
+  currentUser: AppUser | null,
+  radiusInKm: number,
+  vectorSource: VectorSource
+) => {
+  onlineUsers.forEach(user => {
+    if (user.location && user.location.lat && user.location.lng) {
+      // Skip users outside the radius if we have user location
+      if (currentUser?.location) {
+        const distance = calculateDistance(
+          currentUser.location.lat,
+          currentUser.location.lng,
+          user.location.lat,
+          user.location.lng
+        );
+        
+        if (distance > radiusInKm) {
+          return;
+        }
+      }
+      
+      // Check if user has privacy enabled
+      const isPrivacyEnabled = shouldObfuscateLocation(user);
+      
+      // Get the appropriate display location
+      const displayLocation = isPrivacyEnabled ? getDisplayLocation(user) : user.location;
+      
+      if (!displayLocation) return;
+      
+      try {
+        // Create the standard marker
+        const userFeature = new Feature({
+          geometry: new Point(fromLonLat([displayLocation.lng, displayLocation.lat])),
+          userId: user.id,
+          name: user.name || `User-${user.id.substring(0, 4)}`,
+          isPrivacyEnabled: isPrivacyEnabled
+        });
+        
+        vectorSource.addFeature(userFeature);
+        
+        // If privacy enabled, also add a heatmap-style marker (larger, semi-transparent)
+        if (isPrivacyEnabled) {
+          const heatMapFeature = new Feature({
+            geometry: new Point(fromLonLat([displayLocation.lng, displayLocation.lat])),
+            userId: user.id,
+            isHeatMap: true,
+          });
+          
+          vectorSource.addFeature(heatMapFeature);
+        }
+      } catch (error) {
+        console.error(`Error adding user ${user.id} to map:`, error);
+      }
+    }
+  });
+};
+
+const addCurrentUserMarker = (currentUser: AppUser | null, vectorSource: VectorSource) => {
+  if (currentUser?.location?.lat && currentUser?.location?.lng) {
+    try {
+      // Check if current user has privacy enabled
+      const isCurrentUserPrivacyEnabled = shouldObfuscateLocation(currentUser);
+      
+      // For the current user's own view, always show actual location (not privacy-offset location)
+      const userFeature = new Feature({
+        geometry: new Point(fromLonLat([currentUser.location.lng, currentUser.location.lat])),
+        isCurrentUser: true,
+        userId: currentUser.id,
+        name: 'You',
+        isPrivacyEnabled: isCurrentUserPrivacyEnabled
+      });
+      
+      vectorSource.addFeature(userFeature);
+      
+      // If privacy enabled for current user, add a heatmap for them too
+      if (isCurrentUserPrivacyEnabled) {
+        const heatMapFeature = new Feature({
+          geometry: new Point(fromLonLat([currentUser.location.lng, currentUser.location.lat])),
+          userId: currentUser.id,
+          isCurrentUser: true,
+          isHeatMap: true,
+        });
+        
+        vectorSource.addFeature(heatMapFeature);
+      }
+      
+      // Dispatch an event to notify that user's location has been updated on the map
+      window.dispatchEvent(new CustomEvent('user-marker-updated'));
+    } catch (error) {
+      console.error("Error adding current user to map:", error);
+    }
+  }
 };
