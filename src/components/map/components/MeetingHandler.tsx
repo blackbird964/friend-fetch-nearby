@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { LineString } from 'ol/geom';
 import { Vector as VectorSource } from 'ol/source';
@@ -14,9 +15,9 @@ type MeetingHandlerProps = {
   selectedDuration: number;
   setSelectedDuration: (duration: number) => void;
   movingUsers: Set<string>;
-  setMovingUsers: (users: Set<string>) => void;
+  setMovingUsers: React.Dispatch<React.SetStateAction<Set<string>>>;
   completedMoves: Set<string>;
-  setCompletedMoves: (users: Set<string>) => void;
+  setCompletedMoves: React.Dispatch<React.SetStateAction<Set<string>>>;
   nearbyUsers: AppUser[];
   WYNYARD_COORDS: [number, number];
 };
@@ -97,20 +98,24 @@ const MeetingHandler: React.FC<MeetingHandlerProps> = ({
         // Add the route to the map
         addRouteToMap(route);
 
-        // Move user logic
-        setMovingUsers(prev => new Set(prev).add(user.id));
+        // Move user logic - Fixed type issue by creating a new Set
+        setMovingUsers(prev => {
+          const newSet = new Set(prev);
+          newSet.add(user.id);
+          return newSet;
+        });
 
         // Simulate user moving to midpoint
         const timeoutId = setTimeout(() => {
           setCompletedMoves(prev => {
-            const next = new Set(prev);
-            next.add(user.id);
-            return next;
+            const newSet = new Set(prev);
+            newSet.add(user.id);
+            return newSet;
           });
           setMovingUsers(prev => {
-            const next = new Set(prev);
-            next.delete(user.id);
-            return next;
+            const newSet = new Set(prev);
+            newSet.delete(user.id);
+            return newSet;
           });
           setSelectedUser(null);
           const routeSource = routeLayer.current?.getSource();
