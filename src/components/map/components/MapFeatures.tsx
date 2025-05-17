@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { AppUser, FriendRequest } from '@/context/types';
 import Map from 'ol/Map';
@@ -10,6 +11,7 @@ import { useMapStyles } from '../hooks/useMapStyles';
 import { useRadiusCircle } from '../hooks/useRadiusCircle';
 import { usePrivacyCircle } from '../hooks/usePrivacyCircle';
 import { useMapEvents } from '../hooks/useMapEvents';
+import { useMarkerVisibility } from '../hooks/markers/useMarkerVisibility';
 
 type MapFeaturesProps = {
   map: React.MutableRefObject<Map | null>;
@@ -72,21 +74,9 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
     radiusInKm
   );
   
-  // Listen for tracking changes to update markers visibility
-  useEffect(() => {
-    if (isTracking === false && vectorSource.current) {
-      // When tracking is turned off, clear all user markers
-      const features = vectorSource.current.getFeatures();
-      features.forEach(feature => {
-        const isCircle = feature.get('isCircle');
-        const isUserMarker = feature.get('isCurrentUser') || feature.get('userId');
-        if (!isCircle && isUserMarker) {
-          vectorSource.current?.removeFeature(feature);
-        }
-      });
-    }
-  }, [isTracking, vectorSource]);
-
+  // Handle tracking state changes for marker visibility
+  useMarkerVisibility(vectorSource, isTracking, mapLoaded);
+  
   // Listen for radius changes from slider or other components
   useEffect(() => {
     const handleRadiusChange = (e: any) => {
