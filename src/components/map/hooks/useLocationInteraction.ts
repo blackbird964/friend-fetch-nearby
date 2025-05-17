@@ -1,6 +1,6 @@
-
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { AppUser } from '@/context/types';
+import { debounce } from 'lodash';
 
 type UseLocationInteractionProps = {
   isPrivacyModeEnabled: boolean;
@@ -15,40 +15,58 @@ export const useLocationInteraction = ({
   setRadiusInKm,
   currentUser
 }: UseLocationInteractionProps) => {
-  // Handle radius changes from slider or other components
-  const handleRadiusChange = useCallback((newRadius: number) => {
-    console.log("LocationHandling - Radius changed to:", newRadius);
-    setRadiusInKm(newRadius);
-    
-    // Dispatch event to notify radius changed
-    window.dispatchEvent(new CustomEvent('radius-changed', { detail: newRadius }));
-  }, [setRadiusInKm]);
+  // Create a debounced function to reduce frequency of radius changes
+  const debouncedRadiusChange = useCallback(
+    debounce((newRadius: number) => {
+      setRadiusInKm(newRadius);
+      
+      // Dispatch event to notify radius changed
+      window.dispatchEvent(new CustomEvent('radius-changed', { detail: newRadius }));
+    }, 100),
+    [setRadiusInKm]
+  );
   
-  // Listen for radius changes from events
+  // Keep track of event subscriptions for proper cleanup
+  const radiusEventRef = useRef<((e: any) => void) | null>(null);
+  
+  // Handle radius changes with improved performance
+  const handleRadiusChange = useCallback((newRadius: number) => {
+    debouncedRadiusChange(newRadius);
+  }, [debouncedRadiusChange]);
+  
+  // Listen for radius changes from events with proper cleanup
   useEffect(() => {
-    const handleRadiusChangeFromEvent = (e: any) => {
-      console.log("Radius change event detected:", e.detail);
-      handleRadiusChange(e.detail);
+    // Create a handler that will persist for proper cleanup
+    const handleRadiusChangeEvent = (e: any) => {
+      debouncedRadiusChange(e.detail);
     };
     
-    window.addEventListener('radius-changed', handleRadiusChangeFromEvent);
+    // Store reference for cleanup
+    radiusEventRef.current = handleRadiusChangeEvent;
+    window.addEventListener('radius-changed', handleRadiusChangeEvent);
     
     return () => {
-      window.removeEventListener('radius-changed', handleRadiusChangeFromEvent);
+      if (radiusEventRef.current) {
+        window.removeEventListener('radius-changed', radiusEventRef.current);
+        radiusEventRef.current = null;
+      }
     };
-  }, [handleRadiusChange]);
+  }, [debouncedRadiusChange]);
 
-  // Handle privacy mode changes
+  // Handle privacy mode changes with reduced updates
+  const lastPrivacyState = useRef(isPrivacyModeEnabled);
+  
   useEffect(() => {
-    console.log("Privacy mode changed:", isPrivacyModeEnabled);
-    // If current user exists and has location, update markers when privacy changes
-    if (currentUser?.location) {
-      // Dispatch privacy mode changed event
-      window.dispatchEvent(new CustomEvent('privacy-mode-changed', { 
-        detail: { isPrivacyEnabled: isPrivacyModeEnabled } 
-      }));
-      // Also update user location to reflect changes immediately
-      window.dispatchEvent(new CustomEvent('user-location-changed'));
+    // Only dispatch event if privacy state actually changed
+    if (lastPrivacyState.current !== isPrivacyModeEnabled) {
+      lastPrivacyState.current = isPrivacyModeEnabled;
+      
+      // If current user exists and has location, update markers
+      if (currentUser?.location) {
+        window.dispatchEvent(new CustomEvent('privacy-mode-changed', { 
+          detail: { isPrivacyEnabled: isPrivacyModeEnabled } 
+        }));
+      }
     }
   }, [isPrivacyModeEnabled, currentUser]);
 

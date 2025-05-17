@@ -1,7 +1,8 @@
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { AppUser } from '@/context/types';
 import { useToast } from '@/hooks/use-toast';
+import { debounce } from 'lodash';
 
 type UsePrivacyModeProps = {
   currentUser: AppUser | null;
@@ -18,30 +19,31 @@ export const usePrivacyMode = ({
 }: UsePrivacyModeProps) => {
   const { toast } = useToast();
   const [isPrivacyModeEnabled, setIsPrivacyModeEnabled] = useState<boolean>(initialPrivacyEnabled);
+  const updateInProgressRef = useRef(false);
   
   // Update local state when user settings change
   useEffect(() => {
+    // Skip if we're already updating to avoid loops
+    if (updateInProgressRef.current) return;
+    
     // Check if current user has privacy settings and sync state
     if (currentUser?.locationSettings?.hideExactLocation !== undefined) {
-      console.log("Syncing privacy toggle with user settings:", currentUser.locationSettings.hideExactLocation);
       setIsPrivacyModeEnabled(currentUser.locationSettings.hideExactLocation);
     } else if (currentUser?.location_settings?.hide_exact_location !== undefined) {
-      console.log("Syncing privacy toggle with user settings (snake_case):", currentUser.location_settings.hide_exact_location);
       setIsPrivacyModeEnabled(currentUser.location_settings.hide_exact_location);
     } else if (initialPrivacyEnabled !== undefined) {
       // If no settings, use prop value
-      console.log("Using prop value for privacy toggle:", initialPrivacyEnabled);
       setIsPrivacyModeEnabled(initialPrivacyEnabled);
     }
   }, [initialPrivacyEnabled, currentUser?.locationSettings?.hideExactLocation, currentUser?.location_settings?.hide_exact_location]);
 
-  // Function to toggle privacy mode
-  const togglePrivacyMode = useCallback(() => {
-    console.log("Privacy mode toggled, current value:", isPrivacyModeEnabled, "changing to:", !isPrivacyModeEnabled);
-    const newPrivacyValue = !isPrivacyModeEnabled;
-    setIsPrivacyModeEnabled(newPrivacyValue);
-    
-    if (currentUser) {
+  // Use debounce to avoid excessive updates when toggling privacy mode
+  const debouncedUpdatePrivacy = useCallback(
+    debounce((newPrivacyValue: boolean) => {
+      if (!currentUser) return;
+      
+      updateInProgressRef.current = true;
+      
       const updatedUser = {
         ...currentUser,
         locationSettings: {
@@ -63,15 +65,28 @@ export const usePrivacyMode = ({
         });
         
         // Update with current location and new privacy setting
-        updateUserLocation(currentUser.id, currentUser.location);
+        updateUserLocation(currentUser.id, currentUser.location)
+          .finally(() => {
+            updateInProgressRef.current = false;
+          });
         
         // Dispatch privacy mode change event
         window.dispatchEvent(new CustomEvent('privacy-mode-changed', { 
           detail: { isPrivacyEnabled: newPrivacyValue } 
         }));
+      } else {
+        updateInProgressRef.current = false;
       }
-    }
-  }, [isPrivacyModeEnabled, currentUser, setCurrentUser, updateUserLocation, toast]);
+    }, 100),
+    [currentUser, setCurrentUser, updateUserLocation, toast]
+  );
+
+  // Function to toggle privacy mode
+  const togglePrivacyMode = useCallback(() => {
+    const newPrivacyValue = !isPrivacyModeEnabled;
+    setIsPrivacyModeEnabled(newPrivacyValue);
+    debouncedUpdatePrivacy(newPrivacyValue);
+  }, [isPrivacyModeEnabled, debouncedUpdatePrivacy]);
 
   return {
     isPrivacyModeEnabled,

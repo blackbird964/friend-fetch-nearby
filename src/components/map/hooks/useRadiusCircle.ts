@@ -1,5 +1,5 @@
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import { fromLonLat } from 'ol/proj';
 import { Vector as VectorSource } from 'ol/source';
 import { Vector as VectorLayer } from 'ol/layer';
@@ -18,28 +18,48 @@ export const useRadiusCircle = (
   const radiusLayer = useRef<VectorLayer<VectorSource> | null>(null);
   const radiusFeature = useRef<Feature | null>(null);
   const [isLayerInitialized, setIsLayerInitialized] = useState(false);
-  const [lastRadius, setLastRadius] = useState(radiusInKm);
+  const lastRadiusRef = useRef(radiusInKm);
+  const throttleTimeoutRef = useRef<number | null>(null);
   
-  console.log("useRadiusCircle - Current radius:", radiusInKm, "km, user:", currentUser?.id);
+  // Separated update function to prevent recreation on each render
+  const updateRadiusCircle = useCallback((location: {lat: number, lng: number}, radius: number) => {
+    if (!radiusLayer.current || !map.current) return;
+    
+    const source = radiusLayer.current.getSource();
+    if (!source) return;
+    
+    // Clear existing features
+    source.clear();
+    
+    // Convert coordinates and create the circle
+    const center = fromLonLat([location.lng, location.lat]);
+    const radiusInMeters = radius * 1000; // Convert km to meters
+    
+    radiusFeature.current = new Feature({
+      geometry: new Circle(center, radiusInMeters),
+      name: 'radiusCircle',
+      isCircle: true,
+      circleType: 'radius',
+    });
+    
+    // Add the feature to the source
+    source.addFeature(radiusFeature.current);
+    
+    // Store the last radius
+    lastRadiusRef.current = radius;
+  }, [map]);
   
-  // Create a separate layer for the radius circle - independent from the main vector layer
+  // Create a separate layer for radius circle
   useEffect(() => {
-    if (!map.current) {
-      console.log("Map reference not available for radius circle");
-      return;
-    }
+    if (!map.current) return;
     
-    console.log("Initializing radius circle layer, map is available");
-    
-    // Always recreate the layer to ensure it's fresh
+    // Clean up existing layer if it exists
     if (radiusLayer.current) {
-      console.log("Removing existing radius layer");
       map.current.removeLayer(radiusLayer.current);
       radiusLayer.current = null;
     }
     
-    // Create a new layer with its own source
-    console.log("Creating new radius circle layer");
+    // Create a new source for better performance isolation
     const source = new VectorSource();
     
     const radiusStyle = new Style({
@@ -56,131 +76,99 @@ export const useRadiusCircle = (
     radiusLayer.current = new VectorLayer({
       source,
       style: radiusStyle,
-      zIndex: 99, // Much higher zIndex to ensure visibility
-      properties: {
-        updateWhileAnimating: true,
-        updateWhileInteracting: true
-      }
+      zIndex: 5, // Lower than privacy circle
+      updateWhileAnimating: false, // Performance optimization
+      updateWhileInteracting: false, // Performance optimization
     });
     
-    console.log("Adding radius layer to map");
     map.current.addLayer(radiusLayer.current);
     setIsLayerInitialized(true);
     
-    // Force update the circle right after layer initialization
+    // Update on initialization if we have data
     if (currentUser?.location) {
-      setTimeout(() => updateRadiusCircle(currentUser.location, radiusInKm), 100);
+      updateRadiusCircle(currentUser.location, radiusInKm);
     }
     
     return () => {
       if (map.current && radiusLayer.current) {
-        console.log("Cleanup: Removing radius layer from map");
         map.current.removeLayer(radiusLayer.current);
         radiusLayer.current = null;
-        setIsLayerInitialized(false);
+      }
+      
+      // Clear any pending timeouts
+      if (throttleTimeoutRef.current !== null) {
+        window.clearTimeout(throttleTimeoutRef.current);
       }
     };
-  }, [map]); // Only recreate when map changes
+  }, [map, updateRadiusCircle, currentUser?.location, radiusInKm]);
   
-  // Separate function to update the radius circle
-  const updateRadiusCircle = (location: {lat: number, lng: number}, radius: number) => {
-    if (!radiusLayer.current || !map.current || !isLayerInitialized) {
-      console.log("Cannot update radius circle: layer not initialized");
-      return;
-    }
-    
-    const source = radiusLayer.current.getSource();
-    if (!source) {
-      console.error("Radius layer source is null");
-      return;
-    }
-    
-    // Clear existing features
-    source.clear();
-    
-    console.log("Creating radius circle at:", location.lat, location.lng, "with radius:", radius, "km");
-    
-    // Convert coordinates and create the circle
-    const center = fromLonLat([location.lng, location.lat]);
-    const radiusInMeters = radius * 1000; // Convert km to meters
-    
-    radiusFeature.current = new Feature({
-      geometry: new Circle(center, radiusInMeters),
-      name: 'radiusCircle',
-      isCircle: true,
-      circleType: 'radius',
-    });
-    
-    // Add the feature to the source
-    source.addFeature(radiusFeature.current);
-    
-    // Force redraw
-    radiusLayer.current.changed();
-    source.changed();
-    map.current.render();
-    
-    console.log("Radius circle updated with radius:", radius, "km");
-    setLastRadius(radius);
-  };
-  
-  // Update radius circle when user location or radius changes
+  // Update radius circle when user location changes (with throttling)
   useEffect(() => {
-    console.log("Radius circle update triggered - radius:", radiusInKm, "km");
-    console.log("Current user location:", currentUser?.location);
+    if (!currentUser?.location || !isLayerInitialized) return;
     
-    if (!currentUser?.location) {
-      console.log("Current user has no location, not creating radius circle");
-      return;
+    // Throttle updates to improve performance
+    if (throttleTimeoutRef.current !== null) {
+      window.clearTimeout(throttleTimeoutRef.current);
     }
     
-    const { lat, lng } = currentUser.location;
+    throttleTimeoutRef.current = window.setTimeout(() => {
+      updateRadiusCircle(currentUser.location!, radiusInKm);
+      throttleTimeoutRef.current = null;
+    }, 100); // Small delay to batch updates
     
-    // Update the circle if we have a location and either the radius changed or location changed
-    if (lat && lng && (radiusInKm !== lastRadius || isLayerInitialized)) {
-      updateRadiusCircle(currentUser.location, radiusInKm);
-    }
-  }, [currentUser?.location, radiusInKm, map, isLayerInitialized, lastRadius]);
+    return () => {
+      if (throttleTimeoutRef.current !== null) {
+        window.clearTimeout(throttleTimeoutRef.current);
+      }
+    };
+  }, [currentUser?.location, radiusInKm, isLayerInitialized, updateRadiusCircle]);
   
-  // Listen for view changes and maintain fixed radius size regardless of zoom level
+  // Listen for radius changes from external events
   useEffect(() => {
-    if (!map.current || !currentUser?.location || !isLayerInitialized) {
-      return;
-    }
+    const handleRadiusChange = (e: CustomEvent) => {
+      if (!currentUser?.location) return;
+      
+      // Throttle updates for smoother performance
+      if (throttleTimeoutRef.current !== null) {
+        window.clearTimeout(throttleTimeoutRef.current);
+      }
+      
+      throttleTimeoutRef.current = window.setTimeout(() => {
+        updateRadiusCircle(currentUser.location!, e.detail);
+        throttleTimeoutRef.current = null;
+      }, 50);
+    };
     
-    const { lat, lng } = currentUser.location;
-    if (!lat || !lng) return;
+    window.addEventListener('radius-changed', handleRadiusChange as EventListener);
     
-    // Get the map's view
+    return () => {
+      window.removeEventListener('radius-changed', handleRadiusChange as EventListener);
+      if (throttleTimeoutRef.current !== null) {
+        window.clearTimeout(throttleTimeoutRef.current);
+      }
+    };
+  }, [currentUser?.location, updateRadiusCircle]);
+  
+  // Handle zoom changes with improved performance
+  useEffect(() => {
+    if (!map.current || !currentUser?.location || !isLayerInitialized) return;
+    
     const view = map.current.getView();
     
-    // This function maintains the fixed size on zoom changes
+    // Don't recreate this function on every render
     const fixRadiusOnZoomChange = () => {
       if (!currentUser?.location || !radiusFeature.current || !radiusLayer.current) return;
       
-      // Get the center in map projection
-      const center = fromLonLat([currentUser.location.lng, currentUser.location.lat]);
-      
-      // Update the circle with the fixed radius
-      const geometry = new Circle(center, radiusInKm * 1000);
-      radiusFeature.current.setGeometry(geometry);
-      
-      // Force redraw
-      if (radiusLayer.current) {
-        radiusLayer.current.changed();
-      }
+      // Simply update the radius to current value - this ensures fixed size regardless of zoom
+      updateRadiusCircle(currentUser.location, lastRadiusRef.current);
     };
     
-    // Add listener for resolution (zoom) changes
     view.on('change:resolution', fixRadiusOnZoomChange);
     
-    // Initial update to ensure correct size
-    fixRadiusOnZoomChange();
-    
     return () => {
-      // Clean up listener
       view.un('change:resolution', fixRadiusOnZoomChange);
     };
-  }, [map, currentUser?.location, radiusInKm, isLayerInitialized]);
+  }, [map, currentUser?.location, isLayerInitialized, updateRadiusCircle]);
   
   return { radiusLayer, radiusFeature };
 };

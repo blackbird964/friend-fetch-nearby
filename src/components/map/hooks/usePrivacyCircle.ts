@@ -1,10 +1,11 @@
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 import { fromLonLat } from 'ol/proj';
 import { Vector as VectorSource } from 'ol/source';
 import { Vector as VectorLayer } from 'ol/layer';
 import Feature from 'ol/Feature';
 import { Circle } from 'ol/geom';
+import { Fill, Style, Stroke } from 'ol/style';
 import Map from 'ol/Map';
 import { AppUser } from '@/context/types';
 import { shouldObfuscateLocation, getPrivacyCircleRadius } from '@/utils/privacyUtils';
@@ -17,23 +18,38 @@ export const usePrivacyCircle = (
   const privacyLayer = useRef<VectorLayer<VectorSource> | null>(null);
   const privacyFeature = useRef<Feature | null>(null);
   
-  // Create a layer for the privacy circle if it doesn't exist
+  // Create a separate layer for the privacy circle to improve performance
   useEffect(() => {
     if (!map.current) return;
     
-    if (!privacyLayer.current) {
-      const source = new VectorSource();
-      privacyLayer.current = new VectorLayer({
-        source,
-        zIndex: 1, // Places the circle below the markers
-        properties: {
-          updateWhileAnimating: true,
-          updateWhileInteracting: true
-        }
-      });
-      
-      map.current.addLayer(privacyLayer.current);
+    // Clean up existing layer if it exists
+    if (privacyLayer.current) {
+      map.current.removeLayer(privacyLayer.current);
+      privacyLayer.current = null;
     }
+    
+    // Create the privacy layer with appropriate styling
+    const source = new VectorSource();
+    
+    // Improved style with better visibility
+    const privacyStyle = new Style({
+      fill: new Fill({
+        color: 'rgba(100, 149, 237, 0.15)', // Light blue semi-transparent
+      }),
+      stroke: new Stroke({
+        color: 'rgba(100, 149, 237, 0.6)', // Cornflower blue
+        width: 2,
+        lineDash: [5, 5]
+      }),
+    });
+    
+    privacyLayer.current = new VectorLayer({
+      source,
+      style: privacyStyle,
+      zIndex: 10, // Higher than regular markers but lower than selected markers
+    });
+    
+    map.current.addLayer(privacyLayer.current);
     
     return () => {
       if (map.current && privacyLayer.current) {
@@ -43,24 +59,22 @@ export const usePrivacyCircle = (
     };
   }, [map]);
   
-  // Update privacy circle when user location or privacy settings change
-  useEffect(() => {
-    if (!privacyLayer.current || !map.current) return;
+  // Separated update function to avoid recreation in effects
+  const updatePrivacyCircle = useCallback(() => {
+    if (!privacyLayer.current || !map.current || !currentUser?.location) return;
     
-    // Clear existing privacy feature
-    if (privacyFeature.current) {
-      privacyLayer.current.getSource()?.removeFeature(privacyFeature.current);
-      privacyFeature.current = null;
-    }
+    // Only create privacy circle if privacy mode is enabled
+    const isPrivacyEnabled = shouldObfuscateLocation(currentUser);
+    const source = privacyLayer.current.getSource();
     
-    // If user has location and privacy is enabled, create a privacy circle
-    if (currentUser?.location && shouldObfuscateLocation(currentUser)) {
-      console.log("Creating privacy circle for user with privacy mode enabled");
+    // Clear existing features
+    source?.clear();
+    
+    // Only add feature if privacy is enabled
+    if (isPrivacyEnabled) {
       const { lng, lat } = currentUser.location;
       const center = fromLonLat([lng, lat]);
-      
-      // Use fixed radius for privacy circle (~500m)
-      const radiusInMeters = getPrivacyCircleRadius(); // ~500m
+      const radiusInMeters = getPrivacyCircleRadius(); // 500m fixed radius
       
       // Create the circle feature
       privacyFeature.current = new Feature({
@@ -70,40 +84,52 @@ export const usePrivacyCircle = (
         circleType: 'privacy',
       });
       
-      privacyLayer.current.getSource()?.addFeature(privacyFeature.current);
-      console.log("Added privacy circle to map");
-      
-      // Fix the circle size to remain consistent regardless of zoom level
-      const view = map.current.getView();
-      
-      const fixCircleOnZoomChange = () => {
-        if (!currentUser?.location || !privacyFeature.current || !privacyLayer.current) return;
-        
-        // Get the center in map projection
-        const center = fromLonLat([currentUser.location.lng, currentUser.location.lat]);
-        
-        // Update the circle with the fixed radius
-        const geometry = new Circle(center, radiusInMeters);
-        privacyFeature.current.setGeometry(geometry);
-        
-        // Force redraw
-        if (privacyLayer.current) {
-          privacyLayer.current.changed();
-        }
-      };
-      
-      // Add listener for resolution (zoom) changes
-      view.on('change:resolution', fixCircleOnZoomChange);
-      
-      // Initial update to ensure correct size
-      fixCircleOnZoomChange();
-      
-      return () => {
-        // Clean up listener
-        view.un('change:resolution', fixCircleOnZoomChange);
-      };
+      source?.addFeature(privacyFeature.current);
     }
-  }, [currentUser?.location, currentUser?.locationSettings, currentUser?.location_settings, map]);
+  }, [currentUser?.location, map]);
+  
+  // Update privacy circle when user location or privacy settings change
+  useEffect(() => {
+    if (!currentUser || !map.current || !privacyLayer.current) return;
+    
+    updatePrivacyCircle();
+    
+    // Maintain circle size on zoom changes
+    const view = map.current.getView();
+    
+    // Don't recreate this function on every render
+    const fixCircleOnZoomChange = () => {
+      updatePrivacyCircle();
+    };
+    
+    view.on('change:resolution', fixCircleOnZoomChange);
+    
+    // Cleanup zoom listener
+    return () => {
+      view.un('change:resolution', fixCircleOnZoomChange);
+    };
+  }, [
+    currentUser?.location, 
+    currentUser?.locationSettings?.hideExactLocation,
+    currentUser?.location_settings?.hide_exact_location,
+    map, 
+    updatePrivacyCircle
+  ]);
+  
+  // Listen for privacy mode changes from events
+  useEffect(() => {
+    const handlePrivacyChange = () => {
+      updatePrivacyCircle();
+    };
+    
+    window.addEventListener('privacy-mode-changed', handlePrivacyChange);
+    window.addEventListener('user-location-changed', handlePrivacyChange);
+    
+    return () => {
+      window.removeEventListener('privacy-mode-changed', handlePrivacyChange);
+      window.removeEventListener('user-location-changed', handlePrivacyChange);
+    };
+  }, [updatePrivacyCircle]);
   
   return { privacyLayer, privacyFeature };
 };

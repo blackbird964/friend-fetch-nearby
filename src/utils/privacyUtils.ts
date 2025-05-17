@@ -47,10 +47,6 @@ export const shouldObfuscateLocation = (user: any): boolean => {
     (user.location_settings?.hide_exact_location)
   );
   
-  console.log("Privacy check for user:", user.id, "Privacy mode:", privacyEnabled, 
-    "locationSettings:", user.locationSettings, 
-    "location_settings:", user.location_settings);
-    
   return privacyEnabled;
 };
 
@@ -98,6 +94,6 @@ export const getDisplayLocation = (user: any): Location | undefined => {
  * Get radius in meters for privacy circle
  */
 export const getPrivacyCircleRadius = (): number => {
-  // 500m radius as requested in requirements
+  // Fixed 500m radius that doesn't change with zoom
   return 500;
 };
