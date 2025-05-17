@@ -5,23 +5,18 @@ import { ActivePriority } from '@/lib/supabase/profiles/types';
 import { v4 as uuidv4 } from 'uuid';
 import { PriorityActivitySelector } from './form';
 
-// The curated list of activities popular in Sydney
+// Updated list of Sydney activities based on user request
 const SYDNEY_ACTIVITIES = [
-  "Beach visits (Bondi, Manly, Coogee)",
-  "Coastal walks (Bondi to Coogee)",
-  "Harbor ferry rides",
-  "Sydney Opera House tours",
-  "Exploring The Rocks",
-  "Visiting Taronga Zoo",
-  "Paddleboarding on Sydney Harbor",
-  "Dining in Darling Harbour",
-  "Shopping at Queen Victoria Building",
-  "Hiking in Blue Mountains",
-  "Wine tasting in Hunter Valley",
-  "Attending local festivals",
-  "Surfing lessons",
-  "Royal Botanic Gardens visits",
-  "Weekend markets exploration"
+  "coffee",
+  "lunch",
+  "dog walking",
+  "parent/toddler park catchup",
+  "running",
+  "gym",
+  "beach",
+  "co-working space catchup",
+  "new to area - show me around!",
+  "pokemon go"
 ];
 
 interface PriorityFormFieldsProps {
