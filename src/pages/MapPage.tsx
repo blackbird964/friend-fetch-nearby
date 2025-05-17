@@ -174,6 +174,7 @@ const MapPage: React.FC = () => {
                 togglePrivacyMode={togglePrivacyMode}
                 showLabel={true}
                 small={true}
+                variant="switch"
               />
             </div>
 
@@ -191,10 +192,10 @@ const MapPage: React.FC = () => {
             </div>
           </div>
           
-          {/* New privacy mode indicator */}
+          {/* New privacy mode indicator with enhanced styling */}
           {isPrivacyModeEnabled && (
-            <div className="flex items-center justify-center py-1 px-2 bg-purple-50 rounded-md text-xs text-purple-700">
-              <Shield className="h-3 w-3 mr-1 inline" />
+            <div className="flex items-center justify-center py-1 px-2 bg-purple-50 rounded-md text-xs text-purple-700 border border-purple-100 animate-fade-in">
+              <Shield className="h-3 w-3 mr-1 inline shield-pulse text-purple-500" />
               Privacy Mode Active - Your exact location is hidden
             </div>
           )}

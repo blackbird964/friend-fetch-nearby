@@ -98,8 +98,34 @@
   }
 }
 
+@keyframes shield-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+@keyframes privacy-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px rgba(155, 135, 245, 0.3));
+  }
+  50% {
+    filter: drop-shadow(0 0 4px rgba(155, 135, 245, 0.5));
+  }
+}
+
 .pulse-animation {
   animation: pulse-location 2s infinite;
+}
+
+.shield-pulse {
+  animation: shield-pulse 2s infinite;
+}
+
+.privacy-glow {
+  animation: privacy-glow 3s infinite;
 }
 
 /* Simple white background */

@@ -42,6 +42,7 @@ const LocationControls: React.FC<LocationControlsProps> = ({
         <LocationPrivacyToggle 
           isPrivacyModeEnabled={isPrivacyModeEnabled}
           togglePrivacyMode={togglePrivacyMode}
+          showLabel={true}
         />
       </div>
 
