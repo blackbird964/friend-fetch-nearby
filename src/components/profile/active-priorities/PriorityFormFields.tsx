@@ -2,13 +2,27 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ActivePriority } from '@/lib/supabase/profiles/types';
-import PRIORITY_CATEGORIES from './PriorityCategories';
 import { v4 as uuidv4 } from 'uuid';
-import { 
-  PriorityCategorySelector,
-  PriorityActivitySelector,
-  PriorityDetailsForm 
-} from './form';
+import { PriorityActivitySelector } from './form';
+
+// The curated list of activities popular in Sydney
+const SYDNEY_ACTIVITIES = [
+  "Beach visits (Bondi, Manly, Coogee)",
+  "Coastal walks (Bondi to Coogee)",
+  "Harbor ferry rides",
+  "Sydney Opera House tours",
+  "Exploring The Rocks",
+  "Visiting Taronga Zoo",
+  "Paddleboarding on Sydney Harbor",
+  "Dining in Darling Harbour",
+  "Shopping at Queen Victoria Building",
+  "Hiking in Blue Mountains",
+  "Wine tasting in Hunter Valley",
+  "Attending local festivals",
+  "Surfing lessons",
+  "Royal Botanic Gardens visits",
+  "Weekend markets exploration"
+];
 
 interface PriorityFormFieldsProps {
   onAddPriority: (priority: ActivePriority) => void;
@@ -19,44 +33,26 @@ const PriorityFormFields: React.FC<PriorityFormFieldsProps> = ({
   onAddPriority,
   isMaxPriorities
 }) => {
-  const [category, setCategory] = useState<string>("");
   const [activity, setActivity] = useState<string>("");
-  const [frequency, setFrequency] = useState<string>("");
-  const [timePreference, setTimePreference] = useState<string>("");
-  const [urgency, setUrgency] = useState<string>("");
-  const [location, setLocation] = useState<string>("");
-  const [experienceLevel, setExperienceLevel] = useState<string>("");
-  const [customActivity, setCustomActivity] = useState<string>("");
-
-  const activities = PRIORITY_CATEGORIES.find(cat => cat.name === category)?.activities || [];
 
   const handleAddPriority = () => {
-    if (!category || (!activity && !customActivity)) return;
-    
-    const finalActivity = activity === "Custom" ? customActivity : activity;
+    if (!activity) return;
     
     const newPriority: ActivePriority = {
       id: uuidv4(),
-      category,
-      activity: finalActivity,
-      frequency: frequency as any,
-      timePreference: timePreference as any,
-      urgency: urgency as any,
-      location: location || undefined,
-      experienceLevel: experienceLevel as any,
+      category: "Sydney Activities",
+      activity: activity,
+      // Set defaults for other fields
+      frequency: "weekly",
+      timePreference: "flexible",
+      urgency: "ongoing",
+      experienceLevel: "beginner",
     };
     
     onAddPriority(newPriority);
     
-    // Reset form fields
-    setCategory("");
+    // Reset form field
     setActivity("");
-    setFrequency("");
-    setTimePreference("");
-    setUrgency("");
-    setLocation("");
-    setExperienceLevel("");
-    setCustomActivity("");
   };
 
   if (isMaxPriorities) {
@@ -66,42 +62,18 @@ const PriorityFormFields: React.FC<PriorityFormFieldsProps> = ({
   return (
     <div className="border rounded-lg p-4 space-y-4 mt-4">
       <div className="grid grid-cols-1 gap-4">
-        <PriorityCategorySelector 
-          value={category} 
-          onChange={setCategory} 
+        <PriorityActivitySelector 
+          activities={SYDNEY_ACTIVITIES}
+          value={activity}
+          onActivityChange={setActivity}
         />
-
-        {category && (
-          <PriorityActivitySelector 
-            activities={activities}
-            value={activity}
-            customActivity={customActivity}
-            onActivityChange={setActivity}
-            onCustomActivityChange={setCustomActivity}
-          />
-        )}
       </div>
-      
-      {category && activity && (
-        <PriorityDetailsForm 
-          frequency={frequency}
-          timePreference={timePreference}
-          urgency={urgency}
-          experienceLevel={experienceLevel}
-          location={location}
-          onFrequencyChange={setFrequency}
-          onTimePreferenceChange={setTimePreference}
-          onUrgencyChange={setUrgency}
-          onExperienceLevelChange={setExperienceLevel}
-          onLocationChange={(e) => setLocation(e.target.value)}
-        />
-      )}
       
       <div className="flex justify-end">
         <Button 
           type="button"
           onClick={handleAddPriority}
-          disabled={!category || (!activity && !customActivity)}
+          disabled={!activity}
         >
           Add Priority
         </Button>

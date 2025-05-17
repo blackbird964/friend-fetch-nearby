@@ -12,7 +12,7 @@ const ActivePriorities: React.FC<ActivePrioritiesProps> = ({ priorities }) => {
   
   return (
     <div className="mb-6">
-      <h3 className="text-sm font-medium text-gray-500 mb-2">Active Priorities</h3>
+      <h3 className="text-sm font-medium text-gray-500 mb-2">Activities</h3>
       <div className="space-y-2">
         {priorities.map((priority) => (
           <PriorityDisplay key={priority.id} priority={priority} />

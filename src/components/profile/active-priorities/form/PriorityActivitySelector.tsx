@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -13,17 +12,13 @@ import {
 interface PriorityActivitySelectorProps {
   activities: string[];
   value: string;
-  customActivity: string;
   onActivityChange: (value: string) => void;
-  onCustomActivityChange: (value: string) => void;
 }
 
 const PriorityActivitySelector: React.FC<PriorityActivitySelectorProps> = ({
   activities,
   value,
-  customActivity,
   onActivityChange,
-  onCustomActivityChange
 }) => {
   return (
     <div>
@@ -41,19 +36,8 @@ const PriorityActivitySelector: React.FC<PriorityActivitySelectorProps> = ({
               {act}
             </SelectItem>
           ))}
-          <SelectItem value="Custom">Custom activity</SelectItem>
         </SelectContent>
       </Select>
-      
-      {value === "Custom" && (
-        <div className="mt-2">
-          <Input
-            placeholder="Describe your activity"
-            value={customActivity}
-            onChange={(e) => onCustomActivityChange(e.target.value)}
-          />
-        </div>
-      )}
     </div>
   );
 };

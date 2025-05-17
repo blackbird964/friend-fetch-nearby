@@ -20,9 +20,9 @@ const ActivePriorityForm: React.FC<ActivePriorityFormProps> = ({
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="font-medium mb-2">Current Priorities (Maximum 5)</h3>
+        <h3 className="font-medium mb-2">Current Activities (Maximum 5)</h3>
         <p className="text-sm text-muted-foreground mb-4">
-          Share what you're actively focused on right now to connect with like-minded people.
+          Share what Sydney activities you're interested in to connect with like-minded people.
         </p>
       
         <PriorityList 
