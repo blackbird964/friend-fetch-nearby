@@ -37,11 +37,11 @@ const PriorityFormFields: React.FC<PriorityFormFieldsProps> = ({
       id: uuidv4(),
       category: "Sydney Activities",
       activity: activity,
-      // Set defaults for other fields
-      frequency: "weekly",
-      timePreference: "flexible",
-      urgency: "ongoing",
-      experienceLevel: "beginner",
+      // Remove default values for these fields
+      frequency: "",
+      timePreference: "",
+      urgency: "",
+      experienceLevel: "",
     };
     
     onAddPriority(newPriority);
