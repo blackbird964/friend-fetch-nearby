@@ -43,11 +43,11 @@ export type ActivePriority = {
   id: string;
   category: string;
   activity: string;
-  frequency?: 'daily' | 'weekly' | 'weekends' | 'monthly';
-  timePreference?: 'morning' | 'afternoon' | 'evening' | 'night' | 'flexible';
-  urgency?: 'now' | 'soon' | 'ongoing';
+  frequency?: 'daily' | 'weekly' | 'weekends' | 'monthly' | undefined;
+  timePreference?: 'morning' | 'afternoon' | 'evening' | 'night' | 'flexible' | undefined;
+  urgency?: 'now' | 'soon' | 'ongoing' | undefined;
   location?: string;
-  experienceLevel?: 'beginner' | 'intermediate' | 'advanced';
+  experienceLevel?: 'beginner' | 'intermediate' | 'advanced' | undefined;
 };
 
 /**

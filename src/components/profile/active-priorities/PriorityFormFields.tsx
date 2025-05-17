@@ -33,15 +33,12 @@ const PriorityFormFields: React.FC<PriorityFormFieldsProps> = ({
   const handleAddPriority = () => {
     if (!activity) return;
     
+    // Create a new priority with only required fields
     const newPriority: ActivePriority = {
       id: uuidv4(),
       category: "Sydney Activities",
       activity: activity,
-      // Remove default values for these fields
-      frequency: "",
-      timePreference: "",
-      urgency: "",
-      experienceLevel: "",
+      // Optional fields are completely omitted, not set to empty strings
     };
     
     onAddPriority(newPriority);
