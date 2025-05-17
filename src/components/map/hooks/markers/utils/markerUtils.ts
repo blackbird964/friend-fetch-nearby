@@ -38,11 +38,21 @@ export const clearExistingUserMarkers = (vectorSource: VectorSource) => {
  * Filter users to display only online and unblocked users
  */
 export const filterOnlineAndUnblockedUsers = (nearbyUsers: AppUser[], currentUser: AppUser | null): AppUser[] => {
+  console.log("Filtering users - total count:", nearbyUsers.length);
+  
   return nearbyUsers
-    .filter(user => user.isOnline === true)
+    .filter(user => {
+      // Only include users that are explicitly marked as online
+      const isOnline = user.isOnline === true;
+      if (!isOnline) {
+        console.log(`Filtering out offline user: ${user.id}`);
+      }
+      return isOnline;
+    })
     .filter(user => {
       // Filter out users that the current user has blocked
       if (currentUser?.blockedUsers?.includes(user.id)) {
+        console.log(`Filtering out blocked user: ${user.id}`);
         return false;
       }
       return true;

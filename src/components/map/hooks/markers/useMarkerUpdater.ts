@@ -40,12 +40,14 @@ export const useMarkerUpdater = (
       
       // Filter to only show online and unblocked users
       const onlineUsers = filterOnlineAndUnblockedUsers(users, user);
+      console.log(`Filtered to ${onlineUsers.length} online users out of ${users.length} total`);
       
       // Add markers for nearby users
       addNearbyUserMarkers(onlineUsers, user, radius, source);
       
       // Check if privacy is enabled for current user
-      const isPrivacyEnabled = user ? shouldObfuscateLocation(user) : false;
+      const isPrivacyEnabled = user?.locationSettings?.hideExactLocation || 
+                              user?.location_settings?.hide_exact_location || false;
       
       // Only add user marker if privacy is OFF and tracking is ON
       if (tracking && user && !isPrivacyEnabled) {
@@ -131,20 +133,8 @@ export const useMarkerUpdater = (
       if (!vectorSource.current || !mapLoaded) return;
       
       if (event.detail && event.detail.isPrivacyEnabled !== undefined) {
-        // Clear current user marker when privacy is enabled
-        if (event.detail.isPrivacyEnabled) {
-          const features = vectorSource.current.getFeatures();
-          features.forEach(feature => {
-            if (feature.get('isCurrentUser')) {
-              vectorSource.current?.removeFeature(feature);
-            }
-          });
-        } else {
-          // Re-add current user marker when privacy is disabled
-          if (prevTrackingRef.current && currentUserRef.current?.location) {
-            addCurrentUserMarker(currentUserRef.current, vectorSource.current);
-          }
-        }
+        // Clear all user markers first to avoid duplicates
+        clearExistingUserMarkers(vectorSource.current);
         
         // Force an update after privacy change
         throttledUpdateMarkers(

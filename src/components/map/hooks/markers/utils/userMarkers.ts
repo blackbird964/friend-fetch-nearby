@@ -19,8 +19,19 @@ export const addNearbyUserMarkers = (
   if (!vectorSource) return;
   
   const features: Feature[] = [];
+  const processedUserIds = new Set<string>();
   
   onlineUsers.forEach(user => {
+    // Skip the current user - we'll add them separately
+    if (currentUser && user.id === currentUser.id) {
+      return;
+    }
+    
+    // Skip already processed users to avoid duplicates
+    if (processedUserIds.has(user.id)) {
+      return;
+    }
+    
     if (!user.location || !user.location.lat || !user.location.lng) return;
     
     // Skip users outside the radius if we have user location
@@ -46,6 +57,7 @@ export const addNearbyUserMarkers = (
       });
       
       features.push(userFeature);
+      processedUserIds.add(user.id);
       
       // If privacy enabled, also add a heatmap-style marker
       if (isPrivacyEnabled) {
@@ -82,6 +94,14 @@ export const addCurrentUserMarker = (currentUser: AppUser | null, vectorSource: 
     if (isCurrentUserPrivacyEnabled) {
       return;
     }
+    
+    // Look for existing current user markers and remove them to avoid duplicates
+    const existingFeatures = vectorSource.getFeatures();
+    existingFeatures.forEach(feature => {
+      if (feature.get('isCurrentUser')) {
+        vectorSource.removeFeature(feature);
+      }
+    });
     
     // Only add marker if privacy mode is disabled
     const userFeature = new Feature({
