@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 
 // Import custom hooks
 import { useMapInitialization } from './hooks/useMapInitialization';
-import { useMapMarkers } from './hooks/useMapMarkers';
+import { useMapUIState } from './hooks/useMapUIState';
 import { usePrivacyMode } from './hooks/usePrivacyMode';
 
 // Import refactored components
@@ -37,12 +37,6 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     friendRequests 
   } = useAppContext();
   
-  // UI State
-  const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const [selectedDuration, setSelectedDuration] = useState<number>(30);
-  const [movingUsers, setMovingUsers] = useState<Set<string>>(new Set());
-  const [completedMoves, setCompletedMoves] = useState<Set<string>>(new Set());
-  
   // Initialize map with references
   const { 
     mapContainer, 
@@ -50,7 +44,8 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     vectorSource, 
     vectorLayer, 
     routeLayer, 
-    mapLoaded 
+    mapLoaded,
+    WYNYARD_COORDS
   } = useMapInitialization();
 
   // Privacy mode management
@@ -60,21 +55,18 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     updateUserLocation,
     initialPrivacyEnabled
   });
-
-  // Get marker styles and handle marker updates
-  const { WYNYARD_COORDS } = useMapMarkers(
-    map, 
-    vectorSource, 
-    nearbyUsers, 
-    currentUser, 
+  
+  // Map UI state management
+  const {
     selectedUser, 
-    movingUsers, 
-    completedMoves, 
-    mapLoaded,
-    friendRequests,
-    radiusInKm,
-    isTracking
-  );
+    setSelectedUser,
+    selectedDuration, 
+    setSelectedDuration,
+    movingUsers,
+    setMovingUsers,
+    completedMoves,
+    setCompletedMoves
+  } = useMapUIState();
 
   return (
     <MapContainer>

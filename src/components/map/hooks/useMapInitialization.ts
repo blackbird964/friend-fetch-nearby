@@ -4,8 +4,6 @@ import Map from 'ol/Map';
 import { useMapLayers } from './map/useMapLayers';
 import { useMapConfig, WYNYARD_COORDS } from './map/useMapConfig';
 
-export { WYNYARD_COORDS };
-
 export const useMapInitialization = () => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<Map | null>(null);
@@ -56,5 +54,6 @@ export const useMapInitialization = () => {
     vectorLayer,
     routeLayer,
     mapLoaded,
+    WYNYARD_COORDS,
   };
 };
