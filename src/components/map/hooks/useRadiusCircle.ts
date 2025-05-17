@@ -1,3 +1,4 @@
+
 import { useEffect, useRef, useCallback } from 'react';
 import { fromLonLat } from 'ol/proj';
 import { Vector as VectorSource } from 'ol/source';
@@ -33,12 +34,12 @@ export const useRadiusCircle = (
       source,
       style: new Style({
         stroke: new Stroke({
-          color: 'rgba(64, 99, 255, 0.5)',
-          width: 2,
+          color: 'rgba(59, 130, 246, 0.7)', // Brighter blue color for better visibility
+          width: 3,
           lineDash: [5, 5]
         }),
         fill: new Fill({
-          color: 'rgba(64, 99, 255, 0.05)'
+          color: 'rgba(59, 130, 246, 0.08)' // Slightly more visible blue fill
         })
       }),
       zIndex: 9, // Below user markers
@@ -63,6 +64,8 @@ export const useRadiusCircle = (
     const radiusInMeters = radiusInKm * 1000; // Convert km to meters
 
     const source = radiusLayer.current.getSource();
+    if (!source) return;
+    
     source.clear(); // Clear existing feature
 
     radiusFeature.current = new Feature({
@@ -73,6 +76,7 @@ export const useRadiusCircle = (
     });
 
     source.addFeature(radiusFeature.current);
+    console.log(`Radius circle updated to ${radiusInKm}km`);
   }, [currentUser?.location, radiusInKm, map]);
 
   // Update radius circle when user location or radius changes

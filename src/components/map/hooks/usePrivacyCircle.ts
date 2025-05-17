@@ -104,7 +104,7 @@ export const usePrivacyCircle = (
       }),
       stroke: new Stroke({
         color: 'rgba(155, 135, 245, 0.8)', // Solid border color
-        width: 2,
+        width: 3, // Increase width for better visibility
       }),
     });
     
@@ -151,6 +151,11 @@ export const usePrivacyCircle = (
       
       // Start the animation for the privacy circle
       animationRef.current = requestAnimationFrame(animatePrivacyCircle);
+      
+      // Log activation for debugging
+      console.log("Privacy circle activated and visible");
+    } else {
+      console.log("Privacy circle not shown - privacy mode is disabled");
     }
   }, [currentUser?.location, map, animatePrivacyCircle]);
   
@@ -189,6 +194,7 @@ export const usePrivacyCircle = (
   // Listen for privacy mode changes from events
   useEffect(() => {
     const handlePrivacyChange = () => {
+      console.log("Privacy mode change detected, updating privacy circle");
       updatePrivacyCircle();
     };
     

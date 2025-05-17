@@ -105,7 +105,7 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
     };
   }, []);
   
-  // Initialize privacy circle for the current user
+  // Initialize privacy circle for the current user with improved visibility
   const { privacyLayer, privacyFeature } = usePrivacyCircle(
     map,
     vectorSource,
@@ -123,7 +123,7 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
     friendRequests
   );
 
-  // Add map click handlers
+  // Add map click handlers for user interactions
   useMapEvents(
     map,
     mapLoaded,

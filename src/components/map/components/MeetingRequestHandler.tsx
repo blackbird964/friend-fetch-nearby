@@ -159,7 +159,7 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
     return (
       <div 
         ref={requestCardRef}
-        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-slide-in-bottom user-popup-card fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
+        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-fade-in user-popup-card fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
         onClick={stopPropagation} // Stop click propagation at container level
       >
         <div className="flex justify-between items-center mb-3">
@@ -192,7 +192,7 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
     return (
       <div 
         ref={requestCardRef}
-        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-slide-in-bottom user-popup-card fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
+        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-fade-in user-popup-card fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
         onClick={stopPropagation} // Stop click propagation at container level
       >
         <div className="flex justify-between items-center mb-3">
