@@ -6,7 +6,7 @@ import { fromLonLat } from 'ol/proj';
 import { Vector as VectorSource } from 'ol/source';
 import { calculateDistance } from '@/utils/locationUtils';
 import { getDisplayLocation, shouldObfuscateLocation } from '@/utils/privacyUtils';
-import { debounce } from 'lodash';
+import { throttle } from 'lodash';
 
 export const useMarkerUpdater = (
   vectorSource: React.MutableRefObject<VectorSource | null>,
@@ -23,15 +23,18 @@ export const useMarkerUpdater = (
   const nearbyUsersRef = useRef(nearbyUsers);
   const currentUserRef = useRef(currentUser);
   
-  // Create a debounced update function for better performance
-  const debouncedUpdateMarkers = useCallback(
-    debounce((
+  // Create a throttled update function for better performance
+  const throttledUpdateMarkers = useCallback(
+    throttle((
       source: VectorSource,
       users: AppUser[],
       user: AppUser | null,
       radius: number,
       tracking: boolean
     ) => {
+      // Don't proceed if there's no source
+      if (!source) return;
+      
       // Clear existing user markers (but keep circle markers)
       clearExistingUserMarkers(source);
       
@@ -44,12 +47,15 @@ export const useMarkerUpdater = (
       // Add markers for nearby users
       addNearbyUserMarkers(onlineUsers, user, radius, source);
       
-      // Add current user marker if needed
+      // Check if privacy is enabled for current user
       const isPrivacyEnabled = user ? shouldObfuscateLocation(user) : false;
+      
+      // Only add user marker if privacy is OFF and tracking is ON
       if (tracking && user && !isPrivacyEnabled) {
         addCurrentUserMarker(user, source);
       }
-    }, 100),
+      
+    }, 100, { leading: true, trailing: true }),
     []
   );
   
@@ -71,7 +77,7 @@ export const useMarkerUpdater = (
     }
     
     updateTimeoutRef.current = window.setTimeout(() => {
-      debouncedUpdateMarkers(
+      throttledUpdateMarkers(
         vectorSource.current!, 
         nearbyUsers, 
         currentUser, 
@@ -98,7 +104,7 @@ export const useMarkerUpdater = (
     currentUser?.location_settings?.hide_exact_location, 
     currentUser?.blockedUsers, 
     isTracking,
-    debouncedUpdateMarkers
+    throttledUpdateMarkers
   ]);
 
   // Listen for manual location updates and privacy changes
@@ -112,7 +118,7 @@ export const useMarkerUpdater = (
       }
       
       updateTimeoutRef.current = window.setTimeout(() => {
-        debouncedUpdateMarkers(
+        throttledUpdateMarkers(
           vectorSource.current!, 
           nearbyUsersRef.current, 
           currentUserRef.current, 
@@ -142,6 +148,15 @@ export const useMarkerUpdater = (
             addCurrentUserMarker(currentUserRef.current, vectorSource.current);
           }
         }
+        
+        // Force an update after privacy change
+        throttledUpdateMarkers(
+          vectorSource.current!, 
+          nearbyUsersRef.current, 
+          currentUserRef.current, 
+          prevRadiusRef.current, 
+          prevTrackingRef.current
+        );
       }
     };
     
@@ -155,12 +170,17 @@ export const useMarkerUpdater = (
       if (updateTimeoutRef.current) {
         window.clearTimeout(updateTimeoutRef.current);
       }
+      
+      // Cancel any pending throttled updates
+      throttledUpdateMarkers.cancel();
     };
-  }, [debouncedUpdateMarkers, mapLoaded]);
+  }, [throttledUpdateMarkers, mapLoaded]);
 };
 
 // Helper functions to clean up main effect
 const clearExistingUserMarkers = (vectorSource: VectorSource) => {
+  if (!vectorSource) return;
+  
   // Use batch operation for better performance
   const featuresToRemove: Feature[] = [];
   
@@ -168,8 +188,10 @@ const clearExistingUserMarkers = (vectorSource: VectorSource) => {
     const isCircle = feature.get('isCircle');
     const isUserMarker = feature.get('isCurrentUser') || feature.get('userId');
     const isHeatMap = feature.get('isHeatMap');
+    const circleType = feature.get('circleType');
     
-    if ((!isCircle && isUserMarker) || isHeatMap) {
+    // Don't remove privacy circles, only user markers and heatmaps
+    if ((!isCircle && isUserMarker) || isHeatMap || (isCircle && circleType !== 'privacy')) {
       featuresToRemove.push(feature);
     }
   });
@@ -198,6 +220,8 @@ const addNearbyUserMarkers = (
   radiusInKm: number,
   vectorSource: VectorSource
 ) => {
+  if (!vectorSource) return;
+  
   const features: Feature[] = [];
   
   onlineUsers.forEach(user => {
@@ -258,13 +282,13 @@ const addNearbyUserMarkers = (
 };
 
 const addCurrentUserMarker = (currentUser: AppUser | null, vectorSource: VectorSource) => {
-  if (!currentUser?.location?.lat || !currentUser?.location?.lng) return;
+  if (!currentUser?.location?.lat || !currentUser?.location?.lng || !vectorSource) return;
   
   try {
     // Check if current user has privacy enabled
     const isCurrentUserPrivacyEnabled = shouldObfuscateLocation(currentUser);
     
-    // Skip adding the marker if privacy mode is enabled
+    // Skip adding the marker if privacy mode is enabled - we'll show privacy circle instead
     if (isCurrentUserPrivacyEnabled) {
       return;
     }

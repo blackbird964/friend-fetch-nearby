@@ -94,6 +94,17 @@ export const getDisplayLocation = (user: any): Location | undefined => {
  * Get radius in meters for privacy circle
  */
 export const getPrivacyCircleRadius = (): number => {
-  // Fixed 500m radius that doesn't change with zoom
-  return 500;
+  // Updated to 5km (5000m) radius as per requirements
+  return 5000;
+};
+
+/**
+ * Get animation parameters for privacy circle
+ */
+export const getPrivacyCircleAnimation = () => {
+  return {
+    pulseDuration: 3000, // Pulse animation duration in ms
+    pulseMinOpacity: 0.2, // Minimum opacity during pulse animation
+    pulseMaxOpacity: 0.4  // Maximum opacity during pulse animation
+  };
 };

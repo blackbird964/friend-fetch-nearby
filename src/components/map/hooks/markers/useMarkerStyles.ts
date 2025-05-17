@@ -19,14 +19,16 @@ export const useMarkerStyles = (
     const isPrivacyEnabled = feature.get('isPrivacyEnabled');
     const isCircle = feature.get('isCircle');
     const isHeatMap = feature.get('isHeatMap');
+    const circleType = feature.get('circleType');
+    const userName = feature.get('name') || (userId ? `User-${userId.substring(0, 4)}` : '');
     
     // Special style for heatmap marker (privacy mode)
     if (isHeatMap) {
       return new Style({
         image: new CircleStyle({
           radius: 120, // 10 times larger than normal marker (12px)
-          fill: new Fill({ color: 'rgba(99, 102, 241, 0.2)' }), // Semi-transparent purple
-          stroke: new Stroke({ color: 'rgba(99, 102, 241, 0.4)', width: 1 })
+          fill: new Fill({ color: 'rgba(155, 135, 245, 0.2)' }), // Semi-transparent purple
+          stroke: new Stroke({ color: 'rgba(155, 135, 245, 0.4)', width: 1 })
         }),
         zIndex: 5 // Ensure it appears below the actual marker
       });
@@ -34,7 +36,6 @@ export const useMarkerStyles = (
     
     // Special styles for radius or privacy circles
     if (isCircle) {
-      const circleType = feature.get('circleType');
       if (circleType === 'radius') {
         return new Style({
           stroke: new Stroke({
@@ -47,14 +48,21 @@ export const useMarkerStyles = (
           })
         });
       } else if (circleType === 'privacy') {
+        // Privacy circle style is now handled in usePrivacyCircle with animation
         return new Style({
           stroke: new Stroke({
-            color: 'rgba(100, 149, 237, 0.7)',
+            color: 'rgba(155, 135, 245, 0.8)', // Purple color for privacy
             width: 2
           }),
           fill: new Fill({
-            color: 'rgba(100, 149, 237, 0.3)'
-          })
+            color: 'rgba(155, 135, 245, 0.3)' // This opacity will be animated
+          }),
+          text: userName ? new Text({
+            text: userName,
+            offsetY: -20,
+            fill: new Fill({ color: '#374151' }),
+            stroke: new Stroke({ color: 'white', width: 2 })
+          }) : undefined
         });
       }
     }
@@ -120,7 +128,7 @@ export const useMarkerStyles = (
         })
       }),
       text: new Text({
-        text: feature.get('name'),
+        text: userName,
         offsetY: -20,
         fill: new Fill({ color: '#374151' }),
         stroke: new Stroke({ color: 'white', width: 2 })
@@ -130,4 +138,3 @@ export const useMarkerStyles = (
 
   return { getMarkerStyle };
 };
-

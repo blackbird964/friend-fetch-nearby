@@ -1,6 +1,7 @@
+
 import { useEffect, useCallback, useRef } from 'react';
 import { AppUser } from '@/context/types';
-import { debounce } from 'lodash';
+import { throttle } from 'lodash';
 
 type UseLocationInteractionProps = {
   isPrivacyModeEnabled: boolean;
@@ -15,14 +16,14 @@ export const useLocationInteraction = ({
   setRadiusInKm,
   currentUser
 }: UseLocationInteractionProps) => {
-  // Create a debounced function to reduce frequency of radius changes
-  const debouncedRadiusChange = useCallback(
-    debounce((newRadius: number) => {
+  // Create a throttled function to reduce frequency of radius changes
+  const throttledRadiusChange = useCallback(
+    throttle((newRadius: number) => {
       setRadiusInKm(newRadius);
       
       // Dispatch event to notify radius changed
       window.dispatchEvent(new CustomEvent('radius-changed', { detail: newRadius }));
-    }, 100),
+    }, 50, { leading: true, trailing: true }),
     [setRadiusInKm]
   );
   
@@ -31,14 +32,16 @@ export const useLocationInteraction = ({
   
   // Handle radius changes with improved performance
   const handleRadiusChange = useCallback((newRadius: number) => {
-    debouncedRadiusChange(newRadius);
-  }, [debouncedRadiusChange]);
+    if (newRadius === radiusInKm) return; // Skip if unchanged
+    throttledRadiusChange(newRadius);
+  }, [throttledRadiusChange, radiusInKm]);
   
   // Listen for radius changes from events with proper cleanup
   useEffect(() => {
     // Create a handler that will persist for proper cleanup
     const handleRadiusChangeEvent = (e: any) => {
-      debouncedRadiusChange(e.detail);
+      if (e.detail === radiusInKm) return; // Prevent circular updates
+      throttledRadiusChange(e.detail);
     };
     
     // Store reference for cleanup
@@ -50,8 +53,10 @@ export const useLocationInteraction = ({
         window.removeEventListener('radius-changed', radiusEventRef.current);
         radiusEventRef.current = null;
       }
+      // Cancel any pending throttled updates
+      throttledRadiusChange.cancel();
     };
-  }, [debouncedRadiusChange]);
+  }, [throttledRadiusChange, radiusInKm]);
 
   // Handle privacy mode changes with reduced updates
   const lastPrivacyState = useRef(isPrivacyModeEnabled);

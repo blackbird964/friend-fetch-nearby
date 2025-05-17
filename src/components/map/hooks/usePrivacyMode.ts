@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { AppUser } from '@/context/types';
 import { useToast } from '@/hooks/use-toast';
-import { debounce } from 'lodash';
+import { throttle } from 'lodash';
 
 type UsePrivacyModeProps = {
   currentUser: AppUser | null;
@@ -18,8 +18,30 @@ export const usePrivacyMode = ({
   initialPrivacyEnabled = false
 }: UsePrivacyModeProps) => {
   const { toast } = useToast();
-  const [isPrivacyModeEnabled, setIsPrivacyModeEnabled] = useState<boolean>(initialPrivacyEnabled);
+  const [isPrivacyModeEnabled, setIsPrivacyModeEnabled] = useState<boolean>(() => {
+    // First try to get from localStorage for persistence
+    const savedPrivacy = localStorage.getItem('kairo-privacy-mode');
+    if (savedPrivacy !== null) {
+      return savedPrivacy === 'true';
+    }
+    
+    // If not in localStorage, check user settings
+    if (currentUser?.locationSettings?.hideExactLocation !== undefined) {
+      return currentUser.locationSettings.hideExactLocation;
+    } else if (currentUser?.location_settings?.hide_exact_location !== undefined) {
+      return currentUser.location_settings.hide_exact_location;
+    }
+    
+    // If no other source, use the initial value
+    return initialPrivacyEnabled;
+  });
+  
   const updateInProgressRef = useRef(false);
+  
+  // Persist privacy setting in localStorage
+  useEffect(() => {
+    localStorage.setItem('kairo-privacy-mode', String(isPrivacyModeEnabled));
+  }, [isPrivacyModeEnabled]);
   
   // Update local state when user settings change
   useEffect(() => {
@@ -29,17 +51,19 @@ export const usePrivacyMode = ({
     // Check if current user has privacy settings and sync state
     if (currentUser?.locationSettings?.hideExactLocation !== undefined) {
       setIsPrivacyModeEnabled(currentUser.locationSettings.hideExactLocation);
+      localStorage.setItem('kairo-privacy-mode', String(currentUser.locationSettings.hideExactLocation));
     } else if (currentUser?.location_settings?.hide_exact_location !== undefined) {
       setIsPrivacyModeEnabled(currentUser.location_settings.hide_exact_location);
+      localStorage.setItem('kairo-privacy-mode', String(currentUser.location_settings.hide_exact_location));
     } else if (initialPrivacyEnabled !== undefined) {
       // If no settings, use prop value
       setIsPrivacyModeEnabled(initialPrivacyEnabled);
     }
   }, [initialPrivacyEnabled, currentUser?.locationSettings?.hideExactLocation, currentUser?.location_settings?.hide_exact_location]);
 
-  // Use debounce to avoid excessive updates when toggling privacy mode
-  const debouncedUpdatePrivacy = useCallback(
-    debounce((newPrivacyValue: boolean) => {
+  // Use throttle to avoid excessive updates when toggling privacy mode
+  const throttledUpdatePrivacy = useCallback(
+    throttle((newPrivacyValue: boolean) => {
       if (!currentUser) return;
       
       updateInProgressRef.current = true;
@@ -77,7 +101,7 @@ export const usePrivacyMode = ({
       } else {
         updateInProgressRef.current = false;
       }
-    }, 100),
+    }, 100, { leading: true, trailing: true }),
     [currentUser, setCurrentUser, updateUserLocation, toast]
   );
 
@@ -85,8 +109,16 @@ export const usePrivacyMode = ({
   const togglePrivacyMode = useCallback(() => {
     const newPrivacyValue = !isPrivacyModeEnabled;
     setIsPrivacyModeEnabled(newPrivacyValue);
-    debouncedUpdatePrivacy(newPrivacyValue);
-  }, [isPrivacyModeEnabled, debouncedUpdatePrivacy]);
+    localStorage.setItem('kairo-privacy-mode', String(newPrivacyValue));
+    throttledUpdatePrivacy(newPrivacyValue);
+  }, [isPrivacyModeEnabled, throttledUpdatePrivacy]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      throttledUpdatePrivacy.cancel();
+    };
+  }, [throttledUpdatePrivacy]);
 
   return {
     isPrivacyModeEnabled,

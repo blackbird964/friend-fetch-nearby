@@ -8,7 +8,7 @@ import { Circle } from 'ol/geom';
 import { Fill, Style, Stroke } from 'ol/style';
 import Map from 'ol/Map';
 import { AppUser } from '@/context/types';
-import { shouldObfuscateLocation, getPrivacyCircleRadius } from '@/utils/privacyUtils';
+import { shouldObfuscateLocation, getPrivacyCircleRadius, getPrivacyCircleAnimation } from '@/utils/privacyUtils';
 
 export const usePrivacyCircle = (
   map: React.MutableRefObject<Map | null>,
@@ -17,6 +17,19 @@ export const usePrivacyCircle = (
 ) => {
   const privacyLayer = useRef<VectorLayer<VectorSource> | null>(null);
   const privacyFeature = useRef<Feature | null>(null);
+  const animationRef = useRef<number | null>(null);
+  const currentOpacity = useRef<number>(0.3);
+  const animationDirection = useRef<'increasing' | 'decreasing'>('increasing');
+  
+  // Clean up animation on unmount
+  useEffect(() => {
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
+    };
+  }, []);
   
   // Create a separate layer for the privacy circle to improve performance
   useEffect(() => {
@@ -31,15 +44,14 @@ export const usePrivacyCircle = (
     // Create the privacy layer with appropriate styling
     const source = new VectorSource();
     
-    // Improved style with better visibility
+    // Initial style with improved visibility (will be animated)
     const privacyStyle = new Style({
       fill: new Fill({
-        color: 'rgba(100, 149, 237, 0.15)', // Light blue semi-transparent
+        color: `rgba(155, 135, 245, ${currentOpacity.current})`, // Purple color with animation opacity
       }),
       stroke: new Stroke({
-        color: 'rgba(100, 149, 237, 0.6)', // Cornflower blue
+        color: 'rgba(155, 135, 245, 0.8)', // Purple border
         width: 2,
-        lineDash: [5, 5]
       }),
     });
     
@@ -56,8 +68,53 @@ export const usePrivacyCircle = (
         map.current.removeLayer(privacyLayer.current);
         privacyLayer.current = null;
       }
+      
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
     };
   }, [map]);
+  
+  // Function to animate the privacy circle with a gentle pulse
+  const animatePrivacyCircle = useCallback(() => {
+    if (!privacyLayer.current) return;
+    
+    const { pulseMinOpacity, pulseMaxOpacity, pulseDuration } = getPrivacyCircleAnimation();
+    const opacityStep = ((pulseMaxOpacity - pulseMinOpacity) / pulseDuration) * 16; // 16ms is approx one frame at 60fps
+    
+    if (animationDirection.current === 'increasing') {
+      currentOpacity.current += opacityStep;
+      if (currentOpacity.current >= pulseMaxOpacity) {
+        currentOpacity.current = pulseMaxOpacity;
+        animationDirection.current = 'decreasing';
+      }
+    } else {
+      currentOpacity.current -= opacityStep;
+      if (currentOpacity.current <= pulseMinOpacity) {
+        currentOpacity.current = pulseMinOpacity;
+        animationDirection.current = 'increasing';
+      }
+    }
+    
+    // Update style with new opacity
+    const updatedStyle = new Style({
+      fill: new Fill({
+        color: `rgba(155, 135, 245, ${currentOpacity.current})`, // Purple with animated opacity
+      }),
+      stroke: new Stroke({
+        color: 'rgba(155, 135, 245, 0.8)', // Solid border color
+        width: 2,
+      }),
+    });
+    
+    privacyLayer.current.setStyle(updatedStyle);
+    
+    // Continue animation loop if layer exists
+    if (privacyLayer.current) {
+      animationRef.current = requestAnimationFrame(animatePrivacyCircle);
+    }
+  }, []);
   
   // Separated update function to avoid recreation in effects
   const updatePrivacyCircle = useCallback(() => {
@@ -67,14 +124,18 @@ export const usePrivacyCircle = (
     const isPrivacyEnabled = shouldObfuscateLocation(currentUser);
     const source = privacyLayer.current.getSource();
     
-    // Clear existing features
+    // Clear existing features and cancel any ongoing animation
     source?.clear();
+    if (animationRef.current) {
+      cancelAnimationFrame(animationRef.current);
+      animationRef.current = null;
+    }
     
     // Only add feature if privacy is enabled
     if (isPrivacyEnabled) {
       const { lng, lat } = currentUser.location;
       const center = fromLonLat([lng, lat]);
-      const radiusInMeters = getPrivacyCircleRadius(); // 500m fixed radius
+      const radiusInMeters = getPrivacyCircleRadius(); // 5km radius
       
       // Create the circle feature
       privacyFeature.current = new Feature({
@@ -82,11 +143,16 @@ export const usePrivacyCircle = (
         name: 'privacyCircle',
         isCircle: true,
         circleType: 'privacy',
+        userId: currentUser.id, // Associate with user ID
+        userName: currentUser.name || 'User', // Show user name
       });
       
       source?.addFeature(privacyFeature.current);
+      
+      // Start the animation for the privacy circle
+      animationRef.current = requestAnimationFrame(animatePrivacyCircle);
     }
-  }, [currentUser?.location, map]);
+  }, [currentUser?.location, map, animatePrivacyCircle]);
   
   // Update privacy circle when user location or privacy settings change
   useEffect(() => {
@@ -107,6 +173,10 @@ export const usePrivacyCircle = (
     // Cleanup zoom listener
     return () => {
       view.un('change:resolution', fixCircleOnZoomChange);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
     };
   }, [
     currentUser?.location, 
@@ -128,6 +198,10 @@ export const usePrivacyCircle = (
     return () => {
       window.removeEventListener('privacy-mode-changed', handlePrivacyChange);
       window.removeEventListener('user-location-changed', handlePrivacyChange);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+        animationRef.current = null;
+      }
     };
   }, [updatePrivacyCircle]);
   

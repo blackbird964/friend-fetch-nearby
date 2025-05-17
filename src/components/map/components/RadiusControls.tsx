@@ -1,7 +1,7 @@
 
 import React, { useCallback } from 'react';
 import { Slider } from "@/components/ui/slider";
-import { debounce } from 'lodash';
+import { throttle } from 'lodash';
 
 type RadiusControlsProps = {
   radiusInKm: number;
@@ -12,24 +12,26 @@ const RadiusControls: React.FC<RadiusControlsProps> = ({
   radiusInKm, 
   setRadiusInKm
 }) => {
-  // Use debounce to improve performance when slider is moving
-  const debouncedRadiusChange = useCallback(
-    debounce((values: number[]) => {
+  // Use throttle to improve performance when slider is moving
+  const throttledRadiusChange = useCallback(
+    throttle((values: number[]) => {
       if (values.length === 0) return;
       
       const newRadius = values[0];
+      if (newRadius === radiusInKm) return; // Prevent unnecessary updates
+      
       setRadiusInKm(newRadius);
       
       // Dispatch event to notify radius changed
       window.dispatchEvent(new CustomEvent('radius-changed', { detail: newRadius }));
-    }, 50), // Small delay for better performance
-    [setRadiusInKm]
+    }, 50, { leading: true, trailing: true }), // Use both leading and trailing for smooth update
+    [setRadiusInKm, radiusInKm]
   );
 
-  // Handle immediate UI feedback while ensuring debounced backend updates
+  // Handle immediate UI feedback while ensuring throttled backend updates
   const handleRadiusChange = (values: number[]) => {
     if (values.length === 0) return;
-    debouncedRadiusChange(values);
+    throttledRadiusChange(values);
   };
 
   return (

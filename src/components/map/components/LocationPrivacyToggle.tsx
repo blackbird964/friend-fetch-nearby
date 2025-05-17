@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { EyeOff, Eye } from 'lucide-react';
+import { Shield, ShieldOff } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 
 type LocationPrivacyToggleProps = {
@@ -25,8 +25,8 @@ const LocationPrivacyToggle: React.FC<LocationPrivacyToggleProps> = ({
       <Button
         type="button"
         size={small ? "sm" : "icon"}
-        variant="ghost"
-        className={`${buttonSize} p-0 aspect-square flex items-center justify-center`}
+        variant={isPrivacyModeEnabled ? "default" : "ghost"}
+        className={`${buttonSize} p-0 aspect-square flex items-center justify-center ${isPrivacyModeEnabled ? 'bg-purple-500 hover:bg-purple-600' : ''}`}
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
@@ -35,9 +35,9 @@ const LocationPrivacyToggle: React.FC<LocationPrivacyToggleProps> = ({
         title={isPrivacyModeEnabled ? "Disable Privacy Mode" : "Enable Privacy Mode"}
       >
         {isPrivacyModeEnabled ? (
-          <EyeOff className={iconSize} />
+          <Shield className={iconSize} />
         ) : (
-          <Eye className={iconSize} />
+          <ShieldOff className={iconSize} />
         )}
       </Button>
       

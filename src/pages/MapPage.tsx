@@ -3,7 +3,7 @@ import React, { useEffect, useState } from 'react';
 import FriendMap from '@/components/map/FriendMap';
 import UserList from '@/components/users/UserList';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Users, RefreshCw, Eye } from 'lucide-react';
+import { MapPin, Users, RefreshCw, Eye, Shield } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
@@ -18,20 +18,45 @@ const MapPage: React.FC = () => {
   const isMobile = useIsMobile();
   
   // Add state for manual mode and tracking
-  const [isManualMode, setIsManualMode] = useState(false);
-  const [isTracking, setIsTracking] = useState(false);
-  const [isPrivacyModeEnabled, setIsPrivacyModeEnabled] = useState(
-    currentUser?.locationSettings?.hideExactLocation || false
-  );
+  const [isManualMode, setIsManualMode] = useState(() => {
+    // Try to get from localStorage for persistence
+    const savedManualMode = localStorage.getItem('kairo-manual-mode');
+    return savedManualMode === 'true';
+  });
+  
+  const [isTracking, setIsTracking] = useState(() => {
+    // Try to get from localStorage for persistence
+    const savedTracking = localStorage.getItem('kairo-tracking');
+    return savedTracking !== 'false'; // Default to true if not set
+  });
+  
+  const [isPrivacyModeEnabled, setIsPrivacyModeEnabled] = useState(() => {
+    // Try to get from localStorage for persistence
+    const savedPrivacy = localStorage.getItem('kairo-privacy-mode');
+    if (savedPrivacy !== null) {
+      return savedPrivacy === 'true';
+    }
+    return currentUser?.locationSettings?.hideExactLocation || false;
+  });
 
-  // Toggle handlers
-  const toggleManualMode = () => setIsManualMode(prev => !prev);
-  const toggleLocationTracking = () => setIsTracking(prev => !prev);
+  // Toggle handlers with local storage persistence
+  const toggleManualMode = () => {
+    const newValue = !isManualMode;
+    setIsManualMode(newValue);
+    localStorage.setItem('kairo-manual-mode', String(newValue));
+  };
+  
+  const toggleLocationTracking = () => {
+    const newValue = !isTracking;
+    setIsTracking(newValue);
+    localStorage.setItem('kairo-tracking', String(newValue));
+  };
   
   // Privacy mode toggle handler - now directly updates the user's settings
   const togglePrivacyMode = () => {
     const newPrivacyValue = !isPrivacyModeEnabled;
     setIsPrivacyModeEnabled(newPrivacyValue);
+    localStorage.setItem('kairo-privacy-mode', String(newPrivacyValue));
     
     if (currentUser) {
       const updatedUser = {
@@ -77,6 +102,7 @@ const MapPage: React.FC = () => {
   useEffect(() => {
     if (currentUser?.locationSettings?.hideExactLocation !== undefined) {
       setIsPrivacyModeEnabled(currentUser.locationSettings.hideExactLocation);
+      localStorage.setItem('kairo-privacy-mode', String(currentUser.locationSettings.hideExactLocation));
     }
   }, [currentUser?.locationSettings?.hideExactLocation]);
   
@@ -127,7 +153,7 @@ const MapPage: React.FC = () => {
             </TabsTrigger>
           </TabsList>
           
-          {/* New location controls row */}
+          {/* Location controls row with updated privacy toggle */}
           <div className="flex items-center justify-between py-1 px-2 bg-gray-50 rounded-md">
             <div className="flex items-center gap-3">
               <div className="flex items-center space-x-1">
@@ -164,6 +190,14 @@ const MapPage: React.FC = () => {
               </Label>
             </div>
           </div>
+          
+          {/* New privacy mode indicator */}
+          {isPrivacyModeEnabled && (
+            <div className="flex items-center justify-center py-1 px-2 bg-purple-50 rounded-md text-xs text-purple-700">
+              <Shield className="h-3 w-3 mr-1 inline" />
+              Privacy Mode Active - Your exact location is hidden
+            </div>
+          )}
         </div>
         
         <TabsContent value="map" className="pt-4">
