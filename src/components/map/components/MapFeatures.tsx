@@ -5,13 +5,14 @@ import Map from 'ol/Map';
 import { Vector as VectorSource } from 'ol/source';
 import { Vector as VectorLayer } from 'ol/layer';
 
-// Import custom hooks
-import { useMapMarkers } from '../hooks/useMapMarkers';
-import { useMapStyles } from '../hooks/useMapStyles';
-import { useRadiusCircle } from '../hooks/useRadiusCircle';
-import { usePrivacyCircle } from '../hooks/usePrivacyCircle';
-import { useMapEvents } from '../hooks/useMapEvents';
-import { useMarkerVisibility } from '../hooks/markers/useMarkerVisibility';
+// Import refactored components
+import {
+  MapMarkerFeatures,
+  MapCircleFeatures,
+  MapEventListeners,
+  RadiusChangeMonitor,
+  LocationChangeMonitor
+} from './map-features';
 import MeetingRequestHandler from './MeetingRequestHandler';
 
 type MapFeaturesProps = {
@@ -52,134 +53,72 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
     console.log("MapFeatures - selectedUser changed:", selectedUser);
   }, [selectedUser]);
 
-  // Log tracking changes to debug the marker visibility issue
-  useEffect(() => {
-    console.log("MapFeatures - isTracking changed:", isTracking);
-  }, [isTracking]);
-
   // State for meeting request duration
   const [selectedDuration, setSelectedDuration] = React.useState<number>(30);
-  
-  // Debug moving users
-  useEffect(() => {
-    console.log("MapFeatures - movingUsers:", Array.from(movingUsers));
-    console.log("MapFeatures - completedMoves:", Array.from(completedMoves));
-  }, [movingUsers, completedMoves]);
 
-  // Initialize map layers and features
-  const { getMarkerStyle, WYNYARD_COORDS } = useMapMarkers(
+  // Get marker features and wynyard coordinates
+  const { WYNYARD_COORDS } = MapMarkerFeatures({
     map,
     vectorSource,
-    nearbyUsers,
-    currentUser,
-    selectedUser,
-    movingUsers,
-    completedMoves,
-    mapLoaded,
-    friendRequests,
-    radiusInKm,
-    isTracking
-  );
-
-  // Initialize radius circle with current radius value and make it responsive to changes
-  // Pass isTracking to control visibility
-  const { radiusLayer, radiusFeature } = useRadiusCircle(
-    map,
-    vectorSource,
-    currentUser,
-    radiusInKm,
-    isTracking
-  );
-  
-  // Handle tracking state changes for marker visibility
-  useMarkerVisibility(vectorSource, isTracking, mapLoaded);
-  
-  // Listen for radius changes from slider or other components
-  useEffect(() => {
-    console.log("MapFeatures - radiusInKm changed:", radiusInKm);
-    
-    const handleRadiusChange = (e: any) => {
-      const customEvent = e as CustomEvent;
-      console.log("MapFeatures - Radius change event detected:", customEvent.detail);
-    };
-    
-    window.addEventListener('radius-changed', handleRadiusChange);
-    
-    return () => {
-      window.removeEventListener('radius-changed', handleRadiusChange);
-    };
-  }, [radiusInKm]);
-  
-  // Listen for user location changes 
-  useEffect(() => {
-    const handleLocationChange = () => {
-      console.log("MapFeatures - User location changed event detected");
-    };
-    
-    window.addEventListener('user-location-changed', handleLocationChange);
-    
-    return () => {
-      window.removeEventListener('user-location-changed', handleLocationChange);
-    };
-  }, []);
-  
-  // Initialize privacy circle for the current user with improved visibility
-  const { privacyLayer, privacyFeature } = usePrivacyCircle(
-    map,
-    vectorSource,
-    currentUser
-  );
-
-  // Apply styling to map layers
-  useMapStyles(
     vectorLayer,
     routeLayer,
-    getMarkerStyle,
-    selectedUser,
-    movingUsers,
-    completedMoves,
-    friendRequests
-  );
-
-  // Add map click handlers for user interactions
-  useMapEvents(
-    map,
     mapLoaded,
+    currentUser,
+    nearbyUsers,
     selectedUser,
-    setSelectedUser,
     movingUsers,
     completedMoves,
-    vectorLayer,
     friendRequests,
-    currentUser
-  );
-
-  // Handle sending a meeting request
-  const handleSendRequest = () => {
-    console.log("Sending request to user:", selectedUser, "for duration:", selectedDuration);
-    // Logic for sending a request will be handled by MeetingHandler
-  };
-
-  // Handle cancelling a request
-  const handleCancelRequest = () => {
-    console.log("Cancelling request, deselecting user:", selectedUser);
-    setSelectedUser(null);
-  };
+    radiusInKm,
+    isTracking
+  });
 
   return (
     <>
+      {/* Add circle features (radius & privacy) */}
+      <MapCircleFeatures
+        map={map}
+        vectorSource={vectorSource}
+        currentUser={currentUser}
+        radiusInKm={radiusInKm}
+        isTracking={isTracking}
+      />
+      
+      {/* Add map event listeners */}
+      <MapEventListeners
+        map={map}
+        mapLoaded={mapLoaded}
+        selectedUser={selectedUser}
+        setSelectedUser={setSelectedUser}
+        movingUsers={movingUsers}
+        completedMoves={completedMoves}
+        vectorLayer={vectorLayer}
+        friendRequests={friendRequests}
+        currentUser={currentUser}
+      />
+      
+      {/* Monitor radius changes */}
+      <RadiusChangeMonitor radiusInKm={radiusInKm} />
+      
+      {/* Monitor location changes */}
+      <LocationChangeMonitor />
+
       {/* Only render the MeetingRequestHandler when a user is selected */}
       {selectedUser && (
         <MeetingRequestHandler
           selectedUser={selectedUser}
           selectedDuration={selectedDuration}
           setSelectedDuration={setSelectedDuration}
-          onSendRequest={handleSendRequest}
-          onCancel={handleCancelRequest}
+          onSendRequest={() => {
+            console.log("Sending request to user:", selectedUser, "for duration:", selectedDuration);
+          }}
+          onCancel={() => {
+            console.log("Cancelling request, deselecting user:", selectedUser);
+            setSelectedUser(null);
+          }}
           nearbyUsers={nearbyUsers}
           movingUsers={movingUsers}
           completedMoves={completedMoves}
-          // Make sure we pass functions that handle Set updates properly
           setMovingUsers={(newSet: React.SetStateAction<Set<string>>) => {
             console.log("Setting moving users to:", newSet);
             // This function is just a placeholder as we don't manage the sets here
