@@ -23,24 +23,25 @@ export const useRadiusLayer = (
       radiusLayer.current = null;
     }
 
-    // Create the radius layer with appropriate styling
+    // Create the radius layer with improved styling - semi-transparent blue
     const source = new VectorSource();
     radiusLayer.current = new VectorLayer({
       source,
       style: new Style({
         stroke: new Stroke({
-          color: 'rgba(59, 130, 246, 0.7)', // Brighter blue color for better visibility
-          width: 3,
+          color: '#3388ff', // bright blue border
+          width: 2,
           lineDash: [5, 5]
         }),
         fill: new Fill({
-          color: 'rgba(59, 130, 246, 0.08)' // Slightly more visible blue fill
+          color: 'rgba(51, 136, 255, 0.1)' // semi-transparent blue fill (10% opacity)
         })
       }),
-      zIndex: 9, // Below user markers
+      zIndex: 9, // Below user markers but above base map
     });
 
     map.current.addLayer(radiusLayer.current);
+    console.log("Radius layer created with blue styling");
 
     return () => {
       if (map.current && radiusLayer.current) {

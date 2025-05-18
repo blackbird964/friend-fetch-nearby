@@ -21,7 +21,10 @@ export const useRadiusFeature = (
 
   // Separated update function to avoid recreation in effects
   const updateRadiusCircle = useCallback(() => {
-    if (!radiusLayer.current || !map.current || !currentUser?.location) return;
+    if (!radiusLayer.current || !map.current || !currentUser?.location) {
+      console.log("Cannot update radius circle - missing required elements");
+      return;
+    }
 
     const { lng, lat } = currentUser.location;
     const center = fromLonLat([lng, lat]);
@@ -30,8 +33,10 @@ export const useRadiusFeature = (
     const source = radiusLayer.current.getSource();
     if (!source) return;
     
-    source.clear(); // Clear existing feature
+    // Clear existing feature
+    source.clear();
 
+    // Create new radius feature with improved visibility
     radiusFeature.current = new Feature({
       geometry: new Circle(center, radiusInMeters),
       name: 'radiusCircle',
@@ -39,8 +44,9 @@ export const useRadiusFeature = (
       circleType: 'radius',
     });
 
+    // Add the feature to the source
     source.addFeature(radiusFeature.current);
-    console.log(`Radius circle updated to ${radiusInKm}km`);
+    console.log(`Radius circle updated to ${radiusInKm}km around [${lng}, ${lat}]`);
   }, [currentUser?.location, radiusInKm, map, radiusLayer]);
 
   return { 

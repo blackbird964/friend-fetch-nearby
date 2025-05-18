@@ -20,10 +20,12 @@ const RadiusControls: React.FC<RadiusControlsProps> = ({
       const newRadius = values[0];
       if (newRadius === radiusInKm) return; // Prevent unnecessary updates
       
+      // Update radius value
       setRadiusInKm(newRadius);
       
-      // Dispatch event to notify radius changed
+      // Dispatch event to notify radius changed - this will trigger circle update
       window.dispatchEvent(new CustomEvent('radius-changed', { detail: newRadius }));
+      console.log(`Radius changed to ${newRadius}km - event dispatched`);
     }, 50, { leading: true, trailing: true }), // Use both leading and trailing for smooth update
     [setRadiusInKm, radiusInKm]
   );

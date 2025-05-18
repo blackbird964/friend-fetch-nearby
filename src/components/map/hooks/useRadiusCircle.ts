@@ -16,7 +16,7 @@ export const useRadiusCircle = (
   currentUser: AppUser | null,
   radiusInKm: number
 ) => {
-  // Create the layer for the radius circle
+  // Create the layer for the radius circle with blue styling
   const { radiusLayer } = useRadiusLayer(map);
   
   // Create and manage the radius feature
@@ -37,5 +37,12 @@ export const useRadiusCircle = (
     updateRadiusCircle
   );
 
-  return { radiusLayer, radiusFeature };
+  // Ensure the radius is updated immediately on initialization
+  if (map.current && radiusLayer.current && currentUser?.location) {
+    setTimeout(() => {
+      updateRadiusCircle();
+    }, 100);
+  }
+
+  return { radiusLayer, radiusFeature, updateRadiusCircle };
 };

@@ -17,25 +17,54 @@ export const useRadiusCircleUpdater = (
   radiusInKm: number,
   updateRadiusCircle: () => void
 ) => {
-  // Update radius circle when user location or radius changes
+  // Update radius circle when user location changes
   useEffect(() => {
-    if (!currentUser || !map.current || !radiusLayer.current) return;
-
+    if (!currentUser?.location || !map.current || !radiusLayer.current) return;
+    console.log("Location or radius changed, updating circle");
     updateRadiusCircle();
+  }, [currentUser?.location, radiusInKm, updateRadiusCircle]);
 
-    // Maintain circle size on zoom changes
-    const view = map.current.getView();
-
-    // Don't recreate this function on every render
-    const fixCircleOnZoomChange = () => {
+  // Listen for the custom radius-changed event
+  useEffect(() => {
+    const handleRadiusChange = () => {
+      console.log("Radius change event detected, updating circle");
       updateRadiusCircle();
     };
 
-    view.on('change:resolution', fixCircleOnZoomChange);
-
-    // Cleanup zoom listener
+    window.addEventListener('radius-changed', handleRadiusChange);
+    
     return () => {
-      view.un('change:resolution', fixCircleOnZoomChange);
+      window.removeEventListener('radius-changed', handleRadiusChange);
     };
-  }, [currentUser?.location, radiusInKm, map, radiusLayer, updateRadiusCircle]);
+  }, [updateRadiusCircle]);
+
+  // Listen for the user-location-changed event
+  useEffect(() => {
+    const handleLocationChange = () => {
+      console.log("User location changed event detected, updating circle");
+      updateRadiusCircle();
+    };
+
+    window.addEventListener('user-location-changed', handleLocationChange);
+    
+    return () => {
+      window.removeEventListener('user-location-changed', handleLocationChange);
+    };
+  }, [updateRadiusCircle]);
+
+  // Update circle when map view changes (zoom)
+  useEffect(() => {
+    if (!map.current) return;
+
+    const view = map.current.getView();
+    const handleViewChange = () => {
+      updateRadiusCircle();
+    };
+
+    view.on('change:resolution', handleViewChange);
+
+    return () => {
+      view.un('change:resolution', handleViewChange);
+    };
+  }, [map, updateRadiusCircle]);
 };
