@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 
@@ -68,6 +67,11 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     setCompletedMoves
   } = useMapUIState();
 
+  // Debug when selectedUser changes
+  React.useEffect(() => {
+    console.log("FriendMapContainer - selectedUser changed:", selectedUser);
+  }, [selectedUser]);
+
   // Dispatch tracking mode event when isTracking changes
   React.useEffect(() => {
     console.log("FriendMapContainer - isTracking changed:", isTracking);
@@ -76,11 +80,6 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     });
     window.dispatchEvent(event);
   }, [isTracking]);
-
-  // Debug when selectedUser changes
-  React.useEffect(() => {
-    console.log("FriendMapContainer - selectedUser changed:", selectedUser);
-  }, [selectedUser]);
 
   return (
     <MapContainer>
@@ -127,7 +126,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         setCurrentUser={setCurrentUser}
       />
       
-      {/* Add conditional rendering for MeetingHandler to ensure it's displayed */}
+      {/* Keep MeetingHandler for long-term state management, but now MapFeatures handles the UI */}
       <MeetingHandler 
         vectorSource={vectorSource}
         routeLayer={routeLayer}
@@ -143,7 +142,6 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         WYNYARD_COORDS={WYNYARD_COORDS as [number, number]}
       />
 
-      {/* Map Control Panel with radius slider only */}
       <MapControlPanel
         radiusInKm={radiusInKm}
         setRadiusInKm={setRadiusInKm}

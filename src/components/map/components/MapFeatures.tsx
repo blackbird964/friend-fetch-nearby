@@ -12,6 +12,7 @@ import { useRadiusCircle } from '../hooks/useRadiusCircle';
 import { usePrivacyCircle } from '../hooks/usePrivacyCircle';
 import { useMapEvents } from '../hooks/useMapEvents';
 import { useMarkerVisibility } from '../hooks/markers/useMarkerVisibility';
+import MeetingRequestHandler from './MeetingRequestHandler';
 
 type MapFeaturesProps = {
   map: React.MutableRefObject<Map | null>;
@@ -55,6 +56,9 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
   useEffect(() => {
     console.log("MapFeatures - isTracking changed:", isTracking);
   }, [isTracking]);
+
+  // State for meeting request duration
+  const [selectedDuration, setSelectedDuration] = React.useState<number>(30);
 
   // Initialize map layers and features
   const { getMarkerStyle, WYNYARD_COORDS } = useMapMarkers(
@@ -144,7 +148,37 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
     currentUser
   );
 
-  return null; // This component doesn't render any UI elements
+  // Handle sending a meeting request
+  const handleSendRequest = () => {
+    console.log("Sending request to user:", selectedUser, "for duration:", selectedDuration);
+    // Logic for sending a request will be handled by MeetingHandler
+  };
+
+  // Handle cancelling a request
+  const handleCancelRequest = () => {
+    console.log("Cancelling request, deselecting user:", selectedUser);
+    setSelectedUser(null);
+  };
+
+  return (
+    <>
+      {/* Only render the MeetingRequestHandler when a user is selected */}
+      {selectedUser && (
+        <MeetingRequestHandler
+          selectedUser={selectedUser}
+          selectedDuration={selectedDuration}
+          setSelectedDuration={setSelectedDuration}
+          onSendRequest={handleSendRequest}
+          onCancel={handleCancelRequest}
+          nearbyUsers={nearbyUsers}
+          movingUsers={movingUsers}
+          completedMoves={completedMoves}
+          setMovingUsers={new Set()}
+          setCompletedMoves={new Set()}
+        />
+      )}
+    </>
+  );
 };
 
 export default MapFeatures;

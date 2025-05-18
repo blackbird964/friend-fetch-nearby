@@ -101,6 +101,7 @@ export const useMapEvents = (
           
           // Always select the user when clicking on their marker
           setSelectedUser(userId);
+          console.log("User selected:", userId);
           popupJustOpened = true;
           
           // Update the vector layer

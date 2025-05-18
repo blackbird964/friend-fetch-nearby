@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
@@ -237,7 +238,8 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   return (
     <div 
       ref={requestCardRef} 
-      className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
+      className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md user-popup-card"
+      onClick={stopPropagation}
     >
       <UserRequestCard 
         user={user}

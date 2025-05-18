@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useRef } from 'react';
 import { AppUser } from '@/context/types';
 import { Vector as VectorSource } from 'ol/source';
@@ -39,18 +38,12 @@ export const useMarkerUpdater = (
       // Clear existing user markers (but keep circle markers)
       clearExistingUserMarkers(source);
       
-      // If tracking is disabled, don't show any users
-      if (!tracking) {
-        console.log("Tracking disabled, not showing any user markers");
-        return;
-      }
-      
       // Filter to only show online and unblocked users
       const onlineUsers = filterOnlineAndUnblockedUsers(users, user);
       console.log(`Filtered to ${onlineUsers.length} online users out of ${users.length} total`);
       
-      // Add markers for nearby users - EVEN IF tracking is OFF
-      // We need these markers to be clickable for interaction
+      // ALWAYS add markers for nearby users, regardless of tracking state
+      // This ensures users are clickable even when tracking is off
       addNearbyUserMarkers(onlineUsers, user, radius, source);
       
       // Check if privacy is enabled for current user
