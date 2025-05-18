@@ -79,8 +79,11 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
   
   // Listen for radius changes from slider or other components
   useEffect(() => {
+    console.log("MapFeatures - radiusInKm changed:", radiusInKm);
+    
     const handleRadiusChange = (e: any) => {
-      console.log("Radius change event detected:", e.detail);
+      const customEvent = e as CustomEvent;
+      console.log("MapFeatures - Radius change event detected:", customEvent.detail);
       // The useRadiusCircle hook will handle the update based on the radiusInKm prop
     };
     
@@ -94,7 +97,7 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
   // Listen for user location changes 
   useEffect(() => {
     const handleLocationChange = () => {
-      console.log("User location changed event detected");
+      console.log("MapFeatures - User location changed event detected");
       // The radius circle will update based on the currentUser.location change
     };
     

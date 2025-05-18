@@ -16,7 +16,8 @@ export const useRadiusLayer = (
   // Create a separate layer for the radius circle to improve performance
   useEffect(() => {
     if (!map.current) return;
-
+    console.log("Creating radius layer with blue styling");
+    
     // Clean up existing layer if it exists
     if (radiusLayer.current) {
       map.current.removeLayer(radiusLayer.current);
@@ -41,7 +42,7 @@ export const useRadiusLayer = (
     });
 
     map.current.addLayer(radiusLayer.current);
-    console.log("Radius layer created with blue styling");
+    console.log("Radius layer created and added to map");
 
     return () => {
       if (map.current && radiusLayer.current) {

@@ -26,8 +26,9 @@ export const useRadiusCircleUpdater = (
 
   // Listen for the custom radius-changed event
   useEffect(() => {
-    const handleRadiusChange = () => {
-      console.log("Radius change event detected, updating circle");
+    const handleRadiusChange = (e: Event) => {
+      const customEvent = e as CustomEvent;
+      console.log("Radius change event detected:", customEvent.detail);
       updateRadiusCircle();
     };
 
@@ -58,6 +59,7 @@ export const useRadiusCircleUpdater = (
 
     const view = map.current.getView();
     const handleViewChange = () => {
+      console.log("Map view changed, updating radius circle");
       updateRadiusCircle();
     };
 

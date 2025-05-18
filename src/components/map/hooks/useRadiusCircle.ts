@@ -1,5 +1,5 @@
 
-import { useRef } from 'react';
+import { useEffect } from 'react';
 import { Vector as VectorSource } from 'ol/source';
 import Map from 'ol/Map';
 import { AppUser } from '@/context/types';
@@ -37,12 +37,16 @@ export const useRadiusCircle = (
     updateRadiusCircle
   );
 
-  // Ensure the radius is updated immediately on initialization
-  if (map.current && radiusLayer.current && currentUser?.location) {
-    setTimeout(() => {
-      updateRadiusCircle();
-    }, 100);
-  }
+  // Ensure the radius is updated immediately on initialization and when radius changes
+  useEffect(() => {
+    if (map.current && radiusLayer.current && currentUser?.location) {
+      console.log("Initial radius update with radiusInKm:", radiusInKm);
+      // Small delay to ensure all components are initialized
+      setTimeout(() => {
+        updateRadiusCircle();
+      }, 100);
+    }
+  }, [map, radiusLayer, currentUser?.location, radiusInKm, updateRadiusCircle]);
 
   return { radiusLayer, radiusFeature, updateRadiusCircle };
 };

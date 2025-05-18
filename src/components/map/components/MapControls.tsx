@@ -39,7 +39,13 @@ const MapControls: React.FC<MapControlsProps> = ({
   // Log radius changes for debugging
   useEffect(() => {
     console.log("MapControls - radiusInKm changed:", radiusInKm);
-  }, [radiusInKm]);
+    
+    // Force radius update when radius changes
+    if (currentUser?.location) {
+      console.log("MapControls - Dispatching radius-changed event");
+      window.dispatchEvent(new CustomEvent('radius-changed', { detail: radiusInKm }));
+    }
+  }, [radiusInKm, currentUser?.location]);
 
   // Log tracking changes to debug the marker visibility issue
   useEffect(() => {

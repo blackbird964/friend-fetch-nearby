@@ -21,17 +21,33 @@ export const useRadiusFeature = (
 
   // Separated update function to avoid recreation in effects
   const updateRadiusCircle = useCallback(() => {
+    console.log("updateRadiusCircle called with:", {
+      hasMap: !!map.current,
+      hasLayer: !!radiusLayer.current,
+      hasLocation: !!currentUser?.location,
+      radiusInKm
+    });
+    
     if (!radiusLayer.current || !map.current || !currentUser?.location) {
       console.log("Cannot update radius circle - missing required elements");
       return;
     }
 
     const { lng, lat } = currentUser.location;
+    if (typeof lng !== 'number' || typeof lat !== 'number') {
+      console.log("Invalid location coordinates:", currentUser.location);
+      return;
+    }
+    
     const center = fromLonLat([lng, lat]);
-    const radiusInMeters = radiusInKm * 1000; // Convert km to meters - IMPORTANT: this must be right!
+    const radiusInMeters = radiusInKm * 1000; // Convert km to meters
+    console.log(`Creating radius circle: ${radiusInKm}km (${radiusInMeters}m) at [${lng}, ${lat}]`);
 
     const source = radiusLayer.current.getSource();
-    if (!source) return;
+    if (!source) {
+      console.log("No source in radius layer");
+      return;
+    }
     
     // Clear existing feature
     source.clear();
@@ -46,7 +62,7 @@ export const useRadiusFeature = (
 
     // Add the feature to the source
     source.addFeature(radiusFeature.current);
-    console.log(`Radius circle updated to ${radiusInKm}km around [${lng}, ${lat}]`);
+    console.log(`Radius circle added to source: ${radiusInKm}km around [${lng}, ${lat}]`);
   }, [currentUser?.location, radiusInKm, map, radiusLayer]);
 
   return { 
