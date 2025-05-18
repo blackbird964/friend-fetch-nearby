@@ -173,8 +173,9 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
           nearbyUsers={nearbyUsers}
           movingUsers={movingUsers}
           completedMoves={completedMoves}
-          setMovingUsers={new Set()}
-          setCompletedMoves={new Set()}
+          // Fix type issues by passing proper state setter functions
+          setMovingUsers={() => {}}  // Replace with empty function as we don't need to set these here
+          setCompletedMoves={() => {}} // Replace with empty function as we don't need to set these here
         />
       )}
     </>
