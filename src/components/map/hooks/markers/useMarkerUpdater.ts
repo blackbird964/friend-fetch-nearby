@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useRef } from 'react';
 import { AppUser } from '@/context/types';
 import { Vector as VectorSource } from 'ol/source';
@@ -48,7 +49,8 @@ export const useMarkerUpdater = (
       const onlineUsers = filterOnlineAndUnblockedUsers(users, user);
       console.log(`Filtered to ${onlineUsers.length} online users out of ${users.length} total`);
       
-      // Add markers for nearby users
+      // Add markers for nearby users - EVEN IF tracking is OFF
+      // We need these markers to be clickable for interaction
       addNearbyUserMarkers(onlineUsers, user, radius, source);
       
       // Check if privacy is enabled for current user

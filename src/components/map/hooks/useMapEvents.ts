@@ -56,7 +56,6 @@ export const useMapEvents = (
       // Debounce clicks that happen too quickly (helps prevent double processing)
       if (currentTime - lastClickTimestamp < 300) {
         console.log("Click debounced - too soon after last click");
-        event.stopPropagation();
         return;
       }
       lastClickTimestamp = currentTime;
@@ -65,14 +64,12 @@ export const useMapEvents = (
       if (ignoreNextMapClick) {
         console.log("Ignoring map click due to recent popup interaction");
         ignoreNextMapClick = false;
-        event.stopPropagation();
         return;
       }
       
       // Check if we're currently interacting with a popup
       if (isInsidePopupInteraction) {
         console.log("Inside popup interaction - ignoring map click");
-        event.stopPropagation();
         return;
       }
       
@@ -119,15 +116,17 @@ export const useMapEvents = (
       
       // Handle potential deselection when clicking away
       if (selectedUser) {
-        // Don't deselect if the user just clicked on a feature
+        console.log("Handling potential deselection, selectedUser:", selectedUser);
+        
+        // Don't deselect if we just clicked on the same feature
         if (lastClickedFeatureId === selectedUser) {
           console.log("Clicked on selected user, not deselecting");
           return;
         }
         
-        // Use a larger hit tolerance (50px) to make it harder to accidentally deselect
+        // Use a smaller hit tolerance (20px) to make it easier to deselect
         const featuresNearby = map.current?.getFeaturesAtPixel(event.pixel, {
-          hitTolerance: 50 // Increased from 30 to 50 pixel tolerance
+          hitTolerance: 20
         });
         
         // Check if we clicked on something related to the selected user

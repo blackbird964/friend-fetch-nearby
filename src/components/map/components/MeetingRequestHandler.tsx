@@ -1,4 +1,3 @@
-
 import React, { useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
@@ -171,30 +170,32 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
     return (
       <div 
         ref={requestCardRef}
-        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-fade-in user-popup-card fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
+        className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
         onClick={stopPropagation} // Stop click propagation at container level
       >
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="font-medium">Active Meeting</h3>
-          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-            {isUserMoving ? 'In Progress' : 'At Destination'}
-          </span>
+        <div className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-fade-in user-popup-card">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="font-medium">Active Meeting</h3>
+            <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+              {isUserMoving ? 'In Progress' : 'At Destination'}
+            </span>
+          </div>
+          
+          <p className="text-sm text-gray-600 mb-4">
+            {isUserMoving 
+              ? `${user.name} is currently heading to the meeting point.` 
+              : `${user.name} has arrived at the meeting point.`}
+          </p>
+          
+          <Button 
+            variant="destructive"
+            className="w-full flex items-center justify-center"
+            onClick={(e) => handleCancelMeeting(e)}
+          >
+            <X className="mr-2 h-4 w-4" />
+            Cancel Meeting
+          </Button>
         </div>
-        
-        <p className="text-sm text-gray-600 mb-4">
-          {isUserMoving 
-            ? `${user.name} is currently heading to the meeting point.` 
-            : `${user.name} has arrived at the meeting point.`}
-        </p>
-        
-        <Button 
-          variant="destructive"
-          className="w-full flex items-center justify-center"
-          onClick={(e) => handleCancelMeeting(e)}
-        >
-          <X className="mr-2 h-4 w-4" />
-          Cancel Meeting
-        </Button>
       </div>
     );
   }
@@ -204,35 +205,40 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
     return (
       <div 
         ref={requestCardRef}
-        className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-fade-in user-popup-card fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
+        className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
         onClick={stopPropagation} // Stop click propagation at container level
       >
-        <div className="flex justify-between items-center mb-3">
-          <h3 className="font-medium">Active Catch-up Request</h3>
-          <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">
-            Pending
-          </span>
+        <div className="mt-4 p-4 bg-white border rounded-lg shadow-md animate-fade-in user-popup-card">
+          <div className="flex justify-between items-center mb-3">
+            <h3 className="font-medium">Active Catch-up Request</h3>
+            <span className="text-xs bg-amber-100 text-amber-800 px-2 py-1 rounded-full">
+              Pending
+            </span>
+          </div>
+          
+          <p className="text-sm text-gray-600 mb-4">
+            You already have a pending catch-up request with {user.name} for {existingRequest.duration} minutes.
+          </p>
+          
+          <Button 
+            variant="destructive"
+            className="w-full flex items-center justify-center"
+            onClick={(e) => handleCancelRequest(existingRequest, e)}
+          >
+            <X className="mr-2 h-4 w-4" />
+            Cancel Request
+          </Button>
         </div>
-        
-        <p className="text-sm text-gray-600 mb-4">
-          You already have a pending catch-up request with {user.name} for {existingRequest.duration} minutes.
-        </p>
-        
-        <Button 
-          variant="destructive"
-          className="w-full flex items-center justify-center"
-          onClick={(e) => handleCancelRequest(existingRequest, e)}
-        >
-          <X className="mr-2 h-4 w-4" />
-          Cancel Request
-        </Button>
       </div>
     );
   }
   
   // Otherwise, show the normal request card
   return (
-    <div ref={requestCardRef} className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md">
+    <div 
+      ref={requestCardRef} 
+      className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
+    >
       <UserRequestCard 
         user={user}
         selectedDuration={selectedDuration}

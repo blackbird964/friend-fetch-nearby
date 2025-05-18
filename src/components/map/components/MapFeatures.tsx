@@ -46,6 +46,11 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
   friendRequests,
   isTracking
 }) => {
+  // Debug selected user changes
+  useEffect(() => {
+    console.log("MapFeatures - selectedUser changed:", selectedUser);
+  }, [selectedUser]);
+
   // Log tracking changes to debug the marker visibility issue
   useEffect(() => {
     console.log("MapFeatures - isTracking changed:", isTracking);
@@ -86,7 +91,6 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
     const handleRadiusChange = (e: any) => {
       const customEvent = e as CustomEvent;
       console.log("MapFeatures - Radius change event detected:", customEvent.detail);
-      // The useRadiusCircle hook will handle the update based on the radiusInKm prop
     };
     
     window.addEventListener('radius-changed', handleRadiusChange);
@@ -100,7 +104,6 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
   useEffect(() => {
     const handleLocationChange = () => {
       console.log("MapFeatures - User location changed event detected");
-      // The radius circle will update based on the currentUser.location change
     };
     
     window.addEventListener('user-location-changed', handleLocationChange);

@@ -26,11 +26,13 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
 }) => {
   const handleDurationChange = (value: string) => {
     setSelectedDuration(parseInt(value));
+    console.log("Duration changed to:", parseInt(value));
   };
 
   // Prevent click events from reaching the map
   const stopPropagation = (e: React.MouseEvent) => {
     e.stopPropagation();
+    console.log("Stopping propagation on UserRequestCard click");
   };
 
   // Get initials for avatar fallback
@@ -42,6 +44,8 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
       .toUpperCase()
       .substring(0, 2);
   };
+  
+  console.log("Rendering UserRequestCard for:", user.name);
 
   return (
     <Card 
