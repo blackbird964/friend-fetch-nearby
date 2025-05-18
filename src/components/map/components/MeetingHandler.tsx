@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { LineString } from 'ol/geom';
 import { Vector as VectorSource } from 'ol/source';
@@ -36,7 +35,7 @@ const MeetingHandler: React.FC<MeetingHandlerProps> = ({
   nearbyUsers,
   WYNYARD_COORDS
 }) => {
-  // Function to calculate midpoint
+  // Function to calculate midpoint - keeping this for potential future use
   const calculateMidpoint = (coord1: [number, number], coord2: [number, number]): [number, number] => {
     const lat1 = coord1[1] * Math.PI / 180;
     const lon1 = coord1[0] * Math.PI / 180;
@@ -51,53 +50,10 @@ const MeetingHandler: React.FC<MeetingHandlerProps> = ({
     return [lonMid * 180 / Math.PI, latMid * 180 / Math.PI];
   };
 
-  // Function to create a route line
-  const createRouteLine = (start: [number, number], end: [number, number]) => {
-    const line = new LineString([start, end]);
-    line.transform('EPSG:4326', 'EPSG:3857');
-    return new Feature({ geometry: line });
-  };
-
-  // Function to add the route to the map
-  const addRouteToMap = (route: Feature) => {
-    const routeSource = routeLayer.current?.getSource();
-    routeSource?.clear();
-    routeSource?.addFeature(route);
-  };
-
-  // Function to create a style for the route line
-  const createRouteStyle = () => {
-    return new Style({
-      stroke: new Stroke({
-        color: '#ff0000',
-        width: 2,
-      }),
-    });
-  };
-
   useEffect(() => {
     if (selectedUser) {
       const user = nearbyUsers.find(user => user.id === selectedUser);
       if (user && user.location) {
-        //console.log(`Meeting Duration: ${selectedDuration} minutes`);
-
-        const userCoords = [user.location.lng, user.location.lat] as [number, number];
-        const wynyardCoords = WYNYARD_COORDS;
-
-        // Calculate the midpoint
-        const midpointCoords = calculateMidpoint(userCoords, wynyardCoords);
-        //console.log("Midpoint coordinates:", midpointCoords);
-
-        // Create a route line
-        const route = createRouteLine(userCoords, wynyardCoords);
-
-        // Style the route line
-        const routeStyle = createRouteStyle();
-        route.setStyle(routeStyle);
-
-        // Add the route to the map
-        addRouteToMap(route);
-
         // Move user logic - Fixed type issue by creating a new Set
         setMovingUsers(prev => {
           const newSet = new Set(prev);
@@ -105,7 +61,7 @@ const MeetingHandler: React.FC<MeetingHandlerProps> = ({
           return newSet;
         });
 
-        // Simulate user moving to midpoint
+        // Simulate user moving to midpoint but WITHOUT creating any route lines
         const timeoutId = setTimeout(() => {
           setCompletedMoves(prev => {
             const newSet = new Set(prev);
@@ -118,14 +74,25 @@ const MeetingHandler: React.FC<MeetingHandlerProps> = ({
             return newSet;
           });
           setSelectedUser(null);
+          
+          // Ensure the route source is cleared
           const routeSource = routeLayer.current?.getSource();
-          routeSource?.clear();
+          if (routeSource) {
+            routeSource.clear();
+          }
         }, selectedDuration * 1000);
 
         return () => clearTimeout(timeoutId);
       }
     }
   }, [selectedUser, nearbyUsers, selectedDuration, setMovingUsers, setCompletedMoves, setSelectedUser, WYNYARD_COORDS, routeLayer]);
+
+  // Clear any existing route lines when component mounts
+  useEffect(() => {
+    if (routeLayer.current?.getSource()) {
+      routeLayer.current.getSource().clear();
+    }
+  }, [routeLayer]);
 
   return null; // This component doesn't render UI directly
 };
