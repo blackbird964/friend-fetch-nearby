@@ -122,6 +122,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
         </Button>
         <Button 
           className="flex-1"
+          disabled={selectedDuration <= 0}
           onClick={onSendRequest}
         >
           Send Request

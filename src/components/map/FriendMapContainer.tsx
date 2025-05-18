@@ -68,6 +68,15 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     setCompletedMoves
   } = useMapUIState();
 
+  // Dispatch tracking mode event when isTracking changes
+  React.useEffect(() => {
+    console.log("FriendMapContainer - isTracking changed:", isTracking);
+    const event = new CustomEvent('tracking-mode-changed', { 
+      detail: { isTracking } 
+    });
+    window.dispatchEvent(event);
+  }, [isTracking]);
+
   return (
     <MapContainer>
       <MapFeatures 

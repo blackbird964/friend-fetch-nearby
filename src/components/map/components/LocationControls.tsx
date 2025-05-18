@@ -52,8 +52,11 @@ const LocationControls: React.FC<LocationControlsProps> = ({
           checked={isTracking}
           onCheckedChange={toggleLocationTracking}
         />
-        <Label htmlFor="tracking-mode" className="text-xs whitespace-nowrap">
-          <Eye className="h-3 w-3 inline mr-1" />
+        <Label 
+          htmlFor="tracking-mode" 
+          className={`text-xs whitespace-nowrap ${isTracking ? 'text-green-600 font-medium' : 'text-gray-500'}`}
+        >
+          <Eye className={`h-3 w-3 inline mr-1 ${isTracking ? 'text-green-600' : ''}`} />
           Track {isTracking ? "On" : "Off"}
         </Label>
       </div>

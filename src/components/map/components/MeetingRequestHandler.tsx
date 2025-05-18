@@ -37,6 +37,10 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   const { toast } = useToast();
   const requestCardRef = useRef<HTMLDivElement>(null);
   
+  useEffect(() => {
+    console.log("MeetingRequestHandler rendering with selectedUser:", selectedUser);
+  }, [selectedUser]);
+  
   // Prevent card from disappearing by adding click capture
   useEffect(() => {
     if (!requestCardRef.current || !selectedUser) return;
@@ -148,11 +152,19 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   };
 
   // If no user is selected, don't render the request card
-  if (!selectedUser) return null;
+  if (!selectedUser) {
+    console.log("No user selected, not rendering request card");
+    return null;
+  }
 
   // Find the selected user
   const user = nearbyUsers.find(u => u.id === selectedUser);
-  if (!user) return null;
+  if (!user) {
+    console.log("Selected user not found in nearby users");
+    return null;
+  }
+  
+  console.log("Rendering request card for user:", user.name);
   
   // If the user is currently moving to a meeting or has already moved
   if (isUserMoving || hasUserMoved) {

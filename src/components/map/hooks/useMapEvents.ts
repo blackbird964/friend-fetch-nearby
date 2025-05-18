@@ -93,6 +93,13 @@ export const useMapEvents = (
         // Only process clicks on user markers, not circles
         if (userId && !isCircle) {
           console.log("Clicked on user feature:", userId);
+          
+          // Don't select your own marker for meeting requests
+          if (currentUser && userId === currentUser.id) {
+            console.log("This is your own marker, not selecting");
+            return;
+          }
+          
           lastClickedFeatureId = userId;
           
           // Always select the user when clicking on their marker

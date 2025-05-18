@@ -33,11 +33,16 @@ export const useMarkerUpdater = (
       // Don't proceed if there's no source
       if (!source) return;
       
+      console.log("updateMarkers: tracking=", tracking, "users=", users.length);
+      
       // Clear existing user markers (but keep circle markers)
       clearExistingUserMarkers(source);
       
       // If tracking is disabled, don't show any users
-      if (!tracking) return;
+      if (!tracking) {
+        console.log("Tracking disabled, not showing any user markers");
+        return;
+      }
       
       // Filter to only show online and unblocked users
       const onlineUsers = filterOnlineAndUnblockedUsers(users, user);
@@ -69,6 +74,8 @@ export const useMarkerUpdater = (
   // Main effect to update map markers
   useEffect(() => {
     if (!mapLoaded || !vectorSource.current) return;
+    
+    console.log("useMarkerUpdater effect triggered, isTracking:", isTracking);
     
     // Schedule update with a slight delay for better performance
     if (updateTimeoutRef.current) {
@@ -147,12 +154,38 @@ export const useMarkerUpdater = (
       }
     };
     
+    // Handle tracking mode changes
+    const handleTrackingModeChange = (event: Event) => {
+      if (!vectorSource.current || !mapLoaded) return;
+      
+      const customEvent = event as CustomEvent;
+      const isTracking = customEvent.detail?.isTracking;
+      
+      if (isTracking !== undefined) {
+        console.log("Tracking mode changed to:", isTracking);
+        
+        // Clear all user markers first to avoid duplicates
+        clearExistingUserMarkers(vectorSource.current);
+        
+        // Force an update with new tracking state
+        throttledUpdateMarkers(
+          vectorSource.current!,
+          nearbyUsersRef.current, 
+          currentUserRef.current, 
+          prevRadiusRef.current, 
+          isTracking
+        );
+      }
+    };
+    
     window.addEventListener('user-location-changed', handleLocationChange);
     window.addEventListener('privacy-mode-changed', handlePrivacyModeChange as EventListener);
+    window.addEventListener('tracking-mode-changed', handleTrackingModeChange as EventListener);
     
     return () => {
       window.removeEventListener('user-location-changed', handleLocationChange);
       window.removeEventListener('privacy-mode-changed', handlePrivacyModeChange as EventListener);
+      window.removeEventListener('tracking-mode-changed', handleTrackingModeChange as EventListener);
       
       if (updateTimeoutRef.current) {
         window.clearTimeout(updateTimeoutRef.current);
