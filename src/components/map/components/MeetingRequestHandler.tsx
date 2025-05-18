@@ -39,7 +39,9 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   
   useEffect(() => {
     console.log("MeetingRequestHandler rendering with selectedUser:", selectedUser);
-  }, [selectedUser]);
+    console.log("Moving users:", Array.from(movingUsers));
+    console.log("Completed moves:", Array.from(completedMoves));
+  }, [selectedUser, movingUsers, completedMoves]);
   
   // Prevent card from disappearing by adding click capture
   useEffect(() => {
@@ -129,17 +131,21 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
     e.stopPropagation(); // Prevent map click propagation
     if (selectedUser) {
       // Remove from moving and completed sets
-      setMovingUsers(prev => {
-        const next = new Set(prev);
-        next.delete(selectedUser);
-        return next;
-      });
+      if (setMovingUsers && typeof setMovingUsers === 'function') {
+        setMovingUsers(prev => {
+          const next = new Set(prev);
+          next.delete(selectedUser);
+          return next;
+        });
+      }
       
-      setCompletedMoves(prev => {
-        const next = new Set(prev);
-        next.delete(selectedUser);
-        return next;
-      });
+      if (setCompletedMoves && typeof setCompletedMoves === 'function') {
+        setCompletedMoves(prev => {
+          const next = new Set(prev);
+          next.delete(selectedUser);
+          return next;
+        });
+      }
       
       toast({
         title: "Meeting Cancelled",
@@ -165,8 +171,9 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   }
   
   console.log("Rendering request card for user:", user.name);
+  console.log("Is user moving:", isUserMoving, "Has user moved:", hasUserMoved);
   
-  // If the user is currently moving to a meeting or has already moved
+  // CRITICAL FIX: Only show the active meeting card if the user is actually moving or has moved
   if (isUserMoving || hasUserMoved) {
     return (
       <div 

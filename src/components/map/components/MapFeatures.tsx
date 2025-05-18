@@ -59,6 +59,12 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
 
   // State for meeting request duration
   const [selectedDuration, setSelectedDuration] = React.useState<number>(30);
+  
+  // Debug moving users
+  useEffect(() => {
+    console.log("MapFeatures - movingUsers:", Array.from(movingUsers));
+    console.log("MapFeatures - completedMoves:", Array.from(completedMoves));
+  }, [movingUsers, completedMoves]);
 
   // Initialize map layers and features
   const { getMarkerStyle, WYNYARD_COORDS } = useMapMarkers(
@@ -173,9 +179,15 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
           nearbyUsers={nearbyUsers}
           movingUsers={movingUsers}
           completedMoves={completedMoves}
-          // Fix type issues by passing proper state setter functions
-          setMovingUsers={() => {}}  // Replace with empty function as we don't need to set these here
-          setCompletedMoves={() => {}} // Replace with empty function as we don't need to set these here
+          // Make sure we pass functions that handle Set updates properly
+          setMovingUsers={(newSet: React.SetStateAction<Set<string>>) => {
+            console.log("Setting moving users to:", newSet);
+            // This function is just a placeholder as we don't manage the sets here
+          }}
+          setCompletedMoves={(newSet: React.SetStateAction<Set<string>>) => {
+            console.log("Setting completed moves to:", newSet);
+            // This function is just a placeholder as we don't manage the sets here
+          }}
         />
       )}
     </>
