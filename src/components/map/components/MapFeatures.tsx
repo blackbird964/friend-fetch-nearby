@@ -67,11 +67,13 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
   );
 
   // Initialize radius circle with current radius value and make it responsive to changes
+  // Pass isTracking to control visibility
   const { radiusLayer, radiusFeature } = useRadiusCircle(
     map,
     vectorSource,
     currentUser,
-    radiusInKm
+    radiusInKm,
+    isTracking
   );
   
   // Handle tracking state changes for marker visibility

@@ -57,16 +57,23 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
           />
           <Label htmlFor="tracking-mode" className="text-xs whitespace-nowrap">
             <Eye className="h-3 w-3 inline mr-1" />
-            Track
+            Track {isTracking ? "On" : "Off"}
           </Label>
         </div>
       </div>
       
-      {/* Privacy mode indicator */}
+      {/* Messages about active modes */}
       {isPrivacyModeEnabled && (
         <div className="flex items-center justify-center py-1 px-2 bg-purple-50 rounded-md text-xs text-purple-700 border border-purple-100 animate-fade-in">
           <Shield className="h-3 w-3 mr-1 inline shield-pulse text-purple-500" />
           Privacy Mode Active - Your exact location is hidden
+        </div>
+      )}
+      
+      {!isTracking && (
+        <div className="flex items-center justify-center py-1 px-2 bg-gray-50 rounded-md text-xs text-gray-700 border border-gray-100 animate-fade-in mt-1">
+          <Eye className="h-3 w-3 mr-1 inline text-gray-500" />
+          Tracking is off - Your marker and radius are hidden
         </div>
       )}
     </>

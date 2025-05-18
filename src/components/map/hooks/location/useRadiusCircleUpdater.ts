@@ -15,18 +15,30 @@ export const useRadiusCircleUpdater = (
   radiusFeature: React.MutableRefObject<Feature | null>,
   currentUser: AppUser | null,
   radiusInKm: number,
-  updateRadiusCircle: () => void
+  updateRadiusCircle: () => void,
+  isTracking: boolean = false
 ) => {
   // Update radius circle when user location changes
   useEffect(() => {
+    if (!isTracking) {
+      // Clear radius when tracking is disabled
+      if (radiusLayer.current) {
+        const source = radiusLayer.current.getSource();
+        if (source) source.clear();
+      }
+      return;
+    }
+    
     if (!currentUser?.location || !map.current || !radiusLayer.current) return;
     console.log("Location or radius changed, updating circle");
     updateRadiusCircle();
-  }, [currentUser?.location, radiusInKm, updateRadiusCircle]);
+  }, [currentUser?.location, radiusInKm, updateRadiusCircle, isTracking, radiusLayer]);
 
   // Listen for the custom radius-changed event
   useEffect(() => {
     const handleRadiusChange = (e: Event) => {
+      if (!isTracking) return;
+      
       const customEvent = e as CustomEvent;
       console.log("Radius change event detected:", customEvent.detail);
       updateRadiusCircle();
@@ -37,11 +49,13 @@ export const useRadiusCircleUpdater = (
     return () => {
       window.removeEventListener('radius-changed', handleRadiusChange);
     };
-  }, [updateRadiusCircle]);
+  }, [updateRadiusCircle, isTracking]);
 
   // Listen for the user-location-changed event
   useEffect(() => {
     const handleLocationChange = () => {
+      if (!isTracking) return;
+      
       console.log("User location changed event detected, updating circle");
       updateRadiusCircle();
     };
@@ -51,14 +65,16 @@ export const useRadiusCircleUpdater = (
     return () => {
       window.removeEventListener('user-location-changed', handleLocationChange);
     };
-  }, [updateRadiusCircle]);
+  }, [updateRadiusCircle, isTracking]);
 
   // Update circle when map view changes (zoom)
   useEffect(() => {
-    if (!map.current) return;
+    if (!map.current || !isTracking) return;
 
     const view = map.current.getView();
     const handleViewChange = () => {
+      if (!isTracking) return;
+      
       console.log("Map view changed, updating radius circle");
       updateRadiusCircle();
     };
@@ -68,5 +84,5 @@ export const useRadiusCircleUpdater = (
     return () => {
       view.un('change:resolution', handleViewChange);
     };
-  }, [map, updateRadiusCircle]);
+  }, [map, updateRadiusCircle, isTracking]);
 };

@@ -54,7 +54,7 @@ const LocationControls: React.FC<LocationControlsProps> = ({
         />
         <Label htmlFor="tracking-mode" className="text-xs whitespace-nowrap">
           <Eye className="h-3 w-3 inline mr-1" />
-          Track
+          Track {isTracking ? "On" : "Off"}
         </Label>
       </div>
     </div>

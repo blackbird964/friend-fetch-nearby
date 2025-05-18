@@ -14,7 +14,8 @@ export const useRadiusCircle = (
   map: React.MutableRefObject<Map | null>,
   vectorSource: React.MutableRefObject<VectorSource | null>,
   currentUser: AppUser | null,
-  radiusInKm: number
+  radiusInKm: number,
+  isTracking: boolean = false
 ) => {
   // Create the layer for the radius circle with blue styling
   const { radiusLayer } = useRadiusLayer(map);
@@ -24,7 +25,8 @@ export const useRadiusCircle = (
     map,
     radiusLayer,
     currentUser,
-    radiusInKm
+    radiusInKm,
+    isTracking
   );
   
   // Handle updates based on user location and radius changes
@@ -34,19 +36,29 @@ export const useRadiusCircle = (
     radiusFeature,
     currentUser,
     radiusInKm,
-    updateRadiusCircle
+    updateRadiusCircle,
+    isTracking
   );
 
   // Ensure the radius is updated immediately on initialization and when radius changes
   useEffect(() => {
+    if (!isTracking) {
+      // Clear radius visualization when tracking is disabled
+      if (radiusLayer.current) {
+        const source = radiusLayer.current.getSource();
+        if (source) source.clear();
+      }
+      return;
+    }
+    
     if (map.current && radiusLayer.current && currentUser?.location) {
-      console.log("Initial radius update with radiusInKm:", radiusInKm);
+      console.log("Initial radius update with radiusInKm:", radiusInKm, "tracking:", isTracking);
       // Small delay to ensure all components are initialized
       setTimeout(() => {
         updateRadiusCircle();
       }, 100);
     }
-  }, [map, radiusLayer, currentUser?.location, radiusInKm, updateRadiusCircle]);
+  }, [map, radiusLayer, currentUser?.location, radiusInKm, updateRadiusCircle, isTracking]);
 
   return { radiusLayer, radiusFeature, updateRadiusCircle };
 };

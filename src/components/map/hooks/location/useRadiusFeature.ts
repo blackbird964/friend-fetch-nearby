@@ -15,7 +15,8 @@ export const useRadiusFeature = (
   map: React.MutableRefObject<Map | null>,
   radiusLayer: React.MutableRefObject<VectorLayer<VectorSource> | null>,
   currentUser: AppUser | null,
-  radiusInKm: number
+  radiusInKm: number,
+  isTracking: boolean = false
 ) => {
   const radiusFeature = useRef<Feature | null>(null);
 
@@ -25,11 +26,21 @@ export const useRadiusFeature = (
       hasMap: !!map.current,
       hasLayer: !!radiusLayer.current,
       hasLocation: !!currentUser?.location,
-      radiusInKm
+      radiusInKm,
+      isTracking
     });
     
-    if (!radiusLayer.current || !map.current || !currentUser?.location) {
-      console.log("Cannot update radius circle - missing required elements");
+    if (!radiusLayer.current || !map.current || !currentUser?.location || !isTracking) {
+      console.log("Cannot update radius circle - missing required elements or tracking disabled");
+      
+      // Clear the radius if tracking is disabled
+      if (!isTracking && radiusLayer.current) {
+        const source = radiusLayer.current.getSource();
+        if (source) {
+          source.clear();
+          console.log("Radius circle cleared - tracking disabled");
+        }
+      }
       return;
     }
 
@@ -63,7 +74,7 @@ export const useRadiusFeature = (
     // Add the feature to the source
     source.addFeature(radiusFeature.current);
     console.log(`Radius circle added to source: ${radiusInKm}km around [${lng}, ${lat}]`);
-  }, [currentUser?.location, radiusInKm, map, radiusLayer]);
+  }, [currentUser?.location, radiusInKm, map, radiusLayer, isTracking]);
 
   return { 
     radiusFeature,

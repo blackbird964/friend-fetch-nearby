@@ -25,7 +25,8 @@ export const useLocationSettings = (): UseLocationSettingsResult => {
   
   const [isTracking, setIsTracking] = useState(() => {
     const savedTracking = localStorage.getItem('kairo-tracking');
-    return savedTracking !== 'false'; // Default to true if not set
+    // Default to false (off) if not set
+    return savedTracking === 'true';
   });
   
   const [isPrivacyModeEnabled, setIsPrivacyModeEnabled] = useState(() => {
