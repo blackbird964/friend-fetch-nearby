@@ -25,7 +25,7 @@ export const useRadiusFeature = (
 
     const { lng, lat } = currentUser.location;
     const center = fromLonLat([lng, lat]);
-    const radiusInMeters = radiusInKm * 1000; // Convert km to meters
+    const radiusInMeters = radiusInKm * 1000; // Convert km to meters - IMPORTANT: this must be right!
 
     const source = radiusLayer.current.getSource();
     if (!source) return;

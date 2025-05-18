@@ -94,8 +94,8 @@ export const getDisplayLocation = (user: any): Location | undefined => {
  * Get radius in meters for privacy circle
  */
 export const getPrivacyCircleRadius = (): number => {
-  // 5km (5000m) radius for privacy circle
-  return 5000;
+  // 3km (3000m) radius for privacy circle - changed from 5km to 3km as requested
+  return 3000;
 };
 
 /**

@@ -4,6 +4,7 @@ import { Vector as VectorSource } from 'ol/source';
 import { throttle } from 'lodash';
 import { clearExistingUserMarkers, filterOnlineAndUnblockedUsers } from './utils/markerUtils';
 import { addNearbyUserMarkers, addCurrentUserMarker } from './utils/userMarkers';
+import { shouldObfuscateLocation } from '@/utils/privacyUtils';
 
 export const useMarkerUpdater = (
   vectorSource: React.MutableRefObject<VectorSource | null>,
@@ -46,8 +47,7 @@ export const useMarkerUpdater = (
       addNearbyUserMarkers(onlineUsers, user, radius, source);
       
       // Check if privacy is enabled for current user
-      const isPrivacyEnabled = user?.locationSettings?.hideExactLocation || 
-                              user?.location_settings?.hide_exact_location || false;
+      const isPrivacyEnabled = shouldObfuscateLocation(user);
       
       // Only add user marker if privacy is OFF and tracking is ON
       if (tracking && user && !isPrivacyEnabled) {
@@ -163,6 +163,3 @@ export const useMarkerUpdater = (
     };
   }, [throttledUpdateMarkers, mapLoaded]);
 };
-
-// Import shouldObfuscateLocation directly in this file as it's needed for the hook
-import { shouldObfuscateLocation } from '@/utils/privacyUtils';

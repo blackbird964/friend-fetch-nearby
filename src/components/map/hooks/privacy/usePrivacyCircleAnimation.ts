@@ -56,12 +56,12 @@ export const usePrivacyCircleAnimation = (
   }, [privacyLayer]);
   
   // Cleanup function for animation
-  const cleanupAnimation = () => {
+  const cleanupAnimation = useCallback(() => {
     if (animationRef.current) {
       cancelAnimationFrame(animationRef.current);
       animationRef.current = null;
     }
-  };
+  }, []);
   
   return {
     animatePrivacyCircle,

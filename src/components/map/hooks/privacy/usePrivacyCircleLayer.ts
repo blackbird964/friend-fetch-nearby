@@ -26,7 +26,7 @@ export const usePrivacyCircleLayer = (
     // Create the privacy layer with appropriate styling
     const source = new VectorSource();
     
-    // Initial style with improved visibility (will be animated)
+    // Initial style with improved visibility
     const privacyStyle = new Style({
       fill: new Fill({
         color: 'rgba(155, 135, 245, 0.3)', // Purple color with initial opacity

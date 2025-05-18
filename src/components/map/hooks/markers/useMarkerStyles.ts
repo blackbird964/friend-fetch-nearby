@@ -39,16 +39,16 @@ export const useMarkerStyles = (
       if (circleType === 'radius') {
         return new Style({
           stroke: new Stroke({
-            color: 'rgba(64, 99, 255, 0.5)',
+            color: 'rgba(64, 99, 255, 0.5)', // Semi-transparent blue
             width: 2,
             lineDash: [5, 5]
           }),
           fill: new Fill({
-            color: 'rgba(64, 99, 255, 0.05)'
+            color: 'rgba(64, 99, 255, 0.05)' // Very light blue fill
           })
         });
       } else if (circleType === 'privacy') {
-        // Privacy circle style is now handled in usePrivacyCircle with animation
+        // Privacy circle style with purple color
         return new Style({
           stroke: new Stroke({
             color: 'rgba(155, 135, 245, 0.8)', // Purple color for privacy

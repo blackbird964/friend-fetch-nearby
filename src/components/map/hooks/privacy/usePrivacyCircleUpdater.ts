@@ -28,16 +28,17 @@ export const usePrivacyCircleUpdater = (
     // Only create privacy circle if privacy mode is enabled
     const isPrivacyEnabled = shouldObfuscateLocation(currentUser);
     const source = privacyLayer.current.getSource();
+    if (!source) return;
     
     // Clear existing features and cancel any ongoing animation
-    source?.clear();
+    source.clear();
     cleanupAnimation();
     
     // Only add feature if privacy is enabled
     if (isPrivacyEnabled) {
       const { lng, lat } = currentUser.location;
       const center = fromLonLat([lng, lat]);
-      const radiusInMeters = getPrivacyCircleRadius(); // 5km radius
+      const radiusInMeters = getPrivacyCircleRadius(); // Default 3km radius
       
       // Create the circle feature
       privacyFeature.current = new Feature({
@@ -49,7 +50,7 @@ export const usePrivacyCircleUpdater = (
         userName: currentUser.name || 'User', // Show user name
       });
       
-      source?.addFeature(privacyFeature.current);
+      source.addFeature(privacyFeature.current);
       
       // Start the animation for the privacy circle
       animationRef.current = requestAnimationFrame(animatePrivacyCircle);

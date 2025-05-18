@@ -88,8 +88,10 @@ export const useMapEvents = (
       
       if (clickedFeature) {
         const userId = clickedFeature.get('userId');
+        const isCircle = clickedFeature.get('isCircle');
         
-        if (userId) {
+        // Only process clicks on user markers, not circles
+        if (userId && !isCircle) {
           console.log("Clicked on user feature:", userId);
           lastClickedFeatureId = userId;
           
