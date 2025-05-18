@@ -5,7 +5,6 @@ import { Vector as VectorSource } from 'ol/source';
 import Map from 'ol/Map';
 import { useMarkerStyles } from './markers/useMarkerStyles';
 import { useMarkerUpdater } from './markers/useMarkerUpdater';
-import { WYNYARD_COORDS } from './map/useMapConfig';
 
 export const useMapMarkers = (
   map: React.MutableRefObject<Map | null>,
@@ -26,5 +25,5 @@ export const useMapMarkers = (
   // Update markers when data changes - make sure to pass radiusInKm and isTracking
   useMarkerUpdater(vectorSource, nearbyUsers, currentUser, mapLoaded, radiusInKm, isTracking);
 
-  return { getMarkerStyle, WYNYARD_COORDS };
+  return { getMarkerStyle };
 };

@@ -42,7 +42,7 @@ const MapMarkerFeatures: React.FC<MapMarkerFeaturesProps> = ({
   isTracking
 }) => {
   // Get marker styles
-  const { getMarkerStyle, WYNYARD_COORDS } = useMapMarkers(
+  const { getMarkerStyle } = useMapMarkers(
     map,
     vectorSource,
     nearbyUsers,
@@ -70,7 +70,8 @@ const MapMarkerFeatures: React.FC<MapMarkerFeaturesProps> = ({
     friendRequests
   );
 
-  return { WYNYARD_COORDS };
+  // This component doesn't render anything visible
+  return null;
 };
 
 export default MapMarkerFeatures;

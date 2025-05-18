@@ -14,6 +14,7 @@ import {
   LocationChangeMonitor
 } from './map-features';
 import MeetingRequestHandler from './MeetingRequestHandler';
+import { WYNYARD_COORDS } from '../hooks/map/useMapConfig';
 
 type MapFeaturesProps = {
   map: React.MutableRefObject<Map | null>;
@@ -56,25 +57,26 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
   // State for meeting request duration
   const [selectedDuration, setSelectedDuration] = React.useState<number>(30);
 
-  // Get marker features and wynyard coordinates
-  const { WYNYARD_COORDS } = MapMarkerFeatures({
-    map,
-    vectorSource,
-    vectorLayer,
-    routeLayer,
-    mapLoaded,
-    currentUser,
-    nearbyUsers,
-    selectedUser,
-    movingUsers,
-    completedMoves,
-    friendRequests,
-    radiusInKm,
-    isTracking
-  });
-
+  // Apply marker features
   return (
     <>
+      {/* Add marker features */}
+      <MapMarkerFeatures
+        map={map}
+        vectorSource={vectorSource}
+        vectorLayer={vectorLayer}
+        routeLayer={routeLayer}
+        mapLoaded={mapLoaded}
+        currentUser={currentUser}
+        nearbyUsers={nearbyUsers}
+        selectedUser={selectedUser}
+        movingUsers={movingUsers}
+        completedMoves={completedMoves}
+        friendRequests={friendRequests}
+        radiusInKm={radiusInKm}
+        isTracking={isTracking}
+      />
+      
       {/* Add circle features (radius & privacy) */}
       <MapCircleFeatures
         map={map}
