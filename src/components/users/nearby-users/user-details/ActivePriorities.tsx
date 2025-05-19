@@ -8,7 +8,12 @@ interface ActivePrioritiesProps {
 }
 
 const ActivePriorities: React.FC<ActivePrioritiesProps> = ({ priorities }) => {
-  if (!priorities || priorities.length === 0) return null;
+  console.log("Rendering ActivePriorities with:", priorities);
+  
+  if (!priorities || priorities.length === 0) {
+    console.log("No priorities to display");
+    return null;
+  }
   
   return (
     <div className="space-y-2">

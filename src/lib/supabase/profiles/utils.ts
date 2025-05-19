@@ -1,5 +1,5 @@
 
-import { Profile, ProfileWithBlockedUsers } from './types';
+import { Profile, ProfileWithBlockedUsers, ActivePriority } from './types';
 import { Json } from '@/integrations/supabase/types';
 
 /**
@@ -69,6 +69,7 @@ export function normalizeProfileData(profile: any): ProfileWithBlockedUsers {
   // Convert active_priorities from JSON to proper type if needed
   if (normalizedProfile.active_priorities) {
     normalizedProfile.active_priorities = convertJsonToActivePriorities(normalizedProfile.active_priorities);
+    console.log("Normalized active priorities:", normalizedProfile.active_priorities);
   } else {
     normalizedProfile.active_priorities = [];
   }
@@ -87,39 +88,49 @@ export function normalizeProfileData(profile: any): ProfileWithBlockedUsers {
 /**
  * Helper function to convert Json type to ActivePriority[]
  */
-function convertJsonToActivePriorities(jsonData: Json | null): any[] {
+function convertJsonToActivePriorities(jsonData: Json | null): ActivePriority[] {
   if (!jsonData) return [];
+  
+  // Log to debug what's coming in
+  console.log("Converting active priorities from JSON:", jsonData);
   
   // If it's already an array, map it to ensure it has the correct structure
   if (Array.isArray(jsonData)) {
     return jsonData.map(item => {
       // Handle each item safely with type checking
-      const priority: any = {};
+      const priority: Partial<ActivePriority> = {};
       
       if (item && typeof item === 'object') {
         // Only add properties that exist
         if ('id' in item && typeof item.id === 'string') {
           priority.id = item.id;
+        } else {
+          // Ensure we always have an id
+          priority.id = `priority-${Math.random().toString(36).substr(2, 9)}`;
         }
         
         if ('category' in item && typeof item.category === 'string') {
           priority.category = item.category;
+        } else {
+          priority.category = "Sydney Activities";
         }
         
         if ('activity' in item && typeof item.activity === 'string') {
           priority.activity = item.activity;
+        } else {
+          priority.activity = "Activity";
         }
         
         if ('frequency' in item) {
-          priority.frequency = item.frequency;
+          priority.frequency = item.frequency as string;
         }
         
         if ('timePreference' in item) {
-          priority.timePreference = item.timePreference;
+          priority.timePreference = item.timePreference as string;
         }
         
         if ('urgency' in item) {
-          priority.urgency = item.urgency;
+          priority.urgency = item.urgency as string;
         }
         
         if ('location' in item && typeof item.location === 'string') {
@@ -127,13 +138,14 @@ function convertJsonToActivePriorities(jsonData: Json | null): any[] {
         }
         
         if ('experienceLevel' in item) {
-          priority.experienceLevel = item.experienceLevel;
+          priority.experienceLevel = item.experienceLevel as string;
         }
       }
       
-      return priority;
+      return priority as ActivePriority;
     }).filter(item => item.id && item.activity); // Filter out any invalid items
   }
   
+  // If it's not an array, return empty array
   return [];
 }

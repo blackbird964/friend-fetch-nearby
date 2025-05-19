@@ -6,15 +6,19 @@ import { AppUser } from '@/context/types';
 import { useChatActions } from '@/components/users/hooks/useChatActions';
 
 interface ProfileActionsProps {
-  user: AppUser;
+  user?: AppUser; // Making user optional but will get it from parent context
 }
 
 const ProfileActions: React.FC<ProfileActionsProps> = ({ user }) => {
   const { startChat } = useChatActions();
   
   const handleStartChat = () => {
-    console.log("Starting chat with user:", user.name);
-    startChat(user);
+    if (user) {
+      console.log("Starting chat with user:", user.name);
+      startChat(user);
+    } else {
+      console.error("Cannot start chat: User is undefined");
+    }
   };
   
   return (

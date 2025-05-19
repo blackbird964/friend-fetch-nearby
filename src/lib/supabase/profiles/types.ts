@@ -1,59 +1,44 @@
 
-/**
- * Profile data structure from the database
- */
-export type Profile = {
+import { Json } from '@/integrations/supabase/types';
+
+export interface ActivePriority {
+  id: string;
+  category: string;
+  activity: string;
+  frequency?: string;
+  timePreference?: string;
+  urgency?: string;
+  location?: string;
+  experienceLevel?: string;
+}
+
+export interface LocationSettings {
+  isManualMode: boolean;
+  hideExactLocation: boolean;
+}
+
+export interface Profile {
   id: string;
   name: string | null;
   bio: string | null;
   age: number | null;
   gender: string | null;
-  interests: string[];
   profile_pic: string | null;
-  created_at?: string | null;
-  updated_at?: string | null;
-  location?: {
-    lat: number;
-    lng: number;
-  } | null;
-  blocked_users?: string[];
-  locationSettings?: {
-    isManualMode?: boolean;
-    hideExactLocation?: boolean;
-  };
+  location: { lat: number, lng: number } | null;
+  last_seen: string | null;
+  is_online: boolean | null;
+  is_over_18: boolean | null;
+  interests: string[] | null;
+  active_priorities: ActivePriority[] | null;
   location_settings?: {
-    is_manual_mode?: boolean;
-    hide_exact_location?: boolean;
+    is_manual_mode: boolean;
+    hide_exact_location: boolean;
   };
-  is_over_18?: boolean;
-  active_priorities?: ActivePriority[];
-};
+  // For frontend compatibility
+  locationSettings?: LocationSettings;
+}
 
-/**
- * Type for application use that adds the blockedUsers property for compatibility
- */
-export type ProfileWithBlockedUsers = Profile & {
-  blockedUsers?: string[];
-};
-
-/**
- * Active Priority data structure
- */
-export type ActivePriority = {
-  id: string;
-  category: string;
-  activity: string;
-  frequency?: 'daily' | 'weekly' | 'weekends' | 'monthly' | undefined;
-  timePreference?: 'morning' | 'afternoon' | 'evening' | 'night' | 'flexible' | undefined;
-  urgency?: 'now' | 'soon' | 'ongoing' | undefined;
-  location?: string;
-  experienceLevel?: 'beginner' | 'intermediate' | 'advanced' | undefined;
-};
-
-/**
- * Priority category with associated activities
- */
-export type PriorityCategory = {
-  name: string;
-  activities: string[];
-};
+export interface ProfileWithBlockedUsers extends Profile {
+  blocked_users: string[];
+  blockedUsers: string[];
+}

@@ -83,7 +83,7 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
 
           <DrawerFooter className="flex-col gap-3 pt-2">
             <ProfileActions 
-              onStartChat={() => onStartChat(user)}
+              user={user}
             />
             
             <ModerationActions 
