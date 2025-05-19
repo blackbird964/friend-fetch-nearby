@@ -51,7 +51,7 @@ export const useChatActions = () => {
     console.log("Created new chat:", newChat);
     
     // Update global state with new chat - fix the type issue
-    setChats([...chats, newChat]);
+    setChats((prevChats) => [...prevChats, newChat]);
     setSelectedChat(newChat);
     
     // Use setTimeout to ensure state is updated before navigation

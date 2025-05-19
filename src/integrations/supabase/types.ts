@@ -38,6 +38,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_priorities: Json | null
           age: number | null
           bio: string | null
           blocked_users: string[] | null
@@ -54,6 +55,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          active_priorities?: Json | null
           age?: number | null
           bio?: string | null
           blocked_users?: string[] | null
@@ -70,6 +72,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          active_priorities?: Json | null
           age?: number | null
           bio?: string | null
           blocked_users?: string[] | null
