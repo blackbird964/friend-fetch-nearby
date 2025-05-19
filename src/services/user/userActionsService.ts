@@ -1,7 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import { ProfileWithBlockedUsers } from '@/lib/supabase/profiles';
+import { ProfileWithBlockedUsers, ActivePriority } from '@/lib/supabase/profiles';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Add a user to the current user's blocked list
@@ -20,22 +21,28 @@ export async function blockUser(currentUserId: string, blockedUserId: string): P
       return false;
     }
     
-    // Cast to our profile type
-    const profileWithBlocked = profile as ProfileWithBlockedUsers;
+    // Cast and normalize the profile type
+    const profileWithBlocked: ProfileWithBlockedUsers = {
+      ...profile,
+      // Convert Json active_priorities to ActivePriority[] if it exists
+      active_priorities: convertJsonToActivePriorities(profile.active_priorities),
+      // Add in blockedUsers property for compatibility
+      blockedUsers: profile.blocked_users || []
+    };
     
-    // Get current blocked users or initialize empty array
+    // Get current blocked users array or initialize empty array
+    // Process with backward compatibility for both property names
     const currentBlockedUsers = profileWithBlocked.blocked_users || [];
     
     // Add new blocked user if not already blocked
     if (!currentBlockedUsers.includes(blockedUserId)) {
-      // Add to the blocked_users array
-      const updatedBlockedUsers = [...currentBlockedUsers, blockedUserId];
+      currentBlockedUsers.push(blockedUserId);
       
       // Update the profile with new blocked users array
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          blocked_users: updatedBlockedUsers
+          blocked_users: currentBlockedUsers
         })
         .eq('id', currentUserId);
         
@@ -72,8 +79,14 @@ export async function unblockUser(currentUserId: string, blockedUserId: string):
       return false;
     }
     
-    // Cast to our profile type
-    const profileWithBlocked = profile as ProfileWithBlockedUsers;
+    // Cast and normalize the profile type
+    const profileWithBlocked: ProfileWithBlockedUsers = {
+      ...profile,
+      // Convert Json active_priorities to ActivePriority[] if it exists
+      active_priorities: convertJsonToActivePriorities(profile.active_priorities),
+      // Add in blockedUsers property for compatibility
+      blockedUsers: profile.blocked_users || []
+    };
     
     // Get current blocked users or initialize empty array
     const currentBlockedUsers = profileWithBlocked.blocked_users || [];
@@ -135,4 +148,27 @@ export async function reportUser(reporterId: string, reportedUserId: string, rea
     console.error('Error reporting user:', error);
     return false;
   }
+}
+
+/**
+ * Helper function to convert Json type to ActivePriority[]
+ */
+function convertJsonToActivePriorities(jsonData: Json | null): ActivePriority[] {
+  if (!jsonData) return [];
+  
+  // If it's already an array, map it to ensure it has the correct structure
+  if (Array.isArray(jsonData)) {
+    return jsonData.map(item => ({
+      id: typeof item.id === 'string' ? item.id : '',
+      category: typeof item.category === 'string' ? item.category : '',
+      activity: typeof item.activity === 'string' ? item.activity : '',
+      frequency: item.frequency as any,
+      timePreference: item.timePreference as any,
+      urgency: item.urgency as any,
+      location: typeof item.location === 'string' ? item.location : undefined,
+      experienceLevel: item.experienceLevel as any
+    }));
+  }
+  
+  return [];
 }

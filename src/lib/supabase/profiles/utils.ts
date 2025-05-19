@@ -1,52 +1,108 @@
 
 import { Profile, ProfileWithBlockedUsers } from './types';
+import { Json } from '@/integrations/supabase/types';
 
 /**
- * Converts Postgres point type to location object
+ * Parse the location data from Postgres point type to our location format
  */
-export function parseLocationData(location: any): { lat: number; lng: number } | null {
+export function parseLocationData(location: any): { lat: number, lng: number } | null {
+  if (!location) return null;
+  
   try {
-    // Handle conversion from Postgres point type
-    if (typeof location === 'string' && location.startsWith('(')) {
+    // Handle string format "(lat,lng)"
+    if (typeof location === 'string') {
       const match = location.match(/\(([^,]+),([^)]+)\)/);
       if (match) {
         return {
-          lng: parseFloat(match[1]),
-          lat: parseFloat(match[2])
+          lat: parseFloat(match[1]),
+          lng: parseFloat(match[2])
         };
       }
-    } else if (typeof location === 'object') {
-      // If the data is already in the correct format, make sure it has lat/lng
-      if (location && ('lat' in location || 'lng' in location)) {
-        return location as { lat: number; lng: number };
-      }
     }
+    
+    // Handle object format with x,y coordinates (from Postgres)
+    if (typeof location === 'object' && 'x' in location && 'y' in location) {
+      return {
+        lat: location.y,
+        lng: location.x
+      };
+    }
+    
+    // Handle already correctly formatted object
+    if (typeof location === 'object' && 'lat' in location && 'lng' in location) {
+      return {
+        lat: location.lat,
+        lng: location.lng
+      };
+    }
+    
+    console.error('Unknown location format:', location);
+    return null;
   } catch (e) {
     console.error('Error parsing location data:', e);
+    return null;
   }
-  
-  return null;
 }
 
 /**
- * Ensure interests is an array and handle blocked users mapping
+ * Normalize profile data for application use, converting JSON fields, etc.
  */
-export function normalizeProfileData(data: any): ProfileWithBlockedUsers {
-  // Ensure interests is always an array
-  if (!data.interests) {
-    data.interests = [];
-  } else if (!Array.isArray(data.interests)) {
-    // If interests is not an array, convert it to one
-    data.interests = data.interests ? [String(data.interests)] : [];
+export function normalizeProfileData(profile: any): ProfileWithBlockedUsers {
+  // Create a copy of the profile to avoid mutation
+  const normalizedProfile = { ...profile };
+  
+  // Convert the blocked_users to blockedUsers for compatibility
+  if (normalizedProfile.blocked_users && !normalizedProfile.blockedUsers) {
+    normalizedProfile.blockedUsers = [...normalizedProfile.blocked_users];
   }
   
-  // Map blocked_users from database to both properties for consistency
-  if (data.blocked_users) {
-    data.blockedUsers = [...data.blocked_users];
-  } else {
-    data.blocked_users = [];
-    data.blockedUsers = [];
+  // Ensure blocked_users always exists
+  if (!normalizedProfile.blocked_users) {
+    normalizedProfile.blocked_users = [];
   }
+  
+  // Ensure blockedUsers always exists
+  if (!normalizedProfile.blockedUsers) {
+    normalizedProfile.blockedUsers = [];
+  }
+  
+  // Convert active_priorities from JSON to proper type if needed
+  if (normalizedProfile.active_priorities) {
+    normalizedProfile.active_priorities = convertJsonToActivePriorities(normalizedProfile.active_priorities);
+  } else {
+    normalizedProfile.active_priorities = [];
+  }
+  
+  // Ensure location_settings and locationSettings are properly set
+  if (normalizedProfile.location_settings && !normalizedProfile.locationSettings) {
+    normalizedProfile.locationSettings = {
+      isManualMode: normalizedProfile.location_settings.is_manual_mode,
+      hideExactLocation: normalizedProfile.location_settings.hide_exact_location
+    };
+  }
+  
+  return normalizedProfile as ProfileWithBlockedUsers;
+}
 
-  return data as ProfileWithBlockedUsers;
+/**
+ * Helper function to convert Json type to ActivePriority[]
+ */
+function convertJsonToActivePriorities(jsonData: Json | null): any[] {
+  if (!jsonData) return [];
+  
+  // If it's already an array, map it to ensure it has the correct structure
+  if (Array.isArray(jsonData)) {
+    return jsonData.map(item => ({
+      id: typeof item.id === 'string' ? item.id : '',
+      category: typeof item.category === 'string' ? item.category : '',
+      activity: typeof item.activity === 'string' ? item.activity : '',
+      frequency: item.frequency,
+      timePreference: item.timePreference,
+      urgency: item.urgency,
+      location: typeof item.location === 'string' ? item.location : undefined,
+      experienceLevel: item.experienceLevel
+    }));
+  }
+  
+  return [];
 }
