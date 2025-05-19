@@ -22,16 +22,20 @@ export const useUserProfile = () => {
   }, []);
   
   // Update user profile
-  const handleUpdateUserProfile = useCallback(async (userId: string, profileData: Partial<AppUser>): Promise<void> => {
+  const handleUpdateUserProfile = useCallback(async (profileData: Partial<AppUser>): Promise<void> => {
     setLoading(true);
     try {
-      // Create a properly typed profile object
+      if (!profileData.id) {
+        throw new Error('User ID is missing for profile update');
+      }
+      
+      // Create a properly typed profile object with all necessary fields
       const profileUpdate = { 
-        ...profileData, 
-        id: userId,
+        ...profileData,
         // Ensure all values are properly formatted
         gender: profileData.gender?.toLowerCase(), // Ensure consistent case
       };
+      
       console.log("Profile update in hook before sending:", profileUpdate);
       
       const result = await updateUserProfile(profileUpdate);
@@ -49,7 +53,7 @@ export const useUserProfile = () => {
     setLoading(true);
     try {
       // Create proper update object for location settings
-      const updateData: any = { 
+      const updateData = { 
         id: userId,
         location_settings: { is_manual_mode: isManual } 
       };
@@ -67,7 +71,7 @@ export const useUserProfile = () => {
     setLoading(true);
     try {
       // Create proper update object for location privacy settings
-      const updateData: any = { 
+      const updateData = { 
         id: userId,
         location_settings: { hide_exact_location: hideExactLocation } 
       };

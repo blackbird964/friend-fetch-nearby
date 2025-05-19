@@ -40,16 +40,21 @@ export const updateUserProfile = async (updatedProfile: Partial<Profile>) => {
       }
       
       // Validate each priority item has the required fields
-      profileUpdate.active_priorities = profileUpdate.active_priorities.map(priority => ({
+      profileUpdate.active_priorities = profileUpdate.active_priorities.filter(priority => 
+        priority && priority.id && priority.activity
+      ).map(priority => ({
         id: priority.id,
         category: priority.category || "Sydney Activities",
         activity: priority.activity,
-        frequency: priority.frequency,
-        timePreference: priority.timePreference,
-        urgency: priority.urgency,
-        location: priority.location,
-        experienceLevel: priority.experienceLevel
+        // Only include optional fields if they exist
+        ...(priority.frequency ? { frequency: priority.frequency } : {}),
+        ...(priority.timePreference ? { timePreference: priority.timePreference } : {}),
+        ...(priority.urgency ? { urgency: priority.urgency } : {}),
+        ...(priority.location ? { location: priority.location } : {}),
+        ...(priority.experienceLevel ? { experienceLevel: priority.experienceLevel } : {})
       }));
+      
+      console.log("Formatted active_priorities for storage:", profileUpdate.active_priorities);
     }
     
     // Log the profile update being sent to Supabase

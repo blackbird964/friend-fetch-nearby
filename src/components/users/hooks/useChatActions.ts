@@ -1,77 +1,64 @@
 
-import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/hooks/use-toast';
+import { useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { AppUser, Chat } from '@/context/types';
+import { v4 as uuidv4 } from 'uuid';
 
 export const useChatActions = () => {
-  const { 
-    currentUser, 
-    chats, 
-    setChats, 
-    setSelectedChat
-  } = useAppContext();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  const { chats, setChats, setSelectedChat, currentUser } = useAppContext();
 
-  const startChat = useCallback((user: AppUser) => {
+  const startChat = useCallback((targetUser: AppUser) => {
     if (!currentUser) {
-      toast({
-        title: "Not logged in",
-        description: "You need to be logged in to chat",
-        variant: "destructive"
-      });
+      console.error("Cannot start chat: Current user is not defined");
       return;
     }
     
-    console.log("Starting chat with user:", user.name);
+    console.log("Starting chat with user:", targetUser);
     
-    // Check if chat already exists
-    const existingChat = chats.find(chat => chat.participantId === user.id);
-    
+    // Check if we already have a chat with this user
+    const existingChat = chats.find(chat => 
+      chat.participants.includes(targetUser.id) && 
+      chat.participants.includes(currentUser.id)
+    );
+
     if (existingChat) {
-      console.log("Found existing chat:", existingChat.id);
+      console.log("Found existing chat:", existingChat);
       setSelectedChat(existingChat);
-      toast({
-        title: "Chat exists",
-        description: `Opening your chat with ${user.name}`,
-      });
-    } else {
-      // Create new chat with required properties
-      const newChat: Chat = {
-        id: `chat-${user.id}-${Date.now()}`, // Add timestamp for uniqueness
-        name: user.name || 'Chat',
-        participants: [currentUser.id, user.id],
-        participantId: user.id,
-        participantName: user.name,
-        profilePic: user.profile_pic || '',
-        lastMessage: "Start chatting now",
-        lastMessageTime: Date.now(),
-        messages: [],
-      };
       
-      console.log("Created new chat:", newChat.id);
+      // Use setTimeout to ensure state is updated before navigation
+      setTimeout(() => {
+        navigate('/chat', { replace: true });
+      }, 0);
       
-      setChats([newChat, ...chats]);
-      setSelectedChat(newChat);
-      
-      toast({
-        title: "Chat created",
-        description: `Started a new chat with ${user.name}`,
-      });
+      return;
     }
+
+    // Create a new chat
+    const newChat: Chat = {
+      id: uuidv4(),
+      name: targetUser.name || 'Chat',
+      participants: [currentUser.id, targetUser.id],
+      messages: [],
+      participantId: targetUser.id,
+      participantName: targetUser.name,
+      profilePic: targetUser.profile_pic,
+      lastMessage: '',
+      lastMessageTime: Date.now(),
+    };
+
+    console.log("Created new chat:", newChat);
     
-    // CRITICAL: We need to ensure navigation happens AFTER state updates
-    // Use setTimeout to push navigation to the next event loop tick
-    console.log("Scheduling navigation to chat page");
+    // Update global state with new chat
+    setChats(prevChats => [...prevChats, newChat]);
+    setSelectedChat(newChat);
+    
+    // Use setTimeout to ensure state is updated before navigation
     setTimeout(() => {
-      console.log("Now navigating to chat page");
-      navigate('/chat');
+      navigate('/chat', { replace: true });
     }, 0);
-  }, [currentUser, chats, setChats, setSelectedChat, navigate, toast]);
+  }, [chats, setChats, setSelectedChat, currentUser, navigate]);
 
   return { startChat };
 };
-
-export default useChatActions;

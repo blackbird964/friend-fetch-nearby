@@ -6,6 +6,7 @@ import UserAvatar from './UserAvatar';
 import UserBasicInfo from './UserBasicInfo';
 import UserInterests from './UserInterests';
 import UserContextMenu from '../UserContextMenu';
+import ActivePriorities from '@/components/users/nearby-users/user-details/ActivePriorities';
 
 interface UserCardProps {
   user: AppUser;
@@ -42,6 +43,12 @@ const UserCard: React.FC<UserCardProps> = ({
               
               {!minimal && user.interests && (
                 <UserInterests interests={user.interests} />
+              )}
+
+              {!minimal && user.active_priorities && user.active_priorities.length > 0 && (
+                <div className="mt-2">
+                  <ActivePriorities priorities={user.active_priorities} />
+                </div>
               )}
             </div>
           </div>

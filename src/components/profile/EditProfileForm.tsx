@@ -27,6 +27,7 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
   useEffect(() => {
     if (currentUser) {
       setFormData({
+        id: currentUser.id,
         name: currentUser.name || '',
         bio: currentUser.bio || '',
         age: currentUser.age || null,
@@ -74,19 +75,17 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
       // Prepare profile data for update
       const updatedProfile: Partial<Profile> = {
         id: currentUser.id,
+        name: formData.name,
         bio: formData.bio,
+        age: formData.age,
+        gender: formData.gender,
         interests: formData.interests,
-        active_priorities: formData.active_priorities,
+        active_priorities: formData.active_priorities || [],
       };
-      
-      // Ensure active_priorities is included and formatted correctly
-      if (!updatedProfile.active_priorities) {
-        updatedProfile.active_priorities = [];
-      }
       
       console.log("Submitting profile update with active priorities:", updatedProfile.active_priorities);
       
-      await updateUserProfile(currentUser.id, updatedProfile);
+      await updateUserProfile(updatedProfile);
       
       toast({
         title: "Profile updated",
@@ -95,11 +94,11 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
 
       // Call the onCancel function to exit edit mode after successful update
       onCancel();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating profile:', error);
       toast({
         title: "Update failed",
-        description: "There was a problem updating your profile.",
+        description: error.message || "There was a problem updating your profile.",
         variant: "destructive"
       });
     } finally {
