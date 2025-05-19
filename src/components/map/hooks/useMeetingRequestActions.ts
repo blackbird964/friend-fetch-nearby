@@ -1,5 +1,5 @@
 
-import { useState, useRef } from 'react';
+import { useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
 import { AppUser, FriendRequest } from '@/context/types';
@@ -16,10 +16,11 @@ export const useMeetingRequestActions = (
   const { currentUser, friendRequests, setFriendRequests } = useAppContext();
   const { toast } = useToast();
   
-  // Track last check time to prevent race conditions in state checks
-  const lastStateCheckTime = useRef<number>(0);
+  // Debug reference for initial render and last user selection
+  const initialRenderRef = useRef(true);
+  const lastSelectedUserRef = useRef<string | null>(null);
   
-  // Handle sending a request
+  // Handle sending a request - just initiating the action
   const handleSendRequest = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent event from reaching map
     
@@ -34,23 +35,37 @@ export const useMeetingRequestActions = (
     
     if (!selectedUser) return;
     
-    // This is a placeholder - the actual sending happens in the parent component
     console.log("Request sending action triggered in hook");
   };
 
-  // Check if the selected user is in a meeting state
-  const getUserMeetingState = (userId: string | null) => {
-    if (!userId) return { isUserMoving: false, hasUserMoved: false };
+  // CRITICAL FIX: This is now a SYNCHRONOUS function that doesn't rely on state updates
+  // It reads directly from the sets passed as arguments
+  const isUserInMeetingState = (userId: string | null): boolean => {
+    if (!userId) return false;
     
-    // Update the last check time
-    lastStateCheckTime.current = Date.now();
+    // Direct membership check avoids any race conditions
+    const inMovingUsers = movingUsers.has(userId);
+    const inCompletedMoves = completedMoves.has(userId);
     
-    // Check directly against the sets for accurate state determination
-    const isUserMoving = movingUsers.has(userId);
-    const hasUserMoved = completedMoves.has(userId);
+    // Debug output
+    console.log(`DIRECT CHECK: User ${userId} in meeting state:`, inMovingUsers || inCompletedMoves);
+    console.log(`- In movingUsers: ${inMovingUsers}`);
+    console.log(`- In completedMoves: ${inCompletedMoves}`);
     
-    console.log(`getUserMeetingState for ${userId}: moving=${isUserMoving}, moved=${hasUserMoved}`);
-    return { isUserMoving, hasUserMoved };
+    return inMovingUsers || inCompletedMoves;
+  };
+
+  // Find existing request for the selected user
+  const findExistingRequest = (userId: string | null): FriendRequest | null => {
+    if (!userId || !currentUser) return null;
+    
+    const existingRequest = friendRequests.find(req => 
+      req.status === 'pending' && 
+      req.receiverId === userId && 
+      req.senderId === currentUser.id
+    ) || null;
+    
+    return existingRequest;
   };
 
   // Handle cancelling an existing request
@@ -112,45 +127,14 @@ export const useMeetingRequestActions = (
     }
   };
 
-  // Find existing request for the selected user
-  const findExistingRequest = (userId: string | null): FriendRequest | null => {
-    if (!userId || !currentUser) return null;
-    
-    const existingRequest = friendRequests.find(req => 
-      req.status === 'pending' && 
-      req.receiverId === userId && 
-      req.senderId === currentUser.id
-    ) || null;
-    
-    console.log(`Existing request for ${userId}:`, existingRequest ? 'Found' : 'None');
-    return existingRequest;
-  };
-
-  // Check if a user is in a meeting state - either moving or completed
-  // This is a deterministic check that should remain stable between renders
-  const isUserInMeeting = (userId: string | null): boolean => {
-    if (!userId) return false;
-    
-    // Force a state refresh on each check to prevent stale state issues
-    const inMovingSet = movingUsers.has(userId);
-    const inCompletedSet = completedMoves.has(userId);
-    
-    // Log detailed debugging information
-    console.log(`isUserInMeeting check for ${userId}`);
-    console.log(`- In movingUsers set: ${inMovingSet}`);
-    console.log(`- In completedMoves set: ${inCompletedSet}`);
-    console.log(`- Current movingUsers: [${Array.from(movingUsers).join(', ')}]`);
-    console.log(`- Current completedMoves: [${Array.from(completedMoves).join(', ')}]`);
-    
-    return inMovingSet || inCompletedSet;
-  };
-
+  // Return a clean object
   return {
     handleSendRequest,
     handleCancelRequest,
     handleCancelMeeting,
-    getUserMeetingState,
     findExistingRequest,
-    isUserInMeeting
+    isUserInMeetingState,
+    initialRenderRef,
+    lastSelectedUserRef
   };
 };

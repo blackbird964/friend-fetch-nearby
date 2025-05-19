@@ -53,49 +53,48 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
   setMovingUsers,
   setCompletedMoves
 }) => {
-  // Track initial render for selected user
-  const initialRenderRef = useRef(true);
+  // Refs to track component lifecycle and selection changes
+  const mountedRef = useRef(false);
+  const prevSelectedUserRef = useRef<string | null>(null);
   
-  // Debug selected user changes and meeting state
+  // CRITICAL FIX: Add state cleanup when selectedUser changes or on mount
   useEffect(() => {
-    console.log("MapFeatures - selectedUser changed:", selectedUser);
-    console.log("MapFeatures - movingUsers:", Array.from(movingUsers));
-    console.log("MapFeatures - completedMoves:", Array.from(completedMoves));
+    const mounted = mountedRef.current;
+    mountedRef.current = true;
     
-    // Debug to see if user is actually in the sets
-    if (selectedUser) {
-      console.log("Is selected user in movingUsers?", movingUsers.has(selectedUser));
-      console.log("Is selected user in completedMoves?", completedMoves.has(selectedUser));
-    }
+    console.log(`[MapFeatures] selectedUser changed: ${selectedUser}, previously: ${prevSelectedUserRef.current}`);
+    console.log(`[MapFeatures] Current state - movingUsers: [${Array.from(movingUsers)}]`);
+    console.log(`[MapFeatures] Current state - completedMoves: [${Array.from(completedMoves)}]`);
     
-    // On first render after selection, ensure user is not in meeting state
-    if (initialRenderRef.current && selectedUser) {
-      console.log("Initial render after selection - ensuring user not in meeting state");
-      initialRenderRef.current = false;
+    // If selectedUser changed, ensure they aren't in meeting state
+    if (selectedUser && (selectedUser !== prevSelectedUserRef.current || !mounted)) {
+      console.log(`[MapFeatures] User selection changed - cleaning up meeting state`);
       
-      // This is a failsafe to make sure we're starting with a clean state
-      if (movingUsers.has(selectedUser) || completedMoves.has(selectedUser)) {
-        console.log("WARNING: User is in meeting state on initial render - clearing");
-        
-        setMovingUsers(prev => {
+      // Reset meeting state for the newly selected user
+      setMovingUsers(prev => {
+        if (prev.has(selectedUser)) {
+          console.log(`[MapFeatures] Removing ${selectedUser} from movingUsers`);
           const next = new Set(prev);
           next.delete(selectedUser);
           return next;
-        });
-        
-        setCompletedMoves(prev => {
+        }
+        return prev;
+      });
+      
+      setCompletedMoves(prev => {
+        if (prev.has(selectedUser)) {
+          console.log(`[MapFeatures] Removing ${selectedUser} from completedMoves`);
           const next = new Set(prev);
           next.delete(selectedUser);
           return next;
-        });
-      }
+        }
+        return prev;
+      });
     }
     
-    // Reset initialRender when user changes
-    if (!selectedUser) {
-      initialRenderRef.current = true;
-    }
-  }, [selectedUser, movingUsers, completedMoves, setMovingUsers, setCompletedMoves]);
+    // Update previous selection ref
+    prevSelectedUserRef.current = selectedUser;
+  }, [selectedUser, setMovingUsers, setCompletedMoves, movingUsers, completedMoves]);
 
   // State for meeting request duration
   const [selectedDuration, setSelectedDuration] = React.useState<number>(30);
