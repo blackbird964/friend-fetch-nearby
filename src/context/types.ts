@@ -20,8 +20,8 @@ export interface AppUser {
   blockedUsers?: string[];
   blocked_users?: string[];
   locationSettings?: {
-    isManualMode?: boolean;
-    hideExactLocation?: boolean;
+    isManualMode: boolean;
+    hideExactLocation: boolean;
   };
   location_settings?: {
     is_manual_mode?: boolean;

@@ -17,6 +17,7 @@ export interface PriorityCategory {
   activities: string[];
 }
 
+// Update LocationSettings to make all properties required
 export interface LocationSettings {
   isManualMode: boolean;
   hideExactLocation: boolean;

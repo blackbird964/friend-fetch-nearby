@@ -33,6 +33,11 @@ export const useUserProfile = () => {
         ...profileData,
         // Ensure all values are properly formatted
         gender: profileData.gender?.toLowerCase(), // Ensure consistent case
+        // Ensure locationSettings has required properties if present
+        locationSettings: profileData.locationSettings ? {
+          isManualMode: profileData.locationSettings.isManualMode ?? false,
+          hideExactLocation: profileData.locationSettings.hideExactLocation ?? false
+        } : undefined
       };
       
       console.log("Profile update in hook before sending:", profileUpdate);
