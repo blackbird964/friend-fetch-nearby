@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { AppUser, FriendRequest } from '@/context/types';
 import Map from 'ol/Map';
 import { Vector as VectorSource } from 'ol/source';
@@ -53,7 +53,10 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
   setMovingUsers,
   setCompletedMoves
 }) => {
-  // Debug selected user changes
+  // Track initial render for selected user
+  const initialRenderRef = useRef(true);
+  
+  // Debug selected user changes and meeting state
   useEffect(() => {
     console.log("MapFeatures - selectedUser changed:", selectedUser);
     console.log("MapFeatures - movingUsers:", Array.from(movingUsers));
@@ -64,7 +67,35 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
       console.log("Is selected user in movingUsers?", movingUsers.has(selectedUser));
       console.log("Is selected user in completedMoves?", completedMoves.has(selectedUser));
     }
-  }, [selectedUser, movingUsers, completedMoves]);
+    
+    // On first render after selection, ensure user is not in meeting state
+    if (initialRenderRef.current && selectedUser) {
+      console.log("Initial render after selection - ensuring user not in meeting state");
+      initialRenderRef.current = false;
+      
+      // This is a failsafe to make sure we're starting with a clean state
+      if (movingUsers.has(selectedUser) || completedMoves.has(selectedUser)) {
+        console.log("WARNING: User is in meeting state on initial render - clearing");
+        
+        setMovingUsers(prev => {
+          const next = new Set(prev);
+          next.delete(selectedUser);
+          return next;
+        });
+        
+        setCompletedMoves(prev => {
+          const next = new Set(prev);
+          next.delete(selectedUser);
+          return next;
+        });
+      }
+    }
+    
+    // Reset initialRender when user changes
+    if (!selectedUser) {
+      initialRenderRef.current = true;
+    }
+  }, [selectedUser, movingUsers, completedMoves, setMovingUsers, setCompletedMoves]);
 
   // State for meeting request duration
   const [selectedDuration, setSelectedDuration] = React.useState<number>(30);

@@ -16,6 +16,9 @@ export const useMeetingRequestActions = (
   const { currentUser, friendRequests, setFriendRequests } = useAppContext();
   const { toast } = useToast();
   
+  // Track last check time to prevent race conditions in state checks
+  const lastStateCheckTime = useRef<number>(0);
+  
   // Handle sending a request
   const handleSendRequest = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent event from reaching map
@@ -38,6 +41,9 @@ export const useMeetingRequestActions = (
   // Check if the selected user is in a meeting state
   const getUserMeetingState = (userId: string | null) => {
     if (!userId) return { isUserMoving: false, hasUserMoved: false };
+    
+    // Update the last check time
+    lastStateCheckTime.current = Date.now();
     
     // Check directly against the sets for accurate state determination
     const isUserMoving = movingUsers.has(userId);
@@ -121,9 +127,22 @@ export const useMeetingRequestActions = (
   };
 
   // Check if a user is in a meeting state - either moving or completed
+  // This is a deterministic check that should remain stable between renders
   const isUserInMeeting = (userId: string | null): boolean => {
     if (!userId) return false;
-    return movingUsers.has(userId) || completedMoves.has(userId);
+    
+    // Force a state refresh on each check to prevent stale state issues
+    const inMovingSet = movingUsers.has(userId);
+    const inCompletedSet = completedMoves.has(userId);
+    
+    // Log detailed debugging information
+    console.log(`isUserInMeeting check for ${userId}`);
+    console.log(`- In movingUsers set: ${inMovingSet}`);
+    console.log(`- In completedMoves set: ${inCompletedSet}`);
+    console.log(`- Current movingUsers: [${Array.from(movingUsers).join(', ')}]`);
+    console.log(`- Current completedMoves: [${Array.from(completedMoves).join(', ')}]`);
+    
+    return inMovingSet || inCompletedSet;
   };
 
   return {

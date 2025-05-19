@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 
@@ -67,28 +68,52 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     setCompletedMoves
   } = useMapUIState();
 
-  // Debug when selectedUser changes
+  // Debug when selectedUser changes and ensure it's not in meeting state
   React.useEffect(() => {
     console.log("FriendMapContainer - selectedUser changed:", selectedUser);
-    console.log("FriendMapContainer - movingUsers:", Array.from(movingUsers));
-    console.log("FriendMapContainer - completedMoves:", Array.from(completedMoves));
+    console.log("FriendMapContainer - movingUsers before:", Array.from(movingUsers));
+    console.log("FriendMapContainer - completedMoves before:", Array.from(completedMoves));
     
-    // Clear the moving and completed sets for testing
+    // Clear the moving and completed sets whenever user selection changes
     if (selectedUser) {
-      // Ensure the selected user is NOT in any meeting state initially
+      // We need to ensure the selected user is NOT in any meeting state
       setMovingUsers(prev => {
-        const next = new Set(prev);
-        next.delete(selectedUser);
-        return next;
+        if (prev.has(selectedUser)) {
+          console.log("Removing selected user from movingUsers");
+          const next = new Set(prev);
+          next.delete(selectedUser);
+          return next;
+        }
+        return prev;
       });
       
       setCompletedMoves(prev => {
-        const next = new Set(prev);
-        next.delete(selectedUser);
-        return next;
+        if (prev.has(selectedUser)) {
+          console.log("Removing selected user from completedMoves");
+          const next = new Set(prev);
+          next.delete(selectedUser);
+          return next;
+        }
+        return prev;
       });
+      
+      // Double-check that the sets were updated properly
+      setTimeout(() => {
+        console.log("After timeout - Is user in movingUsers?", movingUsers.has(selectedUser));
+        console.log("After timeout - Is user in completedMoves?", completedMoves.has(selectedUser));
+      }, 0);
     }
-  }, [selectedUser]);
+  }, [selectedUser, setMovingUsers, setCompletedMoves]);
+  
+  // Add another effect to monitor meeting state changes
+  React.useEffect(() => {
+    if (selectedUser) {
+      console.log("Meeting state change detected:");
+      console.log("- Selected user:", selectedUser);
+      console.log("- In movingUsers:", movingUsers.has(selectedUser));
+      console.log("- In completedMoves:", completedMoves.has(selectedUser));
+    }
+  }, [selectedUser, movingUsers, completedMoves]);
 
   // Dispatch tracking mode event when isTracking changes
   React.useEffect(() => {

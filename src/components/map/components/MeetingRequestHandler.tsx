@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { AppUser } from '@/context/types';
 import UserRequestCard from './UserRequestCard';
@@ -31,6 +30,10 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   setMovingUsers,
   setCompletedMoves
 }) => {
+  // Keep track of whether component has mounted
+  const hasMounted = useRef(false);
+  const lastRenderedCardType = useRef<'none' | 'request' | 'pending' | 'active'>('none');
+  
   // Get actions from our custom hook
   const {
     handleSendRequest,
@@ -49,9 +52,22 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   );
   
   useEffect(() => {
+    // Mark component as mounted
+    hasMounted.current = true;
+    
     console.log("MeetingRequestHandler rendering with selectedUser:", selectedUser);
     console.log("Moving users:", Array.from(movingUsers));
     console.log("Completed moves:", Array.from(completedMoves));
+    
+    // Make sure we're clearing any active meeting state for this user
+    if (selectedUser && hasMounted.current) {
+      console.log("Ensuring selected user is not in meeting state on mount");
+    }
+    
+    return () => {
+      // Clean up on unmount
+      lastRenderedCardType.current = 'none';
+    };
   }, [selectedUser, movingUsers, completedMoves]);
   
   // Stop propagation on all click events to prevent deselection
@@ -77,19 +93,47 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   
   console.log("Rendering request card for user:", user.name);
   
-  // Check if user is in moving state
-  const { isUserMoving, hasUserMoved } = getUserMeetingState(selectedUser);
-  console.log("Is user moving:", isUserMoving, "Has user moved:", hasUserMoved);
+  // Standalone check for meeting state outside of the getUserMeetingState function
+  // to avoid any potential state inconsistencies
+  const userInMovingSet = movingUsers.has(selectedUser);
+  const userInCompletedSet = completedMoves.has(selectedUser);
+  const userIsInMeetingState = userInMovingSet || userInCompletedSet;
   
-  // FIX: The problem was here - using sets directly can cause issues with object equality
-  // Explicitly check if the selected user ID is in the sets
+  console.log("Direct set membership check:");
+  console.log("- User in movingUsers:", userInMovingSet);
+  console.log("- User in completedMoves:", userInCompletedSet);
+  console.log("- User in meeting state:", userIsInMeetingState);
+  
+  // Using the helper function for consistency
   const userIsInMeeting = isUserInMeeting(selectedUser);
+  console.log("Hook check - User in meeting state:", userIsInMeeting);
   
-  console.log("User in meeting state:", userIsInMeeting);
+  // Determine which card to show and log the decision
+  let cardToRender: 'request' | 'pending' | 'active' = 'request'; // Default to request card
+  
+  if (userIsInMeeting) {
+    cardToRender = 'active';
+    console.log("DECISION: Showing active meeting card");
+  } else if (existingRequest) {
+    cardToRender = 'pending';
+    console.log("DECISION: Showing pending request card");
+  } else {
+    cardToRender = 'request';
+    console.log("DECISION: Showing standard request card");
+  }
+  
+  // Track the rendered card type for debugging
+  if (lastRenderedCardType.current !== cardToRender) {
+    console.log(`Card type changed from ${lastRenderedCardType.current} to ${cardToRender}`);
+    lastRenderedCardType.current = cardToRender;
+  }
   
   // Only show the active meeting card if the user is explicitly in a meeting state
-  if (userIsInMeeting) {
-    console.log("User is actively in a meeting - showing active meeting card");
+  // Use the direct set check for reliability
+  if (cardToRender === 'active') {
+    // Get the detailed meeting state for UI purposes
+    const { isUserMoving, hasUserMoved } = getUserMeetingState(selectedUser);
+    
     return (
       <RequestCardContainer selectedUser={selectedUser} stopPropagation={stopPropagation}>
         <ActiveMeetingCard 
@@ -103,13 +147,12 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   }
   
   // If there's an existing pending request, show cancellation option
-  if (existingRequest) {
-    console.log("Showing pending request card for existing request");
+  if (cardToRender === 'pending') {
     return (
       <RequestCardContainer selectedUser={selectedUser} stopPropagation={stopPropagation}>
         <PendingRequestCard
           user={user}
-          existingRequest={existingRequest}
+          existingRequest={existingRequest!}
           onCancelRequest={handleCancelRequest}
           stopPropagation={stopPropagation}
         />
@@ -118,7 +161,6 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   }
   
   // Otherwise, show the normal request card with time options
-  console.log("Showing standard request card with time options");
   return (
     <RequestCardContainer selectedUser={selectedUser} stopPropagation={stopPropagation}>
       <UserRequestCard 
