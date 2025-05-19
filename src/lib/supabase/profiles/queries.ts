@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Profile, ProfileWithBlockedUsers } from './types';
 import { parseLocationData, normalizeProfileData } from './utils';
 import { formatLocationForStorage } from '@/utils/locationUtils';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Fetch a single profile by user ID
@@ -62,12 +63,17 @@ export async function createOrUpdateProfile(profile: Partial<ProfileWithBlockedU
   console.log("Creating/updating profile:", profile);
   
   // Handle location conversion for PostgreSQL
-  let profileToUpsert = { ...profile };
+  let profileToUpsert = { ...profile } as any;
   
   // Map blockedUsers to blocked_users for database storage
   if (profile.blockedUsers) {
     profileToUpsert.blocked_users = [...profile.blockedUsers];
     delete profileToUpsert.blockedUsers;
+  }
+  
+  // Convert active_priorities to Json for database storage
+  if (profileToUpsert.active_priorities) {
+    profileToUpsert.active_priorities = JSON.stringify(profileToUpsert.active_priorities);
   }
   
   // If location exists, format it for PostgreSQL storage

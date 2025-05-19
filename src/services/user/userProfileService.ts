@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Profile } from '@/lib/supabase';
 import { updateUserLocation } from './userLocationService';
+import { Json } from '@/integrations/supabase/types';
 
 /**
  * Update user profile in Supabase
@@ -27,12 +28,21 @@ export const updateUserProfile = async (updatedProfile: Partial<Profile>) => {
       delete profileUpdate.locationSettings;
     }
     
-    // Handle direct location_settings update
+    // Handle direct location_settings update - ensure all required fields are present
     if (profileUpdate.location_settings) {
       console.log("Updating location settings:", profileUpdate.location_settings);
+      
+      // Ensure both required fields are present
+      if (profileUpdate.location_settings.is_manual_mode === undefined) {
+        profileUpdate.location_settings.is_manual_mode = false;
+      }
+      
+      if (profileUpdate.location_settings.hide_exact_location === undefined) {
+        profileUpdate.location_settings.hide_exact_location = false;
+      }
     }
     
-    // Make sure active_priorities is valid before sending it to Supabase
+    // Make sure active_priorities is valid and converted to JSON before sending it to Supabase
     if (profileUpdate.active_priorities) {
       // Ensure it's a proper array
       if (!Array.isArray(profileUpdate.active_priorities)) {
@@ -55,6 +65,9 @@ export const updateUserProfile = async (updatedProfile: Partial<Profile>) => {
       }));
       
       console.log("Formatted active_priorities for storage:", profileUpdate.active_priorities);
+      
+      // Convert active_priorities to JSON string for Supabase
+      profileUpdate.active_priorities = JSON.stringify(profileUpdate.active_priorities);
     }
     
     // Log the profile update being sent to Supabase

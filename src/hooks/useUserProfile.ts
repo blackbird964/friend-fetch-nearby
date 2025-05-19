@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { AppUser, Location } from '@/context/types';
 import { updateUserLocation, updateUserProfile } from '@/services/user';
@@ -55,7 +54,11 @@ export const useUserProfile = () => {
       // Create proper update object for location settings
       const updateData = { 
         id: userId,
-        location_settings: { is_manual_mode: isManual } 
+        location_settings: { 
+          is_manual_mode: isManual,
+          // Keep the existing hide_exact_location value or set a default
+          hide_exact_location: false
+        } 
       };
       
       await updateUserProfile(updateData);
@@ -73,7 +76,11 @@ export const useUserProfile = () => {
       // Create proper update object for location privacy settings
       const updateData = { 
         id: userId,
-        location_settings: { hide_exact_location: hideExactLocation } 
+        location_settings: { 
+          hide_exact_location: hideExactLocation,
+          // Keep the existing is_manual_mode value or set a default 
+          is_manual_mode: false
+        } 
       };
       
       await updateUserProfile(updateData);

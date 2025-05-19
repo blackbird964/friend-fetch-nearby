@@ -12,6 +12,11 @@ export interface ActivePriority {
   experienceLevel?: string;
 }
 
+export interface PriorityCategory {
+  name: string;
+  activities: string[];
+}
+
 export interface LocationSettings {
   isManualMode: boolean;
   hideExactLocation: boolean;
@@ -31,8 +36,8 @@ export interface Profile {
   interests: string[] | null;
   active_priorities: ActivePriority[] | null;
   location_settings?: {
-    is_manual_mode: boolean;
-    hide_exact_location: boolean;
+    is_manual_mode?: boolean;
+    hide_exact_location?: boolean;
   };
   // For frontend compatibility
   locationSettings?: LocationSettings;
