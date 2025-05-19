@@ -1,3 +1,4 @@
+
 import { AppUser, Chat, FriendRequest, MeetupRequest, Location } from './types';
 import { User } from '@supabase/supabase-js';
 
@@ -10,7 +11,7 @@ export interface AuthContextType {
   setSupabaseUser: (user: User | null) => void;
   loading: boolean;
   updateUserLocation: (userId: string, location: Location) => Promise<void>;
-  updateUserProfile: (userId: string, profileData: Partial<AppUser>) => Promise<void>;
+  updateUserProfile: (profileData: Partial<AppUser>) => Promise<void>;
   blockUser: (userId: string) => Promise<boolean>;
   unblockUser: (userId: string) => Promise<boolean>;
   reportUser: (userId: string, reason: string) => Promise<boolean>;

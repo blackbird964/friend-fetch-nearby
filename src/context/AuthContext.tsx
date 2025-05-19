@@ -17,8 +17,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(false);
 
   // Use the profile and actions hooks
-  const { updateUserLocation, updateUserProfile } = useUserProfile();
+  const { updateUserLocation, updateUserProfile: profileUpdateFunction } = useUserProfile();
   const { blockUser, unblockUser, reportUser, loading: actionsLoading } = useUserActions(currentUser, setCurrentUser);
+
+  // Adapt the updateUserProfile function to match our context type
+  const updateUserProfile = async (profileData: Partial<AppUser>) => {
+    return await profileUpdateFunction(profileData);
+  };
 
   // Auth state listener
   useEffect(() => {
