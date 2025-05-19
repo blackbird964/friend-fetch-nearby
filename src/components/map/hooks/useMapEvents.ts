@@ -22,7 +22,6 @@ export const useMapEvents = (
     // Track various interaction states
     let isInsidePopupInteraction = false;
     let ignoreNextMapClick = false;
-    let popupJustOpened = false;
     let lastClickTimestamp = 0;
     
     // Set up listeners for popup interactions
@@ -73,14 +72,6 @@ export const useMapEvents = (
         return;
       }
       
-      // If a popup was just opened, prevent immediate deselection
-      if (popupJustOpened) {
-        console.log("Popup just opened - ignoring potential deselection");
-        popupJustOpened = false;
-        event.stopPropagation();
-        return;
-      }
-      
       const clickedFeature = map.current?.forEachFeatureAtPixel(event.pixel, (f) => f);
       
       if (clickedFeature) {
@@ -102,7 +93,6 @@ export const useMapEvents = (
           // Always select the user when clicking on their marker
           setSelectedUser(userId);
           console.log("User selected:", userId);
-          popupJustOpened = true;
           
           // Update the vector layer
           if (vectorLayer.current) {
