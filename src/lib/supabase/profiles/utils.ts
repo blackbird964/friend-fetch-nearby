@@ -92,16 +92,47 @@ function convertJsonToActivePriorities(jsonData: Json | null): any[] {
   
   // If it's already an array, map it to ensure it has the correct structure
   if (Array.isArray(jsonData)) {
-    return jsonData.map(item => ({
-      id: typeof item.id === 'string' ? item.id : '',
-      category: typeof item.category === 'string' ? item.category : '',
-      activity: typeof item.activity === 'string' ? item.activity : '',
-      frequency: item.frequency,
-      timePreference: item.timePreference,
-      urgency: item.urgency,
-      location: typeof item.location === 'string' ? item.location : undefined,
-      experienceLevel: item.experienceLevel
-    }));
+    return jsonData.map(item => {
+      // Handle each item safely with type checking
+      const priority: any = {};
+      
+      if (item && typeof item === 'object') {
+        // Only add properties that exist
+        if ('id' in item && typeof item.id === 'string') {
+          priority.id = item.id;
+        }
+        
+        if ('category' in item && typeof item.category === 'string') {
+          priority.category = item.category;
+        }
+        
+        if ('activity' in item && typeof item.activity === 'string') {
+          priority.activity = item.activity;
+        }
+        
+        if ('frequency' in item) {
+          priority.frequency = item.frequency;
+        }
+        
+        if ('timePreference' in item) {
+          priority.timePreference = item.timePreference;
+        }
+        
+        if ('urgency' in item) {
+          priority.urgency = item.urgency;
+        }
+        
+        if ('location' in item && typeof item.location === 'string') {
+          priority.location = item.location;
+        }
+        
+        if ('experienceLevel' in item) {
+          priority.experienceLevel = item.experienceLevel;
+        }
+      }
+      
+      return priority;
+    }).filter(item => item.id && item.activity); // Filter out any invalid items
   }
   
   return [];

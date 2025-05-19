@@ -1,7 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { v4 as uuidv4 } from 'uuid';
-import { ProfileWithBlockedUsers, ActivePriority } from '@/lib/supabase/profiles';
+import { ProfileWithBlockedUsers } from '@/lib/supabase/profiles';
 import { Json } from '@/integrations/supabase/types';
 
 /**
@@ -21,28 +21,21 @@ export async function blockUser(currentUserId: string, blockedUserId: string): P
       return false;
     }
     
-    // Cast and normalize the profile type
-    const profileWithBlocked: ProfileWithBlockedUsers = {
-      ...profile,
-      // Convert Json active_priorities to ActivePriority[] if it exists
-      active_priorities: convertJsonToActivePriorities(profile.active_priorities),
-      // Add in blockedUsers property for compatibility
-      blockedUsers: profile.blocked_users || []
-    };
+    // Get the data and ensure types are correct
+    const profileData = profile as any;
     
-    // Get current blocked users array or initialize empty array
-    // Process with backward compatibility for both property names
-    const currentBlockedUsers = profileWithBlocked.blocked_users || [];
+    // Add in blockedUsers property for compatibility
+    const blockedUsers = profileData.blocked_users || [];
     
     // Add new blocked user if not already blocked
-    if (!currentBlockedUsers.includes(blockedUserId)) {
-      currentBlockedUsers.push(blockedUserId);
+    if (!blockedUsers.includes(blockedUserId)) {
+      blockedUsers.push(blockedUserId);
       
       // Update the profile with new blocked users array
       const { error: updateError } = await supabase
         .from('profiles')
         .update({
-          blocked_users: currentBlockedUsers
+          blocked_users: blockedUsers
         })
         .eq('id', currentUserId);
         
@@ -79,20 +72,14 @@ export async function unblockUser(currentUserId: string, blockedUserId: string):
       return false;
     }
     
-    // Cast and normalize the profile type
-    const profileWithBlocked: ProfileWithBlockedUsers = {
-      ...profile,
-      // Convert Json active_priorities to ActivePriority[] if it exists
-      active_priorities: convertJsonToActivePriorities(profile.active_priorities),
-      // Add in blockedUsers property for compatibility
-      blockedUsers: profile.blocked_users || []
-    };
+    // Get the data and ensure types are correct
+    const profileData = profile as any;
     
     // Get current blocked users or initialize empty array
-    const currentBlockedUsers = profileWithBlocked.blocked_users || [];
+    const blockedUsers = profileData.blocked_users || [];
     
     // Remove the blocked user
-    const updatedBlockedUsers = currentBlockedUsers.filter(id => id !== blockedUserId);
+    const updatedBlockedUsers = blockedUsers.filter((id: string) => id !== blockedUserId);
     
     // Update the profile with new blocked users array
     const { error: updateError } = await supabase
@@ -151,23 +138,54 @@ export async function reportUser(reporterId: string, reportedUserId: string, rea
 }
 
 /**
- * Helper function to convert Json type to ActivePriority[]
+ * Helper function to safely convert Json type to any array
  */
-function convertJsonToActivePriorities(jsonData: Json | null): ActivePriority[] {
+function convertJsonToActivePriorities(jsonData: Json | null): any[] {
   if (!jsonData) return [];
   
   // If it's already an array, map it to ensure it has the correct structure
   if (Array.isArray(jsonData)) {
-    return jsonData.map(item => ({
-      id: typeof item.id === 'string' ? item.id : '',
-      category: typeof item.category === 'string' ? item.category : '',
-      activity: typeof item.activity === 'string' ? item.activity : '',
-      frequency: item.frequency as any,
-      timePreference: item.timePreference as any,
-      urgency: item.urgency as any,
-      location: typeof item.location === 'string' ? item.location : undefined,
-      experienceLevel: item.experienceLevel as any
-    }));
+    return jsonData.map(item => {
+      // Handle each item safely with type checking
+      const priority: any = {};
+      
+      if (item && typeof item === 'object') {
+        // Only add properties that exist
+        if ('id' in item) {
+          priority.id = item.id;
+        }
+        
+        if ('category' in item) {
+          priority.category = item.category;
+        }
+        
+        if ('activity' in item) {
+          priority.activity = item.activity;
+        }
+        
+        if ('frequency' in item) {
+          priority.frequency = item.frequency;
+        }
+        
+        if ('timePreference' in item) {
+          priority.timePreference = item.timePreference;
+        }
+        
+        if ('urgency' in item) {
+          priority.urgency = item.urgency;
+        }
+        
+        if ('location' in item) {
+          priority.location = item.location;
+        }
+        
+        if ('experienceLevel' in item) {
+          priority.experienceLevel = item.experienceLevel;
+        }
+      }
+      
+      return priority;
+    });
   }
   
   return [];

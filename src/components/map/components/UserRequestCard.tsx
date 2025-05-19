@@ -62,6 +62,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   };
   
   console.log("Rendering UserRequestCard for:", user.name);
+  console.log("Active priorities:", user.active_priorities);
 
   return (
     <Card 
@@ -111,6 +112,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
       {/* Display user's activities if they have any */}
       {user.active_priorities && user.active_priorities.length > 0 && (
         <div className="mb-4 bg-gray-50 p-2 rounded-md">
+          <h4 className="text-sm font-medium mb-1">I want to meet up for:</h4>
           <ActivePriorities priorities={user.active_priorities} />
         </div>
       )}

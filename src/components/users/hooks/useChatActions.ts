@@ -50,13 +50,13 @@ export const useChatActions = () => {
 
     console.log("Created new chat:", newChat);
     
-    // Update global state with new chat - using direct array instead of updater function
-    setChats([...chats, newChat]);
+    // Update global state with new chat - FIXED: use function updater form
+    setChats(prevChats => [...prevChats, newChat]);
     setSelectedChat(newChat);
     
     // Use setTimeout to ensure state is updated before navigation
     setTimeout(() => {
-      navigate('/chat', { replace: true });
+        navigate('/chat', { replace: true });
     }, 0);
   }, [chats, setChats, setSelectedChat, currentUser, navigate]);
 

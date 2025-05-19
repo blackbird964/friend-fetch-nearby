@@ -16,9 +16,6 @@ export {
 
 export type { 
   Profile,
-  ProfileWithBlockedUsers
+  ProfileWithBlockedUsers,
+  ActivePriority
 } from './profiles/types';
-
-// For backward compatibility, export types - but no longer re-export Profile type with same name
-// We already exported ProfileWithBlockedUsers from './profiles/types' above,
-// so we don't need to export it again here
