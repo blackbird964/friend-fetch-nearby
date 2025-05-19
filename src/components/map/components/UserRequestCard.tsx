@@ -4,16 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { X } from 'lucide-react';
+import { X, MessageCircle } from 'lucide-react';
 import { AppUser } from '@/context/types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { useChatActions } from '@/components/users/hooks/useChatActions';
 
 interface UserRequestCardProps {
   user: AppUser;
   selectedDuration: number;
   setSelectedDuration: React.Dispatch<React.SetStateAction<number>>;
-  onSendRequest: (e: React.MouseEvent) => void;
   onCancel: (e: React.MouseEvent) => void;
 }
 
@@ -21,9 +21,10 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   user,
   selectedDuration,
   setSelectedDuration,
-  onSendRequest,
   onCancel
 }) => {
+  const { startChat } = useChatActions();
+  
   const handleDurationChange = (value: string) => {
     setSelectedDuration(parseInt(value));
     console.log("Duration changed to:", parseInt(value));
@@ -33,6 +34,13 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   const stopPropagation = (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log("Stopping propagation on UserRequestCard click");
+  };
+
+  // Handle chat button click
+  const handleChatClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    startChat(user);
+    onCancel(e); // Close the card after starting chat
   };
 
   // Get initials for avatar fallback
@@ -125,11 +133,11 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
           Cancel
         </Button>
         <Button 
-          className="flex-1"
-          disabled={selectedDuration <= 0}
-          onClick={onSendRequest}
+          className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+          onClick={handleChatClick}
         >
-          Send Request
+          <MessageCircle className="mr-2 h-4 w-4" />
+          Chat
         </Button>
       </div>
     </Card>

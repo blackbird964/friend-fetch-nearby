@@ -10,7 +10,6 @@ interface MeetingRequestHandlerProps {
   selectedUser: string | null;
   selectedDuration: number;
   setSelectedDuration: React.Dispatch<React.SetStateAction<number>>;
-  onSendRequest: () => void;
   onCancel: () => void;
   nearbyUsers: AppUser[];
   movingUsers: Set<string>;
@@ -23,7 +22,6 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   selectedUser,
   selectedDuration,
   setSelectedDuration,
-  onSendRequest,
   onCancel,
   nearbyUsers,
   movingUsers,
@@ -37,9 +35,7 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   
   // Get actions from our custom hook
   const {
-    handleSendRequest,
     handleCancelRequest,
-    handleCancelMeeting,
     findExistingRequest,
     resetMeetingStates,
     initialRenderRef,
@@ -158,15 +154,7 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
         user={user}
         selectedDuration={selectedDuration}
         setSelectedDuration={setSelectedDuration}
-        onSendRequest={(e) => {
-          e.stopPropagation();
-          handleSendRequest(e);
-          onSendRequest();
-        }}
-        onCancel={(e) => {
-          e.stopPropagation();
-          onCancel();
-        }}
+        onCancel={onCancel}
       />
     </RequestCardContainer>
   );

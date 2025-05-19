@@ -1,33 +1,30 @@
-
-import React, { useEffect } from 'react';
-import { LineString } from 'ol/geom';
-import { Vector as VectorSource } from 'ol/source';
-import { Feature } from 'ol';
-import { Style, Stroke } from 'ol/style';
-import { fromLonLat, transform } from 'ol/proj';
+import React, { useEffect, useState } from 'react';
+import { useAppContext } from '@/context/AppContext';
 import { AppUser } from '@/context/types';
+import MeetingRequestHandler from './MeetingRequestHandler';
+import { useToast } from '@/hooks/use-toast';
 
-type MeetingHandlerProps = {
-  vectorSource: React.MutableRefObject<VectorSource | null>;
-  routeLayer: React.MutableRefObject<any>;
+interface MeetingHandlerProps {
+  vectorSource: any;
+  routeLayer: any;
   selectedUser: string | null;
-  setSelectedUser: (userId: string | null) => void;
+  setSelectedUser: React.Dispatch<React.SetStateAction<string | null>>;
   selectedDuration: number;
-  setSelectedDuration: (duration: number) => void;
+  setSelectedDuration: React.Dispatch<React.SetStateAction<number>>;
   movingUsers: Set<string>;
   setMovingUsers: React.Dispatch<React.SetStateAction<Set<string>>>;
   completedMoves: Set<string>;
   setCompletedMoves: React.Dispatch<React.SetStateAction<Set<string>>>;
   nearbyUsers: AppUser[];
   WYNYARD_COORDS: [number, number];
-};
+}
 
 const MeetingHandler: React.FC<MeetingHandlerProps> = ({
   vectorSource,
   routeLayer,
   selectedUser,
   setSelectedUser,
-  selectedDuration,
+  selectedDuration, 
   setSelectedDuration,
   movingUsers,
   setMovingUsers,
@@ -36,23 +33,34 @@ const MeetingHandler: React.FC<MeetingHandlerProps> = ({
   nearbyUsers,
   WYNYARD_COORDS
 }) => {
-  // Clear any existing route lines when component mounts or selectedUser changes
-  useEffect(() => {
-    console.log("[MeetingHandler] Clearing any existing routes");
-    if (routeLayer.current?.getSource()) {
-      routeLayer.current.getSource().clear();
-    }
-    
-    // CRITICAL FIX: Make sure this component no longer tries to handle state
-    return () => {
-      console.log("[MeetingHandler] Component unmounting");
-      if (routeLayer.current?.getSource()) {
-        routeLayer.current.getSource().clear();
-      }
-    };
-  }, [routeLayer, selectedUser]);
+  const { toast } = useToast();
+  const { friendRequests } = useAppContext();
+  const [requestSent, setRequestSent] = useState(false);
 
-  return null; // This component doesn't render UI directly
+  // Handle cancel request
+  const handleCancel = () => {
+    console.log("Cancel request");
+    setSelectedUser(null);
+    setMovingUsers(new Set());
+    setCompletedMoves(new Set());
+  };
+
+  return (
+    <>
+      {/* Request handler component for showing the user request UI */}
+      <MeetingRequestHandler 
+        selectedUser={selectedUser}
+        selectedDuration={selectedDuration}
+        setSelectedDuration={setSelectedDuration}
+        onCancel={handleCancel}
+        nearbyUsers={nearbyUsers}
+        movingUsers={movingUsers}
+        completedMoves={completedMoves}
+        setMovingUsers={setMovingUsers}
+        setCompletedMoves={setCompletedMoves}
+      />
+    </>
+  );
 };
 
 export default MeetingHandler;
