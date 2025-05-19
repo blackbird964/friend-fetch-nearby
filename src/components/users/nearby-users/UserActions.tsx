@@ -1,19 +1,17 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { MessageCircle, MapPin, UserPlus } from 'lucide-react';
+import { MessageCircle, MapPin } from 'lucide-react';
 
 interface UserActionsProps {
   user: any;
   hasLocation: boolean;
-  onAddFriend: () => void;
   onStartChat: () => void;
 }
 
 const UserActions: React.FC<UserActionsProps> = ({ 
   user, 
   hasLocation, 
-  onAddFriend, 
   onStartChat 
 }) => {
   return (
@@ -24,19 +22,11 @@ const UserActions: React.FC<UserActionsProps> = ({
           <span>User hasn't shared their location yet</span>
         </div>
       )}
-      <div className="flex gap-2 w-full">
+      <div className="flex w-full">
         <Button 
-          className="w-1/2" 
-          onClick={onAddFriend}
-          variant="default"
-        >
-          <UserPlus className="w-4 h-4 mr-2" />
-          Add Friend
-        </Button>
-        <Button 
-          className="w-1/2" 
+          className="w-full" 
           onClick={onStartChat}
-          variant="outline"
+          variant="default"
         >
           <MessageCircle className="w-4 h-4 mr-2" />
           Chat

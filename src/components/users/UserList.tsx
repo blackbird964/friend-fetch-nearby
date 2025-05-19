@@ -8,7 +8,7 @@ import { useUserActions } from './hooks/useUserActions';
 
 const UserList: React.FC = () => {
   const { nearbyUsers, radiusInKm, currentUser, loading, refreshNearbyUsers } = useAppContext();
-  const { startChat, handleAddFriend, handleRefresh, loading: actionLoading } = useUserActions();
+  const { startChat, handleRefresh, loading: actionLoading } = useUserActions();
 
   // Get only online and real users (filter out any test users if they somehow remain)
   const onlineUsers = nearbyUsers.filter(user => 
@@ -34,7 +34,6 @@ const UserList: React.FC = () => {
       ) : (
         <UsersList 
           users={onlineUsers}
-          onAddFriend={handleAddFriend}
           onStartChat={startChat}
         />
       )}

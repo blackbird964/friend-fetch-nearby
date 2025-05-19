@@ -6,14 +6,12 @@ import { AppUser } from '@/context/types';
 
 interface UserItemProps {
   user: AppUser;
-  onAddFriend: (user: AppUser) => void;
   onStartChat: (user: AppUser) => void;
   onSelect: (user: AppUser) => void;
 }
 
 const UserItem: React.FC<UserItemProps> = ({ 
   user, 
-  onAddFriend, 
   onStartChat,
   onSelect
 }) => {
@@ -26,7 +24,6 @@ const UserItem: React.FC<UserItemProps> = ({
       <UserActions 
         user={user} 
         hasLocation={!!user.location} 
-        onAddFriend={() => onAddFriend(user)} 
         onStartChat={() => onStartChat(user)}
       />
     </div>
