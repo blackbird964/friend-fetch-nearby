@@ -30,15 +30,20 @@ export const useMeetingRequestActions = (
     }
     
     if (!selectedUser) return;
+    
+    // This is a placeholder - the actual sending happens in the parent component
+    console.log("Request sending action triggered in hook");
   };
 
   // Check if the selected user is in a meeting state
   const getUserMeetingState = (userId: string | null) => {
     if (!userId) return { isUserMoving: false, hasUserMoved: false };
     
+    // Check directly against the sets for accurate state determination
     const isUserMoving = movingUsers.has(userId);
     const hasUserMoved = completedMoves.has(userId);
     
+    console.log(`getUserMeetingState for ${userId}: moving=${isUserMoving}, moved=${hasUserMoved}`);
     return { isUserMoving, hasUserMoved };
   };
 
@@ -76,22 +81,20 @@ export const useMeetingRequestActions = (
   const handleCancelMeeting = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent map click propagation
     if (selectedUser) {
-      // Remove from moving and completed sets
-      if (setMovingUsers && typeof setMovingUsers === 'function') {
-        setMovingUsers(prev => {
-          const next = new Set(prev);
-          next.delete(selectedUser);
-          return next;
-        });
-      }
+      console.log(`Cancelling meeting for user ${selectedUser}`);
       
-      if (setCompletedMoves && typeof setCompletedMoves === 'function') {
-        setCompletedMoves(prev => {
-          const next = new Set(prev);
-          next.delete(selectedUser);
-          return next;
-        });
-      }
+      // Remove from moving and completed sets
+      setMovingUsers(prev => {
+        const next = new Set(prev);
+        next.delete(selectedUser);
+        return next;
+      });
+      
+      setCompletedMoves(prev => {
+        const next = new Set(prev);
+        next.delete(selectedUser);
+        return next;
+      });
       
       toast({
         title: "Meeting Cancelled",
@@ -107,11 +110,14 @@ export const useMeetingRequestActions = (
   const findExistingRequest = (userId: string | null): FriendRequest | null => {
     if (!userId || !currentUser) return null;
     
-    return friendRequests.find(req => 
+    const existingRequest = friendRequests.find(req => 
       req.status === 'pending' && 
       req.receiverId === userId && 
       req.senderId === currentUser.id
     ) || null;
+    
+    console.log(`Existing request for ${userId}:`, existingRequest ? 'Found' : 'None');
+    return existingRequest;
   };
 
   return {

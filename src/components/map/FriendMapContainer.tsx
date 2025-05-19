@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 
@@ -70,7 +71,9 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
   // Debug when selectedUser changes
   React.useEffect(() => {
     console.log("FriendMapContainer - selectedUser changed:", selectedUser);
-  }, [selectedUser]);
+    console.log("FriendMapContainer - movingUsers:", Array.from(movingUsers));
+    console.log("FriendMapContainer - completedMoves:", Array.from(completedMoves));
+  }, [selectedUser, movingUsers, completedMoves]);
 
   // Dispatch tracking mode event when isTracking changes
   React.useEffect(() => {
@@ -98,6 +101,8 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         completedMoves={completedMoves}
         friendRequests={friendRequests}
         isTracking={isTracking}
+        setMovingUsers={setMovingUsers}
+        setCompletedMoves={setCompletedMoves}
       />
       
       <LocationHandling 

@@ -79,8 +79,10 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   const { isUserMoving, hasUserMoved } = getUserMeetingState(selectedUser);
   console.log("Is user moving:", isUserMoving, "Has user moved:", hasUserMoved);
   
-  // CRITICAL FIX: Only show the active meeting card if the user is actually moving or has moved
-  if (isUserMoving || hasUserMoved) {
+  // Only show the active meeting card if the user is explicitly in the moving or completed sets
+  // FIX: This was incorrectly determining when to show the active meeting card
+  if (movingUsers.has(selectedUser) || completedMoves.has(selectedUser)) {
+    console.log("User is actively in a meeting - showing active meeting card");
     return (
       <RequestCardContainer selectedUser={selectedUser} stopPropagation={stopPropagation}>
         <ActiveMeetingCard 
@@ -95,6 +97,7 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   
   // If there's an existing pending request, show cancellation option
   if (existingRequest) {
+    console.log("Showing pending request card for existing request");
     return (
       <RequestCardContainer selectedUser={selectedUser} stopPropagation={stopPropagation}>
         <PendingRequestCard
@@ -107,7 +110,8 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
     );
   }
   
-  // Otherwise, show the normal request card
+  // Otherwise, show the normal request card with time options
+  console.log("Showing standard request card with time options");
   return (
     <RequestCardContainer selectedUser={selectedUser} stopPropagation={stopPropagation}>
       <UserRequestCard 

@@ -31,6 +31,8 @@ type MapFeaturesProps = {
   completedMoves: Set<string>;
   friendRequests: FriendRequest[];
   isTracking: boolean;
+  setMovingUsers: React.Dispatch<React.SetStateAction<Set<string>>>;
+  setCompletedMoves: React.Dispatch<React.SetStateAction<Set<string>>>;
 };
 
 const MapFeatures: React.FC<MapFeaturesProps> = ({
@@ -47,12 +49,16 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
   movingUsers,
   completedMoves,
   friendRequests,
-  isTracking
+  isTracking,
+  setMovingUsers,
+  setCompletedMoves
 }) => {
   // Debug selected user changes
   useEffect(() => {
     console.log("MapFeatures - selectedUser changed:", selectedUser);
-  }, [selectedUser]);
+    console.log("MapFeatures - movingUsers:", Array.from(movingUsers));
+    console.log("MapFeatures - completedMoves:", Array.from(completedMoves));
+  }, [selectedUser, movingUsers, completedMoves]);
 
   // State for meeting request duration
   const [selectedDuration, setSelectedDuration] = React.useState<number>(30);
@@ -121,14 +127,8 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
           nearbyUsers={nearbyUsers}
           movingUsers={movingUsers}
           completedMoves={completedMoves}
-          setMovingUsers={(newSet: React.SetStateAction<Set<string>>) => {
-            console.log("Setting moving users to:", newSet);
-            // This function is just a placeholder as we don't manage the sets here
-          }}
-          setCompletedMoves={(newSet: React.SetStateAction<Set<string>>) => {
-            console.log("Setting completed moves to:", newSet);
-            // This function is just a placeholder as we don't manage the sets here
-          }}
+          setMovingUsers={setMovingUsers}
+          setCompletedMoves={setCompletedMoves}
         />
       )}
     </>
