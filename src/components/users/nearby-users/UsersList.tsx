@@ -6,11 +6,10 @@ import { AppUser } from '@/context/types';
 
 interface UsersListProps {
   users: AppUser[];
-  onAddFriend: (user: AppUser) => void;
   onStartChat: (user: AppUser) => void;
 }
 
-const UsersList: React.FC<UsersListProps> = ({ users, onAddFriend, onStartChat }) => {
+const UsersList: React.FC<UsersListProps> = ({ users, onStartChat }) => {
   const [selectedUser, setSelectedUser] = useState<AppUser | null>(null);
   
   const handleSelectUser = (user: AppUser) => {
@@ -28,7 +27,6 @@ const UsersList: React.FC<UsersListProps> = ({ users, onAddFriend, onStartChat }
           <UserItem 
             key={user.id} 
             user={user} 
-            onAddFriend={onAddFriend} 
             onStartChat={onStartChat}
             onSelect={handleSelectUser}
           />
@@ -39,7 +37,6 @@ const UsersList: React.FC<UsersListProps> = ({ users, onAddFriend, onStartChat }
         user={selectedUser}
         isOpen={!!selectedUser}
         onClose={handleCloseDrawer}
-        onAddFriend={onAddFriend}
         onStartChat={onStartChat}
       />
     </>

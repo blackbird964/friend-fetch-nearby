@@ -13,7 +13,7 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({ onStartChat }) => {
     <div className="flex gap-3 w-full">
       <Button 
         onClick={onStartChat}
-        className="flex-1"
+        className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
       >
         <MessageCircle className="mr-2 h-4 w-4" />
         Chat

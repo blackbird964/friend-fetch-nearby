@@ -24,9 +24,8 @@ const UserActions: React.FC<UserActionsProps> = ({
       )}
       <div className="flex w-full">
         <Button 
-          className="w-full" 
+          className="w-full bg-primary text-primary-foreground hover:bg-primary/90" 
           onClick={onStartChat}
-          variant="default"
         >
           <MessageCircle className="w-4 h-4 mr-2" />
           Chat

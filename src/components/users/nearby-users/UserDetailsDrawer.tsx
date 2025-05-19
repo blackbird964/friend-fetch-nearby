@@ -24,7 +24,6 @@ interface UserDetailsDrawerProps {
   user: AppUser | null;
   isOpen: boolean;
   onClose: () => void;
-  onAddFriend: (user: AppUser) => void;
   onStartChat: (user: AppUser) => void;
 }
 
@@ -32,7 +31,6 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
   user, 
   isOpen, 
   onClose,
-  onAddFriend,
   onStartChat
 }) => {
   const { currentUser, blockUser, unblockUser, reportUser } = useAppContext();
@@ -86,7 +84,6 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
           <DrawerFooter className="flex-col gap-3 pt-2">
             <ProfileActions 
               onStartChat={() => onStartChat(user)}
-              onAddFriend={() => onAddFriend(user)}
             />
             
             <ModerationActions 
