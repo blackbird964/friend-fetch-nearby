@@ -128,7 +128,7 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   console.log(`Determined card type: ${cardType}`);
   cardTypeRef.current = cardType;
   
-  // Handle explicit cancel action
+  // Handle explicit cancel action that stops propagation
   const handleCancel = (e: React.MouseEvent) => {
     e.stopPropagation();
     onCancel();

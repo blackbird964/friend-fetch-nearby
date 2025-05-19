@@ -1,5 +1,5 @@
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { useAppContext } from '@/context/AppContext';
@@ -15,7 +15,7 @@ export const useChatActions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const startChat = (user: AppUser) => {
+  const startChat = useCallback((user: AppUser) => {
     if (!currentUser) {
       toast({
         title: "Not logged in",
@@ -62,10 +62,14 @@ export const useChatActions = () => {
       });
     }
     
-    // Navigate to chat page - make sure this executes
-    console.log("Navigating to chat page");
-    navigate('/chat');
-  };
+    // CRITICAL: We need to ensure navigation happens AFTER state updates
+    // Use setTimeout to push navigation to the next event loop tick
+    console.log("Scheduling navigation to chat page");
+    setTimeout(() => {
+      console.log("Now navigating to chat page");
+      navigate('/chat');
+    }, 0);
+  }, [currentUser, chats, setChats, setSelectedChat, navigate, toast]);
 
   return { startChat };
 };
