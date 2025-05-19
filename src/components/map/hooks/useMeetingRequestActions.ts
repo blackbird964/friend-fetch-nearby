@@ -16,9 +16,29 @@ export const useMeetingRequestActions = (
   const { currentUser, friendRequests, setFriendRequests } = useAppContext();
   const { toast } = useToast();
   
-  // Debug reference for initial render and last user selection
+  // Debug references
   const initialRenderRef = useRef(true);
   const lastSelectedUserRef = useRef<string | null>(null);
+  
+  // Reset meeting states completely to ensure clean slate
+  const resetMeetingStates = () => {
+    console.log("RESET: Clearing all meeting states");
+    
+    if (selectedUser) {
+      console.log(`RESET: Explicitly removing ${selectedUser} from all meeting states`);
+      setMovingUsers(prev => {
+        const next = new Set(prev);
+        next.delete(selectedUser);
+        return next;
+      });
+      
+      setCompletedMoves(prev => {
+        const next = new Set(prev);
+        next.delete(selectedUser);
+        return next;
+      });
+    }
+  };
   
   // Handle sending a request - just initiating the action
   const handleSendRequest = (e: React.MouseEvent) => {
@@ -35,24 +55,17 @@ export const useMeetingRequestActions = (
     
     if (!selectedUser) return;
     
+    // CRITICAL: Make sure we're starting with a clean slate
+    resetMeetingStates();
+    
     console.log("Request sending action triggered in hook");
   };
 
-  // CRITICAL FIX: This is now a SYNCHRONOUS function that doesn't rely on state updates
-  // It reads directly from the sets passed as arguments
-  const isUserInMeetingState = (userId: string | null): boolean => {
-    if (!userId) return false;
-    
-    // Direct membership check avoids any race conditions
-    const inMovingUsers = movingUsers.has(userId);
-    const inCompletedMoves = completedMoves.has(userId);
-    
-    // Debug output
-    console.log(`DIRECT CHECK: User ${userId} in meeting state:`, inMovingUsers || inCompletedMoves);
-    console.log(`- In movingUsers: ${inMovingUsers}`);
-    console.log(`- In completedMoves: ${inCompletedMoves}`);
-    
-    return inMovingUsers || inCompletedMoves;
+  // This is now a simple function that definitively returns false
+  // We want to ONLY show the booking card, never the "in meeting" card
+  const isUserInMeetingState = (): boolean => {
+    // Force false to ensure we only show the booking card
+    return false;
   };
 
   // Find existing request for the selected user
@@ -103,19 +116,7 @@ export const useMeetingRequestActions = (
     e.stopPropagation(); // Prevent map click propagation
     if (selectedUser) {
       console.log(`Cancelling meeting for user ${selectedUser}`);
-      
-      // Remove from moving and completed sets
-      setMovingUsers(prev => {
-        const next = new Set(prev);
-        next.delete(selectedUser);
-        return next;
-      });
-      
-      setCompletedMoves(prev => {
-        const next = new Set(prev);
-        next.delete(selectedUser);
-        return next;
-      });
+      resetMeetingStates();
       
       toast({
         title: "Meeting Cancelled",
@@ -134,6 +135,7 @@ export const useMeetingRequestActions = (
     handleCancelMeeting,
     findExistingRequest,
     isUserInMeetingState,
+    resetMeetingStates,
     initialRenderRef,
     lastSelectedUserRef
   };

@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 
 // Import custom hooks
@@ -67,45 +68,46 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     setCompletedMoves
   } = useMapUIState();
 
-  // CRITICAL FIX: Force state cleanup whenever selected user changes
-  React.useEffect(() => {
+  // Important: Clear meeting state when a user is selected
+  useEffect(() => {
     console.log(`[FriendMapContainer] selectedUser changed to: ${selectedUser}`);
     
-    // When a new user is selected, ensure they aren't already in a meeting state
     if (selectedUser) {
-      // Use setTimeout to ensure this runs after state updates
-      setTimeout(() => {
-        setMovingUsers(prev => {
-          if (prev.has(selectedUser)) {
-            console.log(`[FriendMapContainer] Removing ${selectedUser} from movingUsers`);
-            const next = new Set(prev);
-            next.delete(selectedUser);
-            return next;
-          }
-          return prev;
-        });
-        
-        setCompletedMoves(prev => {
-          if (prev.has(selectedUser)) {
-            console.log(`[FriendMapContainer] Removing ${selectedUser} from completedMoves`);
-            const next = new Set(prev);
-            next.delete(selectedUser);
-            return next;
-          }
-          return prev;
-        });
-      }, 0);
+      // Immediately clear the selected user from meeting states
+      setMovingUsers(prev => {
+        const next = new Set(prev);
+        if (next.has(selectedUser)) {
+          console.log(`[FriendMapContainer] Removing ${selectedUser} from movingUsers`);
+          next.delete(selectedUser);
+        }
+        return next;
+      });
+      
+      setCompletedMoves(prev => {
+        const next = new Set(prev);
+        if (next.has(selectedUser)) {
+          console.log(`[FriendMapContainer] Removing ${selectedUser} from completedMoves`);
+          next.delete(selectedUser);
+        }
+        return next;
+      });
     }
   }, [selectedUser, setMovingUsers, setCompletedMoves]);
 
   // Dispatch tracking mode event when isTracking changes
-  React.useEffect(() => {
+  useEffect(() => {
     console.log("FriendMapContainer - isTracking changed:", isTracking);
     const event = new CustomEvent('tracking-mode-changed', { 
       detail: { isTracking } 
     });
     window.dispatchEvent(event);
   }, [isTracking]);
+  
+  // Debug state on render
+  console.log("[FriendMapContainer] Current state:");
+  console.log("- selectedUser:", selectedUser);
+  console.log("- movingUsers:", Array.from(movingUsers));
+  console.log("- completedMoves:", Array.from(completedMoves));
 
   return (
     <MapContainer>
@@ -154,7 +156,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         setCurrentUser={setCurrentUser}
       />
       
-      {/* Keep MeetingHandler but with reduced role */}
+      {/* Modified to ONLY handle route visualization */}
       <MeetingHandler 
         vectorSource={vectorSource}
         routeLayer={routeLayer}
@@ -162,10 +164,10 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         setSelectedUser={setSelectedUser}
         selectedDuration={selectedDuration}
         setSelectedDuration={setSelectedDuration}
-        movingUsers={movingUsers}
-        setMovingUsers={setMovingUsers}
-        completedMoves={completedMoves}
-        setCompletedMoves={setCompletedMoves}
+        movingUsers={new Set()} // IMPORTANT: Pass empty sets to prevent state changes
+        setMovingUsers={(prev) => prev} // No-op function to prevent state changes
+        completedMoves={new Set()} // IMPORTANT: Pass empty sets to prevent state changes
+        setCompletedMoves={(prev) => prev} // No-op function to prevent state changes
         nearbyUsers={nearbyUsers}
         WYNYARD_COORDS={WYNYARD_COORDS as [number, number]}
       />

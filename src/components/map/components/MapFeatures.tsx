@@ -70,31 +70,47 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
     if (selectedUser && (selectedUser !== prevSelectedUserRef.current || !mounted)) {
       console.log(`[MapFeatures] User selection changed - cleaning up meeting state`);
       
-      // Reset meeting state for the newly selected user
+      // Reset meeting state for the newly selected user - CRITICAL FIX
       setMovingUsers(prev => {
-        if (prev.has(selectedUser)) {
+        const next = new Set(prev);
+        // Explicitly remove the selected user from moving state
+        if (next.has(selectedUser)) {
           console.log(`[MapFeatures] Removing ${selectedUser} from movingUsers`);
-          const next = new Set(prev);
           next.delete(selectedUser);
-          return next;
         }
-        return prev;
+        return next;
       });
       
       setCompletedMoves(prev => {
-        if (prev.has(selectedUser)) {
+        const next = new Set(prev);
+        // Explicitly remove the selected user from completed state
+        if (next.has(selectedUser)) {
           console.log(`[MapFeatures] Removing ${selectedUser} from completedMoves`);
-          const next = new Set(prev);
           next.delete(selectedUser);
-          return next;
         }
-        return prev;
+        return next;
       });
+      
+      // Force a re-render through empty state update to ensure UI consistency
+      setTimeout(() => {
+        console.log("[MapFeatures] Forcing UI refresh after state updates");
+        setMovingUsers(prev => new Set(prev));
+      }, 0);
     }
     
     // Update previous selection ref
     prevSelectedUserRef.current = selectedUser;
-  }, [selectedUser, setMovingUsers, setCompletedMoves, movingUsers, completedMoves]);
+    
+    // Important: clear any possible route lines
+    if (routeLayer.current?.getSource()) {
+      routeLayer.current.getSource().clear();
+    }
+    
+    return () => {
+      // Reset on unmount
+      console.log("[MapFeatures] Component unmounting");
+    };
+  }, [selectedUser, setMovingUsers, setCompletedMoves, movingUsers, completedMoves, routeLayer]);
 
   // State for meeting request duration
   const [selectedDuration, setSelectedDuration] = React.useState<number>(30);

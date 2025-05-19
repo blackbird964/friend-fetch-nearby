@@ -33,7 +33,7 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
 }) => {
   // Component state tracking
   const mountedRef = useRef(false);
-  const lastRenderedCardType = useRef<'none' | 'request' | 'pending' | 'active'>('none');
+  const cardTypeRef = useRef<'request' | 'pending' | 'active'>('request');
   
   // Get actions from our custom hook
   const {
@@ -41,7 +41,7 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
     handleCancelRequest,
     handleCancelMeeting,
     findExistingRequest,
-    isUserInMeetingState,
+    resetMeetingStates,
     initialRenderRef,
     lastSelectedUserRef
   } = useMeetingRequestActions(
@@ -53,51 +53,47 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
     onCancel
   );
   
-  // CRITICAL FIX: Reset meeting state when selectedUser changes
+  // CRITICAL FIX: On mount and when selectedUser changes, 
+  // ensure we reset all meeting states
   useEffect(() => {
     // Mark component as mounted
-    mountedRef.current = true;
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      console.log("MeetingRequestHandler mounted for first time");
+    }
     
-    console.log(`MeetingRequestHandler mounted/updated for user: ${selectedUser}`);
+    console.log(`MeetingRequestHandler updated for user: ${selectedUser}`);
     console.log("Moving users set:", Array.from(movingUsers));
     console.log("Completed moves set:", Array.from(completedMoves));
     
-    // Critical cleanup: When user selection changes, ensure they're not in meeting state
+    // Critical cleanup: When user selection changes, reset all meeting states
     if (selectedUser && (selectedUser !== lastSelectedUserRef.current)) {
       console.log(`User selection changed from ${lastSelectedUserRef.current} to ${selectedUser}`);
       lastSelectedUserRef.current = selectedUser;
       
-      // Clear the user from both sets - this is the key fix
-      setMovingUsers(prev => {
-        const next = new Set(prev);
-        if (next.has(selectedUser)) {
-          console.log(`Removing ${selectedUser} from movingUsers on selection change`);
-          next.delete(selectedUser);
-        }
-        return next;
-      });
+      // IMPORTANT: Always reset states when component mounts or user changes
+      resetMeetingStates();
       
-      setCompletedMoves(prev => {
-        const next = new Set(prev);
-        if (next.has(selectedUser)) {
-          console.log(`Removing ${selectedUser} from completedMoves on selection change`);
-          next.delete(selectedUser);
-        }
-        return next;
-      });
-      
-      // Force a re-render through empty state update to ensure UI consistency
-      setTimeout(() => {
-        console.log("Forcing UI refresh after state updates");
-        setMovingUsers(prev => new Set(prev));
-      }, 0);
+      // Hard-code the card type to always be 'request'
+      cardTypeRef.current = 'request';
     }
     
     return () => {
       // Reset on unmount
-      lastRenderedCardType.current = 'none';
+      console.log("MeetingRequestHandler unmounted");
     };
-  }, [selectedUser, setMovingUsers, setCompletedMoves]);
+  }, [selectedUser, resetMeetingStates]);
+  
+  // CRITICAL FIX: Additional cleanup effect to run on every render
+  useEffect(() => {
+    // This runs on every render to force the correct card type
+    cardTypeRef.current = 'request';
+    
+    // Force clear all meeting states
+    if (selectedUser) {
+      resetMeetingStates();
+    }
+  });
   
   // Stop propagation on all click events to prevent deselection
   const stopPropagation = (e: React.MouseEvent) => {
@@ -122,52 +118,32 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   // Find any existing request
   const existingRequest = findExistingRequest(selectedUser);
   
-  // CRITICAL FIX: Use direct set membership checks for maximum reliability
-  // These direct checks are more reliable than derived state
-  const userInMovingSet = movingUsers.has(selectedUser);
-  const userInCompletedSet = completedMoves.has(selectedUser);
-  
-  console.log("Direct set membership check for", user.name);
-  console.log("- In movingUsers:", userInMovingSet);
-  console.log("- In completedMoves:", userInCompletedSet);
-  
-  // Determine which card to show based on direct set membership checks
+  // CRITICAL FIX: Override automatic card type determination
+  // Always show the request card unless there's a pending request
   let cardType: 'request' | 'pending' | 'active';
   
-  if (userInMovingSet || userInCompletedSet) {
-    cardType = 'active';
-  } else if (existingRequest) {
+  if (existingRequest) {
     cardType = 'pending';
   } else {
+    // FORCE request card type, never show active
     cardType = 'request';
   }
   
-  // Log card type changes for debugging
-  if (lastRenderedCardType.current !== cardType) {
-    console.log(`Card changed from ${lastRenderedCardType.current} to ${cardType}`);
-    lastRenderedCardType.current = cardType;
+  console.log(`Determined card type: ${cardType}`);
+  cardTypeRef.current = cardType;
+  
+  // Debug log
+  if (cardType !== 'request' && !existingRequest) {
+    console.log("CRITICAL WARNING: Not showing request card despite no existing request");
   }
   
   // Render appropriate card based on determined type
-  if (cardType === 'active') {
-    return (
-      <RequestCardContainer selectedUser={selectedUser} stopPropagation={stopPropagation}>
-        <ActiveMeetingCard 
-          user={user} 
-          isMoving={userInMovingSet} 
-          onCancel={handleCancelMeeting}
-          stopPropagation={stopPropagation} 
-        />
-      </RequestCardContainer>
-    );
-  }
-  
-  if (cardType === 'pending') {
+  if (cardType === 'pending' && existingRequest) {
     return (
       <RequestCardContainer selectedUser={selectedUser} stopPropagation={stopPropagation}>
         <PendingRequestCard
           user={user}
-          existingRequest={existingRequest!}
+          existingRequest={existingRequest}
           onCancelRequest={handleCancelRequest}
           stopPropagation={stopPropagation}
         />
