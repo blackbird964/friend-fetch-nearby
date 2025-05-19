@@ -29,8 +29,27 @@ export const updateUserProfile = async (updatedProfile: Partial<Profile>) => {
     
     // Handle direct location_settings update
     if (profileUpdate.location_settings) {
-      // Make sure it's already in the right format
       console.log("Updating location settings:", profileUpdate.location_settings);
+    }
+    
+    // Make sure active_priorities is valid before sending it to Supabase
+    if (profileUpdate.active_priorities) {
+      // Ensure it's a proper array
+      if (!Array.isArray(profileUpdate.active_priorities)) {
+        profileUpdate.active_priorities = [];
+      }
+      
+      // Validate each priority item has the required fields
+      profileUpdate.active_priorities = profileUpdate.active_priorities.map(priority => ({
+        id: priority.id,
+        category: priority.category || "Sydney Activities",
+        activity: priority.activity,
+        frequency: priority.frequency,
+        timePreference: priority.timePreference,
+        urgency: priority.urgency,
+        location: priority.location,
+        experienceLevel: priority.experienceLevel
+      }));
     }
     
     // Log the profile update being sent to Supabase

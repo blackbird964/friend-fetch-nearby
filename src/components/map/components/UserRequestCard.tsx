@@ -9,6 +9,7 @@ import { AppUser } from '@/context/types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useChatActions } from '@/components/users/hooks/useChatActions';
+import ActivePriorities from '@/components/users/nearby-users/user-details/ActivePriorities';
 
 interface UserRequestCardProps {
   user: AppUser;
@@ -106,6 +107,13 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
           <span className="sr-only">Close</span>
         </Button>
       </div>
+      
+      {/* Display user's activities if they have any */}
+      {user.active_priorities && user.active_priorities.length > 0 && (
+        <div className="mb-4 bg-gray-50 p-2 rounded-md">
+          <ActivePriorities priorities={user.active_priorities} />
+        </div>
+      )}
       
       <RadioGroup 
         value={selectedDuration.toString()} 

@@ -71,18 +71,20 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
         throw new Error('User ID is missing');
       }
       
-      // Prepare profile data for update without location
-      let updatedProfile: Partial<Profile> = {
+      // Prepare profile data for update
+      const updatedProfile: Partial<Profile> = {
+        id: currentUser.id,
         bio: formData.bio,
         interests: formData.interests,
         active_priorities: formData.active_priorities,
-        id: currentUser.id,
       };
       
-      // Remove location from the update payload to avoid format errors
-      delete updatedProfile.location;
+      // Ensure active_priorities is included and formatted correctly
+      if (!updatedProfile.active_priorities) {
+        updatedProfile.active_priorities = [];
+      }
       
-      console.log("Submitting profile update:", updatedProfile);
+      console.log("Submitting profile update with active priorities:", updatedProfile.active_priorities);
       
       await updateUserProfile(currentUser.id, updatedProfile);
       
