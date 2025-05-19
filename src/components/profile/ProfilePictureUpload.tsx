@@ -77,7 +77,10 @@ const ProfilePictureUpload: React.FC<ProfilePictureUploadProps> = ({
       console.log('File uploaded successfully, public URL:', publicUrl);
 
       // Update the user's profile with the new profile picture URL
-      await updateUserProfile(currentUser.id, { profile_pic: publicUrl });
+      await updateUserProfile({ 
+        id: currentUser.id, 
+        profile_pic: publicUrl 
+      });
 
       // Call the callback with the new URL if provided
       if (onUploadComplete) {
