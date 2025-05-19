@@ -128,10 +128,11 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   console.log(`Determined card type: ${cardType}`);
   cardTypeRef.current = cardType;
   
-  // Debug log
-  if (cardType !== 'request' && !existingRequest) {
-    console.log("CRITICAL WARNING: Not showing request card despite no existing request");
-  }
+  // Handle explicit cancel action
+  const handleCancel = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onCancel();
+  };
   
   // Render appropriate card based on determined type
   if (cardType === 'pending' && existingRequest) {
@@ -154,7 +155,7 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
         user={user}
         selectedDuration={selectedDuration}
         setSelectedDuration={setSelectedDuration}
-        onCancel={onCancel}
+        onCancel={handleCancel}
       />
     </RequestCardContainer>
   );

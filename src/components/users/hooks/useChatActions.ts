@@ -25,10 +25,13 @@ export const useChatActions = () => {
       return;
     }
     
+    console.log("Starting chat with user:", user.name);
+    
     // Check if chat already exists
     const existingChat = chats.find(chat => chat.participantId === user.id);
     
     if (existingChat) {
+      console.log("Found existing chat:", existingChat.id);
       setSelectedChat(existingChat);
       toast({
         title: "Chat exists",
@@ -37,7 +40,7 @@ export const useChatActions = () => {
     } else {
       // Create new chat with required properties
       const newChat: Chat = {
-        id: `chat-${user.id}`,
+        id: `chat-${user.id}-${Date.now()}`, // Add timestamp for uniqueness
         name: user.name || 'Chat',
         participants: [currentUser.id, user.id],
         participantId: user.id,
@@ -48,6 +51,8 @@ export const useChatActions = () => {
         messages: [],
       };
       
+      console.log("Created new chat:", newChat.id);
+      
       setChats([newChat, ...chats]);
       setSelectedChat(newChat);
       
@@ -57,9 +62,12 @@ export const useChatActions = () => {
       });
     }
     
-    // Navigate to chat page
+    // Navigate to chat page - make sure this executes
+    console.log("Navigating to chat page");
     navigate('/chat');
   };
 
   return { startChat };
 };
+
+export default useChatActions;
