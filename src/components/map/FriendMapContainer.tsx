@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useAppContext } from '@/context/AppContext';
 
@@ -73,7 +72,23 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     console.log("FriendMapContainer - selectedUser changed:", selectedUser);
     console.log("FriendMapContainer - movingUsers:", Array.from(movingUsers));
     console.log("FriendMapContainer - completedMoves:", Array.from(completedMoves));
-  }, [selectedUser, movingUsers, completedMoves]);
+    
+    // Clear the moving and completed sets for testing
+    if (selectedUser) {
+      // Ensure the selected user is NOT in any meeting state initially
+      setMovingUsers(prev => {
+        const next = new Set(prev);
+        next.delete(selectedUser);
+        return next;
+      });
+      
+      setCompletedMoves(prev => {
+        const next = new Set(prev);
+        next.delete(selectedUser);
+        return next;
+      });
+    }
+  }, [selectedUser]);
 
   // Dispatch tracking mode event when isTracking changes
   React.useEffect(() => {

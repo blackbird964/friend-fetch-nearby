@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { AppUser } from '@/context/types';
@@ -36,7 +37,8 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
     handleCancelRequest,
     handleCancelMeeting,
     getUserMeetingState,
-    findExistingRequest
+    findExistingRequest,
+    isUserInMeeting
   } = useMeetingRequestActions(
     selectedUser, 
     movingUsers, 
@@ -79,9 +81,14 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   const { isUserMoving, hasUserMoved } = getUserMeetingState(selectedUser);
   console.log("Is user moving:", isUserMoving, "Has user moved:", hasUserMoved);
   
-  // Only show the active meeting card if the user is explicitly in the moving or completed sets
-  // FIX: This was incorrectly determining when to show the active meeting card
-  if (movingUsers.has(selectedUser) || completedMoves.has(selectedUser)) {
+  // FIX: The problem was here - using sets directly can cause issues with object equality
+  // Explicitly check if the selected user ID is in the sets
+  const userIsInMeeting = isUserInMeeting(selectedUser);
+  
+  console.log("User in meeting state:", userIsInMeeting);
+  
+  // Only show the active meeting card if the user is explicitly in a meeting state
+  if (userIsInMeeting) {
     console.log("User is actively in a meeting - showing active meeting card");
     return (
       <RequestCardContainer selectedUser={selectedUser} stopPropagation={stopPropagation}>

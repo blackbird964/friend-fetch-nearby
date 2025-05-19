@@ -58,6 +58,12 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
     console.log("MapFeatures - selectedUser changed:", selectedUser);
     console.log("MapFeatures - movingUsers:", Array.from(movingUsers));
     console.log("MapFeatures - completedMoves:", Array.from(completedMoves));
+    
+    // Debug to see if user is actually in the sets
+    if (selectedUser) {
+      console.log("Is selected user in movingUsers?", movingUsers.has(selectedUser));
+      console.log("Is selected user in completedMoves?", completedMoves.has(selectedUser));
+    }
   }, [selectedUser, movingUsers, completedMoves]);
 
   // State for meeting request duration

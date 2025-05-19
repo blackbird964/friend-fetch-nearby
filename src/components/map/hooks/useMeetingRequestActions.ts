@@ -120,11 +120,18 @@ export const useMeetingRequestActions = (
     return existingRequest;
   };
 
+  // Check if a user is in a meeting state - either moving or completed
+  const isUserInMeeting = (userId: string | null): boolean => {
+    if (!userId) return false;
+    return movingUsers.has(userId) || completedMoves.has(userId);
+  };
+
   return {
     handleSendRequest,
     handleCancelRequest,
     handleCancelMeeting,
     getUserMeetingState,
-    findExistingRequest
+    findExistingRequest,
+    isUserInMeeting
   };
 };
