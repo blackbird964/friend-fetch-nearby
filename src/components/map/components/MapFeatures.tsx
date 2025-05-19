@@ -169,9 +169,6 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
           selectedUser={selectedUser}
           selectedDuration={selectedDuration}
           setSelectedDuration={setSelectedDuration}
-          onSendRequest={() => {
-            console.log("Sending request to user:", selectedUser, "for duration:", selectedDuration);
-          }}
           onCancel={() => {
             console.log("Cancelling request, deselecting user:", selectedUser);
             setSelectedUser(null);
