@@ -57,10 +57,11 @@ export const useLocationSettings = (): UseLocationSettingsResult => {
     localStorage.setItem('kairo-privacy-mode', String(newPrivacyValue));
     
     if (currentUser) {
+      // Fix: Ensure both required properties are always set
       const updatedUser = {
         ...currentUser,
         locationSettings: {
-          ...currentUser.locationSettings || {},
+          isManualMode: currentUser.locationSettings?.isManualMode ?? false,
           hideExactLocation: newPrivacyValue
         }
       };

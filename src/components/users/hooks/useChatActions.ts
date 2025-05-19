@@ -50,8 +50,8 @@ export const useChatActions = () => {
 
     console.log("Created new chat:", newChat);
     
-    // Fix: Use the correct typing for setChats
-    setChats((prevChats: Chat[]) => [...prevChats, newChat]);
+    // Fix: Update setChats to match expected type signature in AppContext
+    setChats([...chats, newChat]);
     setSelectedChat(newChat);
     
     // Use setTimeout to ensure state is updated before navigation

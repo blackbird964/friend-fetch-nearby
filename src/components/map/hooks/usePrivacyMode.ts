@@ -68,10 +68,11 @@ export const usePrivacyMode = ({
       
       updateInProgressRef.current = true;
       
+      // Fix: Ensure all required properties are set in locationSettings
       const updatedUser = {
         ...currentUser,
         locationSettings: {
-          ...currentUser.locationSettings || {},
+          isManualMode: currentUser.locationSettings?.isManualMode ?? false,
           hideExactLocation: newPrivacyValue
         }
       };
