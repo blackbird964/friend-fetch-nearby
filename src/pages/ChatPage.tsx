@@ -8,6 +8,7 @@ import ChatPageLoading from '@/components/chat/ChatPageLoading';
 import ChatPlaceholder from '@/components/chat/ChatPlaceholder';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useViewportConfig } from '@/hooks/useViewportConfig';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 const ChatPage: React.FC = () => {
   const { 
@@ -17,12 +18,15 @@ const ChatPage: React.FC = () => {
     setSelectedChat, 
     loading, 
     refreshFriendRequests, 
-    refreshMeetupRequests 
+    refreshMeetupRequests,
+    chats
   } = useAppContext();
   
   const [activeTab, setActiveTab] = useState('chats');
   const [activeRequestsTab, setActiveRequestsTab] = useState('friends');
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
+  const location = useLocation();
   
   // Configure viewport for mobile devices
   useViewportConfig(isMobile);
@@ -36,6 +40,13 @@ const ChatPage: React.FC = () => {
     r.status === 'pending' && r.receiverId === meetupRequests[0]?.receiverId
   ).length;
 
+  // Log when component mounts or chats change
+  useEffect(() => {
+    console.log("[ChatPage] Mounted or chats changed. Available chats:", chats.length);
+    console.log("[ChatPage] Selected chat:", selectedChat?.id);
+    console.log("[ChatPage] Route:", location.pathname);
+  }, [chats, selectedChat, location]);
+  
   // Reset selected chat when navigating away on mobile
   useEffect(() => {
     return () => {

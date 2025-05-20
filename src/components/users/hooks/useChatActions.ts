@@ -1,9 +1,10 @@
 
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppUser, Chat } from '@/context/types';
+import { AppUser } from '@/context/types';
 import { useToast } from '@/hooks/use-toast';
 import { useChatList } from '@/hooks/useChatList';
+import { toast as sonnerToast } from 'sonner';
 
 export const useChatActions = () => {
   const navigate = useNavigate();
@@ -32,12 +33,15 @@ export const useChatActions = () => {
 
       if (existingChat) {
         console.log("[useChatActions] Found existing chat:", existingChat.id);
-        // Navigate to existing chat
-        navigate(`/chat`);
-        setTimeout(() => {
-          console.log("[useChatActions] Setting selected chat after navigation");
-          // The chat page will pick up the selected chat from context
-        }, 100);
+        
+        // Navigate to the chat page
+        navigate('/chat');
+        
+        // Use sonner toast for notification
+        sonnerToast.success("Opening chat", {
+          description: `Chat with ${user.name}`
+        });
+        
       } else {
         console.log("[useChatActions] Creating new chat with user:", user.name);
         // Create a new chat
@@ -45,11 +49,16 @@ export const useChatActions = () => {
         console.log("[useChatActions] New chat created:", newChat);
         
         // Add the new chat to the chats list
-        setChats([...chats, newChat]);
+        setChats(prevChats => [...prevChats, newChat]);
         
         // Navigate to the chat page
         console.log("[useChatActions] Navigating to chat page");
-        navigate(`/chat`);
+        navigate('/chat');
+        
+        // Use sonner toast for notification
+        sonnerToast.success("Chat created", {
+          description: `Started a new chat with ${user.name}`
+        });
       }
     } catch (error) {
       console.error("[useChatActions] Error starting chat:", error);
