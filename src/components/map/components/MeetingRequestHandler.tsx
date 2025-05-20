@@ -38,6 +38,15 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   const stopPropagation = (e: React.MouseEvent) => {
     console.log("Stopping propagation on request card container");
     e.stopPropagation();
+    e.preventDefault(); // Prevent default behavior
+  };
+  
+  // Handle cancel with proper event handling
+  const handleCancel = (e: React.MouseEvent) => {
+    console.log("Cancel handler called in MeetingRequestHandler");
+    e.stopPropagation();
+    e.preventDefault(); // Prevent default behavior
+    onCancel();
   };
 
   // Log when component renders
@@ -61,11 +70,7 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
         user={userDetails}
         selectedDuration={selectedDuration}
         setSelectedDuration={setSelectedDuration}
-        onCancel={(e) => {
-          e.stopPropagation();
-          console.log("Cancel button clicked in UserRequestCard");
-          onCancel();
-        }}
+        onCancel={handleCancel}
       />
     </RequestCardContainer>
   );

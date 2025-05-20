@@ -24,7 +24,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   setSelectedDuration,
   onCancel
 }) => {
-  const { startChat } = useChatActions();
+  const { startChat, loading } = useChatActions();
   
   // Log when component renders
   React.useEffect(() => {
@@ -44,12 +44,16 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
 
   // Handle chat button click
   const handleChatClick = (e: React.MouseEvent) => {
-    console.log("[UserRequestCard] Chat button clicked for user:", user?.name);
+    e.preventDefault();
     e.stopPropagation();
+    
+    console.log("[UserRequestCard] Chat button clicked for user:", user?.name);
     
     // Start chat with the selected user
     if (user) {
+      console.log("[UserRequestCard] Starting chat with:", user.name);
       startChat(user);
+      
       // Call onCancel to close the card after initiating chat
       onCancel(e);
     }
@@ -57,8 +61,10 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
 
   // Handle cancel button click
   const handleCancelClick = (e: React.MouseEvent) => {
-    console.log("[UserRequestCard] Cancel button clicked");
+    e.preventDefault();
     e.stopPropagation();
+    
+    console.log("[UserRequestCard] Cancel button clicked");
     onCancel(e);
   };
 
@@ -111,6 +117,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
           size="sm"
           className="rounded-full h-8 w-8 p-0"
           onClick={handleCancelClick}
+          type="button"
         >
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
@@ -154,15 +161,20 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
           variant="outline" 
           className="flex-1"
           onClick={handleCancelClick}
+          type="button"
+          disabled={loading}
         >
           Cancel
         </Button>
         <Button 
           className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
           onClick={handleChatClick}
+          type="button"
+          disabled={loading}
         >
           <MessageCircle className="mr-2 h-4 w-4" />
           Chat
+          {loading && <span className="ml-2">...</span>}
         </Button>
       </div>
     </Card>

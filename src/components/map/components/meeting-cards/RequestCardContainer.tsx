@@ -47,6 +47,7 @@ const RequestCardContainer: React.FC<RequestCardContainerProps> = ({
       onClick={(e) => {
         console.log("[RequestCardContainer] Card container clicked");
         stopPropagation(e);
+        e.preventDefault(); // Prevent default behavior
       }}
     >
       {children}

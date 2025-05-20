@@ -1,7 +1,6 @@
 
 import { useEffect } from 'react';
 import { Map } from 'ol';
-import Feature from 'ol/Feature';
 import { FriendRequest } from '@/context/types';
 
 export const useMapEvents = (
@@ -27,19 +26,28 @@ export const useMapEvents = (
     // Set up listeners for popup interactions
     const handlePopupInteractionStart = (e: Event) => {
       const target = e.target as HTMLElement;
-      if (target.closest('.user-popup-card')) {
+      if (target.closest('.user-popup-card') || 
+          target.closest('button') ||
+          target.tagName === 'BUTTON') {
         isInsidePopupInteraction = true;
-        console.log("Popup interaction started");
+        console.log("Popup interaction started", target.tagName);
       }
     };
     
     const handlePopupInteractionEnd = (e: Event) => {
       const target = e.target as HTMLElement;
-      if (target.closest('.user-popup-card')) {
+      if (target.closest('.user-popup-card') || 
+          target.closest('button') ||
+          target.tagName === 'BUTTON') {
         isInsidePopupInteraction = false;
-        console.log("Popup interaction ended");
+        console.log("Popup interaction ended", target.tagName);
         // Set a flag to ignore the next map click (prevents deselection)
         ignoreNextMapClick = true;
+        
+        // Set a timeout to reset the flag after a short delay
+        setTimeout(() => {
+          ignoreNextMapClick = false;
+        }, 300);
       }
     };
     
@@ -70,7 +78,7 @@ export const useMapEvents = (
         return;
       }
       
-      const clickedFeature = map.current?.forEachFeatureAtPixel(event.pixel, (f) => f);
+      const clickedFeature = map.current?.forEachFeatureAtPixel(event.pixel, (f: any) => f);
       
       if (clickedFeature) {
         const userId = clickedFeature.get('userId');
@@ -117,6 +125,23 @@ export const useMapEvents = (
     document.addEventListener('mouseup', handlePopupInteractionEnd);
     document.addEventListener('touchend', handlePopupInteractionEnd);
     
+    // Add special handling for buttons to prevent map interaction
+    const handleButtonInteraction = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('button') || target.tagName === 'BUTTON') {
+        console.log("Button interaction detected");
+        e.stopPropagation();
+        ignoreNextMapClick = true;
+        
+        // Set a timeout to reset the flag after a short delay
+        setTimeout(() => {
+          ignoreNextMapClick = false;
+        }, 300);
+      }
+    };
+    
+    document.addEventListener('click', handleButtonInteraction, { capture: true });
+    
     // Attach map click handler
     map.current.on('click', clickHandler);
 
@@ -128,6 +153,7 @@ export const useMapEvents = (
       document.removeEventListener('touchstart', handlePopupInteractionStart);
       document.removeEventListener('mouseup', handlePopupInteractionEnd);
       document.removeEventListener('touchend', handlePopupInteractionEnd);
+      document.removeEventListener('click', handleButtonInteraction, { capture: true });
     };
   }, [mapLoaded, selectedUser, movingUsers, completedMoves, map, setSelectedUser, vectorLayer, friendRequests, currentUser]);
 };
