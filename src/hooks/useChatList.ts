@@ -1,13 +1,14 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { supabase } from '@/integrations/supabase/client';
 import { getProfile } from '@/lib/supabase';
-import { Chat, Message as MessageType } from '@/context/types';
+import { Chat, Message as MessageType, AppUser } from '@/context/types';
 import { toast } from 'sonner';
 
 export function useChatList() {
-  const { currentUser, setChats } = useAppContext();
+  // Get context values
+  const { currentUser, chats, setChats } = useAppContext();
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -162,5 +163,43 @@ export function useChatList() {
     };
   }, [currentUser, setChats]);
 
-  return { isLoading, loadError, unreadCount };
+  // Add createChat function that was missing
+  const createChat = useCallback(async (participants: AppUser[]) => {
+    console.log("[useChatList] Creating new chat with participants:", participants);
+    if (!currentUser) {
+      console.error("[useChatList] Cannot create chat: No current user");
+      throw new Error("User not authenticated");
+    }
+
+    try {
+      // Create a new chat object
+      const newChat: Chat = {
+        id: `chat-${participants[0].id}-${Date.now()}`,
+        name: participants[0].name || 'User',
+        participants: [currentUser.id, ...participants.map(p => p.id)],
+        participantId: participants[0].id,
+        participantName: participants[0].name || 'User',
+        profilePic: participants[0].profile_pic || '',
+        lastMessage: "Say hello!",
+        lastMessageTime: Date.now(),
+        messages: [],
+        unreadCount: 0,
+      };
+
+      console.log("[useChatList] Created new chat:", newChat);
+      return newChat;
+    } catch (error) {
+      console.error("[useChatList] Error creating chat:", error);
+      throw error;
+    }
+  }, [currentUser]);
+
+  return { 
+    isLoading, 
+    loadError, 
+    unreadCount,
+    chats,
+    setChats,
+    createChat
+  };
 }

@@ -26,7 +26,7 @@ export const useChatActions = () => {
       // First check if a chat with this user already exists
       const existingChat = chats.find(
         chat => chat.participants.some(
-          participant => participant.id === user.id
+          participant => participant === user.id
         )
       );
 
