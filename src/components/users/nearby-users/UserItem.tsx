@@ -25,7 +25,7 @@ const UserItem: React.FC<UserItemProps> = ({
         user={user} 
         hasLocation={!!user.location} 
         onStartChat={() => {
-          console.log("UserItem: Starting chat with user:", user.name);
+          console.log("[UserItem] Starting chat with user:", user.name);
           onStartChat(user);
         }}
       />

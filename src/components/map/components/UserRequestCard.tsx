@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useChatActions } from '@/components/users/hooks/useChatActions';
 import ActivePriorities from '@/components/users/nearby-users/user-details/ActivePriorities';
+import { useNavigate } from 'react-router-dom';
 
 interface UserRequestCardProps {
   user: AppUser;
@@ -25,6 +26,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   onCancel
 }) => {
   const { startChat } = useChatActions();
+  const navigate = useNavigate();
   
   const handleDurationChange = (value: string) => {
     setSelectedDuration(parseInt(value));
@@ -36,16 +38,16 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
     e.stopPropagation();
   };
 
-  // Handle chat button click - directly use startChat function
+  // Handle chat button click
   const handleChatClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log("Chat button clicked for user:", user.name);
     
-    // First close the card to prevent UI conflicts
+    // First close the card
     onCancel(e);
     
-    // Then start chat with the selected user
-    console.log("Starting chat with:", user);
+    // Then start chat with the selected user and navigate
+    console.log("Starting chat with user and navigating:", user.id);
     startChat(user);
   };
 
@@ -60,7 +62,6 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   };
   
   console.log("Rendering UserRequestCard for:", user.name);
-  console.log("Active priorities:", user.active_priorities);
 
   return (
     <Card 

@@ -15,20 +15,20 @@ export const useChatActions = () => {
       return;
     }
     
-    console.log("Starting chat with user:", targetUser);
+    console.log("[useChatActions] Starting chat with user:", targetUser.name, targetUser.id);
     
     // Check if we already have a chat with this user
     const existingChat = chats.find(chat => 
-      chat.participants.includes(targetUser.id) && 
-      chat.participants.includes(currentUser.id)
+      chat.participants.some(id => id === targetUser.id) && 
+      chat.participants.some(id => id === currentUser.id)
     );
 
     if (existingChat) {
-      console.log("Found existing chat:", existingChat);
+      console.log("[useChatActions] Found existing chat:", existingChat);
       setSelectedChat(existingChat);
       
-      // Navigate immediately to chat page
-      console.log("Navigating to existing chat");
+      // Navigate to chat page
+      console.log("[useChatActions] Navigating to existing chat");
       navigate('/chat');
       return;
     }
@@ -46,17 +46,17 @@ export const useChatActions = () => {
       lastMessageTime: Date.now(),
     };
 
-    console.log("Created new chat:", newChat);
+    console.log("[useChatActions] Created new chat:", newChat);
     
-    // Update the chats array with the new chat
+    // Update the chats array with the new chat using a new array
     const updatedChats = [...chats, newChat];
     setChats(updatedChats);
     
     // Set the selected chat
     setSelectedChat(newChat);
     
-    // Navigate to chat page immediately
-    console.log("Navigating to new chat");
+    // Navigate to chat page
+    console.log("[useChatActions] Navigating to new chat");
     navigate('/chat');
     
   }, [chats, setChats, setSelectedChat, currentUser, navigate]);

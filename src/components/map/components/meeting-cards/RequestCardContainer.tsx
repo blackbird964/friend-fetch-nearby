@@ -1,7 +1,5 @@
 
-import React, { useRef } from 'react';
-import { useAppContext } from '@/context/AppContext';
-import { AppUser } from '@/context/types';
+import React, { useRef, useEffect } from 'react';
 
 interface RequestCardContainerProps {
   selectedUser: string | null;
@@ -17,7 +15,7 @@ const RequestCardContainer: React.FC<RequestCardContainerProps> = ({
   const requestCardRef = useRef<HTMLDivElement>(null);
   
   // Add click capture effect
-  React.useEffect(() => {
+  useEffect(() => {
     if (!requestCardRef.current || !selectedUser) return;
     
     const handleDocumentClick = (e: MouseEvent) => {

@@ -22,10 +22,10 @@ export const useMeetingRequestActions = (
   
   // Reset meeting states completely to ensure clean slate
   const resetMeetingStates = () => {
-    console.log("RESET: Clearing all meeting states");
+    console.log("[useMeetingRequestActions] RESET: Clearing all meeting states");
     
     if (selectedUser) {
-      console.log(`RESET: Explicitly removing ${selectedUser} from all meeting states`);
+      console.log(`[useMeetingRequestActions] RESET: Explicitly removing ${selectedUser} from all meeting states`);
       setMovingUsers(prev => {
         const next = new Set(prev);
         next.delete(selectedUser);
@@ -38,6 +38,9 @@ export const useMeetingRequestActions = (
         return next;
       });
     }
+    
+    // Execute the onCancel callback to close any open UI elements
+    onCancel();
   };
   
   // Handle sending a request - just initiating the action
@@ -58,7 +61,7 @@ export const useMeetingRequestActions = (
     // CRITICAL: Make sure we're starting with a clean slate
     resetMeetingStates();
     
-    console.log("Request sending action triggered in hook");
+    console.log("[useMeetingRequestActions] Request sending action triggered in hook");
   };
 
   // This is now a simple function that definitively returns false
@@ -102,7 +105,7 @@ export const useMeetingRequestActions = (
         throw new Error("Failed to cancel request");
       }
     } catch (error) {
-      console.error('Error cancelling request:', error);
+      console.error('[useMeetingRequestActions] Error cancelling request:', error);
       toast({
         title: "Error",
         description: "Failed to cancel request. Please try again.",
@@ -115,7 +118,7 @@ export const useMeetingRequestActions = (
   const handleCancelMeeting = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent map click propagation
     if (selectedUser) {
-      console.log(`Cancelling meeting for user ${selectedUser}`);
+      console.log(`[useMeetingRequestActions] Cancelling meeting for user ${selectedUser}`);
       resetMeetingStates();
       
       toast({
