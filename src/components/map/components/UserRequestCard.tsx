@@ -43,7 +43,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   };
 
   // Handle chat button click
-  const handleChatClick = (e: React.MouseEvent) => {
+  const handleChatClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
@@ -52,10 +52,15 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
     // Start chat with the selected user
     if (user) {
       console.log("[UserRequestCard] Starting chat with:", user.name);
-      startChat(user);
-      
-      // Call onCancel to close the card after initiating chat
-      onCancel(e);
+      try {
+        await startChat(user);
+        console.log("[UserRequestCard] Chat started successfully");
+        
+        // Call onCancel to close the card after initiating chat
+        onCancel(e);
+      } catch (error) {
+        console.error("[UserRequestCard] Error starting chat:", error);
+      }
     }
   };
 

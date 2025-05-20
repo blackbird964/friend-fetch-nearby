@@ -33,21 +33,23 @@ export const useChatActions = () => {
       if (existingChat) {
         console.log("[useChatActions] Found existing chat:", existingChat.id);
         // Navigate to existing chat
-        navigate(`/chat/${existingChat.id}`);
+        navigate(`/chat`);
+        setTimeout(() => {
+          console.log("[useChatActions] Setting selected chat after navigation");
+          // The chat page will pick up the selected chat from context
+        }, 100);
       } else {
         console.log("[useChatActions] Creating new chat with user:", user.name);
         // Create a new chat
         const newChat = await createChat([user]);
         console.log("[useChatActions] New chat created:", newChat);
         
-        // Add the new chat to the chats list - Fixed: Using the spread operator directly on the array
-        const updatedChats = [...chats, newChat];
-        console.log("[useChatActions] Updated chats:", updatedChats);
-        setChats(updatedChats);
-
-        // Navigate to the new chat
-        console.log("[useChatActions] Navigating to new chat:", newChat.id);
-        navigate(`/chat/${newChat.id}`);
+        // Add the new chat to the chats list
+        setChats([...chats, newChat]);
+        
+        // Navigate to the chat page
+        console.log("[useChatActions] Navigating to chat page");
+        navigate(`/chat`);
       }
     } catch (error) {
       console.error("[useChatActions] Error starting chat:", error);

@@ -30,8 +30,20 @@ const RequestCardContainer: React.FC<RequestCardContainerProps> = ({
     // Capture phase ensures our handler runs before the map click handler
     document.addEventListener('click', handleDocumentClick, { capture: true });
     
+    // Handle buttons separately
+    const handleButtonClick = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'BUTTON' || target.closest('button')) {
+        console.log("[RequestCardContainer] Button click detected, stopping propagation");
+        e.stopPropagation();
+      }
+    };
+    
+    document.addEventListener('click', handleButtonClick, { capture: true });
+    
     return () => {
       document.removeEventListener('click', handleDocumentClick, { capture: true });
+      document.removeEventListener('click', handleButtonClick, { capture: true });
     };
   }, [selectedUser]);
 
@@ -47,7 +59,7 @@ const RequestCardContainer: React.FC<RequestCardContainerProps> = ({
       onClick={(e) => {
         console.log("[RequestCardContainer] Card container clicked");
         stopPropagation(e);
-        e.preventDefault(); // Prevent default behavior
+        e.preventDefault(); 
       }}
     >
       {children}
