@@ -40,12 +40,10 @@ export const useChatActions = () => {
         const newChat = await createChat([user]);
         console.log("[useChatActions] New chat created:", newChat);
         
-        // Add the new chat to the chats list
-        setChats((prevChats) => {
-          const updatedChats = [...prevChats, newChat];
-          console.log("[useChatActions] Updated chats:", updatedChats);
-          return updatedChats;
-        });
+        // Add the new chat to the chats list - Fixed: Using the spread operator directly on the array
+        const updatedChats = [...chats, newChat];
+        console.log("[useChatActions] Updated chats:", updatedChats);
+        setChats(updatedChats);
 
         // Navigate to the new chat
         console.log("[useChatActions] Navigating to new chat:", newChat.id);
