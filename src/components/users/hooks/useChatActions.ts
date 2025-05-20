@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppUser } from '@/context/types';
+import { AppUser, Chat } from '@/context/types';
 import { useToast } from '@/hooks/use-toast';
 import { useChatList } from '@/hooks/useChatList';
 import { toast as sonnerToast } from 'sonner';
@@ -49,7 +49,8 @@ export const useChatActions = () => {
         console.log("[useChatActions] New chat created:", newChat);
         
         // Add the new chat to the chats list
-        setChats(prevChats => [...prevChats, newChat]);
+        // Fix: Use direct array assignment instead of a callback function
+        setChats([...chats, newChat]);
         
         // Navigate to the chat page
         console.log("[useChatActions] Navigating to chat page");
