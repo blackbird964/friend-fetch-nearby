@@ -50,13 +50,13 @@ export const useChatActions = () => {
 
     console.log("Created new chat:", newChat);
     
-    // Fix: Update setChats to match expected type signature in AppContext
-    setChats([...chats, newChat]);
+    // Update setChats to match expected type signature in AppContext
+    setChats(prevChats => [...prevChats, newChat]);
     setSelectedChat(newChat);
     
     // Use setTimeout to ensure state is updated before navigation
     setTimeout(() => {
-        navigate('/chat', { replace: true });
+      navigate('/chat', { replace: true });
     }, 0);
   }, [chats, setChats, setSelectedChat, currentUser, navigate]);
 

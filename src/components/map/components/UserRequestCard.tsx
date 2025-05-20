@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -50,8 +51,9 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
     console.log("Starting chat with:", user.name);
     startChat(user);
     
-    // Navigate to the chat screen after a short delay to ensure state is updated
+    // Navigate to the chat screen with a small delay to ensure state updates
     setTimeout(() => {
+      console.log("Navigating to chat page");
       navigate('/chat');
     }, 100);
   };
