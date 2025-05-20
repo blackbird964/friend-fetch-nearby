@@ -30,7 +30,6 @@ export const useMapEvents = (
       if (target.closest('.user-popup-card')) {
         isInsidePopupInteraction = true;
         console.log("Popup interaction started");
-        e.stopPropagation();
       }
     };
     
@@ -41,7 +40,6 @@ export const useMapEvents = (
         console.log("Popup interaction ended");
         // Set a flag to ignore the next map click (prevents deselection)
         ignoreNextMapClick = true;
-        e.stopPropagation();
       }
     };
     
@@ -99,82 +97,37 @@ export const useMapEvents = (
             vectorLayer.current.changed();
           }
           
-          // Prevent map click event from bubbling up
+          // Prevent further processing of this click
           event.stopPropagation();
           return;
         }
-      } 
-      
-      // Handle potential deselection when clicking away
-      if (selectedUser) {
-        console.log("Handling potential deselection, selectedUser:", selectedUser);
-        
-        // Don't deselect if we just clicked on the same feature
-        if (lastClickedFeatureId === selectedUser) {
-          console.log("Clicked on selected user, not deselecting");
-          return;
-        }
-        
-        // Use a smaller hit tolerance (20px) to make it easier to deselect
-        const featuresNearby = map.current?.getFeaturesAtPixel(event.pixel, {
-          hitTolerance: 20
-        });
-        
-        // Check if we clicked on something related to the selected user
-        const isNearSelectedFeature = featuresNearby?.some((f) => {
-          return f.get('userId') === selectedUser;
-        });
-        
-        // Check if we clicked inside the popup area (approximate check)
-        const mapSize = map.current?.getSize();
-        const clickX = event.pixel[0];
-        const clickY = event.pixel[1];
-        
-        // Define a "safe zone" in the bottom center of map where popups typically appear
-        const isSafeZone = mapSize && 
-          clickX > mapSize[0] * 0.2 && 
-          clickX < mapSize[0] * 0.8 && 
-          clickY > mapSize[1] * 0.6;
-          
-        if (isSafeZone) {
-          console.log("Click in popup safe zone, not deselecting");
-          return;
-        }
-        
-        // Only deselect if there are no features nearby or none related to the selected user
-        if (!featuresNearby || featuresNearby.length === 0 || !isNearSelectedFeature) {
-          console.log("Clicked away from users, deselecting");
+      } else {
+        // Only handle deselection if we have a selected user and didn't click on a feature
+        if (selectedUser) {
+          console.log("Clicked away from markers, deselecting user");
           setSelectedUser(null);
           lastClickedFeatureId = null;
-          if (vectorLayer.current) {
-            vectorLayer.current.changed();
-          }
-        } else {
-          console.log("Clicked near the selected feature, keeping selection");
         }
       }
     };
 
     // Attach document-level event listeners for popup interactions
-    document.addEventListener('mousedown', handlePopupInteractionStart, { capture: true });
-    document.addEventListener('touchstart', handlePopupInteractionStart, { capture: true });
-    document.addEventListener('mouseup', handlePopupInteractionEnd, { capture: true });
-    document.addEventListener('touchend', handlePopupInteractionEnd, { capture: true });
-    document.addEventListener('click', (e) => {
-      if ((e.target as HTMLElement).closest('.user-popup-card')) {
-        e.stopPropagation();
-      }
-    }, { capture: true });
+    document.addEventListener('mousedown', handlePopupInteractionStart);
+    document.addEventListener('touchstart', handlePopupInteractionStart);
+    document.addEventListener('mouseup', handlePopupInteractionEnd);
+    document.addEventListener('touchend', handlePopupInteractionEnd);
     
     // Attach map click handler
     map.current.on('click', clickHandler);
 
     return () => {
-      map.current?.un('click', clickHandler);
-      document.removeEventListener('mousedown', handlePopupInteractionStart, { capture: true });
-      document.removeEventListener('touchstart', handlePopupInteractionStart, { capture: true });
-      document.removeEventListener('mouseup', handlePopupInteractionEnd, { capture: true });
-      document.removeEventListener('touchend', handlePopupInteractionEnd, { capture: true });
+      if (map.current) {
+        map.current.un('click', clickHandler);
+      }
+      document.removeEventListener('mousedown', handlePopupInteractionStart);
+      document.removeEventListener('touchstart', handlePopupInteractionStart);
+      document.removeEventListener('mouseup', handlePopupInteractionEnd);
+      document.removeEventListener('touchend', handlePopupInteractionEnd);
     };
   }, [mapLoaded, selectedUser, movingUsers, completedMoves, map, setSelectedUser, vectorLayer, friendRequests, currentUser]);
 };

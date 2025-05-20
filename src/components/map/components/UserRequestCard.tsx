@@ -10,7 +10,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useChatActions } from '@/components/users/hooks/useChatActions';
 import ActivePriorities from '@/components/users/nearby-users/user-details/ActivePriorities';
-import { useNavigate } from 'react-router-dom';
 
 interface UserRequestCardProps {
   user: AppUser;
@@ -26,29 +25,41 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   onCancel
 }) => {
   const { startChat } = useChatActions();
-  const navigate = useNavigate();
+  
+  // Log when component renders
+  React.useEffect(() => {
+    console.log("[UserRequestCard] Rendered for user:", user?.name);
+  }, [user]);
   
   const handleDurationChange = (value: string) => {
     setSelectedDuration(parseInt(value));
-    console.log("Duration changed to:", parseInt(value));
+    console.log("[UserRequestCard] Duration changed to:", parseInt(value));
   };
 
   // Prevent click events from reaching the map
   const stopPropagation = (e: React.MouseEvent) => {
+    console.log("[UserRequestCard] Stopping propagation on card element");
     e.stopPropagation();
   };
 
   // Handle chat button click
   const handleChatClick = (e: React.MouseEvent) => {
+    console.log("[UserRequestCard] Chat button clicked for user:", user?.name);
     e.stopPropagation();
-    console.log("Chat button clicked for user:", user.name);
     
-    // First close the card
+    // Start chat with the selected user
+    if (user) {
+      startChat(user);
+      // Call onCancel to close the card after initiating chat
+      onCancel(e);
+    }
+  };
+
+  // Handle cancel button click
+  const handleCancelClick = (e: React.MouseEvent) => {
+    console.log("[UserRequestCard] Cancel button clicked");
+    e.stopPropagation();
     onCancel(e);
-    
-    // Then start chat with the selected user and navigate
-    console.log("Starting chat with user and navigating:", user.id);
-    startChat(user);
   };
 
   // Get initials for avatar fallback
@@ -60,8 +71,6 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
       .toUpperCase()
       .substring(0, 2);
   };
-  
-  console.log("Rendering UserRequestCard for:", user.name);
 
   return (
     <Card 
@@ -101,7 +110,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
           variant="ghost" 
           size="sm"
           className="rounded-full h-8 w-8 p-0"
-          onClick={onCancel}
+          onClick={handleCancelClick}
         >
           <X className="h-4 w-4" />
           <span className="sr-only">Close</span>
@@ -144,7 +153,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
         <Button 
           variant="outline" 
           className="flex-1"
-          onClick={onCancel}
+          onClick={handleCancelClick}
         >
           Cancel
         </Button>

@@ -1,10 +1,8 @@
 
-import React, { useEffect, useRef } from 'react';
-import { useAppContext } from '@/context/AppContext';
+import React from 'react';
 import { AppUser } from '@/context/types';
 import UserRequestCard from './UserRequestCard';
-import { RequestCardContainer, ActiveMeetingCard, PendingRequestCard } from './meeting-cards';
-import { useMeetingRequestActions } from '../hooks/useMeetingRequestActions';
+import RequestCardContainer from './meeting-cards/RequestCardContainer';
 
 interface MeetingRequestHandlerProps {
   selectedUser: string | null;
@@ -29,133 +27,45 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   setMovingUsers,
   setCompletedMoves
 }) => {
-  // Component state tracking
-  const mountedRef = useRef(false);
-  const cardTypeRef = useRef<'request' | 'pending' | 'active'>('request');
-  
-  // Get actions from our custom hook
-  const {
-    handleCancelRequest,
-    findExistingRequest,
-    resetMeetingStates,
-    initialRenderRef,
-    lastSelectedUserRef
-  } = useMeetingRequestActions(
-    selectedUser, 
-    movingUsers, 
-    completedMoves, 
-    setMovingUsers, 
-    setCompletedMoves,
-    onCancel
-  );
-  
-  // CRITICAL FIX: On mount and when selectedUser changes, 
-  // ensure we reset all meeting states
-  useEffect(() => {
-    // Mark component as mounted
-    if (!mountedRef.current) {
-      mountedRef.current = true;
-      console.log("MeetingRequestHandler mounted for first time");
-    }
-    
-    console.log(`MeetingRequestHandler updated for user: ${selectedUser}`);
-    console.log("Moving users set:", Array.from(movingUsers));
-    console.log("Completed moves set:", Array.from(completedMoves));
-    
-    // Critical cleanup: When user selection changes, reset all meeting states
-    if (selectedUser && (selectedUser !== lastSelectedUserRef.current)) {
-      console.log(`User selection changed from ${lastSelectedUserRef.current} to ${selectedUser}`);
-      lastSelectedUserRef.current = selectedUser;
-      
-      // IMPORTANT: Always reset states when component mounts or user changes
-      resetMeetingStates();
-      
-      // Hard-code the card type to always be 'request'
-      cardTypeRef.current = 'request';
-    }
-    
-    return () => {
-      // Reset on unmount
-      console.log("MeetingRequestHandler unmounted");
-    };
-  }, [selectedUser, resetMeetingStates]);
-  
-  // CRITICAL FIX: Additional cleanup effect to run on every render
-  useEffect(() => {
-    // This runs on every render to force the correct card type
-    cardTypeRef.current = 'request';
-    
-    // Force clear all meeting states
-    if (selectedUser) {
-      resetMeetingStates();
-    }
-  });
-  
-  // Stop propagation on all click events to prevent deselection
+  // Find the selected user's data
+  const userDetails = React.useMemo(() => {
+    console.log("Looking for user with ID:", selectedUser);
+    console.log("Available users:", nearbyUsers.map(u => ({ id: u.id, name: u.name })));
+    return nearbyUsers.find(user => user.id === selectedUser);
+  }, [selectedUser, nearbyUsers]);
+
+  // Handle click to prevent propagation to map
   const stopPropagation = (e: React.MouseEvent) => {
+    console.log("Stopping propagation on request card container");
     e.stopPropagation();
   };
 
-  // If no user is selected, don't render anything
-  if (!selectedUser) {
-    console.log("No user selected, not rendering request card");
+  // Log when component renders
+  React.useEffect(() => {
+    console.log("MeetingRequestHandler rendered with selectedUser:", selectedUser);
+    console.log("User details found:", userDetails ? userDetails.name : "Not found");
+  }, [selectedUser, userDetails]);
+
+  // Don't render if no user is selected or user details not found
+  if (!selectedUser || !userDetails) {
+    console.log("Not rendering card - no selectedUser or userDetails not found");
     return null;
   }
 
-  // Find the selected user
-  const user = nearbyUsers.find(u => u.id === selectedUser);
-  if (!user) {
-    console.log("Selected user not found in nearby users");
-    return null;
-  }
-  
-  console.log("Rendering request card for user:", user.name);
-  
-  // Find any existing request
-  const existingRequest = findExistingRequest(selectedUser);
-  
-  // CRITICAL FIX: Override automatic card type determination
-  // Always show the request card unless there's a pending request
-  let cardType: 'request' | 'pending' | 'active';
-  
-  if (existingRequest) {
-    cardType = 'pending';
-  } else {
-    // FORCE request card type, never show active
-    cardType = 'request';
-  }
-  
-  console.log(`Determined card type: ${cardType}`);
-  cardTypeRef.current = cardType;
-  
-  // Handle explicit cancel action that stops propagation
-  const handleCancel = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onCancel();
-  };
-  
-  // Render appropriate card based on determined type
-  if (cardType === 'pending' && existingRequest) {
-    return (
-      <RequestCardContainer selectedUser={selectedUser} stopPropagation={stopPropagation}>
-        <PendingRequestCard
-          user={user}
-          existingRequest={existingRequest}
-          onCancelRequest={handleCancelRequest}
-          stopPropagation={stopPropagation}
-        />
-      </RequestCardContainer>
-    );
-  }
-  
-  // Default - show the normal request card with time options
   return (
-    <RequestCardContainer selectedUser={selectedUser} stopPropagation={stopPropagation}>
-      <UserRequestCard 
-        user={user}
+    <RequestCardContainer 
+      selectedUser={selectedUser}
+      stopPropagation={stopPropagation}
+    >
+      <UserRequestCard
+        user={userDetails}
         selectedDuration={selectedDuration}
         setSelectedDuration={setSelectedDuration}
-        onCancel={handleCancel}
+        onCancel={(e) => {
+          e.stopPropagation();
+          console.log("Cancel button clicked in UserRequestCard");
+          onCancel();
+        }}
       />
     </RequestCardContainer>
   );

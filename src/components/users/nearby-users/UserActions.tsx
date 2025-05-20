@@ -3,7 +3,6 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, MapPin } from 'lucide-react';
 import { AppUser } from '@/context/types';
-import { useChatActions } from '@/components/users/hooks/useChatActions';
 
 interface UserActionsProps {
   user: AppUser;
@@ -16,8 +15,9 @@ const UserActions: React.FC<UserActionsProps> = ({
   hasLocation, 
   onStartChat 
 }) => {
-  const handleChatClick = () => {
-    console.log("UserActions: Chat button clicked for user:", user.name);
+  const handleChatClick = (e: React.MouseEvent) => {
+    console.log("[UserActions] Chat button clicked for user:", user.name);
+    e.stopPropagation(); // Prevent event bubbling
     onStartChat();
   };
   

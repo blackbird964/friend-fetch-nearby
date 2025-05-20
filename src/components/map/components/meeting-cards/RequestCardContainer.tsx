@@ -14,13 +14,15 @@ const RequestCardContainer: React.FC<RequestCardContainerProps> = ({
 }) => {
   const requestCardRef = useRef<HTMLDivElement>(null);
   
-  // Add click capture effect
+  // Add click capture effect and log when component mounts
   useEffect(() => {
+    console.log("[RequestCardContainer] Mounted with selectedUser:", selectedUser);
     if (!requestCardRef.current || !selectedUser) return;
     
     const handleDocumentClick = (e: MouseEvent) => {
       // If the click is inside the request card, prevent it from propagating
       if (requestCardRef.current && requestCardRef.current.contains(e.target as Node)) {
+        console.log("[RequestCardContainer] Click inside card detected");
         e.stopPropagation();
       }
     };
@@ -33,11 +35,19 @@ const RequestCardContainer: React.FC<RequestCardContainerProps> = ({
     };
   }, [selectedUser]);
 
+  // Don't render if no selected user
+  if (!selectedUser) {
+    return null;
+  }
+
   return (
     <div 
       ref={requestCardRef}
       className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
-      onClick={stopPropagation}
+      onClick={(e) => {
+        console.log("[RequestCardContainer] Card container clicked");
+        stopPropagation(e);
+      }}
     >
       {children}
     </div>

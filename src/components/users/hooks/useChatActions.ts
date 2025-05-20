@@ -1,65 +1,70 @@
 
+import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useCallback } from 'react';
-import { useAppContext } from '@/context/AppContext';
 import { AppUser, Chat } from '@/context/types';
-import { v4 as uuidv4 } from 'uuid';
+import { useToast } from '@/hooks/use-toast';
+import { useChatList } from '@/hooks/useChatList';
 
 export const useChatActions = () => {
   const navigate = useNavigate();
-  const { chats, setChats, setSelectedChat, currentUser } = useAppContext();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState<boolean>(false);
+  const { chats, setChats, createChat } = useChatList();
 
-  const startChat = useCallback((targetUser: AppUser) => {
-    if (!currentUser) {
-      console.error("Cannot start chat: Current user is not defined");
-      return;
-    }
-    
-    console.log("[useChatActions] Starting chat with user:", targetUser.name, targetUser.id);
-    
-    // Check if we already have a chat with this user
-    const existingChat = chats.find(chat => 
-      chat.participants.some(id => id === targetUser.id) && 
-      chat.participants.some(id => id === currentUser.id)
-    );
-
-    if (existingChat) {
-      console.log("[useChatActions] Found existing chat:", existingChat);
-      setSelectedChat(existingChat);
-      
-      // Navigate to chat page
-      console.log("[useChatActions] Navigating to existing chat");
-      navigate('/chat');
+  // Function to start a new chat or navigate to an existing one
+  const startChat = useCallback(async (user: AppUser) => {
+    console.log("[useChatActions] Starting chat with:", user.name);
+    if (!user || !user.id) {
+      console.error("[useChatActions] Invalid user or missing ID:", user);
       return;
     }
 
-    // Create a new chat
-    const newChat: Chat = {
-      id: uuidv4(),
-      name: targetUser.name || 'Chat',
-      participants: [currentUser.id, targetUser.id],
-      messages: [],
-      participantId: targetUser.id,
-      participantName: targetUser.name,
-      profilePic: targetUser.profile_pic,
-      lastMessage: '',
-      lastMessageTime: Date.now(),
-    };
+    setLoading(true);
 
-    console.log("[useChatActions] Created new chat:", newChat);
-    
-    // Update the chats array with the new chat using a new array
-    const updatedChats = [...chats, newChat];
-    setChats(updatedChats);
-    
-    // Set the selected chat
-    setSelectedChat(newChat);
-    
-    // Navigate to chat page
-    console.log("[useChatActions] Navigating to new chat");
-    navigate('/chat');
-    
-  }, [chats, setChats, setSelectedChat, currentUser, navigate]);
+    try {
+      console.log("[useChatActions] Checking for existing chat with user ID:", user.id);
+      // First check if a chat with this user already exists
+      const existingChat = chats.find(
+        chat => chat.participants.some(
+          participant => participant.id === user.id
+        )
+      );
 
-  return { startChat };
+      if (existingChat) {
+        console.log("[useChatActions] Found existing chat:", existingChat.id);
+        // Navigate to existing chat
+        navigate(`/chat/${existingChat.id}`);
+      } else {
+        console.log("[useChatActions] Creating new chat with user:", user.name);
+        // Create a new chat
+        const newChat = await createChat([user]);
+        console.log("[useChatActions] New chat created:", newChat);
+        
+        // Add the new chat to the chats list
+        setChats((prevChats) => {
+          const updatedChats = [...prevChats, newChat];
+          console.log("[useChatActions] Updated chats:", updatedChats);
+          return updatedChats;
+        });
+
+        // Navigate to the new chat
+        console.log("[useChatActions] Navigating to new chat:", newChat.id);
+        navigate(`/chat/${newChat.id}`);
+      }
+    } catch (error) {
+      console.error("[useChatActions] Error starting chat:", error);
+      toast({
+        title: "Error",
+        description: "Failed to start chat. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [chats, navigate, setChats, createChat, toast]);
+
+  return {
+    startChat,
+    loading
+  };
 };

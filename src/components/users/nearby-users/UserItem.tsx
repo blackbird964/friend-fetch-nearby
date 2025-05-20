@@ -15,19 +15,27 @@ const UserItem: React.FC<UserItemProps> = ({
   onStartChat,
   onSelect
 }) => {
+  // Memoize the handlers to prevent unnecessary re-renders
+  const handleStartChat = React.useCallback(() => {
+    console.log("[UserItem] Starting chat with user:", user.name);
+    onStartChat(user);
+  }, [user, onStartChat]);
+  
+  const handleSelect = React.useCallback(() => {
+    console.log("[UserItem] Selecting user:", user.name);
+    onSelect(user);
+  }, [user, onSelect]);
+  
   return (
     <div className="border rounded-lg overflow-hidden">
       <UserCard 
         user={user} 
-        onClick={() => onSelect(user)}
+        onClick={handleSelect}
       />
       <UserActions 
         user={user} 
         hasLocation={!!user.location} 
-        onStartChat={() => {
-          console.log("[UserItem] Starting chat with user:", user.name);
-          onStartChat(user);
-        }}
+        onStartChat={handleStartChat}
       />
     </div>
   );

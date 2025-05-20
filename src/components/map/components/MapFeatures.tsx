@@ -57,65 +57,62 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
   const mountedRef = useRef(false);
   const prevSelectedUserRef = useRef<string | null>(null);
   
-  // CRITICAL FIX: Add state cleanup when selectedUser changes or on mount
+  // Log when component mounts or selectedUser changes
   useEffect(() => {
     const mounted = mountedRef.current;
     mountedRef.current = true;
     
     console.log(`[MapFeatures] selectedUser changed: ${selectedUser}, previously: ${prevSelectedUserRef.current}`);
-    console.log(`[MapFeatures] Current state - movingUsers: [${Array.from(movingUsers)}]`);
-    console.log(`[MapFeatures] Current state - completedMoves: [${Array.from(completedMoves)}]`);
     
     // If selectedUser changed, ensure they aren't in meeting state
-    if (selectedUser && (selectedUser !== prevSelectedUserRef.current || !mounted)) {
+    if (selectedUser !== prevSelectedUserRef.current) {
       console.log(`[MapFeatures] User selection changed - cleaning up meeting state`);
       
-      // Reset meeting state for the newly selected user - CRITICAL FIX
-      setMovingUsers(prev => {
-        const next = new Set(prev);
-        // Explicitly remove the selected user from moving state
-        if (next.has(selectedUser)) {
-          console.log(`[MapFeatures] Removing ${selectedUser} from movingUsers`);
-          next.delete(selectedUser);
-        }
-        return next;
-      });
+      // Reset meeting state for any previously selected user
+      if (prevSelectedUserRef.current) {
+        setMovingUsers(prev => {
+          const next = new Set(prev);
+          if (next.has(prevSelectedUserRef.current!)) {
+            console.log(`[MapFeatures] Removing ${prevSelectedUserRef.current} from movingUsers`);
+            next.delete(prevSelectedUserRef.current!);
+          }
+          return next;
+        });
+        
+        setCompletedMoves(prev => {
+          const next = new Set(prev);
+          if (next.has(prevSelectedUserRef.current!)) {
+            console.log(`[MapFeatures] Removing ${prevSelectedUserRef.current} from completedMoves`);
+            next.delete(prevSelectedUserRef.current!);
+          }
+          return next;
+        });
+      }
       
-      setCompletedMoves(prev => {
-        const next = new Set(prev);
-        // Explicitly remove the selected user from completed state
-        if (next.has(selectedUser)) {
-          console.log(`[MapFeatures] Removing ${selectedUser} from completedMoves`);
-          next.delete(selectedUser);
-        }
-        return next;
-      });
-      
-      // Force a re-render through empty state update to ensure UI consistency
-      setTimeout(() => {
-        console.log("[MapFeatures] Forcing UI refresh after state updates");
-        setMovingUsers(prev => new Set(prev));
-      }, 0);
+      // Important: clear any possible route lines
+      if (routeLayer.current?.getSource()) {
+        routeLayer.current.getSource().clear();
+      }
     }
     
     // Update previous selection ref
     prevSelectedUserRef.current = selectedUser;
     
-    // Important: clear any possible route lines
-    if (routeLayer.current?.getSource()) {
-      routeLayer.current.getSource().clear();
-    }
-    
     return () => {
       // Reset on unmount
       console.log("[MapFeatures] Component unmounting");
     };
-  }, [selectedUser, setMovingUsers, setCompletedMoves, movingUsers, completedMoves, routeLayer]);
+  }, [selectedUser, setMovingUsers, setCompletedMoves, routeLayer]);
 
   // State for meeting request duration
   const [selectedDuration, setSelectedDuration] = React.useState<number>(30);
+  
+  // Handle canceling selection
+  const handleCancel = React.useCallback(() => {
+    console.log("[MapFeatures] Canceling selection, current selectedUser:", selectedUser);
+    setSelectedUser(null);
+  }, [selectedUser, setSelectedUser]);
 
-  // Apply marker features
   return (
     <>
       {/* Add marker features */}
@@ -169,10 +166,7 @@ const MapFeatures: React.FC<MapFeaturesProps> = ({
           selectedUser={selectedUser}
           selectedDuration={selectedDuration}
           setSelectedDuration={setSelectedDuration}
-          onCancel={() => {
-            console.log("Cancelling request, deselecting user:", selectedUser);
-            setSelectedUser(null);
-          }}
+          onCancel={handleCancel}
           nearbyUsers={nearbyUsers}
           movingUsers={movingUsers}
           completedMoves={completedMoves}
