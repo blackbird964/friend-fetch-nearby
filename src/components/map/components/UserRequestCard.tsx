@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useChatActions } from '@/components/users/hooks/useChatActions';
 import ActivePriorities from '@/components/users/nearby-users/user-details/ActivePriorities';
+import { useNavigate } from 'react-router-dom';
 
 interface UserRequestCardProps {
   user: AppUser;
@@ -25,6 +25,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   onCancel
 }) => {
   const { startChat } = useChatActions();
+  const navigate = useNavigate();
   
   const handleDurationChange = (value: string) => {
     setSelectedDuration(parseInt(value));
@@ -48,6 +49,11 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
     // Then start chat with the selected user
     console.log("Starting chat with:", user.name);
     startChat(user);
+    
+    // Navigate to the chat screen after a short delay to ensure state is updated
+    setTimeout(() => {
+      navigate('/chat');
+    }, 100);
   };
 
   // Get initials for avatar fallback
