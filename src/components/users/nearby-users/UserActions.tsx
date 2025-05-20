@@ -2,9 +2,10 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { MessageCircle, MapPin } from 'lucide-react';
+import { AppUser } from '@/context/types';
 
 interface UserActionsProps {
-  user: any;
+  user: AppUser;
   hasLocation: boolean;
   onStartChat: () => void;
 }
@@ -14,6 +15,11 @@ const UserActions: React.FC<UserActionsProps> = ({
   hasLocation, 
   onStartChat 
 }) => {
+  const handleChatClick = () => {
+    console.log("UserActions: Chat button clicked for user:", user.name);
+    onStartChat();
+  };
+  
   return (
     <div className="px-4 pb-4 pt-1 flex flex-col gap-2">
       {!hasLocation && (
@@ -25,7 +31,7 @@ const UserActions: React.FC<UserActionsProps> = ({
       <div className="flex w-full">
         <Button 
           className="w-full bg-primary text-primary-foreground hover:bg-primary/90" 
-          onClick={onStartChat}
+          onClick={handleChatClick}
         >
           <MessageCircle className="w-4 h-4 mr-2" />
           Chat

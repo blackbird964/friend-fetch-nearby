@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import UserItem from './UserItem';
 import UserDetailsDrawer from './UserDetailsDrawer';
 import { AppUser } from '@/context/types';
+import { useChatActions } from '@/components/users/hooks/useChatActions';
 
 interface UsersListProps {
   users: AppUser[];
@@ -27,7 +28,10 @@ const UsersList: React.FC<UsersListProps> = ({ users, onStartChat }) => {
           <UserItem 
             key={user.id} 
             user={user} 
-            onStartChat={onStartChat}
+            onStartChat={() => {
+              console.log("UsersList: Starting chat with user:", user.name);
+              onStartChat(user);
+            }}
             onSelect={handleSelectUser}
           />
         ))}

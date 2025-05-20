@@ -27,11 +27,9 @@ export const useChatActions = () => {
       console.log("Found existing chat:", existingChat);
       setSelectedChat(existingChat);
       
-      // Use setTimeout to ensure state is updated before navigation
-      setTimeout(() => {
-        navigate('/chat', { replace: true });
-      }, 0);
-      
+      // Navigate immediately to chat page
+      console.log("Navigating to existing chat");
+      navigate('/chat');
       return;
     }
 
@@ -50,14 +48,17 @@ export const useChatActions = () => {
 
     console.log("Created new chat:", newChat);
     
-    // Update chats with the new chat - using direct array instead of updater function
-    setChats([...chats, newChat]);
+    // Update the chats array with the new chat
+    const updatedChats = [...chats, newChat];
+    setChats(updatedChats);
+    
+    // Set the selected chat
     setSelectedChat(newChat);
     
-    // Use setTimeout to ensure state is updated before navigation
-    setTimeout(() => {
-      navigate('/chat', { replace: true });
-    }, 0);
+    // Navigate to chat page immediately
+    console.log("Navigating to new chat");
+    navigate('/chat');
+    
   }, [chats, setChats, setSelectedChat, currentUser, navigate]);
 
   return { startChat };

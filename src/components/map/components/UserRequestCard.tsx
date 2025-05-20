@@ -10,7 +10,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useChatActions } from '@/components/users/hooks/useChatActions';
 import ActivePriorities from '@/components/users/nearby-users/user-details/ActivePriorities';
-import { useNavigate } from 'react-router-dom';
 
 interface UserRequestCardProps {
   user: AppUser;
@@ -26,7 +25,6 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   onCancel
 }) => {
   const { startChat } = useChatActions();
-  const navigate = useNavigate();
   
   const handleDurationChange = (value: string) => {
     setSelectedDuration(parseInt(value));
@@ -36,10 +34,9 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   // Prevent click events from reaching the map
   const stopPropagation = (e: React.MouseEvent) => {
     e.stopPropagation();
-    console.log("Stopping propagation on UserRequestCard click");
   };
 
-  // Handle chat button click - navigate to chat with this user
+  // Handle chat button click - directly use startChat function
   const handleChatClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     console.log("Chat button clicked for user:", user.name);
@@ -48,14 +45,8 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
     onCancel(e);
     
     // Then start chat with the selected user
-    console.log("Starting chat with:", user.name);
+    console.log("Starting chat with:", user);
     startChat(user);
-    
-    // Navigate to the chat screen with a small delay to ensure state updates
-    setTimeout(() => {
-      console.log("Navigating to chat page");
-      navigate('/chat');
-    }, 100);
   };
 
   // Get initials for avatar fallback
