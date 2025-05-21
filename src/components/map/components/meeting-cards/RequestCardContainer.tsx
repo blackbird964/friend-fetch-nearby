@@ -24,32 +24,16 @@ const RequestCardContainer: React.FC<RequestCardContainerProps> = ({
       if (requestCardRef.current && requestCardRef.current.contains(e.target as Node)) {
         console.log("[RequestCardContainer] Click inside card detected");
         e.stopPropagation();
+        // IMPORTANT: Don't stop propagation completely, let button clicks work
+        return;
       }
     };
     
     // Capture phase ensures our handler runs before the map click handler
     document.addEventListener('click', handleDocumentClick, { capture: true });
     
-    // Handle buttons separately
-    const handleButtonClick = (e: Event) => {
-      const target = e.target as HTMLElement;
-      const button = target.tagName === 'BUTTON' ? target : target.closest('button');
-      
-      if (button) {
-        console.log("[RequestCardContainer] Button click detected, stopping propagation");
-        e.stopPropagation();
-        
-        // Let the event continue if it's a button click
-        // This ensures button click handlers work properly
-        return true;
-      }
-    };
-    
-    document.addEventListener('click', handleButtonClick, { capture: true });
-    
     return () => {
       document.removeEventListener('click', handleDocumentClick, { capture: true });
-      document.removeEventListener('click', handleButtonClick, { capture: true });
     };
   }, [selectedUser]);
 

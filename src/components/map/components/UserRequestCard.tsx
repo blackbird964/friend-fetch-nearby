@@ -38,12 +38,6 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
     console.log("[UserRequestCard] Duration changed to:", parseInt(value));
   };
 
-  // Prevent click events from reaching the map
-  const stopPropagation = (e: React.MouseEvent) => {
-    console.log("[UserRequestCard] Stopping propagation on card element");
-    e.stopPropagation();
-  };
-
   // Handle chat button click
   const handleChatClick = async (e: React.MouseEvent) => {
     console.log("[UserRequestCard] Chat button clicked for user:", user?.name);
@@ -53,9 +47,9 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
     try {
       if (user) {
         console.log("[UserRequestCard] Starting chat with:", user.name);
-        // Call startChat directly with the user object
-        await startChat(user);
-        console.log("[UserRequestCard] Chat started successfully");
+        // Call startChat with the user object
+        const chat = await startChat(user);
+        console.log("[UserRequestCard] Chat started successfully", chat);
         
         // First close the card
         onCancel(e);
@@ -91,7 +85,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   return (
     <Card 
       className="p-4 bg-white shadow-lg animate-slide-in-bottom user-popup-card"
-      onClick={stopPropagation}
+      onClick={(e) => e.stopPropagation()}
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
@@ -146,7 +140,6 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
         value={selectedDuration.toString()} 
         onValueChange={handleDurationChange}
         className="flex gap-2 mb-4"
-        onClick={stopPropagation}
       >
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="15" id="r1" />
