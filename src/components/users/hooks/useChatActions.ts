@@ -34,31 +34,32 @@ export const useChatActions = () => {
       if (existingChat) {
         console.log("[useChatActions] Found existing chat:", existingChat.id);
         
+        // Navigate to the chat page
+        navigate('/chat');
+        
         // Use sonner toast for notification
         sonnerToast.success("Opening chat", {
           description: `Chat with ${user.name}`
         });
         
-        return existingChat;
       } else {
         console.log("[useChatActions] Creating new chat with user:", user.name);
         // Create a new chat
         const newChat = await createChat([user]);
         console.log("[useChatActions] New chat created:", newChat);
         
-        if (newChat) {
-          // Add the new chat to the chats list - using direct array assignment
-          setChats([...chats, newChat]);
-          
-          // Use sonner toast for notification
-          sonnerToast.success("Chat created", {
-            description: `Started a new chat with ${user.name}`
-          });
-          
-          return newChat;
-        }
+        // Add the new chat to the chats list
+        // Fix: Use direct array assignment instead of a callback function
+        setChats([...chats, newChat]);
         
-        return null;
+        // Navigate to the chat page
+        console.log("[useChatActions] Navigating to chat page");
+        navigate('/chat');
+        
+        // Use sonner toast for notification
+        sonnerToast.success("Chat created", {
+          description: `Started a new chat with ${user.name}`
+        });
       }
     } catch (error) {
       console.error("[useChatActions] Error starting chat:", error);
@@ -67,11 +68,10 @@ export const useChatActions = () => {
         description: "Failed to start chat. Please try again.",
         variant: "destructive"
       });
-      return null;
     } finally {
       setLoading(false);
     }
-  }, [chats, setChats, createChat, toast]);
+  }, [chats, navigate, setChats, createChat, toast]);
 
   return {
     startChat,

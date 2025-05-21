@@ -32,11 +32,9 @@ const MainLayout: React.FC = () => {
     }
   }, [isAuthenticated, currentUser, location.pathname, navigate]);
 
-  console.log("[MainLayout] Current route:", location.pathname);
-
   return (
     <>
-      <main className="min-h-screen pb-16">
+      <main className="min-h-screen">
         <Outlet />
       </main>
       <BottomNavigation />

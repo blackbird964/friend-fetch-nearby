@@ -10,7 +10,6 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useChatActions } from '@/components/users/hooks/useChatActions';
 import ActivePriorities from '@/components/users/nearby-users/user-details/ActivePriorities';
-import { useNavigate } from 'react-router-dom';
 
 interface UserRequestCardProps {
   user: AppUser;
@@ -26,7 +25,6 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   onCancel
 }) => {
   const { startChat, loading } = useChatActions();
-  const navigate = useNavigate();
   
   // Log when component renders
   React.useEffect(() => {
@@ -38,37 +36,40 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
     console.log("[UserRequestCard] Duration changed to:", parseInt(value));
   };
 
+  // Prevent click events from reaching the map
+  const stopPropagation = (e: React.MouseEvent) => {
+    console.log("[UserRequestCard] Stopping propagation on card element");
+    e.stopPropagation();
+  };
+
   // Handle chat button click
   const handleChatClick = async (e: React.MouseEvent) => {
-    console.log("[UserRequestCard] Chat button clicked for user:", user?.name);
     e.preventDefault();
     e.stopPropagation();
     
-    try {
-      if (user) {
-        console.log("[UserRequestCard] Starting chat with:", user.name);
-        // Call startChat with the user object
-        const chat = await startChat(user);
-        console.log("[UserRequestCard] Chat started successfully", chat);
+    console.log("[UserRequestCard] Chat button clicked for user:", user?.name);
+    
+    // Start chat with the selected user
+    if (user) {
+      console.log("[UserRequestCard] Starting chat with:", user.name);
+      try {
+        await startChat(user);
+        console.log("[UserRequestCard] Chat started successfully");
         
-        // First close the card
+        // Call onCancel to close the card after initiating chat
         onCancel(e);
-        
-        // Then navigate to chat page
-        setTimeout(() => {
-          navigate('/chat');
-        }, 100);
+      } catch (error) {
+        console.error("[UserRequestCard] Error starting chat:", error);
       }
-    } catch (error) {
-      console.error("[UserRequestCard] Error starting chat:", error);
     }
   };
 
   // Handle cancel button click
   const handleCancelClick = (e: React.MouseEvent) => {
-    console.log("[UserRequestCard] Cancel button clicked");
     e.preventDefault();
     e.stopPropagation();
+    
+    console.log("[UserRequestCard] Cancel button clicked");
     onCancel(e);
   };
 
@@ -85,7 +86,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   return (
     <Card 
       className="p-4 bg-white shadow-lg animate-slide-in-bottom user-popup-card"
-      onClick={(e) => e.stopPropagation()}
+      onClick={stopPropagation}
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
@@ -140,6 +141,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
         value={selectedDuration.toString()} 
         onValueChange={handleDurationChange}
         className="flex gap-2 mb-4"
+        onClick={stopPropagation}
       >
         <div className="flex items-center space-x-2">
           <RadioGroupItem value="15" id="r1" />
