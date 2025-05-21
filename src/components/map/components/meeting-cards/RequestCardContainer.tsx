@@ -33,9 +33,15 @@ const RequestCardContainer: React.FC<RequestCardContainerProps> = ({
     // Handle buttons separately
     const handleButtonClick = (e: Event) => {
       const target = e.target as HTMLElement;
-      if (target.tagName === 'BUTTON' || target.closest('button')) {
+      const button = target.tagName === 'BUTTON' ? target : target.closest('button');
+      
+      if (button) {
         console.log("[RequestCardContainer] Button click detected, stopping propagation");
         e.stopPropagation();
+        
+        // Let the event continue if it's a button click
+        // This ensures button click handlers work properly
+        return true;
       }
     };
     
@@ -59,7 +65,6 @@ const RequestCardContainer: React.FC<RequestCardContainerProps> = ({
       onClick={(e) => {
         console.log("[RequestCardContainer] Card container clicked");
         stopPropagation(e);
-        e.preventDefault(); 
       }}
     >
       {children}

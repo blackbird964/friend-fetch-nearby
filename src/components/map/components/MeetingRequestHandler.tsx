@@ -29,31 +29,26 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
 }) => {
   // Find the selected user's data
   const userDetails = React.useMemo(() => {
+    if (!selectedUser) return null;
     console.log("Looking for user with ID:", selectedUser);
     console.log("Available users:", nearbyUsers.map(u => ({ id: u.id, name: u.name })));
-    return nearbyUsers.find(user => user.id === selectedUser);
+    const user = nearbyUsers.find(user => user.id === selectedUser);
+    console.log("Found user:", user ? user.name : "Not found");
+    return user;
   }, [selectedUser, nearbyUsers]);
 
   // Handle click to prevent propagation to map
   const stopPropagation = (e: React.MouseEvent) => {
     console.log("Stopping propagation on request card container");
     e.stopPropagation();
-    e.preventDefault();
   };
   
   // Handle cancel with proper event handling
   const handleCancel = (e: React.MouseEvent) => {
     console.log("Cancel handler called in MeetingRequestHandler");
     e.stopPropagation();
-    e.preventDefault();
     onCancel();
   };
-
-  // Log when component renders
-  React.useEffect(() => {
-    console.log("MeetingRequestHandler rendered with selectedUser:", selectedUser);
-    console.log("User details found:", userDetails ? userDetails.name : "Not found");
-  }, [selectedUser, userDetails]);
 
   // Don't render if no user is selected or user details not found
   if (!selectedUser || !userDetails) {

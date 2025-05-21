@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { useChatActions } from '@/components/users/hooks/useChatActions';
 import ActivePriorities from '@/components/users/nearby-users/user-details/ActivePriorities';
+import { useNavigate } from 'react-router-dom';
 
 interface UserRequestCardProps {
   user: AppUser;
@@ -25,6 +26,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   onCancel
 }) => {
   const { startChat, loading } = useChatActions();
+  const navigate = useNavigate();
   
   // Log when component renders
   React.useEffect(() => {
@@ -44,32 +46,35 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
 
   // Handle chat button click
   const handleChatClick = async (e: React.MouseEvent) => {
+    console.log("[UserRequestCard] Chat button clicked for user:", user?.name);
     e.preventDefault();
     e.stopPropagation();
     
-    console.log("[UserRequestCard] Chat button clicked for user:", user?.name);
-    
-    // Start chat with the selected user
-    if (user) {
-      console.log("[UserRequestCard] Starting chat with:", user.name);
-      try {
+    try {
+      if (user) {
+        console.log("[UserRequestCard] Starting chat with:", user.name);
+        // Call startChat directly with the user object
         await startChat(user);
         console.log("[UserRequestCard] Chat started successfully");
         
-        // Call onCancel to close the card after initiating chat
+        // First close the card
         onCancel(e);
-      } catch (error) {
-        console.error("[UserRequestCard] Error starting chat:", error);
+        
+        // Then navigate to chat page
+        setTimeout(() => {
+          navigate('/chat');
+        }, 100);
       }
+    } catch (error) {
+      console.error("[UserRequestCard] Error starting chat:", error);
     }
   };
 
   // Handle cancel button click
   const handleCancelClick = (e: React.MouseEvent) => {
+    console.log("[UserRequestCard] Cancel button clicked");
     e.preventDefault();
     e.stopPropagation();
-    
-    console.log("[UserRequestCard] Cancel button clicked");
     onCancel(e);
   };
 
