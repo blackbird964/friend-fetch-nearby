@@ -19,7 +19,14 @@ import MainLayout from "@/pages/MainLayout";
 import NotFound from "./pages/NotFound";
 
 // Create a new QueryClient instance outside of the component
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      retry: 1
+    }
+  }
+});
 
 const App: React.FC = () => {
   return (

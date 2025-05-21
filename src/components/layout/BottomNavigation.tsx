@@ -53,6 +53,14 @@ const BottomNavigation: React.FC = () => {
     },
   ];
 
+  // Handle navigation with explicit navigation function
+  const handleNavigation = (path: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("[BottomNavigation] Navigating to:", path);
+    navigate(path);
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-10">
       <div className="flex justify-around items-center h-16">
@@ -64,7 +72,7 @@ const BottomNavigation: React.FC = () => {
                 ? 'text-primary'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
-            onClick={() => navigate(route.path)}
+            onClick={(e) => handleNavigation(route.path, e)}
           >
             <div className="relative">
               {route.icon}
