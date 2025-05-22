@@ -22,6 +22,16 @@ const LocationControls: React.FC<LocationControlsProps> = ({
   isPrivacyModeEnabled,
   togglePrivacyMode
 }) => {
+  const handleTrackingToggle = () => {
+    console.log("Tracking toggle clicked directly");
+    toggleLocationTracking();
+  };
+
+  const handleManualToggle = () => {
+    console.log("Manual toggle clicked directly");
+    toggleManualMode();
+  };
+
   return (
     <div className="grid grid-cols-3 gap-2 w-full items-center">
       <div className="flex items-center space-x-2 justify-start">
@@ -29,18 +39,11 @@ const LocationControls: React.FC<LocationControlsProps> = ({
           <Switch
             id="manual-mode-control"
             checked={isManualMode}
-            onCheckedChange={() => {
-              console.log("Manual switch clicked");
-              toggleManualMode();
-            }}
+            onCheckedChange={handleManualToggle}
           />
           <Label 
             htmlFor="manual-mode-control" 
             className="text-xs whitespace-nowrap"
-            onClick={() => {
-              console.log("Manual label clicked");
-              toggleManualMode();
-            }}
           >
             <MapPin className="h-3 w-3 inline mr-1" />
             Manual
@@ -60,18 +63,11 @@ const LocationControls: React.FC<LocationControlsProps> = ({
         <Switch
           id="tracking-mode-control"
           checked={isTracking}
-          onCheckedChange={() => {
-            console.log("Tracking switch clicked");
-            toggleLocationTracking();
-          }}
+          onCheckedChange={handleTrackingToggle}
         />
         <Label 
           htmlFor="tracking-mode-control" 
           className={`text-xs whitespace-nowrap ${isTracking ? 'text-green-600 font-medium' : 'text-gray-500'}`}
-          onClick={() => {
-            console.log("Tracking label clicked");
-            toggleLocationTracking();
-          }}
         >
           <Eye className={`h-3 w-3 inline mr-1 ${isTracking ? 'text-green-600' : ''}`} />
           Track {isTracking ? "On" : "Off"}
