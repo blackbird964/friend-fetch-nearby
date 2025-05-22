@@ -22,13 +22,24 @@ const LocationControls: React.FC<LocationControlsProps> = ({
   isPrivacyModeEnabled,
   togglePrivacyMode
 }) => {
-  const handleTrackingToggle = () => {
+  const handleTrackingToggle = (checked: boolean) => {
     console.log("Tracking toggle clicked directly");
     toggleLocationTracking();
   };
 
-  const handleManualToggle = () => {
+  const handleManualToggle = (checked: boolean) => {
     console.log("Manual toggle clicked directly");
+    toggleManualMode();
+  };
+
+  // Create separate handlers for label clicks
+  const handleTrackingLabelClick = () => {
+    console.log("Tracking label clicked");
+    toggleLocationTracking();
+  };
+
+  const handleManualLabelClick = () => {
+    console.log("Manual label clicked");
     toggleManualMode();
   };
 
@@ -44,6 +55,7 @@ const LocationControls: React.FC<LocationControlsProps> = ({
           <Label 
             htmlFor="manual-mode-control" 
             className="text-xs whitespace-nowrap"
+            onClick={handleManualLabelClick}
           >
             <MapPin className="h-3 w-3 inline mr-1" />
             Manual
@@ -68,6 +80,7 @@ const LocationControls: React.FC<LocationControlsProps> = ({
         <Label 
           htmlFor="tracking-mode-control" 
           className={`text-xs whitespace-nowrap ${isTracking ? 'text-green-600 font-medium' : 'text-gray-500'}`}
+          onClick={handleTrackingLabelClick}
         >
           <Eye className={`h-3 w-3 inline mr-1 ${isTracking ? 'text-green-600' : ''}`} />
           Track {isTracking ? "On" : "Off"}

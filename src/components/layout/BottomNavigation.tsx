@@ -53,14 +53,18 @@ const BottomNavigation: React.FC = () => {
     },
   ];
 
-  // Simplify navigation handling - no event parameters
-  const navigateTo = (path: string) => {
+  // Enhanced navigation handling with explicit stopPropagation
+  const navigateTo = (path: string, event: React.MouseEvent) => {
+    // Stop event propagation to prevent other handlers from interfering
+    event.stopPropagation();
+    event.preventDefault();
+    
     console.log("Direct navigation to:", path);
     navigate(path);
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-10">
+    <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50">
       <div className="flex justify-around items-center h-16">
         {routes.map((route) => (
           <button
@@ -70,7 +74,7 @@ const BottomNavigation: React.FC = () => {
                 ? 'text-primary'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
-            onClick={() => navigateTo(route.path)}
+            onClick={(e) => navigateTo(route.path, e)}
           >
             <div className="relative">
               {route.icon}

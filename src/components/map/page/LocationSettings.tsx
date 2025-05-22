@@ -23,13 +23,28 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
   toggleLocationTracking
 }) => {
   // Create direct handlers that don't rely on event parameters
-  const handleManualClick = () => {
+  const handleManualClick = (checked: boolean) => {
     console.log("Manual mode toggle clicked");
     toggleManualMode();
   };
 
-  const handleTrackingClick = () => {
+  const handleTrackingClick = (checked: boolean) => {
     console.log("Tracking toggle clicked");
+    toggleLocationTracking();
+  };
+  
+  // Create separate label click handlers
+  const handleManualLabelClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("Manual mode label clicked");
+    toggleManualMode();
+  };
+  
+  const handleTrackingLabelClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("Tracking label clicked");
     toggleLocationTracking();
   };
 
@@ -46,7 +61,7 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
             <Label 
               htmlFor="manual-mode" 
               className="text-xs whitespace-nowrap"
-              onClick={handleManualClick}
+              onClick={handleManualLabelClick}
             >
               <MapPin className="h-3 w-3 inline mr-1" />
               Manual
@@ -71,7 +86,7 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
           <Label 
             htmlFor="tracking-mode" 
             className="text-xs whitespace-nowrap"
-            onClick={handleTrackingClick}
+            onClick={handleTrackingLabelClick}
           >
             <Eye className="h-3 w-3 inline mr-1" />
             Track {isTracking ? "On" : "Off"}

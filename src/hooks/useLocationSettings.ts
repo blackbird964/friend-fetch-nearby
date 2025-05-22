@@ -57,24 +57,30 @@ export const useLocationSettings = () => {
     console.log("Tracking mode changed:", isTracking);
   }, [isTracking]);
   
-  // Toggle functions that don't rely on any event parameters
+  // Toggle functions with better logging
   const toggleManualMode = useCallback(() => {
-    const newValue = !isManualMode;
-    console.log("Toggling manual mode from", isManualMode, "to", newValue);
-    setIsManualMode(newValue);
-  }, [isManualMode]);
+    setIsManualMode(prevState => {
+      const newValue = !prevState;
+      console.log(`[useLocationSettings] Toggling manual mode from ${prevState} to ${newValue}`);
+      return newValue;
+    });
+  }, []);
   
   const togglePrivacyMode = useCallback(() => {
-    const newValue = !isPrivacyModeEnabled;
-    console.log("Toggling privacy mode from", isPrivacyModeEnabled, "to", newValue);
-    setIsPrivacyModeEnabled(newValue);
-  }, [isPrivacyModeEnabled]);
+    setIsPrivacyModeEnabled(prevState => {
+      const newValue = !prevState;
+      console.log(`[useLocationSettings] Toggling privacy mode from ${prevState} to ${newValue}`);
+      return newValue;
+    });
+  }, []);
   
   const toggleLocationTracking = useCallback(() => {
-    const newValue = !isTracking;
-    console.log("Toggling tracking from", isTracking, "to", newValue);
-    setIsTracking(newValue);
-  }, [isTracking]);
+    setIsTracking(prevState => {
+      const newValue = !prevState;
+      console.log(`[useLocationSettings] Toggling tracking from ${prevState} to ${newValue}`);
+      return newValue;
+    });
+  }, []);
   
   return {
     isManualMode,
