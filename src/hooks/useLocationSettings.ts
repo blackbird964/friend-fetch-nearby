@@ -54,19 +54,19 @@ export const useLocationSettings = () => {
     console.log("Dispatched tracking event:", isTracking);
   }, [isTracking]);
   
-  // Toggle functions with proper event handling
+  // Toggle functions with simplified logic and additional logging
   const toggleManualMode = useCallback(() => {
-    console.log("Toggle manual mode called");
+    console.log("Toggle manual mode: current =", isManualMode, "→ new =", !isManualMode);
     setIsManualMode(prev => !prev);
-  }, []);
+  }, [isManualMode]);
   
   const togglePrivacyMode = useCallback(() => {
-    console.log("Toggle privacy mode called");
+    console.log("Toggle privacy mode: current =", isPrivacyModeEnabled, "→ new =", !isPrivacyModeEnabled);
     setIsPrivacyModeEnabled(prev => !prev);
-  }, []);
+  }, [isPrivacyModeEnabled]);
   
   const toggleLocationTracking = useCallback(() => {
-    console.log("Toggle tracking called, current state:", isTracking);
+    console.log("Toggle tracking: current =", isTracking, "→ new =", !isTracking); 
     setIsTracking(prev => !prev);
   }, [isTracking]);
   

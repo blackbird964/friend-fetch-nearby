@@ -22,23 +22,6 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
   togglePrivacyMode,
   toggleLocationTracking
 }) => {
-  // Fixed event handlers with stopPropagation
-  const handleManualToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleManualMode();
-  };
-
-  const handleTrackingToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    toggleLocationTracking();
-  };
-
-  const handlePrivacyToggle = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    togglePrivacyMode();
-  };
-
-  // Important: Use onClick directly instead of onCheckedChange for the switches
   return (
     <>
       <div className="flex items-center justify-between py-1 px-2 bg-gray-50 rounded-md">
@@ -47,7 +30,7 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
             <Switch
               id="manual-mode"
               checked={isManualMode}
-              onClick={(e: any) => {
+              onClick={(e) => {
                 e.stopPropagation();
                 toggleManualMode();
               }}
@@ -56,7 +39,10 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
             <Label 
               htmlFor="manual-mode" 
               className="text-xs whitespace-nowrap"
-              onClick={handleManualToggle}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleManualMode();
+              }}
             >
               <MapPin className="h-3 w-3 inline mr-1" />
               Manual
@@ -76,7 +62,7 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
           <Switch
             id="tracking-mode"
             checked={isTracking}
-            onClick={(e: any) => {
+            onClick={(e) => {
               e.stopPropagation();
               toggleLocationTracking();
             }}
@@ -85,7 +71,10 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
           <Label 
             htmlFor="tracking-mode" 
             className="text-xs whitespace-nowrap"
-            onClick={handleTrackingToggle}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleLocationTracking();
+            }}
           >
             <Eye className="h-3 w-3 inline mr-1" />
             Track {isTracking ? "On" : "Off"}
