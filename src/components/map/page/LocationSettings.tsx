@@ -22,6 +22,17 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
   togglePrivacyMode,
   toggleLocationTracking
 }) => {
+  // Create direct handlers that don't rely on event parameters
+  const handleManualClick = () => {
+    console.log("Manual mode toggle clicked");
+    toggleManualMode();
+  };
+
+  const handleTrackingClick = () => {
+    console.log("Tracking toggle clicked");
+    toggleLocationTracking();
+  };
+
   return (
     <>
       <div className="flex items-center justify-between py-1 px-2 bg-gray-50 rounded-md">
@@ -30,19 +41,12 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
             <Switch
               id="manual-mode"
               checked={isManualMode}
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleManualMode();
-              }}
-              className="scale-75"
+              onCheckedChange={handleManualClick}
             />
             <Label 
               htmlFor="manual-mode" 
               className="text-xs whitespace-nowrap"
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleManualMode();
-              }}
+              onClick={handleManualClick}
             >
               <MapPin className="h-3 w-3 inline mr-1" />
               Manual
@@ -62,19 +66,12 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
           <Switch
             id="tracking-mode"
             checked={isTracking}
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleLocationTracking();
-            }}
-            className="scale-75"
+            onCheckedChange={handleTrackingClick}
           />
           <Label 
             htmlFor="tracking-mode" 
             className="text-xs whitespace-nowrap"
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleLocationTracking();
-            }}
+            onClick={handleTrackingClick}
           >
             <Eye className="h-3 w-3 inline mr-1" />
             Track {isTracking ? "On" : "Off"}

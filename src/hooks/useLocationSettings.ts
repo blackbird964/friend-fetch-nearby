@@ -31,6 +31,8 @@ export const useLocationSettings = () => {
     window.dispatchEvent(new CustomEvent('manual-mode-changed', { 
       detail: { isManualMode } 
     }));
+    
+    console.log("Manual mode changed:", isManualMode);
   }, [isManualMode]);
   
   useEffect(() => {
@@ -40,34 +42,38 @@ export const useLocationSettings = () => {
     window.dispatchEvent(new CustomEvent('privacy-mode-changed', { 
       detail: { isPrivacyEnabled: isPrivacyModeEnabled } 
     }));
+    
+    console.log("Privacy mode changed:", isPrivacyModeEnabled);
   }, [isPrivacyModeEnabled]);
   
   useEffect(() => {
     localStorage.setItem('kairo-tracking', String(isTracking));
     
     // Dispatch an event to notify map and other components
-    const event = new CustomEvent('tracking-mode-changed', { 
+    window.dispatchEvent(new CustomEvent('tracking-mode-changed', { 
       detail: { isTracking } 
-    });
-    window.dispatchEvent(event);
+    }));
     
-    console.log("Dispatched tracking event:", isTracking);
+    console.log("Tracking mode changed:", isTracking);
   }, [isTracking]);
   
-  // Toggle functions with simplified logic and additional logging
+  // Toggle functions that don't rely on any event parameters
   const toggleManualMode = useCallback(() => {
-    console.log("Toggle manual mode: current =", isManualMode, "→ new =", !isManualMode);
-    setIsManualMode(prev => !prev);
+    const newValue = !isManualMode;
+    console.log("Toggling manual mode from", isManualMode, "to", newValue);
+    setIsManualMode(newValue);
   }, [isManualMode]);
   
   const togglePrivacyMode = useCallback(() => {
-    console.log("Toggle privacy mode: current =", isPrivacyModeEnabled, "→ new =", !isPrivacyModeEnabled);
-    setIsPrivacyModeEnabled(prev => !prev);
+    const newValue = !isPrivacyModeEnabled;
+    console.log("Toggling privacy mode from", isPrivacyModeEnabled, "to", newValue);
+    setIsPrivacyModeEnabled(newValue);
   }, [isPrivacyModeEnabled]);
   
   const toggleLocationTracking = useCallback(() => {
-    console.log("Toggle tracking: current =", isTracking, "→ new =", !isTracking); 
-    setIsTracking(prev => !prev);
+    const newValue = !isTracking;
+    console.log("Toggling tracking from", isTracking, "to", newValue);
+    setIsTracking(newValue);
   }, [isTracking]);
   
   return {

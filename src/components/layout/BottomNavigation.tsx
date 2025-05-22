@@ -53,9 +53,9 @@ const BottomNavigation: React.FC = () => {
     },
   ];
 
-  // Very simple direct navigation without any event handling complexity
-  const handleClick = (path: string) => {
-    console.log(`Navigation: Navigating to ${path}`);
+  // Simplify navigation handling - no event parameters
+  const navigateTo = (path: string) => {
+    console.log("Direct navigation to:", path);
     navigate(path);
   };
 
@@ -70,7 +70,7 @@ const BottomNavigation: React.FC = () => {
                 ? 'text-primary'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
-            onClick={() => handleClick(route.path)}
+            onClick={() => navigateTo(route.path)}
           >
             <div className="relative">
               {route.icon}

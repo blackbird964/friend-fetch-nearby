@@ -27,11 +27,21 @@ const LocationControls: React.FC<LocationControlsProps> = ({
       <div className="flex items-center space-x-2 justify-start">
         <div className="flex items-center space-x-1">
           <Switch
-            id="manual-mode"
+            id="manual-mode-control"
             checked={isManualMode}
-            onCheckedChange={toggleManualMode}
+            onCheckedChange={() => {
+              console.log("Manual switch clicked");
+              toggleManualMode();
+            }}
           />
-          <Label htmlFor="manual-mode" className="text-xs whitespace-nowrap">
+          <Label 
+            htmlFor="manual-mode-control" 
+            className="text-xs whitespace-nowrap"
+            onClick={() => {
+              console.log("Manual label clicked");
+              toggleManualMode();
+            }}
+          >
             <MapPin className="h-3 w-3 inline mr-1" />
             Manual
           </Label>
@@ -48,13 +58,20 @@ const LocationControls: React.FC<LocationControlsProps> = ({
 
       <div className="flex items-center space-x-1 justify-end">
         <Switch
-          id="tracking-mode"
+          id="tracking-mode-control"
           checked={isTracking}
-          onCheckedChange={toggleLocationTracking}
+          onCheckedChange={() => {
+            console.log("Tracking switch clicked");
+            toggleLocationTracking();
+          }}
         />
         <Label 
-          htmlFor="tracking-mode" 
+          htmlFor="tracking-mode-control" 
           className={`text-xs whitespace-nowrap ${isTracking ? 'text-green-600 font-medium' : 'text-gray-500'}`}
+          onClick={() => {
+            console.log("Tracking label clicked");
+            toggleLocationTracking();
+          }}
         >
           <Eye className={`h-3 w-3 inline mr-1 ${isTracking ? 'text-green-600' : ''}`} />
           Track {isTracking ? "On" : "Off"}
