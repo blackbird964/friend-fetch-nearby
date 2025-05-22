@@ -53,6 +53,14 @@ const BottomNavigation: React.FC = () => {
     },
   ];
 
+  // Fixed navigation handler
+  const handleNavigation = (path: string, event: React.MouseEvent) => {
+    // Prevent default and stop propagation to ensure the event is captured only here
+    event.preventDefault();
+    event.stopPropagation();
+    navigate(path);
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-10">
       <div className="flex justify-around items-center h-16">
@@ -64,7 +72,7 @@ const BottomNavigation: React.FC = () => {
                 ? 'text-primary'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
-            onClick={() => navigate(route.path)}
+            onClick={(e) => handleNavigation(route.path, e)}
           >
             <div className="relative">
               {route.icon}

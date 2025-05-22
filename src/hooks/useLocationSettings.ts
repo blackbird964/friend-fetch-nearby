@@ -1,105 +1,79 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { AppUser } from '@/context/types';
-import { useToast } from './use-toast';
 
-interface UseLocationSettingsResult {
-  isManualMode: boolean;
-  isTracking: boolean;
-  isPrivacyModeEnabled: boolean;
-  toggleManualMode: () => void;
-  toggleLocationTracking: () => void;
-  togglePrivacyMode: () => void;
-}
-
-export const useLocationSettings = (): UseLocationSettingsResult => {
-  const { currentUser, setCurrentUser, updateUserLocation } = useAppContext();
-  const { toast } = useToast();
+export const useLocationSettings = () => {
+  const { currentUser, updateUserLocation } = useAppContext();
   
-  // State for manual mode and tracking with localStorage persistence
-  const [isManualMode, setIsManualMode] = useState(() => {
+  // Initialize manual mode from local storage or default to false
+  const [isManualMode, setIsManualMode] = useState<boolean>(() => {
     const savedManualMode = localStorage.getItem('kairo-manual-mode');
-    return savedManualMode === 'true';
+    return savedManualMode ? savedManualMode === 'true' : false;
   });
   
-  const [isTracking, setIsTracking] = useState(() => {
-    const savedTracking = localStorage.getItem('kairo-tracking');
-    // Default to false (off) if not set
-    return savedTracking === 'true';
-  });
-  
-  const [isPrivacyModeEnabled, setIsPrivacyModeEnabled] = useState(() => {
+  // Initialize privacy mode from local storage or default to false
+  const [isPrivacyModeEnabled, setIsPrivacyModeEnabled] = useState<boolean>(() => {
     const savedPrivacy = localStorage.getItem('kairo-privacy-mode');
-    if (savedPrivacy !== null) {
-      return savedPrivacy === 'true';
-    }
-    return currentUser?.locationSettings?.hideExactLocation || false;
+    return savedPrivacy ? savedPrivacy === 'true' : false;
   });
-
-  // Toggle handlers with local storage persistence
-  const toggleManualMode = useCallback(() => {
-    const newValue = !isManualMode;
-    setIsManualMode(newValue);
-    localStorage.setItem('kairo-manual-mode', String(newValue));
+  
+  // Initialize tracking from local storage or default to true
+  const [isTracking, setIsTracking] = useState<boolean>(() => {
+    const savedTracking = localStorage.getItem('kairo-tracking');
+    return savedTracking ? savedTracking === 'true' : true;
+  });
+  
+  // Update stored values when changed
+  useEffect(() => {
+    localStorage.setItem('kairo-manual-mode', String(isManualMode));
+    
+    // Dispatch an event to notify map and other components
+    window.dispatchEvent(new CustomEvent('manual-mode-changed', { 
+      detail: { isManualMode } 
+    }));
   }, [isManualMode]);
   
-  const toggleLocationTracking = useCallback(() => {
-    const newValue = !isTracking;
-    setIsTracking(newValue);
-    localStorage.setItem('kairo-tracking', String(newValue));
+  useEffect(() => {
+    localStorage.setItem('kairo-privacy-mode', String(isPrivacyModeEnabled));
+    
+    // Dispatch an event to notify map and other components
+    window.dispatchEvent(new CustomEvent('privacy-mode-changed', { 
+      detail: { isPrivacyEnabled: isPrivacyModeEnabled } 
+    }));
+  }, [isPrivacyModeEnabled]);
+  
+  useEffect(() => {
+    localStorage.setItem('kairo-tracking', String(isTracking));
+    
+    // Dispatch an event to notify map and other components
+    const event = new CustomEvent('tracking-mode-changed', { 
+      detail: { isTracking } 
+    });
+    window.dispatchEvent(event);
+    
+    console.log("Dispatched tracking event:", isTracking);
   }, [isTracking]);
   
-  // Privacy mode toggle handler
+  // Toggle functions with proper event handling
+  const toggleManualMode = useCallback(() => {
+    setIsManualMode(prev => !prev);
+  }, []);
+  
   const togglePrivacyMode = useCallback(() => {
-    const newPrivacyValue = !isPrivacyModeEnabled;
-    setIsPrivacyModeEnabled(newPrivacyValue);
-    localStorage.setItem('kairo-privacy-mode', String(newPrivacyValue));
-    
-    if (currentUser) {
-      // Fix: Ensure both required properties are always set
-      const updatedUser = {
-        ...currentUser,
-        locationSettings: {
-          isManualMode: currentUser.locationSettings?.isManualMode ?? false,
-          hideExactLocation: newPrivacyValue
-        }
-      };
-      
-      setCurrentUser(updatedUser);
-      
-      if (currentUser.id && currentUser.location) {
-        toast({
-          title: newPrivacyValue ? "Privacy Mode Enabled" : "Privacy Mode Disabled",
-          description: newPrivacyValue 
-            ? "Your exact location is now hidden from others" 
-            : "Your exact location is now visible to others",
-          duration: 3000,
-        });
-        
-        updateUserLocation(currentUser.id, currentUser.location);
-        
-        window.dispatchEvent(new CustomEvent('privacy-mode-changed', { 
-          detail: { isPrivacyEnabled: newPrivacyValue } 
-        }));
-      }
-    }
-  }, [isPrivacyModeEnabled, currentUser, setCurrentUser, updateUserLocation, toast]);
-
-  // Update privacy mode based on user settings when they change
-  useEffect(() => {
-    if (currentUser?.locationSettings?.hideExactLocation !== undefined) {
-      setIsPrivacyModeEnabled(currentUser.locationSettings.hideExactLocation);
-      localStorage.setItem('kairo-privacy-mode', String(currentUser.locationSettings.hideExactLocation));
-    }
-  }, [currentUser?.locationSettings?.hideExactLocation]);
-
+    setIsPrivacyModeEnabled(prev => !prev);
+  }, []);
+  
+  const toggleLocationTracking = useCallback(() => {
+    console.log("Toggle tracking called, current state:", isTracking);
+    setIsTracking(prev => !prev);
+  }, [isTracking]);
+  
   return {
     isManualMode,
-    isTracking,
     isPrivacyModeEnabled,
+    isTracking,
     toggleManualMode,
-    toggleLocationTracking,
-    togglePrivacyMode
+    togglePrivacyMode,
+    toggleLocationTracking
   };
 };

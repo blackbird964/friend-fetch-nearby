@@ -18,7 +18,7 @@ const MapPage: React.FC = () => {
   const { refreshNearbyUsers, loading, currentUser, nearbyUsers } = useAppContext();
   const { toast } = useToast();
   
-  // Use our new location settings hook
+  // Use our location settings hook
   const { 
     isManualMode, 
     isTracking, 
@@ -35,7 +35,10 @@ const MapPage: React.FC = () => {
     }
   }, [currentUser?.location, refreshNearbyUsers]);
   
-  const handleRefresh = async () => {
+  const handleRefresh = async (e: React.MouseEvent) => {
+    // Stop propagation to prevent event bubbling
+    e.stopPropagation();
+    
     try {
       await refreshNearbyUsers(true);
     } catch (error) {
@@ -53,7 +56,7 @@ const MapPage: React.FC = () => {
   const totalUsers = nearbyUsers.length;
 
   return (
-    <div className="container mx-auto px-4 py-6 mb-20 max-w-4xl">
+    <div className="container mx-auto px-4 py-6 mb-20 max-w-4xl" onClick={(e) => e.stopPropagation()}>
       <MapPageHeader 
         loading={loading} 
         handleRefresh={handleRefresh} 

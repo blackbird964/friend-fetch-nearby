@@ -22,6 +22,19 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
   togglePrivacyMode,
   toggleLocationTracking
 }) => {
+  // Fixed event handlers with stopPropagation
+  const handleManualToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleManualMode();
+  };
+
+  const handleTrackingToggle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggleLocationTracking();
+  };
+
   return (
     <>
       <div className="flex items-center justify-between py-1 px-2 bg-gray-50 rounded-md">
@@ -32,8 +45,13 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
               checked={isManualMode}
               onCheckedChange={toggleManualMode}
               className="scale-75"
+              onClick={(e) => e.stopPropagation()}
             />
-            <Label htmlFor="manual-mode" className="text-xs whitespace-nowrap">
+            <Label 
+              htmlFor="manual-mode" 
+              className="text-xs whitespace-nowrap"
+              onClick={handleManualToggle}
+            >
               <MapPin className="h-3 w-3 inline mr-1" />
               Manual
             </Label>
@@ -54,8 +72,13 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
             checked={isTracking}
             onCheckedChange={toggleLocationTracking}
             className="scale-75"
+            onClick={(e) => e.stopPropagation()}
           />
-          <Label htmlFor="tracking-mode" className="text-xs whitespace-nowrap">
+          <Label 
+            htmlFor="tracking-mode" 
+            className="text-xs whitespace-nowrap"
+            onClick={handleTrackingToggle}
+          >
             <Eye className="h-3 w-3 inline mr-1" />
             Track {isTracking ? "On" : "Off"}
           </Label>
