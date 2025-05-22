@@ -24,17 +24,21 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
 }) => {
   // Fixed event handlers with stopPropagation
   const handleManualToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
     toggleManualMode();
   };
 
   const handleTrackingToggle = (e: React.MouseEvent) => {
-    e.preventDefault();
     e.stopPropagation();
     toggleLocationTracking();
   };
 
+  const handlePrivacyToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    togglePrivacyMode();
+  };
+
+  // Important: Use onClick directly instead of onCheckedChange for the switches
   return (
     <>
       <div className="flex items-center justify-between py-1 px-2 bg-gray-50 rounded-md">
@@ -43,9 +47,11 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
             <Switch
               id="manual-mode"
               checked={isManualMode}
-              onCheckedChange={toggleManualMode}
+              onClick={(e: any) => {
+                e.stopPropagation();
+                toggleManualMode();
+              }}
               className="scale-75"
-              onClick={(e) => e.stopPropagation()}
             />
             <Label 
               htmlFor="manual-mode" 
@@ -70,9 +76,11 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
           <Switch
             id="tracking-mode"
             checked={isTracking}
-            onCheckedChange={toggleLocationTracking}
+            onClick={(e: any) => {
+              e.stopPropagation();
+              toggleLocationTracking();
+            }}
             className="scale-75"
-            onClick={(e) => e.stopPropagation()}
           />
           <Label 
             htmlFor="tracking-mode" 

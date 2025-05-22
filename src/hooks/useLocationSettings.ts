@@ -56,10 +56,12 @@ export const useLocationSettings = () => {
   
   // Toggle functions with proper event handling
   const toggleManualMode = useCallback(() => {
+    console.log("Toggle manual mode called");
     setIsManualMode(prev => !prev);
   }, []);
   
   const togglePrivacyMode = useCallback(() => {
+    console.log("Toggle privacy mode called");
     setIsPrivacyModeEnabled(prev => !prev);
   }, []);
   

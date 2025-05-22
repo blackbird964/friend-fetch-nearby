@@ -9,13 +9,19 @@ interface MapPageHeaderProps {
 }
 
 const MapPageHeader: React.FC<MapPageHeaderProps> = ({ loading, handleRefresh }) => {
+  // Create a new handler that properly stops propagation
+  const onRefreshClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    handleRefresh(e);
+  };
+
   return (
     <div className="flex justify-between items-center mb-4">
       <h1 className="text-2xl font-bold">Find Friends Nearby</h1>
       <Button 
         variant="outline" 
         size="sm" 
-        onClick={handleRefresh}
+        onClick={onRefreshClick}
         disabled={loading}
         className="flex items-center gap-2"
       >

@@ -56,7 +56,7 @@ const MapPage: React.FC = () => {
   const totalUsers = nearbyUsers.length;
 
   return (
-    <div className="container mx-auto px-4 py-6 mb-20 max-w-4xl" onClick={(e) => e.stopPropagation()}>
+    <div className="container mx-auto px-4 py-6 mb-20 max-w-4xl">
       <MapPageHeader 
         loading={loading} 
         handleRefresh={handleRefresh} 

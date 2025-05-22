@@ -53,11 +53,9 @@ const BottomNavigation: React.FC = () => {
     },
   ];
 
-  // Fixed navigation handler
-  const handleNavigation = (path: string, event: React.MouseEvent) => {
-    // Prevent default and stop propagation to ensure the event is captured only here
-    event.preventDefault();
-    event.stopPropagation();
+  // Completely revised navigation handler
+  const navigateTo = (path: string) => {
+    console.log("Navigating to:", path);
     navigate(path);
   };
 
@@ -72,7 +70,7 @@ const BottomNavigation: React.FC = () => {
                 ? 'text-primary'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
-            onClick={(e) => handleNavigation(route.path, e)}
+            onClick={() => navigateTo(route.path)}
           >
             <div className="relative">
               {route.icon}
