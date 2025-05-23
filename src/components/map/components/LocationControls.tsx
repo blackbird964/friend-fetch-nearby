@@ -22,6 +22,11 @@ const LocationControls: React.FC<LocationControlsProps> = ({
   isPrivacyModeEnabled,
   togglePrivacyMode
 }) => {
+  const handleClick = (handler: () => void, e: React.MouseEvent) => {
+    e.stopPropagation();
+    handler();
+  };
+
   return (
     <div className="grid grid-cols-3 gap-2 w-full items-center">
       <div className="flex items-center space-x-2 justify-start">
@@ -34,11 +39,7 @@ const LocationControls: React.FC<LocationControlsProps> = ({
           <Label 
             htmlFor="manual-mode-control" 
             className="text-xs whitespace-nowrap cursor-pointer"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              toggleManualMode();
-            }}
+            onClick={(e) => handleClick(toggleManualMode, e)}
           >
             <MapPin className="h-3 w-3 inline mr-1" />
             Manual
@@ -63,11 +64,7 @@ const LocationControls: React.FC<LocationControlsProps> = ({
         <Label 
           htmlFor="tracking-mode-control" 
           className={`text-xs whitespace-nowrap cursor-pointer ${isTracking ? 'text-green-600 font-medium' : 'text-gray-500'}`}
-          onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              toggleLocationTracking();
-          }}
+          onClick={(e) => handleClick(toggleLocationTracking, e)}
         >
           <Eye className={`h-3 w-3 inline mr-1 ${isTracking ? 'text-green-600' : ''}`} />
           Track {isTracking ? "On" : "Off"}
