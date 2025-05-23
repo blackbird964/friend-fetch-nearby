@@ -1,4 +1,5 @@
-import React from 'react';
+
+import React, { useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MapPin, MessageSquare, User, Home } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';

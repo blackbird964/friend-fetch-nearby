@@ -22,32 +22,6 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
   togglePrivacyMode,
   toggleLocationTracking
 }) => {
-  // Create direct handlers that don't rely on event parameters
-  const handleManualClick = (checked: boolean) => {
-    console.log("Manual mode toggle clicked");
-    toggleManualMode();
-  };
-
-  const handleTrackingClick = (checked: boolean) => {
-    console.log("Tracking toggle clicked");
-    toggleLocationTracking();
-  };
-  
-  // Create separate label click handlers
-  const handleManualLabelClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("Manual mode label clicked");
-    toggleManualMode();
-  };
-  
-  const handleTrackingLabelClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("Tracking label clicked");
-    toggleLocationTracking();
-  };
-
   return (
     <>
       <div className="flex items-center justify-between py-1 px-2 bg-gray-50 rounded-md">
@@ -56,12 +30,16 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
             <Switch
               id="manual-mode"
               checked={isManualMode}
-              onCheckedChange={handleManualClick}
+              onCheckedChange={toggleManualMode}
             />
             <Label 
               htmlFor="manual-mode" 
-              className="text-xs whitespace-nowrap"
-              onClick={handleManualLabelClick}
+              className="text-xs whitespace-nowrap cursor-pointer"
+              onClick={(e) => {
+                e.preventDefault(); 
+                e.stopPropagation();
+                toggleManualMode();
+              }}
             >
               <MapPin className="h-3 w-3 inline mr-1" />
               Manual
@@ -81,12 +59,16 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
           <Switch
             id="tracking-mode"
             checked={isTracking}
-            onCheckedChange={handleTrackingClick}
+            onCheckedChange={toggleLocationTracking}
           />
           <Label 
             htmlFor="tracking-mode" 
-            className="text-xs whitespace-nowrap"
-            onClick={handleTrackingLabelClick}
+            className="text-xs whitespace-nowrap cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleLocationTracking();
+            }}
           >
             <Eye className="h-3 w-3 inline mr-1" />
             Track {isTracking ? "On" : "Off"}

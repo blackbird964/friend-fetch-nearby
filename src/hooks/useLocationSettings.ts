@@ -57,7 +57,7 @@ export const useLocationSettings = () => {
     console.log("Tracking mode updated:", isTracking);
   }, [isTracking]);
   
-  // Simplified toggle functions
+  // Simplified toggle functions that properly update state
   const toggleManualMode = useCallback(() => {
     console.log("Toggle manual mode called");
     setIsManualMode(prev => !prev);

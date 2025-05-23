@@ -29,11 +29,16 @@ const LocationControls: React.FC<LocationControlsProps> = ({
           <Switch
             id="manual-mode-control"
             checked={isManualMode}
-            onCheckedChange={() => toggleManualMode()}
+            onCheckedChange={toggleManualMode}
           />
           <Label 
             htmlFor="manual-mode-control" 
             className="text-xs whitespace-nowrap cursor-pointer"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleManualMode();
+            }}
           >
             <MapPin className="h-3 w-3 inline mr-1" />
             Manual
@@ -53,11 +58,16 @@ const LocationControls: React.FC<LocationControlsProps> = ({
         <Switch
           id="tracking-mode-control"
           checked={isTracking}
-          onCheckedChange={() => toggleLocationTracking()}
+          onCheckedChange={toggleLocationTracking}
         />
         <Label 
           htmlFor="tracking-mode-control" 
           className={`text-xs whitespace-nowrap cursor-pointer ${isTracking ? 'text-green-600 font-medium' : 'text-gray-500'}`}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleLocationTracking();
+          }}
         >
           <Eye className={`h-3 w-3 inline mr-1 ${isTracking ? 'text-green-600' : ''}`} />
           Track {isTracking ? "On" : "Off"}
