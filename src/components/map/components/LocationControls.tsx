@@ -64,9 +64,9 @@ const LocationControls: React.FC<LocationControlsProps> = ({
           htmlFor="tracking-mode-control" 
           className={`text-xs whitespace-nowrap cursor-pointer ${isTracking ? 'text-green-600 font-medium' : 'text-gray-500'}`}
           onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            toggleLocationTracking();
+              e.preventDefault();
+              e.stopPropagation();
+              toggleLocationTracking();
           }}
         >
           <Eye className={`h-3 w-3 inline mr-1 ${isTracking ? 'text-green-600' : ''}`} />

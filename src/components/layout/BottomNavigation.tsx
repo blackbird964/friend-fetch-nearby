@@ -53,9 +53,9 @@ const BottomNavigation: React.FC = () => {
     },
   ];
 
-  // Extremely simplified navigation handler - just use navigate directly
-  const handleNavigate = (path: string) => {
-    console.log(`Navigating to: ${path} from ${location.pathname}`);
+  // Use a direct navigation handler without any event parameters
+  const handleClick = (path: string) => {
+    console.log(`Navigating from ${location.pathname} to ${path}`);
     navigate(path);
   };
 
@@ -71,7 +71,7 @@ const BottomNavigation: React.FC = () => {
                 ? 'text-primary'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
-            onClick={() => handleNavigate(route.path)}
+            onClick={() => handleClick(route.path)}
           >
             <div className="relative">
               {route.icon}
