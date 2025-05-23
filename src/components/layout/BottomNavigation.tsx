@@ -53,17 +53,11 @@ const BottomNavigation: React.FC = () => {
     },
   ];
 
-  const handleNavigate = (path: string, e: React.MouseEvent) => {
-    // Stop propagation to prevent any parent handlers from capturing the event
-    e.stopPropagation();
-    // Prevent default behavior
-    e.preventDefault();
-    
-    console.log(`Navigation attempt from ${location.pathname} to ${path}`);
-    
-    // Force navigation
+  // Simple direct navigation handler
+  const handleNavigate = (path: string) => {
+    console.log(`Navigation requested from ${location.pathname} to ${path}`);
     if (path !== location.pathname) {
-      console.log(`Executing navigation to: ${path}`);
+      console.log('Executing navigation');
       navigate(path);
     }
   };
@@ -80,7 +74,7 @@ const BottomNavigation: React.FC = () => {
                 ? 'text-primary'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
-            onClick={(e) => handleNavigate(route.path, e)}
+            onClick={() => handleNavigate(route.path)}
           >
             <div className="relative">
               {route.icon}

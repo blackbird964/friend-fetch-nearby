@@ -22,7 +22,8 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
   togglePrivacyMode,
   toggleLocationTracking
 }) => {
-  const handleClick = (handler: () => void, e: React.MouseEvent) => {
+  const handleToggle = (handler: () => void) => (e: React.MouseEvent) => {
+    // Prevent event propagation to ensure it doesn't interfere with navigation
     e.stopPropagation();
     handler();
   };
@@ -40,7 +41,7 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
             <Label 
               htmlFor="manual-mode" 
               className="text-xs whitespace-nowrap cursor-pointer"
-              onClick={(e) => handleClick(toggleManualMode, e)}
+              onClick={handleToggle(toggleManualMode)}
             >
               <MapPin className="h-3 w-3 inline mr-1" />
               Manual
@@ -65,7 +66,7 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
           <Label 
             htmlFor="tracking-mode" 
             className="text-xs whitespace-nowrap cursor-pointer"
-            onClick={(e) => handleClick(toggleLocationTracking, e)}
+            onClick={handleToggle(toggleLocationTracking)}
           >
             <Eye className="h-3 w-3 inline mr-1" />
             Track {isTracking ? "On" : "Off"}
