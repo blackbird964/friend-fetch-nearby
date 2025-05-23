@@ -22,27 +22,6 @@ const LocationControls: React.FC<LocationControlsProps> = ({
   isPrivacyModeEnabled,
   togglePrivacyMode
 }) => {
-  const handleTrackingToggle = (checked: boolean) => {
-    console.log("Tracking toggle clicked directly");
-    toggleLocationTracking();
-  };
-
-  const handleManualToggle = (checked: boolean) => {
-    console.log("Manual toggle clicked directly");
-    toggleManualMode();
-  };
-
-  // Create separate handlers for label clicks
-  const handleTrackingLabelClick = () => {
-    console.log("Tracking label clicked");
-    toggleLocationTracking();
-  };
-
-  const handleManualLabelClick = () => {
-    console.log("Manual label clicked");
-    toggleManualMode();
-  };
-
   return (
     <div className="grid grid-cols-3 gap-2 w-full items-center">
       <div className="flex items-center space-x-2 justify-start">
@@ -50,12 +29,11 @@ const LocationControls: React.FC<LocationControlsProps> = ({
           <Switch
             id="manual-mode-control"
             checked={isManualMode}
-            onCheckedChange={handleManualToggle}
+            onCheckedChange={() => toggleManualMode()}
           />
           <Label 
             htmlFor="manual-mode-control" 
-            className="text-xs whitespace-nowrap"
-            onClick={handleManualLabelClick}
+            className="text-xs whitespace-nowrap cursor-pointer"
           >
             <MapPin className="h-3 w-3 inline mr-1" />
             Manual
@@ -75,12 +53,11 @@ const LocationControls: React.FC<LocationControlsProps> = ({
         <Switch
           id="tracking-mode-control"
           checked={isTracking}
-          onCheckedChange={handleTrackingToggle}
+          onCheckedChange={() => toggleLocationTracking()}
         />
         <Label 
           htmlFor="tracking-mode-control" 
-          className={`text-xs whitespace-nowrap ${isTracking ? 'text-green-600 font-medium' : 'text-gray-500'}`}
-          onClick={handleTrackingLabelClick}
+          className={`text-xs whitespace-nowrap cursor-pointer ${isTracking ? 'text-green-600 font-medium' : 'text-gray-500'}`}
         >
           <Eye className={`h-3 w-3 inline mr-1 ${isTracking ? 'text-green-600' : ''}`} />
           Track {isTracking ? "On" : "Off"}

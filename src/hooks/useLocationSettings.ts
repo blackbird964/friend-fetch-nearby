@@ -32,7 +32,7 @@ export const useLocationSettings = () => {
       detail: { isManualMode } 
     }));
     
-    console.log("Manual mode changed:", isManualMode);
+    console.log("Manual mode updated:", isManualMode);
   }, [isManualMode]);
   
   useEffect(() => {
@@ -43,7 +43,7 @@ export const useLocationSettings = () => {
       detail: { isPrivacyEnabled: isPrivacyModeEnabled } 
     }));
     
-    console.log("Privacy mode changed:", isPrivacyModeEnabled);
+    console.log("Privacy mode updated:", isPrivacyModeEnabled);
   }, [isPrivacyModeEnabled]);
   
   useEffect(() => {
@@ -54,32 +54,23 @@ export const useLocationSettings = () => {
       detail: { isTracking } 
     }));
     
-    console.log("Tracking mode changed:", isTracking);
+    console.log("Tracking mode updated:", isTracking);
   }, [isTracking]);
   
-  // Toggle functions with better logging
+  // Simplified toggle functions
   const toggleManualMode = useCallback(() => {
-    setIsManualMode(prevState => {
-      const newValue = !prevState;
-      console.log(`[useLocationSettings] Toggling manual mode from ${prevState} to ${newValue}`);
-      return newValue;
-    });
+    console.log("Toggle manual mode called");
+    setIsManualMode(prev => !prev);
   }, []);
   
   const togglePrivacyMode = useCallback(() => {
-    setIsPrivacyModeEnabled(prevState => {
-      const newValue = !prevState;
-      console.log(`[useLocationSettings] Toggling privacy mode from ${prevState} to ${newValue}`);
-      return newValue;
-    });
+    console.log("Toggle privacy mode called");
+    setIsPrivacyModeEnabled(prev => !prev);
   }, []);
   
   const toggleLocationTracking = useCallback(() => {
-    setIsTracking(prevState => {
-      const newValue = !prevState;
-      console.log(`[useLocationSettings] Toggling tracking from ${prevState} to ${newValue}`);
-      return newValue;
-    });
+    console.log("Toggle tracking called");
+    setIsTracking(prev => !prev);
   }, []);
   
   return {

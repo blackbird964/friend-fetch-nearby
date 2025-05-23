@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MapPin, MessageSquare, User, Home } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
@@ -53,14 +52,14 @@ const BottomNavigation: React.FC = () => {
     },
   ];
 
-  // Enhanced navigation handling with explicit stopPropagation
-  const navigateTo = (path: string, event: React.MouseEvent) => {
-    // Stop event propagation to prevent other handlers from interfering
-    event.stopPropagation();
-    event.preventDefault();
+  // Simplified navigation handler that ensures the navigation happens
+  const navigateTo = (path: string) => {
+    console.log(`Navigating to: ${path} from current: ${location.pathname}`);
     
-    console.log("Direct navigation to:", path);
-    navigate(path);
+    // Directly navigate without being tied to click event
+    if (path !== location.pathname) {
+      navigate(path);
+    }
   };
 
   return (
@@ -74,7 +73,7 @@ const BottomNavigation: React.FC = () => {
                 ? 'text-primary'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
-            onClick={(e) => navigateTo(route.path, e)}
+            onClick={() => navigateTo(route.path)}
           >
             <div className="relative">
               {route.icon}
