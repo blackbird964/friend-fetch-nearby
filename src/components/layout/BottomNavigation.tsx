@@ -53,14 +53,10 @@ const BottomNavigation: React.FC = () => {
     },
   ];
 
-  // Simplified navigation handler that ensures the navigation happens
-  const navigateTo = (path: string) => {
-    console.log(`Navigating to: ${path} from current: ${location.pathname}`);
-    
-    // Directly navigate without being tied to click event
-    if (path !== location.pathname) {
-      navigate(path);
-    }
+  // Extremely simplified navigation handler - just use navigate directly
+  const handleNavigate = (path: string) => {
+    console.log(`Navigating to: ${path} from ${location.pathname}`);
+    navigate(path);
   };
 
   return (
@@ -69,12 +65,13 @@ const BottomNavigation: React.FC = () => {
         {routes.map((route) => (
           <button
             key={route.path}
+            type="button"
             className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
               location.pathname === route.path
                 ? 'text-primary'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
-            onClick={() => navigateTo(route.path)}
+            onClick={() => handleNavigate(route.path)}
           >
             <div className="relative">
               {route.icon}
