@@ -6,6 +6,11 @@ import { Message, Chat } from '@/context/types';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 
+// Helper function to ensure timestamp is always a number
+const normalizeTimestamp = (timestamp: string | number): number => {
+  return typeof timestamp === 'string' ? parseInt(timestamp, 10) : timestamp;
+};
+
 export function useChat(selectedChatId: string | null) {
   const { selectedChat, setSelectedChat, chats, setChats, currentUser, setUnreadMessageCount } = useAppContext();
   const [message, setMessage] = useState('');
@@ -107,9 +112,7 @@ export function useChat(selectedChatId: string | null) {
         if (formattedMessages.length > 0) {
           const lastMsg = formattedMessages[formattedMessages.length - 1];
           updatedChat.lastMessage = lastMsg.text || lastMsg.content || '';
-          updatedChat.lastMessageTime = typeof lastMsg.timestamp === 'string' 
-            ? parseInt(lastMsg.timestamp, 10) 
-            : lastMsg.timestamp;
+          updatedChat.lastMessageTime = normalizeTimestamp(lastMsg.timestamp);
         }
         
         setSelectedChat(updatedChat);
@@ -181,7 +184,7 @@ export function useChat(selectedChatId: string | null) {
               ...prev,
               messages: [...(prev.messages || []), newMessage],
               lastMessage: newMessage.text || newMessage.content || '',
-              lastMessageTime: newMessage.timestamp,
+              lastMessageTime: normalizeTimestamp(newMessage.timestamp),
             };
           });
         }
@@ -200,6 +203,7 @@ export function useChat(selectedChatId: string | null) {
     
     const originalMessage = message.trim();
     const tempId = `temp-${Date.now()}`;
+    const currentTimestamp = Date.now();
     
     // Optimistic update - add message immediately
     const optimisticMessage: Message = {
@@ -208,7 +212,7 @@ export function useChat(selectedChatId: string | null) {
       senderId: 'current',
       text: originalMessage,
       content: originalMessage,
-      timestamp: Date.now(),
+      timestamp: currentTimestamp,
       status: 'sending',
     };
     
@@ -222,7 +226,7 @@ export function useChat(selectedChatId: string | null) {
         ...prev,
         messages: [...(prev.messages || []), optimisticMessage],
         lastMessage: originalMessage,
-        lastMessageTime: Date.now(),
+        lastMessageTime: currentTimestamp,
       };
     });
     

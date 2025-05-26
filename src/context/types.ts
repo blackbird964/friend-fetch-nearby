@@ -45,7 +45,7 @@ export interface Chat {
   participantName?: string;
   profilePic?: string;
   lastMessage?: string;
-  lastMessageTime?: number;
+  lastMessageTime?: number;  // Always number for consistency
   isOnline?: boolean; // Added this property
   unreadCount?: number; // Added this property for tracking unread messages
 }
@@ -56,7 +56,7 @@ export interface Message {
   senderId: string;
   content?: string;  // Made optional since we're using text in some places
   text?: string;     // Added to support existing usage
-  timestamp: string | number;  // Support both string and number timestamps
+  timestamp: string | number;  // Support both string and number timestamps for input
   status?: MessageStatus;  // Made optional for compatibility
 }
 
