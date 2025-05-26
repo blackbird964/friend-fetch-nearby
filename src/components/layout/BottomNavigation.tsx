@@ -54,7 +54,7 @@ const BottomNavigation: React.FC = () => {
   ];
 
   // Enhanced navigation handler with better event handling
-  const handleNavigate = (path: string, event: React.MouseEvent) => {
+  const handleNavigate = (path: string, event: React.MouseEvent<HTMLButtonElement>) => {
     // Prevent any default behavior and stop propagation
     event.preventDefault();
     event.stopPropagation();
@@ -73,17 +73,20 @@ const BottomNavigation: React.FC = () => {
           <button
             key={route.path}
             type="button"
-            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors cursor-pointer ${
               location.pathname === route.path
                 ? 'text-primary'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
             onClick={(event) => handleNavigate(route.path, event)}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
+            style={{ 
+              WebkitTapHighlightColor: 'transparent',
+              touchAction: 'manipulation'
+            }}
           >
             <div className="relative">
               {route.icon}
-              {route.badge > 0 && (
+              {route.badge && route.badge > 0 && (
                 <Badge className="absolute -top-2 -right-2 px-1 min-h-5 min-w-5 h-5 w-5 flex items-center justify-center text-[10px] bg-red-500 text-white rounded-full">
                   {route.badge}
                 </Badge>
