@@ -18,6 +18,7 @@ const UserActions: React.FC<UserActionsProps> = ({
   const handleChatClick = (e: React.MouseEvent) => {
     console.log("[UserActions] Chat button clicked for user:", user.name);
     e.stopPropagation(); // Prevent event bubbling
+    e.preventDefault(); // Prevent default behavior
     onStartChat();
   };
   
@@ -33,6 +34,7 @@ const UserActions: React.FC<UserActionsProps> = ({
         <Button 
           className="w-full bg-primary text-primary-foreground hover:bg-primary/90" 
           onClick={handleChatClick}
+          type="button"
         >
           <MessageCircle className="w-4 h-4 mr-2" />
           Chat

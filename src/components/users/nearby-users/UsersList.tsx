@@ -3,7 +3,6 @@ import React, { useState } from 'react';
 import UserItem from './UserItem';
 import UserDetailsDrawer from './UserDetailsDrawer';
 import { AppUser } from '@/context/types';
-import { useChatActions } from '@/components/users/hooks/useChatActions';
 
 interface UsersListProps {
   users: AppUser[];
@@ -14,11 +13,17 @@ const UsersList: React.FC<UsersListProps> = ({ users, onStartChat }) => {
   const [selectedUser, setSelectedUser] = useState<AppUser | null>(null);
   
   const handleSelectUser = (user: AppUser) => {
+    console.log("[UsersList] User selected for details:", user.name);
     setSelectedUser(user);
   };
   
   const handleCloseDrawer = () => {
     setSelectedUser(null);
+  };
+
+  const handleStartChat = (user: AppUser) => {
+    console.log("[UsersList] Starting chat with user:", user.name);
+    onStartChat(user);
   };
 
   return (
@@ -28,10 +33,7 @@ const UsersList: React.FC<UsersListProps> = ({ users, onStartChat }) => {
           <UserItem 
             key={user.id} 
             user={user} 
-            onStartChat={() => {
-              console.log("UsersList: Starting chat with user:", user.name);
-              onStartChat(user);
-            }}
+            onStartChat={handleStartChat}
             onSelect={handleSelectUser}
           />
         ))}
@@ -41,7 +43,7 @@ const UsersList: React.FC<UsersListProps> = ({ users, onStartChat }) => {
         user={selectedUser}
         isOpen={!!selectedUser}
         onClose={handleCloseDrawer}
-        onStartChat={onStartChat}
+        onStartChat={handleStartChat}
       />
     </>
   );

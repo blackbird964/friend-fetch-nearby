@@ -48,9 +48,8 @@ export const useChatActions = () => {
         const newChat = await createChat([user]);
         console.log("[useChatActions] New chat created:", newChat);
         
-        // Add the new chat to the chats list
-        // Fix: Use direct array assignment instead of a callback function
-        setChats([...chats, newChat]);
+        // Add the new chat to the chats list using functional update
+        setChats(prevChats => [...prevChats, newChat]);
         
         // Navigate to the chat page
         console.log("[useChatActions] Navigating to chat page");
