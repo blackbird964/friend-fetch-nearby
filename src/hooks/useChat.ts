@@ -81,7 +81,7 @@ export function useChat(selectedChatId: string | null) {
           await markMessagesAsRead(unreadMessageIds);
           
           // Update the unread count for this chat efficiently
-          setChats(prevChats => {
+          setChats((prevChats: Chat[]) => {
             const updatedChats = prevChats.map(chat => {
               if (chat.id === selectedChat.id) {
                 return { ...chat, unreadCount: 0 };
@@ -175,7 +175,7 @@ export function useChat(selectedChatId: string | null) {
           messagesCache.current.set(selectedChat.id, updatedMessages);
           
           // Update selected chat
-          setSelectedChat(prev => {
+          setSelectedChat((prev: Chat | null) => {
             if (!prev || prev.id !== selectedChat.id) return prev;
             return {
               ...prev,
@@ -216,7 +216,7 @@ export function useChat(selectedChatId: string | null) {
     setIsSending(true);
     
     // Update UI immediately
-    setSelectedChat(prev => {
+    setSelectedChat((prev: Chat | null) => {
       if (!prev) return prev;
       return {
         ...prev,
@@ -257,7 +257,7 @@ export function useChat(selectedChatId: string | null) {
       messagesCache.current.set(selectedChat.id, updatedCache);
       
       // Update selected chat and chats list
-      setSelectedChat(prev => {
+      setSelectedChat((prev: Chat | null) => {
         if (!prev) return prev;
         const updatedMessages = prev.messages.map(msg => 
           msg.id === tempId ? realMessage : msg
@@ -270,7 +270,7 @@ export function useChat(selectedChatId: string | null) {
         };
       });
       
-      setChats(prevChats =>
+      setChats((prevChats: Chat[]) =>
         prevChats.map(chat => 
           chat.id === selectedChat.id 
             ? {
@@ -285,7 +285,7 @@ export function useChat(selectedChatId: string | null) {
       console.error("Error sending message:", err);
       
       // Remove optimistic message on error
-      setSelectedChat(prev => {
+      setSelectedChat((prev: Chat | null) => {
         if (!prev) return prev;
         return {
           ...prev,
