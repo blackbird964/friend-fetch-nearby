@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { AppUser, Chat } from '@/context/types';
 import { useToast } from '@/hooks/use-toast';
 import { useChatList } from '@/hooks/useChatList';
+import { useAppContext } from '@/context/AppContext';
 import { toast as sonnerToast } from 'sonner';
 
 export const useChatActions = () => {
@@ -11,6 +12,7 @@ export const useChatActions = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState<boolean>(false);
   const { chats, setChats, createChat } = useChatList();
+  const { setSelectedChat } = useAppContext();
 
   // Function to start a new chat or navigate to an existing one
   const startChat = useCallback(async (user: AppUser) => {
@@ -34,6 +36,9 @@ export const useChatActions = () => {
       if (existingChat) {
         console.log("[useChatActions] Found existing chat:", existingChat.id);
         
+        // Set the selected chat
+        setSelectedChat(existingChat);
+        
         // Navigate to the chat page
         navigate('/chat');
         
@@ -50,6 +55,9 @@ export const useChatActions = () => {
         
         // Add the new chat to the chats list by passing the updated array directly
         setChats([...chats, newChat]);
+        
+        // Set the newly created chat as selected
+        setSelectedChat(newChat);
         
         // Navigate to the chat page
         console.log("[useChatActions] Navigating to chat page");
@@ -70,7 +78,7 @@ export const useChatActions = () => {
     } finally {
       setLoading(false);
     }
-  }, [chats, navigate, setChats, createChat, toast]);
+  }, [chats, navigate, setChats, createChat, toast, setSelectedChat]);
 
   return {
     startChat,
