@@ -53,13 +53,17 @@ const BottomNavigation: React.FC = () => {
     },
   ];
 
-  // Simple direct navigation handler
-  const handleNavigate = (path: string) => {
-    console.log(`Navigation requested from ${location.pathname} to ${path}`);
-    if (path !== location.pathname) {
-      console.log('Executing navigation');
-      navigate(path);
-    }
+  // Enhanced navigation handler with better event handling
+  const handleNavigate = (path: string, event: React.MouseEvent) => {
+    // Prevent any default behavior and stop propagation
+    event.preventDefault();
+    event.stopPropagation();
+    
+    console.log(`[BottomNavigation] Navigation requested from ${location.pathname} to ${path}`);
+    
+    // Always navigate, even if it's the same path (this will refresh the page state)
+    console.log('[BottomNavigation] Executing navigation');
+    navigate(path);
   };
 
   return (
@@ -74,7 +78,8 @@ const BottomNavigation: React.FC = () => {
                 ? 'text-primary'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
-            onClick={() => handleNavigate(route.path)}
+            onClick={(event) => handleNavigate(route.path, event)}
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <div className="relative">
               {route.icon}
