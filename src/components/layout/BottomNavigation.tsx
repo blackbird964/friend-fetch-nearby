@@ -53,25 +53,41 @@ const BottomNavigation: React.FC = () => {
     },
   ];
 
-  // Simplified navigation handler
-  const handleNavigate = (path: string) => {
+  // Navigation handler with event capture
+  const handleNavigate = (path: string, event: React.MouseEvent | React.TouchEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
     console.log(`[BottomNavigation] Navigating from ${location.pathname} to ${path}`);
     navigate(path);
   };
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50">
-      <div className="flex justify-around items-center h-16">
+    <div 
+      className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-[9999]"
+      style={{ 
+        position: 'fixed',
+        zIndex: 9999,
+        pointerEvents: 'auto'
+      }}
+    >
+      <div className="flex justify-around items-center h-16 bg-white">
         {routes.map((route) => (
-          <div
+          <button
             key={route.path}
-            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors cursor-pointer select-none ${
+            type="button"
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors cursor-pointer select-none border-0 bg-transparent p-2 ${
               location.pathname === route.path
                 ? 'text-primary'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
-            onClick={() => handleNavigate(route.path)}
-            onTouchEnd={() => handleNavigate(route.path)}
+            onClick={(e) => handleNavigate(route.path, e)}
+            onTouchEnd={(e) => handleNavigate(route.path, e)}
+            style={{ 
+              WebkitTapHighlightColor: 'transparent',
+              touchAction: 'manipulation',
+              pointerEvents: 'auto',
+              zIndex: 10000
+            }}
           >
             <div className="relative">
               {route.icon}
@@ -82,7 +98,7 @@ const BottomNavigation: React.FC = () => {
               )}
             </div>
             <span className="text-xs mt-1">{route.label}</span>
-          </div>
+          </button>
         ))}
       </div>
     </div>
