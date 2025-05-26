@@ -5,6 +5,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { createRealTimeMessage } from './utils/messageFormatters';
 import { normalizeTimestamp } from './utils/timestampUtils';
 import { useMessageCache } from './useMessageCache';
+import { Chat } from '@/context/types';
 
 export function useRealTimeMessages() {
   const { selectedChat, setSelectedChat, currentUser } = useAppContext();
