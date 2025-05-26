@@ -53,16 +53,9 @@ const BottomNavigation: React.FC = () => {
     },
   ];
 
-  // Enhanced navigation handler with better event handling
-  const handleNavigate = (path: string, event: React.MouseEvent<HTMLButtonElement>) => {
-    // Prevent any default behavior and stop propagation
-    event.preventDefault();
-    event.stopPropagation();
-    
-    console.log(`[BottomNavigation] Navigation requested from ${location.pathname} to ${path}`);
-    
-    // Always navigate, even if it's the same path (this will refresh the page state)
-    console.log('[BottomNavigation] Executing navigation');
+  // Simplified navigation handler
+  const handleNavigate = (path: string) => {
+    console.log(`[BottomNavigation] Navigating from ${location.pathname} to ${path}`);
     navigate(path);
   };
 
@@ -70,19 +63,15 @@ const BottomNavigation: React.FC = () => {
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-50">
       <div className="flex justify-around items-center h-16">
         {routes.map((route) => (
-          <button
+          <div
             key={route.path}
-            type="button"
-            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors cursor-pointer ${
+            className={`flex flex-col items-center justify-center flex-1 h-full transition-colors cursor-pointer select-none ${
               location.pathname === route.path
                 ? 'text-primary'
                 : 'text-gray-500 hover:text-gray-700'
             }`}
-            onClick={(event) => handleNavigate(route.path, event)}
-            style={{ 
-              WebkitTapHighlightColor: 'transparent',
-              touchAction: 'manipulation'
-            }}
+            onClick={() => handleNavigate(route.path)}
+            onTouchEnd={() => handleNavigate(route.path)}
           >
             <div className="relative">
               {route.icon}
@@ -93,7 +82,7 @@ const BottomNavigation: React.FC = () => {
               )}
             </div>
             <span className="text-xs mt-1">{route.label}</span>
-          </button>
+          </div>
         ))}
       </div>
     </div>
