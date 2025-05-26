@@ -32,9 +32,9 @@ export interface SocialContextType {
   meetupRequests: MeetupRequest[];
   setMeetupRequests: (requests: MeetupRequest[]) => void;
   chats: Chat[];
-  setChats: (chats: Chat[]) => void;
+  setChats: (chats: Chat[] | ((prev: Chat[]) => Chat[])) => void;
   selectedChat: Chat | null;
-  setSelectedChat: (chat: Chat | null) => void;
+  setSelectedChat: (chat: Chat | null | ((prev: Chat | null) => Chat | null)) => void;
   showSidebar: boolean;
   setShowSidebar: (show: boolean) => void;
   refreshFriendRequests: () => Promise<void>;
