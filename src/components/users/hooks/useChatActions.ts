@@ -48,8 +48,8 @@ export const useChatActions = () => {
         const newChat = await createChat([user]);
         console.log("[useChatActions] New chat created:", newChat);
         
-        // Add the new chat to the chats list using functional update with proper typing
-        setChats((prevChats: Chat[]) => [...prevChats, newChat]);
+        // Add the new chat to the chats list by passing the updated array directly
+        setChats([...chats, newChat]);
         
         // Navigate to the chat page
         console.log("[useChatActions] Navigating to chat page");
