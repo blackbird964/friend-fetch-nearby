@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +7,19 @@ import { useNavigate } from 'react-router-dom';
 const Landing: React.FC = () => {
   const navigate = useNavigate();
 
+  const handleSignIn = () => {
+    navigate('/auth');
+  };
+
   const handleGetStarted = () => {
-    navigate('/');
+    navigate('/auth');
+  };
+
+  const handleLearnMore = () => {
+    const benefitsSection = document.getElementById('benefits-section');
+    if (benefitsSection) {
+      benefitsSection.scrollIntoView({ behavior: 'smooth' });
+    }
   };
 
   const benefits = [
@@ -56,7 +66,7 @@ const Landing: React.FC = () => {
             </div>
             <span className="text-2xl font-bold text-gray-900">Kairo</span>
           </div>
-          <Button onClick={handleGetStarted} variant="outline">
+          <Button onClick={handleSignIn} variant="outline">
             Sign In
           </Button>
         </div>
@@ -75,14 +85,14 @@ const Landing: React.FC = () => {
           <Button onClick={handleGetStarted} size="lg" className="text-lg px-8 py-3">
             Get Started Free
           </Button>
-          <Button variant="outline" size="lg" className="text-lg px-8 py-3">
+          <Button onClick={handleLearnMore} variant="outline" size="lg" className="text-lg px-8 py-3">
             Learn More
           </Button>
         </div>
       </section>
 
       {/* Benefits Section */}
-      <section className="container mx-auto px-4 py-20">
+      <section id="benefits-section" className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
           <h2 className="text-4xl font-bold text-gray-900 mb-4">
             Why Choose Kairo?
