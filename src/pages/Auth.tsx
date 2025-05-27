@@ -16,9 +16,7 @@ const Auth: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   
-  // Check for email confirmation parameters
-  const confirmationToken = searchParams.get('token_hash');
-  const type = searchParams.get('type');
+  // Check for password reset parameter
   const showReset = searchParams.get('reset') === 'true';
   
   // Debug authentication state
@@ -28,44 +26,6 @@ const Auth: React.FC = () => {
     }
   }, [isAuthenticated, currentUser]);
   
-  useEffect(() => {
-    // Handle email confirmation if token is present
-    const handleEmailConfirmation = async () => {
-      if (confirmationToken && type === 'email_confirmation') {
-        try {
-          const { error } = await supabase.auth.verifyOtp({
-            token_hash: confirmationToken,
-            type: 'email',
-          });
-          
-          if (error) {
-            toast({
-              title: 'Verification failed',
-              description: error.message,
-              variant: 'destructive',
-            });
-          } else {
-            toast({
-              title: 'Email verified successfully!',
-              description: 'You can now sign in to your account.',
-              variant: 'default',
-            });
-            setFormState('login');
-          }
-        } catch (err) {
-          console.error('Error during email verification:', err);
-          toast({
-            title: 'Verification error',
-            description: 'There was a problem verifying your email. Please try again.',
-            variant: 'destructive',
-          });
-        }
-      }
-    };
-    
-    handleEmailConfirmation();
-  }, [confirmationToken, type, toast]);
-
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
@@ -146,26 +106,13 @@ const Auth: React.FC = () => {
       {formState === 'login' ? (
         <LoginForm onToggleForm={() => setFormState('signup')} />
       ) : formState === 'signup' ? (
-        <>
-          <div className="w-full max-w-md mb-6">
-            <Alert className="bg-blue-50 border-blue-200">
-              <Info className="h-4 w-4 text-blue-500" />
-              <AlertDescription>
-                <p className="text-sm text-blue-700">
-                  After signing up, you will receive an email from Supabase to verify your account.
-                  <strong> Please check your spam/junk folder</strong> if you don't see it in your inbox.
-                </p>
-              </AlertDescription>
-            </Alert>
-          </div>
-          <SignUpForm 
-            onToggleForm={() => setFormState('login')} 
-            onContinue={() => {
-              console.log("User signed up, showing profile setup");
-              setFormState('profile-setup');
-            }}
-          />
-        </>
+        <SignUpForm 
+          onToggleForm={() => setFormState('login')} 
+          onContinue={() => {
+            console.log("User signed up, showing profile setup");
+            setFormState('profile-setup');
+          }}
+        />
       ) : null}
     </div>
   );
