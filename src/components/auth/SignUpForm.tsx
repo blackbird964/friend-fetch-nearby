@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
@@ -68,10 +67,10 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
             variant: "destructive",
           });
         } else {
-          // For any other errors, including rate limits, provide a generic message
+          // For any other errors, provide a generic message
           toast({
             title: "Sign up failed",
-            description: "Unable to create account at this time. Please try again in a few minutes or contact support if the issue persists.",
+            description: "Unable to create account. Please try again or contact support if the issue persists.",
             variant: "destructive",
           });
         }
@@ -94,12 +93,11 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
           // Proceed to profile setup
           onContinue();
         } else {
-          // Fallback case - shouldn't happen with confirmations disabled
+          // If no session but user exists, it means confirmation is still required
           toast({
-            title: "Account created successfully!",
-            description: "Please sign in with your new account.",
+            title: "Account created!",
+            description: "Please check your email to confirm your account.",
           });
-          onToggleForm();
         }
       }
     } catch (error: any) {
