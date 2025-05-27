@@ -44,17 +44,39 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
       );
       
       if (error) {
-        // Handle specific rate limit errors
+        console.error("Signup error:", error);
+        
+        // Handle specific rate limit errors with more helpful messages
         if (error.message.includes('rate limit') || error.message.includes('too many requests')) {
           toast({
-            title: "Too many signup attempts",
-            description: "Please wait a few minutes before trying again, or try using a different email address.",
+            title: "Rate limit reached",
+            description: "Please wait a few minutes before trying again. If this persists, try using a different email address or contact support.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('User already registered')) {
+          toast({
+            title: "Account already exists",
+            description: "An account with this email already exists. Please sign in instead.",
+            variant: "destructive",
+          });
+          // Automatically switch to login form
+          setTimeout(() => onToggleForm(), 2000);
+        } else if (error.message.includes('Invalid email')) {
+          toast({
+            title: "Invalid email address",
+            description: "Please enter a valid email address.",
+            variant: "destructive",
+          });
+        } else if (error.message.includes('Password')) {
+          toast({
+            title: "Password requirements not met",
+            description: "Password must be at least 6 characters long.",
             variant: "destructive",
           });
         } else {
           toast({
             title: "Sign up failed",
-            description: error.message || "An error occurred during sign up.",
+            description: error.message || "An unexpected error occurred. Please try again.",
             variant: "destructive",
           });
         }
@@ -64,7 +86,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
       if (data && data.user) {
         console.log("Signup successful, user:", data);
         
-        // Since email confirmation is disabled, user should be immediately authenticated
+        // With email confirmation disabled, user should be immediately authenticated
         if (data.session) {
           setIsAuthenticated(true);
           setSupabaseUser(data.user);
@@ -75,23 +97,21 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
           });
           
           // Proceed to profile setup
-          if (typeof onContinue === 'function') {
-            onContinue();
-          }
+          onContinue();
         } else {
-          // Fallback case
+          // Fallback case - shouldn't happen with confirmations disabled
           toast({
-            title: "Account created!",
+            title: "Account created successfully!",
             description: "Please sign in with your new account.",
           });
-          onToggleForm(); // Switch to login form
+          onToggleForm();
         }
       }
     } catch (error: any) {
-      console.error('Sign up error:', error);
+      console.error('Unexpected signup error:', error);
       toast({
         title: "Sign up failed",
-        description: "An unexpected error occurred. Please try again.",
+        description: "An unexpected error occurred. Please check your internet connection and try again.",
         variant: "destructive",
       });
     } finally {

@@ -1,18 +1,21 @@
 
 project_id = "sqrlsxmwvmgmbmcyaxcq"
 
+[auth]
+# Disable email confirmations completely for immediate signup
+enable_signup = true
+enable_confirmations = false
+enable_anonymous_sign_ins = false
+
 [auth.email]
 enable_signup = true
 double_confirm_changes = false
 enable_confirmations = false
+# Disable rate limiting for development
+max_frequency = "1s"
 
-# Disable built-in SMTP to avoid conflicts with our custom edge function
+# Remove SMTP configuration to avoid conflicts
 # [auth.email.smtp]
-# host = "smtp.resend.com"
-# port = 587
-# user = "resend"
-# admin_email = "onboarding@resend.dev"
-# sender_name = "meetkairo"
 
 [auth.email.template.invite]
 action_url = "{{ .ConfirmationURL }}"
