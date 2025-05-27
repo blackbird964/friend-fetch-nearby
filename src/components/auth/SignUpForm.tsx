@@ -50,7 +50,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
         if (error.message.includes('rate limit') || error.message.includes('too many requests')) {
           toast({
             title: "Rate limit reached",
-            description: "Please wait a few minutes before trying again. If this persists, try using a different email address or contact support.",
+            description: "This email has been used for too many signup attempts. Please try a different email address or wait 24 hours before trying again.",
             variant: "destructive",
           });
         } else if (error.message.includes('User already registered')) {
@@ -76,7 +76,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
         } else {
           toast({
             title: "Sign up failed",
-            description: error.message || "An unexpected error occurred. Please try again.",
+            description: `${error.message || "An unexpected error occurred."} Try using a different email address.`,
             variant: "destructive",
           });
         }
@@ -111,7 +111,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
       console.error('Unexpected signup error:', error);
       toast({
         title: "Sign up failed",
-        description: "An unexpected error occurred. Please check your internet connection and try again.",
+        description: "An unexpected error occurred. Please try a different email address or check your internet connection.",
         variant: "destructive",
       });
     } finally {
