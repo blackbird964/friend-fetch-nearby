@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -8,6 +7,7 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import { AppProvider } from "@/context/AppContext";
 
 // Import pages
+import Landing from "@/pages/Landing";
 import Auth from "@/pages/Auth";
 import Home from "@/pages/Home";
 import MapPage from "@/pages/MapPage";
@@ -30,7 +30,8 @@ const App: React.FC = () => {
           <Toaster />
           <Sonner />
           <Routes>
-            <Route path="/" element={<Auth />} />
+            <Route path="/" element={<Landing />} />
+            <Route path="/auth" element={<Auth />} />
             <Route path="/test-email" element={<TestEmail />} />
             
             <Route element={<MainLayout />}>
