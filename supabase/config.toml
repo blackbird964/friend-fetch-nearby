@@ -11,11 +11,11 @@ enable_anonymous_sign_ins = false
 enable_signup = true
 double_confirm_changes = false
 enable_confirmations = false
-# Completely remove rate limiting for development
-# Setting to 0 disables rate limiting entirely
-max_frequency = "0s"
+# Disable all rate limiting completely
+max_frequency = "0"
+secure_email_change_enabled = false
 
-# Remove SMTP configuration to avoid conflicts
+# Completely remove SMTP to prevent any email sending
 # [auth.email.smtp]
 
 [auth.email.template.invite]

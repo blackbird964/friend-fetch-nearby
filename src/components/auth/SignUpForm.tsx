@@ -46,14 +46,8 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
       if (error) {
         console.error("Signup error:", error);
         
-        // Handle specific rate limit errors with more helpful messages
-        if (error.message.includes('rate limit') || error.message.includes('too many requests')) {
-          toast({
-            title: "Rate limit reached",
-            description: "There have been too many signup attempts recently. Please wait a few minutes and try again, or use a different email address.",
-            variant: "destructive",
-          });
-        } else if (error.message.includes('User already registered')) {
+        // Handle specific error cases with user-friendly messages
+        if (error.message.includes('User already registered')) {
           toast({
             title: "Account already exists",
             description: "An account with this email already exists. Please sign in instead.",
@@ -74,9 +68,10 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
             variant: "destructive",
           });
         } else {
+          // For any other errors, including rate limits, provide a generic message
           toast({
             title: "Sign up failed",
-            description: `${error.message || "An unexpected error occurred."} Please try again with a different email if the issue persists.`,
+            description: "Unable to create account at this time. Please try again in a few minutes or contact support if the issue persists.",
             variant: "destructive",
           });
         }
@@ -111,7 +106,7 @@ const SignUpForm: React.FC<SignUpFormProps> = ({ onToggleForm, onContinue }) => 
       console.error('Unexpected signup error:', error);
       toast({
         title: "Sign up failed",
-        description: "An unexpected error occurred. Please try again or use a different email address.",
+        description: "An unexpected error occurred. Please try again or contact support if the issue persists.",
         variant: "destructive",
       });
     } finally {
