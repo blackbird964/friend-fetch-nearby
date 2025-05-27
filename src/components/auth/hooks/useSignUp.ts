@@ -48,7 +48,7 @@ export const useSignUp = (onToggleForm: () => void, onContinue: () => void) => {
           // For any other errors, provide a generic message
           toast({
             title: "Sign up failed",
-            description: "Unable to create account. Please try again or contact support if the issue persists.",
+            description: error.message || "Unable to create account. Please try again.",
             variant: "destructive",
           });
         }
@@ -58,7 +58,7 @@ export const useSignUp = (onToggleForm: () => void, onContinue: () => void) => {
       if (data && data.user) {
         console.log("Signup successful, user:", data);
         
-        // With email confirmation disabled, user should be immediately authenticated
+        // Since email confirmation is disabled, user should be immediately authenticated
         if (data.session) {
           setIsAuthenticated(true);
           setSupabaseUser(data.user);
@@ -71,18 +71,19 @@ export const useSignUp = (onToggleForm: () => void, onContinue: () => void) => {
           // Proceed to profile setup
           onContinue();
         } else {
-          // If no session but user exists, it means confirmation is still required
+          // User created but no session - this should not happen with confirmations disabled
           toast({
             title: "Account created!",
-            description: "Please check your email to confirm your account.",
+            description: "Account created successfully. Please try signing in.",
           });
+          onToggleForm();
         }
       }
     } catch (error: any) {
       console.error('Unexpected signup error:', error);
       toast({
         title: "Sign up failed",
-        description: "An unexpected error occurred. Please try again or contact support if the issue persists.",
+        description: error.message || "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     } finally {
