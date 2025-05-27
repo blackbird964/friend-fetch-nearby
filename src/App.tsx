@@ -15,6 +15,7 @@ import ChatPage from "@/pages/ChatPage";
 import Profile from "@/pages/ProfilePage";
 import FriendsPage from "@/pages/FriendsPage";
 import AdminPage from "@/pages/AdminPage";
+import TestEmail from "@/pages/TestEmail";
 import MainLayout from "@/pages/MainLayout";
 import NotFound from "./pages/NotFound";
 
@@ -30,6 +31,7 @@ const App: React.FC = () => {
           <Sonner />
           <Routes>
             <Route path="/" element={<Auth />} />
+            <Route path="/test-email" element={<TestEmail />} />
             
             <Route element={<MainLayout />}>
               <Route path="/home" element={<Home />} />
