@@ -2,7 +2,7 @@
 project_id = "sqrlsxmwvmgmbmcyaxcq"
 
 [auth]
-# Disable email confirmations completely for immediate signup
+# Completely disable email confirmations for immediate signup
 enable_signup = true
 enable_confirmations = false
 enable_anonymous_sign_ins = false
@@ -11,11 +11,11 @@ enable_anonymous_sign_ins = false
 enable_signup = true
 double_confirm_changes = false
 enable_confirmations = false
-# Disable all rate limiting completely
-max_frequency = "0"
+# Completely disable rate limiting
+max_frequency = "never"
 secure_email_change_enabled = false
 
-# Completely remove SMTP to prevent any email sending attempts
+# Do not include any SMTP configuration to prevent email sending
 
 [auth.email.template.invite]
 action_url = "{{ .ConfirmationURL }}"

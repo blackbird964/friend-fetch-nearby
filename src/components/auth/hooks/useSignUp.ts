@@ -58,7 +58,7 @@ export const useSignUp = (onToggleForm: () => void, onContinue: () => void) => {
       if (data && data.user) {
         console.log("Signup successful, user:", data);
         
-        // Since email confirmation is disabled, user should be immediately authenticated
+        // With email confirmations disabled, user should be immediately authenticated
         if (data.session) {
           setIsAuthenticated(true);
           setSupabaseUser(data.user);
@@ -71,10 +71,11 @@ export const useSignUp = (onToggleForm: () => void, onContinue: () => void) => {
           // Proceed to profile setup
           onContinue();
         } else {
-          // User created but no session - this should not happen with confirmations disabled
+          // If user is created but no session, they still need to sign in
+          // This can happen if confirmations are still enabled on the server side
           toast({
             title: "Account created!",
-            description: "Account created successfully. Please try signing in.",
+            description: "Please sign in with your new account.",
           });
           onToggleForm();
         }
