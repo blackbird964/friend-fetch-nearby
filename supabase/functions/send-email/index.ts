@@ -76,6 +76,27 @@ serve(async (req) => {
       return new Response(JSON.stringify(emailResponse), {
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
+    } else if (type === 'test') {
+      const { subject, message } = data;
+      
+      const emailResponse = await resend.emails.send({
+        from: "meetkairo <onboarding@resend.dev>",
+        to: [email],
+        subject: subject || "Test Email from meetkairo",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #1E40AF;">Test Email</h2>
+            <p>${message || 'This is a test email to verify your email configuration is working correctly.'}</p>
+            <p>If you received this email, your SMTP configuration with Resend is working properly!</p>
+            <p>Best regards,<br>The meetkairo Team</p>
+          </div>
+        `,
+      });
+      
+      console.log("Test email sent via Resend:", emailResponse);
+      return new Response(JSON.stringify(emailResponse), {
+        headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
     }
     
     // Default response if no matching email type
