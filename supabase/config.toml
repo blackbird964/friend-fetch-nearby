@@ -6,7 +6,22 @@ enable_signup = true
 double_confirm_changes = true
 enable_confirmations = true
 
+# Custom SMTP configuration using Resend
+[auth.email.smtp]
+host = "smtp.resend.com"
+port = 587
+user = "resend"
+# The password should be your Resend API key
+admin_email = "onboarding@resend.dev"
+sender_name = "meetkairo"
+
 [auth.email.template.invite]
+action_url = "{{ .ConfirmationURL }}"
+
+[auth.email.template.confirmation]
+action_url = "{{ .ConfirmationURL }}"
+
+[auth.email.template.recovery]
 action_url = "{{ .ConfirmationURL }}"
 
 [functions.send-email]
