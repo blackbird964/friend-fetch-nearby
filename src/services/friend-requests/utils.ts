@@ -27,8 +27,7 @@ export function messageToFriendRequest(message: any): FriendRequest | null {
       receiverProfilePic: content.receiver_profile_pic,
       duration: content.duration,
       status: content.status,
-      timestamp: content.timestamp,
-      createdAt: message.created_at
+      timestamp: content.timestamp
     };
   } catch (error) {
     console.error('Error parsing message to friend request:', error);

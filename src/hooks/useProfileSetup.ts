@@ -122,7 +122,6 @@ export const useProfileSetup = () => {
           email: user.email || '',
           location: currentUser?.location,
           is_over_18: data.is_over_18 || false, // Include is_over_18 in user object
-          isOnline: true, // Add the missing isOnline property
         };
         
         setCurrentUser(updatedUser);

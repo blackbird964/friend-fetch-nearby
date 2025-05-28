@@ -12,11 +12,13 @@ const AppContext = React.createContext<AppContextType | undefined>(undefined);
 // Combined provider component
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
-    <UsersProvider>
-      <SocialProvider>
-        <CombinedContextProvider>{children}</CombinedContextProvider>
-      </SocialProvider>
-    </UsersProvider>
+    <AuthProvider>
+      <UsersProvider>
+        <SocialProvider>
+          <CombinedContextProvider>{children}</CombinedContextProvider>
+        </SocialProvider>
+      </UsersProvider>
+    </AuthProvider>
   );
 };
 
@@ -27,7 +29,7 @@ const CombinedContextProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const usersContext = useUsersContext();
   const socialContext = useSocialContext();
   
-  // Add user actions with error handling
+  // Add user actions
   const { blockUser, unblockUser, reportUser, loading: userActionsLoading } = 
     useUserActions(authContext.currentUser, authContext.setCurrentUser);
 
@@ -39,7 +41,7 @@ const CombinedContextProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     blockUser,
     unblockUser,
     reportUser,
-    userActionsLoading: userActionsLoading || false
+    userActionsLoading
   };
 
   return <AppContext.Provider value={combinedValue}>{children}</AppContext.Provider>;

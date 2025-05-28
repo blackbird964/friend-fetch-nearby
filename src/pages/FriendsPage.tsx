@@ -26,11 +26,12 @@ const FriendsPage: React.FC = () => {
       email: '', // Required by AppUser but not used in display
       interests: [], // Required by AppUser but not used in display
       profile_pic: chat.profilePic,
-      isOnline: chat.isOnline || false,
+      isOnline: chat.isOnline,
+      chat: chat // Link to the chat for navigation
     };
     
-    return { friend, chat };
-  }).filter(item => item.friend.id !== ''); // Filter out any potentially invalid entries
+    return friend;
+  }).filter(friend => friend.id !== ''); // Filter out any potentially invalid entries
 
   const handleFriendClick = (chat: Chat) => {
     setSelectedChat(chat);
@@ -53,11 +54,11 @@ const FriendsPage: React.FC = () => {
 
       {friends.length > 0 ? (
         <div className="space-y-4">
-          {friends.map(({ friend, chat }) => (
+          {friends.map((friend) => (
             <div 
               key={friend.id}
               className="border rounded-lg p-4 bg-white cursor-pointer hover:bg-gray-50"
-              onClick={() => handleFriendClick(chat)}
+              onClick={() => friend.chat && handleFriendClick(friend.chat)}
             >
               <UserCard user={friend} minimal={false} />
             </div>

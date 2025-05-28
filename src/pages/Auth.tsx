@@ -114,15 +114,6 @@ const Auth: React.FC = () => {
           }}
         />
       ) : null}
-      
-      <div className="mt-6 text-center">
-        <p className="text-sm text-gray-500">
-          Are you a business?{" "}
-          <a href="/business-auth" className="text-primary underline font-medium hover:text-primary/80">
-            Create a business account
-          </a>
-        </p>
-      </div>
     </div>
   );
 };

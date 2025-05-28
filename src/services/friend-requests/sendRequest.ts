@@ -19,7 +19,6 @@ export async function sendFriendRequest(
   try {
     // Create a proper UUID for the request
     const requestId = generateRequestId();
-    const currentTime = new Date().toISOString();
     
     // Create the friend request object
     const newRequest: FriendRequest = {
@@ -32,8 +31,7 @@ export async function sendFriendRequest(
       receiverProfilePic,
       duration,
       status: 'pending',
-      timestamp: Date.now(),
-      createdAt: currentTime
+      timestamp: Date.now()
     };
 
     console.log("Sending friend request:", newRequest);
