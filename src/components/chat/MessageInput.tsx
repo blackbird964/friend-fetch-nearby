@@ -3,6 +3,7 @@ import React, { RefObject, useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface MessageInputProps {
   message: string;
@@ -20,6 +21,7 @@ const MessageInput: React.FC<MessageInputProps> = ({
   textareaRef
 }) => {
   const [localMessage, setLocalMessage] = useState('');
+  const isMobile = useIsMobile();
   
   // Sync local state with prop when the prop changes
   useEffect(() => {
@@ -41,7 +43,9 @@ const MessageInput: React.FC<MessageInputProps> = ({
   };
 
   return (
-    <div className="p-3 bg-background border-t sticky bottom-0 z-10">
+    <div className={`p-3 bg-background border-t sticky bottom-0 z-10 ${
+      isMobile ? 'pb-20' : 'pb-3'
+    }`}>
       <form onSubmit={handleSubmit} className="flex space-x-2">
         <Textarea
           ref={textareaRef}
