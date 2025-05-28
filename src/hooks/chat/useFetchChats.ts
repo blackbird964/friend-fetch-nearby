@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -27,7 +26,7 @@ export function useFetchChats() {
         .from('messages')
         .select('*')
         .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: true }); // Changed to ascending to get proper chronological order
       
       if (error) {
         console.error('Error fetching messages:', error);
@@ -73,6 +72,9 @@ export function useFetchChats() {
         if (profile) {
           const participantMessages = participantMap.get(participantId)!;
           
+          // Sort messages chronologically to get the actual latest message
+          participantMessages.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+          
           // Count unread messages
           const unreadMessages = participantMessages.filter(msg => 
             msg.sender_id === participantId && 
@@ -83,10 +85,12 @@ export function useFetchChats() {
           const unreadCount = unreadMessages.length;
           totalUnread += unreadCount;
           
-          // Get latest message
-          const latestMessage = participantMessages[0];
+          // Get the actual latest message (last in chronological order)
+          const latestMessage = participantMessages[participantMessages.length - 1];
           
           if (latestMessage) {
+            console.log(`Latest message for ${profile.name}:`, latestMessage.content, "at", latestMessage.created_at);
+            
             chatsList.push({
               id: `chat-${participantId}`,
               name: profile.name || 'Anonymous',
@@ -105,7 +109,7 @@ export function useFetchChats() {
       
       console.log(`Created ${chatsList.length} chat objects`);
       
-      // Sort chats by latest message
+      // Sort chats by latest message time (most recent first)
       chatsList.sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
       
       // Update state in a single batch

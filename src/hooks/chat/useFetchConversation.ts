@@ -57,10 +57,16 @@ export function useFetchConversation(selectedChatId: string | null) {
         
         console.log(`Fetched ${dbMessages.length} messages for chat:`, selectedChat.id);
         
-        // Transform database messages to our app format
-        const formattedMessages: Message[] = dbMessages.map(dbMsg => 
-          formatDbMessageToAppMessage(dbMsg, selectedChat, currentUser.id)
-        );
+        // Transform database messages to our app format and sort by timestamp
+        const formattedMessages: Message[] = dbMessages
+          .map(dbMsg => formatDbMessageToAppMessage(dbMsg, selectedChat, currentUser.id))
+          .sort((a, b) => {
+            const timestampA = normalizeTimestamp(a.timestamp);
+            const timestampB = normalizeTimestamp(b.timestamp);
+            return timestampA - timestampB; // Sort ascending (oldest first)
+          });
+        
+        console.log("Formatted and sorted messages:", formattedMessages.length);
         
         // Cache the messages
         setCachedMessages(selectedChat.id, formattedMessages);
@@ -97,10 +103,12 @@ export function useFetchConversation(selectedChatId: string | null) {
           unreadCount: 0,
         };
         
+        // Update last message info with the actual last message (most recent)
         if (formattedMessages.length > 0) {
-          const lastMsg = formattedMessages[formattedMessages.length - 1];
+          const lastMsg = formattedMessages[formattedMessages.length - 1]; // Get last message (most recent)
           updatedChat.lastMessage = lastMsg.text || lastMsg.content || '';
           updatedChat.lastMessageTime = normalizeTimestamp(lastMsg.timestamp);
+          console.log("Updated last message:", updatedChat.lastMessage, "at", new Date(updatedChat.lastMessageTime));
         }
         
         setSelectedChat(updatedChat);
