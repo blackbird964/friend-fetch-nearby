@@ -75,6 +75,7 @@ const ChatWindow: React.FC = () => {
         )}
       </div>
       
+      {/* Always show the message input when a chat is selected */}
       <MessageInput 
         message={message}
         isLoading={isLoading}

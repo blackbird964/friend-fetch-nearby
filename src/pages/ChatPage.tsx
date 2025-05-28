@@ -45,7 +45,8 @@ const ChatPage: React.FC = () => {
     console.log("[ChatPage] Mounted or chats changed. Available chats:", chats.length);
     console.log("[ChatPage] Selected chat:", selectedChat?.id);
     console.log("[ChatPage] Route:", location.pathname);
-  }, [chats, selectedChat, location]);
+    console.log("[ChatPage] Is mobile:", isMobile);
+  }, [chats, selectedChat, location, isMobile]);
   
   // Reset selected chat when navigating away on mobile
   useEffect(() => {
@@ -72,7 +73,8 @@ const ChatPage: React.FC = () => {
         <ChatPageLoading />
       ) : (
         <div className="flex flex-col md:flex-row gap-6 flex-grow overflow-hidden">
-          {/* On mobile: Show chat list when no chat is selected, hide when viewing a chat */}
+          {/* Mobile: Show chat list when no chat is selected, show chat when one is selected */}
+          {/* Desktop: Always show both sidebar and chat area */}
           {(!selectedChat || !isMobile) && (
             <div className={`${isMobile ? 'h-full w-full' : 'md:w-1/3'} overflow-hidden flex-shrink-0`}>
               <ChatSidebar 
@@ -88,7 +90,7 @@ const ChatPage: React.FC = () => {
           
           {/* Show the chat window if a chat is selected */}
           {selectedChat && (
-            <div className={`${isMobile ? 'fixed inset-0 z-20 bg-background pt-0' : 'md:w-2/3 relative'} flex-grow overflow-hidden`}>
+            <div className={`${isMobile ? 'fixed inset-0 z-20 bg-background' : 'md:w-2/3 relative'} flex-grow overflow-hidden`}>
               <div className={`${isMobile ? 'h-full' : 'border rounded-lg shadow-sm h-full'} bg-background flex flex-col`}>
                 <ChatHeader 
                   participantName={selectedChat.participantName}
