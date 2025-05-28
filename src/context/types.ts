@@ -1,88 +1,136 @@
-
-import { User } from '@supabase/supabase-js';
-import { ActivePriority } from '@/lib/supabase/profiles/types';
+import { Dispatch, SetStateAction } from 'react';
 
 export interface Location {
   lat: number;
   lng: number;
 }
 
+export interface Priority {
+  id: string;
+  category: string;
+  activity: string;
+  frequency?: string;
+  timePreference?: string;
+  urgency?: string;
+  location?: string;
+  experienceLevel?: string;
+}
+
+export interface Business {
+  id: string;
+  auth_user_id: string;
+  business_name: string;
+  business_type: 'cafe' | 'bar' | 'restaurant' | 'lunch_spot' | 'other';
+  description?: string;
+  location?: { lat: number; lng: number };
+  address?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  hours_of_operation?: any;
+  is_online: boolean;
+  last_seen: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface AppUser {
   id: string;
-  name?: string;
+  name: string;
   email: string;
   avatar?: string;
   location?: Location;
-  interests?: string[];
+  interests: string[];
   profile_pic?: string;
   bio?: string;
   age?: number;
   gender?: string;
+  isOnline: boolean;
   blockedUsers?: string[];
-  blocked_users?: string[];
+  // New fields for business support
+  isBusiness?: boolean;
+  businessType?: 'cafe' | 'bar' | 'restaurant' | 'lunch_spot' | 'other';
+  // Location settings
   locationSettings?: {
-    isManualMode: boolean;
-    hideExactLocation: boolean;
+    isManualMode?: boolean;
+    hideExactLocation?: boolean;
   };
   location_settings?: {
     is_manual_mode?: boolean;
     hide_exact_location?: boolean;
   };
-  distance?: number;
-  chat?: Chat; // Chat property for navigation purposes
-  isOnline?: boolean; // Adding isOnline property
-  is_over_18?: boolean; // Added is_over_18 property
-  active_priorities?: ActivePriority[]; // Added active_priorities property
+}
+
+export interface FriendRequest {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: string;
+}
+
+export interface MeetupRequest {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  createdAt: string;
+  location?: Location;
+  duration?: number;
+}
+
+export interface Message {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  text: string;
+  timestamp: number;
+  isRead: boolean;
+  content?: string;
 }
 
 export interface Chat {
   id: string;
   name: string;
-  avatar?: string;
-  participants: string[]; // User IDs
+  participants: string[];
+  participantId: string;
+  participantName: string;
+  profilePic: string;
+  lastMessage: string;
+  lastMessageTime: number;
   messages: Message[];
-  participantId?: string;
-  participantName?: string;
-  profilePic?: string;
-  lastMessage?: string;
-  lastMessageTime?: number;  // Always number for consistency
-  isOnline?: boolean; // Added this property
-  unreadCount?: number; // Added this property for tracking unread messages
+  unreadCount?: number;
+  isOnline?: boolean;
 }
 
-export interface Message {
-  id: string;
-  chatId?: string;  // Made optional since not all context requires it
-  senderId: string;
-  content?: string;  // Made optional since we're using text in some places
-  text?: string;     // Added to support existing usage
-  timestamp: string | number;  // Support both string and number timestamps for input
-  status?: MessageStatus;  // Made optional for compatibility
+export interface AppContextType {
+  isAuthenticated: boolean;
+  setIsAuthenticated: Dispatch<SetStateAction<boolean>>;
+  supabaseUser: any;
+  setSupabaseUser: Dispatch<SetStateAction<any>>;
+  currentUser: AppUser | null;
+  setCurrentUser: Dispatch<SetStateAction<AppUser | null>>;
+  loading: boolean;
+  updateUserLocation: (location: Location, options?: { hideExactLocation?: boolean }) => Promise<void>;
+  updateUserProfile: (profileData: Partial<AppUser>) => Promise<void>;
+  blockUser: (userId: string) => Promise<void>;
+  unblockUser: (userId: string) => Promise<void>;
+  reportUser: (userId: string, reason: string) => Promise<void>;
+  nearbyUsers: AppUser[];
+  setNearbyUsers: Dispatch<SetStateAction<AppUser[]>>;
+  radiusInKm: number;
+  setRadiusInKm: Dispatch<SetStateAction<number>>;
+  friendRequests: FriendRequest[];
+  setFriendRequests: Dispatch<SetStateAction<FriendRequest[]>>;
+  meetupRequests: MeetupRequest[];
+  setMeetupRequests: Dispatch<SetStateAction<MeetupRequest[]>>;
+  refreshFriendRequests: () => void;
+  refreshMeetupRequests: () => void;
+  chats: Chat[];
+  setChats: Dispatch<SetStateAction<Chat[]>>;
+  selectedChat: Chat | null;
+  setSelectedChat: Dispatch<SetStateAction<Chat | null>>;
+  unreadMessageCount: number;
+  setUnreadMessageCount: Dispatch<SetStateAction<number>>;
+  refreshNearbyUsers: (showToast: boolean) => Promise<void>;
 }
-
-export interface BaseRequest {
-  id: string;
-  senderId: string;
-  receiverId: string;
-  status: 'pending' | 'accepted' | 'rejected';
-  senderName?: string;
-  senderProfilePic?: string;
-  receiverName?: string;
-  receiverProfilePic?: string;
-  timestamp?: number;
-}
-
-export interface FriendRequest extends BaseRequest {
-  duration?: number;
-  type?: 'friend';
-}
-
-export interface MeetupRequest extends BaseRequest {
-  duration: number;
-  type: 'meetup';
-  meetLocation?: string;
-}
-
-export type RequestType = FriendRequest | MeetupRequest;
-
-export type MessageStatus = 'sent' | 'received' | 'read' | 'sending';

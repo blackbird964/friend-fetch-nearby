@@ -1,55 +1,40 @@
-import React from "react";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { Routes, Route, Navigate } from "react-router-dom";
-import { AppProvider } from "@/context/AppContext";
 
-// Import pages
-import Landing from "@/pages/Landing";
-import Auth from "@/pages/Auth";
-import Home from "@/pages/Home";
-import MapPage from "@/pages/MapPage";
-import ChatPage from "@/pages/ChatPage";
-import Profile from "@/pages/ProfilePage";
-import FriendsPage from "@/pages/FriendsPage";
-import AdminPage from "@/pages/AdminPage";
-import TestEmail from "@/pages/TestEmail";
-import MainLayout from "@/pages/MainLayout";
-import NotFound from "./pages/NotFound";
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { AppProvider } from '@/context/AppContext';
+import { AuthProvider } from '@/context/AuthContext';
+import { Toaster } from '@/components/ui/toaster';
 
-// Create a new QueryClient instance outside of the component
+import Index from '@/pages/Index';
+import Landing from '@/pages/Landing';
+import Auth from '@/pages/Auth';
+import BusinessAuth from '@/pages/BusinessAuth';
+import MainLayout from '@/pages/MainLayout';
+
 const queryClient = new QueryClient();
 
-const App: React.FC = () => {
+function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/test-email" element={<TestEmail />} />
-            
-            <Route element={<MainLayout />}>
-              <Route path="/home" element={<Home />} />
-              <Route path="/map" element={<MapPage />} />
-              <Route path="/chat" element={<ChatPage />} />
-              <Route path="/chat/:chatId" element={<ChatPage />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/friends" element={<FriendsPage />} />
-              <Route path="/admin" element={<AdminPage />} />
-            </Route>
-            
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </TooltipProvider>
-      </AppProvider>
+      <BrowserRouter>
+        <AppProvider>
+          <AuthProvider>
+            <div className="min-h-screen bg-background">
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/landing" element={<Landing />} />
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/business-auth" element={<BusinessAuth />} />
+                <Route path="/*" element={<MainLayout />} />
+              </Routes>
+              <Toaster />
+            </div>
+          </AuthProvider>
+        </AppProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
-};
+}
 
 export default App;

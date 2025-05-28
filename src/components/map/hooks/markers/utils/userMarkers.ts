@@ -39,8 +39,8 @@ export const addNearbyUserMarkers = (
       return;
     }
     
-    // Check if user has privacy enabled
-    const isPrivacyEnabled = shouldObfuscateLocation(user);
+    // Check if user has privacy enabled (only for non-business users)
+    const isPrivacyEnabled = !user.isBusiness && shouldObfuscateLocation(user);
     
     // Get the appropriate display location
     const displayLocation = isPrivacyEnabled ? getDisplayLocation(user) : user.location;
@@ -53,14 +53,16 @@ export const addNearbyUserMarkers = (
         geometry: new Point(fromLonLat([displayLocation.lng, displayLocation.lat])),
         userId: user.id,
         name: user.name || `User-${user.id.substring(0, 4)}`,
-        isPrivacyEnabled: isPrivacyEnabled
+        isPrivacyEnabled: isPrivacyEnabled,
+        isBusiness: user.isBusiness || false,
+        businessType: user.businessType
       });
       
       features.push(userFeature);
       processedUserIds.add(user.id);
       
-      // If privacy enabled, also add a heatmap-style marker
-      if (isPrivacyEnabled) {
+      // If privacy enabled (and not a business), also add a heatmap-style marker
+      if (isPrivacyEnabled && !user.isBusiness) {
         const heatMapFeature = new Feature({
           geometry: new Point(fromLonLat([displayLocation.lng, displayLocation.lat])),
           userId: user.id,

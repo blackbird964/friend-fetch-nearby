@@ -1,35 +1,34 @@
 
 import React, { useState, useEffect } from 'react';
 import LoginForm from '@/components/auth/LoginForm';
-import SignUpForm from '@/components/auth/SignUpForm';
-import ProfileSetupForm from '@/components/auth/ProfileSetupForm';
+import BusinessSignUpForm from '@/components/auth/BusinessSignUpForm';
+import BusinessProfileSetupForm from '@/components/auth/BusinessProfileSetupForm';
 import { useAppContext } from '@/context/AppContext';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
+import { getBusinessProfile } from '@/services/business/businessService';
 
-const Auth: React.FC = () => {
+const BusinessAuth: React.FC = () => {
   const [formState, setFormState] = useState<'login' | 'signup' | 'profile-setup'>('login');
   const { isAuthenticated, loading, setIsAuthenticated, setSupabaseUser, currentUser } = useAppContext();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   
-  // Check for password reset parameter
   const showReset = searchParams.get('reset') === 'true';
   
-  // Debug authentication state
   useEffect(() => {
     if (isAuthenticated) {
-      console.log("Auth component - User is authenticated:", { currentUser });
+      console.log("BusinessAuth component - User is authenticated:", { currentUser });
     }
   }, [isAuthenticated, currentUser]);
   
   useEffect(() => {
     const checkAuth = async () => {
       const { data } = await supabase.auth.getSession();
-      console.log("Initial session check in Auth:", data.session);
+      console.log("Initial session check in BusinessAuth:", data.session);
       
       if (data.session) {
         setIsAuthenticated(true);
@@ -40,7 +39,7 @@ const Auth: React.FC = () => {
     checkAuth();
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session);
+      console.log("BusinessAuth state changed:", event, session);
       if (session) {
         setIsAuthenticated(true);
         setSupabaseUser(session.user);
@@ -55,26 +54,27 @@ const Auth: React.FC = () => {
     };
   }, [setIsAuthenticated, setSupabaseUser]);
 
-  // If authenticated and has a complete profile, redirect to home
-  if (isAuthenticated && currentUser?.bio && !loading) {
-    console.log("User has complete profile, redirecting to home");
-    return <Navigate to="/home" replace />;
-  }
-  
-  // If authenticated but profile is incomplete, show profile setup
+  // If authenticated and has a complete business profile, redirect to home
   if (isAuthenticated && currentUser && !loading) {
-    if (!currentUser.bio) {
-      console.log("User profile is incomplete, showing profile setup");
-      return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
-          <div className="w-full max-w-md mb-8 text-center">
-            <h1 className="text-3xl font-bold text-primary mb-2">Kairo</h1>
-            <p className="text-gray-600">Complete your profile to continue</p>
-          </div>
-          <ProfileSetupForm />
+    // Check if user has business profile set up
+    getBusinessProfile(currentUser.id).then(business => {
+      if (business && business.description) {
+        console.log("Business has complete profile, redirecting to home");
+        return <Navigate to="/home" replace />;
+      }
+    });
+    
+    // If business profile is incomplete, show profile setup
+    console.log("Business profile may be incomplete, showing profile setup");
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
+        <div className="w-full max-w-md mb-8 text-center">
+          <h1 className="text-3xl font-bold text-primary mb-2">Kairo Business</h1>
+          <p className="text-gray-600">Complete your business profile to continue</p>
         </div>
-      );
-    }
+        <BusinessProfileSetupForm />
+      </div>
+    );
   }
 
   if (loading) {
@@ -88,8 +88,8 @@ const Auth: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
       <div className="w-full max-w-md mb-8 text-center">
-        <h1 className="text-3xl font-bold text-primary mb-2">Kairo</h1>
-        <p className="text-gray-600">Connect with people nearby, right now.</p>
+        <h1 className="text-3xl font-bold text-primary mb-2">Kairo Business</h1>
+        <p className="text-gray-600">Connect with customers in your area.</p>
       </div>
 
       {showReset && (
@@ -106,10 +106,10 @@ const Auth: React.FC = () => {
       {formState === 'login' ? (
         <LoginForm onToggleForm={() => setFormState('signup')} />
       ) : formState === 'signup' ? (
-        <SignUpForm 
+        <BusinessSignUpForm 
           onToggleForm={() => setFormState('login')} 
           onContinue={() => {
-            console.log("User signed up, showing profile setup");
+            console.log("Business signed up, showing profile setup");
             setFormState('profile-setup');
           }}
         />
@@ -117,9 +117,9 @@ const Auth: React.FC = () => {
       
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-500">
-          Are you a business?{" "}
-          <a href="/business-auth" className="text-primary underline font-medium hover:text-primary/80">
-            Create a business account
+          Looking for a personal account?{" "}
+          <a href="/auth" className="text-primary underline font-medium hover:text-primary/80">
+            Sign up as a user
           </a>
         </p>
       </div>
@@ -127,4 +127,4 @@ const Auth: React.FC = () => {
   );
 };
 
-export default Auth;
+export default BusinessAuth;

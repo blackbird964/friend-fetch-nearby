@@ -4,6 +4,7 @@ import { AppUser } from '@/context/types';
 import { processNearbyUsers, filterUsersByDistance } from './userFilterService';
 import { extractLocationFromPgPoint } from './userLocationService';
 import { addTestUsersNearby } from './testUserService';
+import { getNearbyBusinesses } from '@/services/business/businessService';
 
 /**
  * Service for managing nearby users functionality
@@ -33,12 +34,11 @@ export const nearbyUsersService = {
       
       // Convert to AppUser type
       const otherUsers = profiles.map(profile => {
-        // Use type assertion to handle properties that might not be in the type
         const typedProfile = profile as any;
         const userData: AppUser = {
           id: profile.id,
           name: profile.name || 'User',
-          email: '', // We don't have emails for other users
+          email: '',
           avatar: profile.profile_pic || undefined,
           location: profile.location ? extractLocationFromPgPoint(profile.location) : undefined,
           interests: Array.isArray(profile.interests) ? profile.interests : [],
@@ -47,7 +47,7 @@ export const nearbyUsersService = {
           age: profile.age || undefined,
           gender: profile.gender || undefined,
           isOnline: typedProfile.is_online || false,
-          blockedUsers: typedProfile.blockedUsers || [] // Use type assertion to access blockedUsers
+          blockedUsers: typedProfile.blockedUsers || []
         };
         
         console.log(`Processed user: ${profile.id}, name: ${userData.name}`);
@@ -56,20 +56,42 @@ export const nearbyUsersService = {
 
       console.log(`Found ${otherUsers.length} users`, otherUsers);
       
+      // Also fetch nearby businesses
+      const businesses = await getNearbyBusinesses(location, radiusKm);
+      console.log(`Found ${businesses.length} businesses`);
+      
+      // Convert businesses to AppUser format for map display
+      const businessUsers: AppUser[] = businesses.map(business => ({
+        id: business.id,
+        name: business.business_name,
+        email: business.email || '',
+        avatar: undefined,
+        location: business.location ? extractLocationFromPgPoint(business.location) : undefined,
+        interests: [business.business_type],
+        profile_pic: undefined,
+        bio: business.description || '',
+        age: undefined,
+        gender: undefined,
+        isOnline: business.is_online,
+        blockedUsers: [],
+        // Mark as business for map rendering
+        isBusiness: true,
+        businessType: business.business_type
+      }));
+      
+      // Combine users and businesses
+      const allEntities = [...otherUsers, ...businessUsers];
+      
       // If we have a location, calculate distance and filter by radius
       if (location && location.lat && location.lng) {
-        // Calculate distance for each user
-        const usersWithDistance = processNearbyUsers(otherUsers, location);
+        const entitiesWithDistance = processNearbyUsers(allEntities, location);
+        const nearbyEntities = filterUsersByDistance(entitiesWithDistance, radiusKm);
         
-        // Filter users by distance
-        const nearbyUsers = filterUsersByDistance(usersWithDistance, radiusKm);
-        
-        console.log(`After distance filtering: ${nearbyUsers.length} users within ${radiusKm}km`);
-        return nearbyUsers;
+        console.log(`After distance filtering: ${nearbyEntities.length} entities within ${radiusKm}km`);
+        return nearbyEntities;
       } else {
-        // If no location provided, return all users without distance filtering
-        console.log("No location provided, returning all users without distance filtering");
-        return otherUsers;
+        console.log("No location provided, returning all entities without distance filtering");
+        return allEntities;
       }
     } catch (error) {
       console.error("Error getting nearby users:", error);

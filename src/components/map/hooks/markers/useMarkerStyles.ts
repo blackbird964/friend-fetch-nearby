@@ -1,5 +1,5 @@
 
-import { Style, Circle as CircleStyle, Fill, Stroke, Text } from 'ol/style';
+import { Style, Circle as CircleStyle, Fill, Stroke, Text, Icon } from 'ol/style';
 import Feature from 'ol/Feature';
 import Geometry from 'ol/geom/Geometry';
 import { FriendRequest } from '@/context/types';
@@ -20,17 +20,18 @@ export const useMarkerStyles = (
     const isCircle = feature.get('isCircle');
     const isHeatMap = feature.get('isHeatMap');
     const circleType = feature.get('circleType');
+    const isBusiness = feature.get('isBusiness');
     const userName = feature.get('name') || (userId ? `User-${userId.substring(0, 4)}` : '');
     
     // Special style for heatmap marker (privacy mode)
     if (isHeatMap) {
       return new Style({
         image: new CircleStyle({
-          radius: 120, // 10 times larger than normal marker (12px)
-          fill: new Fill({ color: 'rgba(155, 135, 245, 0.2)' }), // Semi-transparent purple
+          radius: 120,
+          fill: new Fill({ color: 'rgba(155, 135, 245, 0.2)' }),
           stroke: new Stroke({ color: 'rgba(155, 135, 245, 0.4)', width: 1 })
         }),
-        zIndex: 5 // Ensure it appears below the actual marker
+        zIndex: 5
       });
     }
     
@@ -39,23 +40,22 @@ export const useMarkerStyles = (
       if (circleType === 'radius') {
         return new Style({
           stroke: new Stroke({
-            color: 'rgba(64, 99, 255, 0.5)', // Semi-transparent blue
+            color: 'rgba(64, 99, 255, 0.5)',
             width: 2,
             lineDash: [5, 5]
           }),
           fill: new Fill({
-            color: 'rgba(64, 99, 255, 0.05)' // Very light blue fill
+            color: 'rgba(64, 99, 255, 0.05)'
           })
         });
       } else if (circleType === 'privacy') {
-        // Privacy circle style with purple color
         return new Style({
           stroke: new Stroke({
-            color: 'rgba(155, 135, 245, 0.8)', // Purple color for privacy
+            color: 'rgba(155, 135, 245, 0.8)',
             width: 2
           }),
           fill: new Fill({
-            color: 'rgba(155, 135, 245, 0.3)' // This opacity will be animated
+            color: 'rgba(155, 135, 245, 0.3)'
           }),
           text: userName ? new Text({
             text: userName,
@@ -83,10 +83,14 @@ export const useMarkerStyles = (
       (req.senderId === userId || req.receiverId === userId)
     );
     
-    // Determine marker color based on status
+    // Determine marker color and style based on status
     let markerColor = '#6366f1'; // Default purple color
+    let useStarIcon = false;
     
-    if (isUser) {
+    if (isBusiness) {
+      markerColor = '#f59e0b'; // Amber color for businesses
+      useStarIcon = true;
+    } else if (isUser) {
       markerColor = '#0ea5e9'; // Blue for current user
     } else if (isMoving || hasMoved) {
       markerColor = '#10b981'; // Green for moving/completed users
@@ -104,7 +108,7 @@ export const useMarkerStyles = (
     if (isPrivacyEnabled && !isUser) {
       return new Style({
         image: new CircleStyle({
-          radius: 8, // Smaller marker for privacy users
+          radius: 8,
           fill: new Fill({ color: markerColor }),
           stroke: new Stroke({ color: 'white', width: 2 })
         }),
@@ -114,6 +118,24 @@ export const useMarkerStyles = (
           fill: new Fill({ color: '#374151' }),
           stroke: new Stroke({ color: 'white', width: 2 })
         })
+      });
+    }
+    
+    // For businesses, use star icon if possible, otherwise colored circle
+    if (isBusiness && useStarIcon) {
+      return new Style({
+        image: new CircleStyle({
+          radius: 16,
+          fill: new Fill({ color: markerColor }),
+          stroke: new Stroke({ color: 'white', width: 2 })
+        }),
+        text: new Text({
+          text: '★',
+          fill: new Fill({ color: 'white' }),
+          font: 'bold 16px sans-serif',
+          offsetY: 2
+        }),
+        zIndex: 10 // Higher z-index for businesses
       });
     }
     
