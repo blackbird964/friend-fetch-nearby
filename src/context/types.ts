@@ -1,3 +1,4 @@
+
 import { Dispatch, SetStateAction } from 'react';
 
 export interface Location {
@@ -47,6 +48,9 @@ export interface AppUser {
   gender?: string;
   isOnline: boolean;
   blockedUsers?: string[];
+  blocked_users?: string[];
+  active_priorities?: Priority[];
+  is_over_18?: boolean;
   // New fields for business support
   isBusiness?: boolean;
   businessType?: 'cafe' | 'bar' | 'restaurant' | 'lunch_spot' | 'other';
@@ -67,6 +71,12 @@ export interface FriendRequest {
   receiverId: string;
   status: 'pending' | 'accepted' | 'rejected';
   createdAt: string;
+  senderName?: string;
+  receiverName?: string;
+  senderProfilePic?: string;
+  receiverProfilePic?: string;
+  duration?: number;
+  timestamp?: number;
 }
 
 export interface MeetupRequest {
@@ -76,7 +86,13 @@ export interface MeetupRequest {
   status: 'pending' | 'accepted' | 'rejected';
   createdAt: string;
   location?: Location;
+  meetLocation?: Location;
   duration?: number;
+  senderName?: string;
+  receiverName?: string;
+  senderProfilePic?: string;
+  receiverProfilePic?: string;
+  timestamp?: number;
 }
 
 export interface Message {
@@ -87,6 +103,7 @@ export interface Message {
   timestamp: number;
   isRead: boolean;
   content?: string;
+  chatId?: string;
 }
 
 export interface Chat {
@@ -101,6 +118,7 @@ export interface Chat {
   messages: Message[];
   unreadCount?: number;
   isOnline?: boolean;
+  chat?: any;
 }
 
 export interface AppContextType {
