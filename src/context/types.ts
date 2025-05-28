@@ -104,6 +104,7 @@ export interface Message {
   isRead: boolean;
   content?: string;
   chatId?: string;
+  status?: 'sending' | 'sent' | 'received';
 }
 
 export interface Chat {
@@ -118,7 +119,6 @@ export interface Chat {
   messages: Message[];
   unreadCount?: number;
   isOnline?: boolean;
-  chat?: any;
 }
 
 export interface AppContextType {

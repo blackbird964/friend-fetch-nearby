@@ -23,11 +23,10 @@ export const updateBusinessProfile = async (userId: string, profileData: Partial
   try {
     console.log("Updating business profile for user:", userId, profileData);
     
-    const { data, error } = await supabase
-      .from('businesses')
-      .update(profileData)
-      .eq('auth_user_id', userId)
-      .select();
+    const { data, error } = await supabase.rpc('update_business_profile', {
+      user_id: userId,
+      profile_data: profileData
+    });
       
     if (error) {
       console.error('Error updating business profile:', error);
@@ -44,15 +43,12 @@ export const updateBusinessProfile = async (userId: string, profileData: Partial
 
 export const getBusinessProfile = async (userId: string): Promise<Business | null> => {
   try {
-    const { data, error } = await supabase
-      .from('businesses')
-      .select('*')
-      .eq('auth_user_id', userId)
-      .single();
+    const { data, error } = await supabase.rpc('get_business_profile', {
+      user_id: userId
+    });
       
     if (error) {
-      if (error.code === 'PGRST116') {
-        // No business profile found
+      if (error.message.includes('No business profile found')) {
         return null;
       }
       throw error;
@@ -72,9 +68,11 @@ export const getNearbyBusinesses = async (
   try {
     console.log(`Getting nearby businesses within ${radiusKm}km radius`);
     
-    const { data: businesses, error } = await supabase
-      .from('businesses')
-      .select('*');
+    const { data: businesses, error } = await supabase.rpc('get_nearby_businesses', {
+      lat: location.lat,
+      lng: location.lng,
+      radius_km: radiusKm
+    });
       
     if (error) {
       console.error("Error fetching businesses:", error);
@@ -84,7 +82,7 @@ export const getNearbyBusinesses = async (
     console.log("All fetched businesses:", businesses);
     
     // Filter businesses that have location data
-    const businessesWithLocation = businesses.filter(business => business.location);
+    const businessesWithLocation = businesses?.filter((business: any) => business.location) || [];
     
     console.log(`Found ${businessesWithLocation.length} businesses with location data`);
     return businessesWithLocation;
@@ -101,18 +99,11 @@ export const updateBusinessLocation = async (
   try {
     console.log("Updating business location:", userId, location);
     
-    // Format the location data for PostgreSQL point type storage
-    const formattedLocation = `(${location.lng},${location.lat})`;
-    
-    const { data, error } = await supabase
-      .from('businesses')
-      .update({ 
-        location: formattedLocation,
-        is_online: true,
-        last_seen: new Date().toISOString()
-      })
-      .eq('auth_user_id', userId)
-      .select();
+    const { data, error } = await supabase.rpc('update_business_location', {
+      user_id: userId,
+      lat: location.lat,
+      lng: location.lng
+    });
       
     if (error) {
       console.error("Error updating business location:", error);
