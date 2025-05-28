@@ -1,4 +1,3 @@
-
 import { Dispatch, SetStateAction } from 'react';
 
 export interface Location {
@@ -63,6 +62,8 @@ export interface AppUser {
     is_manual_mode?: boolean;
     hide_exact_location?: boolean;
   };
+  // Add distance property for filtering
+  distance?: number;
 }
 
 export interface FriendRequest {
@@ -86,7 +87,7 @@ export interface MeetupRequest {
   status: 'pending' | 'accepted' | 'rejected';
   createdAt: string;
   location?: Location;
-  meetLocation?: Location;
+  meetLocation?: string; // Changed from Location to string for display
   duration?: number;
   senderName?: string;
   receiverName?: string;

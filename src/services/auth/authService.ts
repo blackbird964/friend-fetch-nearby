@@ -55,6 +55,7 @@ export const fetchUserProfile = async (userId: string): Promise<AppUser | null> 
       email: '', // Email will be added from session
       location: profile.location as Location || undefined,
       is_over_18: profile.is_over_18 || false,
+      isOnline: profile.is_online || false,
     };
   } catch (error) {
     console.error('Error in fetchUserProfile:', error);

@@ -57,9 +57,11 @@ export function useSendMessage() {
         id: sentMessage.id,
         chatId: selectedChat.id,
         senderId: 'current',
+        receiverId: sentMessage.receiver_id,
         text: sentMessage.content,
         content: sentMessage.content,
         timestamp: new Date(sentMessage.created_at).getTime(),
+        isRead: sentMessage.read || false,
         status: 'sent',
       };
       
