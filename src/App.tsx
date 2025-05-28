@@ -12,14 +12,21 @@ import Auth from '@/pages/Auth';
 import BusinessAuth from '@/pages/BusinessAuth';
 import MainLayout from '@/pages/MainLayout';
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <AppProvider>
-          <AuthProvider>
+        <AuthProvider>
+          <AppProvider>
             <div className="min-h-screen bg-background">
               <Routes>
                 <Route path="/" element={<Index />} />
@@ -30,8 +37,8 @@ function App() {
               </Routes>
               <Toaster />
             </div>
-          </AuthProvider>
-        </AppProvider>
+          </AppProvider>
+        </AuthProvider>
       </BrowserRouter>
     </QueryClientProvider>
   );

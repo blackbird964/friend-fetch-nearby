@@ -1,7 +1,6 @@
 
 // Since the businesses table doesn't exist yet in the database schema,
 // we'll use placeholder functions until the proper Supabase migration is completed
-import { supabase } from '@/integrations/supabase/client';
 
 export interface Business {
   id: string;
@@ -27,11 +26,11 @@ export const updateBusinessProfile = async (userId: string, profileData: Partial
     
     // Placeholder implementation until businesses table is created
     console.warn('Business table not implemented in database yet');
-    return null;
+    return { data: null, error: null };
     
   } catch (error) {
     console.error('Error in updateBusinessProfile:', error);
-    throw error;
+    return { data: null, error: error };
   }
 };
 
@@ -43,7 +42,7 @@ export const getBusinessProfile = async (userId: string): Promise<Business | nul
     
   } catch (error) {
     console.error('Error fetching business profile:', error);
-    throw error;
+    return null;
   }
 };
 
@@ -77,6 +76,6 @@ export const updateBusinessLocation = async (
     
   } catch (error) {
     console.error("Error in updateBusinessLocation:", error);
-    throw error;
+    return { data: null, error: error };
   }
 };
