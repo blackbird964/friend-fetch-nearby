@@ -72,13 +72,21 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [userScrolled, setUserScrolled] = useState(false);
   const prevMessagesLength = useRef(messages.length);
+  const hasScrolledToBottom = useRef(false);
   
-  // Optimized scroll to bottom - only when new messages arrive
+  // Scroll to bottom when messages are first loaded or when new messages arrive
   useEffect(() => {
-    if (messages.length > prevMessagesLength.current && !userScrolled) {
+    const shouldScrollToBottom = 
+      (!hasScrolledToBottom.current && messages.length > 0) || // First load
+      (messages.length > prevMessagesLength.current && !userScrolled); // New messages
+    
+    if (shouldScrollToBottom) {
       const timeoutId = setTimeout(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      }, 50); // Reduced timeout for faster response
+        messagesEndRef.current?.scrollIntoView({ behavior: messages.length === prevMessagesLength.current ? 'smooth' : 'auto' });
+        if (!hasScrolledToBottom.current) {
+          hasScrolledToBottom.current = true;
+        }
+      }, 50);
       
       prevMessagesLength.current = messages.length;
       return () => clearTimeout(timeoutId);
