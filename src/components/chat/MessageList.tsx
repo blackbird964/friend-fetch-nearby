@@ -151,11 +151,11 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
       onScroll={handleScroll}
       ref={scrollContainerRef}
     >
-      <div className="p-4 space-y-4 pb-2">
+      <div className="p-4 space-y-4 pb-6">
         {messages.map((msg) => (
           <MessageItem key={msg.id} message={msg} />
         ))}
-        <div ref={messagesEndRef} />
+        <div ref={messagesEndRef} className="h-4" />
       </div>
     </div>
   );
