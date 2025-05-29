@@ -1,9 +1,8 @@
 
 import React from 'react';
-import { MapPin, Eye } from 'lucide-react';
+import { Eye } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import LocationPrivacyToggle from './LocationPrivacyToggle';
 
 type LocationControlsProps = {
   toggleLocationTracking: () => void;
@@ -16,11 +15,7 @@ type LocationControlsProps = {
 
 const LocationControls: React.FC<LocationControlsProps> = ({
   toggleLocationTracking,
-  isTracking,
-  isManualMode,
-  toggleManualMode,
-  isPrivacyModeEnabled,
-  togglePrivacyMode
+  isTracking
 }) => {
   const handleToggle = (handler: () => void) => (e: React.MouseEvent) => {
     // This ensures the click doesn't bubble up to parent elements
@@ -29,34 +24,8 @@ const LocationControls: React.FC<LocationControlsProps> = ({
   };
 
   return (
-    <div className="grid grid-cols-3 gap-2 w-full items-center">
-      <div className="flex items-center space-x-2 justify-start">
-        <div className="flex items-center space-x-1">
-          <Switch
-            id="manual-mode-control"
-            checked={isManualMode}
-            onCheckedChange={toggleManualMode}
-          />
-          <Label 
-            htmlFor="manual-mode-control" 
-            className="text-xs whitespace-nowrap cursor-pointer"
-            onClick={handleToggle(toggleManualMode)}
-          >
-            <MapPin className="h-3 w-3 inline mr-1" />
-            Manual
-          </Label>
-        </div>
-      </div>
-      
-      <div className="flex justify-center">
-        <LocationPrivacyToggle 
-          isPrivacyModeEnabled={isPrivacyModeEnabled}
-          togglePrivacyMode={togglePrivacyMode}
-          showLabel={true}
-        />
-      </div>
-
-      <div className="flex items-center space-x-1 justify-end">
+    <div className="flex items-center justify-center w-full">
+      <div className="flex items-center space-x-2">
         <Switch
           id="tracking-mode-control"
           checked={isTracking}
