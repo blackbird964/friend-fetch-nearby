@@ -14,7 +14,6 @@ import LocationHandling from './components/LocationHandling';
 import MeetingHandler from './components/MeetingHandler';
 import MapControlPanel from './components/MapControlPanel';
 import MapControls from './components/MapControls';
-import MapZoomControls from './components/MapZoomControls';
 
 interface FriendMapContainerProps {
   isManualMode: boolean;
@@ -155,11 +154,6 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         setRadiusInKm={setRadiusInKm}
         updateUserLocation={updateUserLocation}
         setCurrentUser={setCurrentUser}
-      />
-      
-      <MapZoomControls
-        map={map}
-        mapLoaded={mapLoaded}
       />
       
       {/* Modified to ONLY handle route visualization */}
