@@ -9,7 +9,7 @@ const PRIORITY_CATEGORIES: PriorityCategory[] = [
   },
   {
     name: "Fitness Goals",
-    activities: ["Training for a 5K", "Finding a tennis partner", "Looking for yoga buddies", "Starting group workouts", "Seeking hiking companions"]
+    activities: ["Training for a 5K", "drinks after work", "Looking for yoga buddies", "Starting group workouts", "Seeking hiking companions"]
   },
   {
     name: "Local Exploration",

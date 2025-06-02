@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { ActivePriority } from '@/lib/supabase/profiles/types';
@@ -16,7 +15,8 @@ const SYDNEY_ACTIVITIES = [
   "beach",
   "co-working space catchup",
   "new to area - show me around!",
-  "pokemon go"
+  "pokemon go",
+  "drinks after work"
 ];
 
 interface PriorityFormFieldsProps {
