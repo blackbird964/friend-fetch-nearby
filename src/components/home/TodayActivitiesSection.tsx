@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -81,7 +80,7 @@ const TodayActivitiesSection: React.FC = () => {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="text-lg">What do you want to do today?</CardTitle>
-          <p className="text-sm text-gray-600">Select up to 5 activities</p>
+          <p className="text-sm text-gray-600">Select up to 5 activities - you can change at any time by de-selecting and picking another</p>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Selected Activities */}
