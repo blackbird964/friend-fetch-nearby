@@ -16,7 +16,7 @@ const SYDNEY_ACTIVITIES = [
   "co-working space catchup",
   "new to area - show me around!",
   "pokemon go",
-  "drinks after work"
+  "Drinks after work"
 ];
 
 interface PriorityFormFieldsProps {

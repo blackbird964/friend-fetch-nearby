@@ -5,11 +5,11 @@ import { PriorityCategory } from '@/lib/supabase/profiles/types';
 const PRIORITY_CATEGORIES: PriorityCategory[] = [
   {
     name: "Parenting Activities",
-    activities: ["Finding playdate partners", "Discovering family-friendly venues", "Organizing children's activities", "Seeking parent support groups"]
+    activities: ["Discovering family-friendly venues", "Organizing children's activities"]
   },
   {
     name: "Fitness Goals",
-    activities: ["Training for a 5K", "drinks after work", "Looking for yoga buddies", "Starting group workouts", "Seeking hiking companions"]
+    activities: ["Training for a 5K", "Drinks after work", "Looking for yoga buddies", "Starting group workouts", "Seeking hiking companions"]
   },
   {
     name: "Local Exploration",
