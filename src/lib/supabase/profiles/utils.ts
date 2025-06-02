@@ -64,7 +64,7 @@ export const normalizeProfileData = (profile: any): ProfileWithBlockedUsers => {
     active_priorities: activePriorities,
     blocked_users: profile.blocked_users || [],
     blockedUsers: profile.blocked_users || [],
-    // Handle today's activities
+    // Handle today's activities from database
     todayActivities: profile.today_activities || [],
     preferredHangoutDuration: profile.preferred_hangout_duration || '30',
     // Ensure interests is always an array

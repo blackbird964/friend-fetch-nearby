@@ -51,7 +51,9 @@ export type Database = {
           last_seen: string | null
           location: unknown | null
           name: string | null
+          preferred_hangout_duration: string | null
           profile_pic: string | null
+          today_activities: string[] | null
           updated_at: string | null
         }
         Insert: {
@@ -68,7 +70,9 @@ export type Database = {
           last_seen?: string | null
           location?: unknown | null
           name?: string | null
+          preferred_hangout_duration?: string | null
           profile_pic?: string | null
+          today_activities?: string[] | null
           updated_at?: string | null
         }
         Update: {
@@ -85,7 +89,9 @@ export type Database = {
           last_seen?: string | null
           location?: unknown | null
           name?: string | null
+          preferred_hangout_duration?: string | null
           profile_pic?: string | null
+          today_activities?: string[] | null
           updated_at?: string | null
         }
         Relationships: []

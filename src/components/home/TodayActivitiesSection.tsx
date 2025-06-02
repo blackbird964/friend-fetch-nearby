@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,23 +48,24 @@ const TodayActivitiesSection: React.FC = () => {
 
     setIsUpdating(true);
     try {
-      // For now, we'll just update the local state since the database fields don't exist yet
-      // In a real implementation, you'd want to add these fields to the profiles table
+      // Update the profile with the new preferences
+      const updatedProfile = {
+        id: currentUser.id,
+        today_activities: selectedActivities,
+        preferred_hangout_duration: hangoutDuration
+      };
+
+      await updateUserProfile(updatedProfile);
+      
+      // Update local state
       const updatedUser = {
         ...currentUser,
         todayActivities: selectedActivities,
         preferredHangoutDuration: hangoutDuration
       };
-
-      // Try to update the profile (this will skip the todayActivities and preferredHangoutDuration fields)
-      await updateUserProfile({ id: currentUser.id });
-      
-      // Update local state
       setCurrentUser(updatedUser);
       
-      toast.success('Preferences saved locally!', {
-        description: 'Note: Database persistence for activities is coming soon.'
-      });
+      toast.success('Preferences saved successfully!');
     } catch (error) {
       console.error('Error updating preferences:', error);
       toast.error('Failed to update preferences', {
