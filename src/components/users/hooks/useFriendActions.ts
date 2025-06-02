@@ -52,8 +52,8 @@ export const useFriendActions = () => {
 
     try {
       setLoading(true);
-      // Use the default 30 minutes duration
-      const defaultDuration = 30;
+      // Use the default 30 minutes duration as string
+      const defaultDuration = "30";
       
       console.log("Sending friend request with data:", {
         currentUserId: currentUser.id, 
