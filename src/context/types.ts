@@ -1,25 +1,37 @@
-
-import { User } from '@supabase/supabase-js';
-import { ActivePriority } from '@/lib/supabase/profiles/types';
+import { ReactNode } from 'react';
+import { Profile } from '@/lib/supabase';
+import { Chat } from '@/components/chat/types';
 
 export interface Location {
   lat: number;
   lng: number;
 }
 
+export interface ActivePriority {
+  id: string;
+  category: string;
+  activity: string;
+  frequency?: string;
+  timePreference?: string;
+  urgency?: string;
+  location?: string;
+  experienceLevel?: string;
+}
+
 export interface AppUser {
   id: string;
-  name?: string;
+  name: string;
   email: string;
   avatar?: string;
   location?: Location;
-  interests?: string[];
+  interests: string[];
+  distance?: number;
+  isOnline?: boolean;
   profile_pic?: string;
   bio?: string;
   age?: number;
   gender?: string;
   blockedUsers?: string[];
-  blocked_users?: string[];
   locationSettings?: {
     isManualMode: boolean;
     hideExactLocation: boolean;
@@ -28,61 +40,74 @@ export interface AppUser {
     is_manual_mode?: boolean;
     hide_exact_location?: boolean;
   };
-  distance?: number;
-  chat?: Chat; // Chat property for navigation purposes
-  isOnline?: boolean; // Adding isOnline property
-  is_over_18?: boolean; // Added is_over_18 property
-  active_priorities?: ActivePriority[]; // Added active_priorities property
+  active_priorities?: ActivePriority[];
+  todayActivities?: string[]; // New field for today's selected activities
+  preferredHangoutDuration?: string; // New field for hangout duration preference
 }
 
-export interface Chat {
-  id: string;
-  name: string;
-  avatar?: string;
-  participants: string[]; // User IDs
-  messages: Message[];
-  participantId?: string;
-  participantName?: string;
-  profilePic?: string;
-  lastMessage?: string;
-  lastMessageTime?: number;  // Always number for consistency
-  isOnline?: boolean; // Added this property
-  unreadCount?: number; // Added this property for tracking unread messages
-}
-
-export interface Message {
-  id: string;
-  chatId?: string;  // Made optional since not all context requires it
-  senderId: string;
-  content?: string;  // Made optional since we're using text in some places
-  text?: string;     // Added to support existing usage
-  timestamp: string | number;  // Support both string and number timestamps for input
-  status?: MessageStatus;  // Made optional for compatibility
-}
-
-export interface BaseRequest {
+export interface FriendRequest {
   id: string;
   senderId: string;
   receiverId: string;
   status: 'pending' | 'accepted' | 'rejected';
-  senderName?: string;
-  senderProfilePic?: string;
-  receiverName?: string;
-  receiverProfilePic?: string;
-  timestamp?: number;
+  createdAt: string;
+  duration: string;
+  sender_name: string;
 }
 
-export interface FriendRequest extends BaseRequest {
-  duration?: number;
-  type?: 'friend';
+export interface Message {
+  id: string;
+  chatId: string;
+  senderId: string;
+  content: string;
+  timestamp: number;
+  status: 'sent' | 'delivered' | 'read';
+  text?: string;
 }
 
-export interface MeetupRequest extends BaseRequest {
-  duration: number;
-  type: 'meetup';
-  meetLocation?: string;
+export interface Chat {
+  id: string;
+  participants: string[];
+  messages: Message[];
+  createdAt: string;
+  updatedAt: string;
 }
 
-export type RequestType = FriendRequest | MeetupRequest;
+export interface AuthContextType {
+  currentUser: AppUser | null;
+  setCurrentUser: (user: AppUser) => void;
+  loading: boolean;
+  error: string | null;
+  signUp: (data: any) => Promise<void>;
+  signIn: (data: any) => Promise<void>;
+  signOut: () => Promise<void>;
+  updateProfile: (profileData: Partial<Profile>) => Promise<void>;
+}
 
-export type MessageStatus = 'sent' | 'received' | 'read' | 'sending';
+export interface UsersContextType {
+  nearbyUsers: AppUser[];
+  setNearbyUsers: (users: AppUser[]) => void;
+  radiusInKm: number;
+  setRadiusInKm: (radius: number) => void;
+  refreshNearbyUsers: (showToast?: boolean) => Promise<void>;
+}
+
+export interface ChatContextType {
+  chats: Chat[];
+  activeChat: Chat | null;
+  friendRequests: FriendRequest[];
+  loading: boolean;
+  error: string | null;
+  startChat: (user: AppUser) => Promise<void>;
+  sendMessage: (chatId: string, content: string) => Promise<void>;
+  acceptFriendRequest: (friendRequestId: string, duration: string) => Promise<void>;
+  rejectFriendRequest: (friendRequestId: string) => Promise<void>;
+  sendFriendRequest: (receiverId: string, duration: string) => Promise<void>;
+  cancelFriendRequest: (friendRequestId: string) => Promise<void>;
+  loadChat: (chatId: string) => Promise<void>;
+  removeChat: (chatId: string) => Promise<void>;
+}
+
+export interface AppContextType extends AuthContextType, UsersContextType, ChatContextType {
+  children?: ReactNode;
+}

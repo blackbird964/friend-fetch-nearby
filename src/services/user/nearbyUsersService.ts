@@ -47,7 +47,9 @@ export const nearbyUsersService = {
           age: profile.age || undefined,
           gender: profile.gender || undefined,
           isOnline: typedProfile.is_online || false,
-          blockedUsers: typedProfile.blockedUsers || [] // Use type assertion to access blockedUsers
+          blockedUsers: typedProfile.blockedUsers || [],
+          todayActivities: typedProfile.today_activities || [],
+          preferredHangoutDuration: typedProfile.preferred_hangout_duration || '30'
         };
         
         console.log(`Processed user: ${profile.id}, name: ${userData.name}`);

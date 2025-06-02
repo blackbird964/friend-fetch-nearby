@@ -19,12 +19,27 @@ const UserList: React.FC = () => {
   };
 
   // Get only online and real users (filter out any test users if they somehow remain)
-  const onlineUsers = nearbyUsers.filter(user => 
+  let onlineUsers = nearbyUsers.filter(user => 
     // Only include users marked as online
     user.isOnline === true &&
     // Filter out users that don't have a valid ID or have test/mock in their ID
     user.id && !String(user.id).includes('test') && !String(user.id).includes('mock')
   );
+
+  // Filter users based on matching activities if current user has selected today's activities
+  if (currentUser?.todayActivities && currentUser.todayActivities.length > 0) {
+    onlineUsers = onlineUsers.filter(user => {
+      // If the user doesn't have today's activities set, don't show them
+      if (!user.todayActivities || user.todayActivities.length === 0) {
+        return false;
+      }
+      
+      // Check if there's at least one matching activity
+      return user.todayActivities.some(activity => 
+        currentUser.todayActivities!.includes(activity)
+      );
+    });
+  }
 
   console.log("UserList component - Displaying users:", onlineUsers.length, "out of", nearbyUsers.length);
 

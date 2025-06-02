@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { MapPin, Users, Info } from 'lucide-react';
 import UserList from '@/components/users/UserList';
+import TodayActivitiesSection from '@/components/home/TodayActivitiesSection';
 import { useNavigate } from 'react-router-dom';
 
 const Home: React.FC = () => {
@@ -46,6 +47,9 @@ const Home: React.FC = () => {
             )}
           </Button>
         </div>
+
+        {/* Today's Activities Section */}
+        <TodayActivitiesSection />
         
         {/* App Info */}
         <Card className="bg-gray-50">

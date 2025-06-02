@@ -41,6 +41,17 @@ export const updateUserProfile = async (updatedProfile: Partial<Profile>) => {
         profileUpdate.location_settings.hide_exact_location = false;
       }
     }
+
+    // Handle today's activities and hangout duration
+    if (profileUpdate.todayActivities !== undefined) {
+      profileUpdate.today_activities = profileUpdate.todayActivities;
+      delete profileUpdate.todayActivities;
+    }
+
+    if (profileUpdate.preferredHangoutDuration !== undefined) {
+      profileUpdate.preferred_hangout_duration = profileUpdate.preferredHangoutDuration;
+      delete profileUpdate.preferredHangoutDuration;
+    }
     
     // Make sure active_priorities is valid and converted to JSON before sending it to Supabase
     if (profileUpdate.active_priorities) {
