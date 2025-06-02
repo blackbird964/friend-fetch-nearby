@@ -48,9 +48,6 @@ const Home: React.FC = () => {
           </Button>
         </div>
 
-        {/* Today's Activities Section */}
-        <TodayActivitiesSection />
-        
         {/* App Info */}
         <Card className="bg-gray-50">
           <CardContent className="p-4">
@@ -66,6 +63,9 @@ const Home: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Today's Activities Section */}
+        <TodayActivitiesSection />
         
         {/* Nearby Users */}
         <UserList />

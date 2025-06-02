@@ -148,7 +148,7 @@ const TodayActivitiesSection: React.FC = () => {
         disabled={isUpdating || selectedActivities.length === 0}
         className="w-full"
       >
-        {isUpdating ? 'Saving...' : 'Save Preferences'}
+        {isUpdating ? 'Saving...' : 'Save and find new friends'}
       </Button>
     </div>
   );
