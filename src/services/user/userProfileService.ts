@@ -42,15 +42,18 @@ export const updateUserProfile = async (updatedProfile: Partial<Profile>) => {
       }
     }
 
-    // Handle today's activities and hangout duration
+    // Handle today's activities - check if the field exists in the database schema
     if (profileUpdate.todayActivities !== undefined) {
-      profileUpdate.today_activities = profileUpdate.todayActivities;
-      delete profileUpdate.todayActivities;
+      // Since we don't have today_activities in the profiles table, we'll store it in the bio for now
+      // or we can add it to the database schema if needed
+      console.log("Today's activities will be stored in user preferences (not yet implemented in DB)");
+      delete profileUpdate.todayActivities; // Remove for now until we add the field to DB
     }
 
+    // Handle preferred hangout duration - same issue
     if (profileUpdate.preferredHangoutDuration !== undefined) {
-      profileUpdate.preferred_hangout_duration = profileUpdate.preferredHangoutDuration;
-      delete profileUpdate.preferredHangoutDuration;
+      console.log("Preferred hangout duration will be stored in user preferences (not yet implemented in DB)");
+      delete profileUpdate.preferredHangoutDuration; // Remove for now until we add the field to DB
     }
     
     // Make sure active_priorities is valid and converted to JSON before sending it to Supabase

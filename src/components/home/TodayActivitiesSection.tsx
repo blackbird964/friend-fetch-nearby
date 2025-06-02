@@ -48,18 +48,28 @@ const TodayActivitiesSection: React.FC = () => {
 
     setIsUpdating(true);
     try {
-      const updatedProfile = {
+      // For now, we'll just update the local state since the database fields don't exist yet
+      // In a real implementation, you'd want to add these fields to the profiles table
+      const updatedUser = {
         ...currentUser,
         todayActivities: selectedActivities,
         preferredHangoutDuration: hangoutDuration
       };
 
-      await updateUserProfile(updatedProfile);
-      setCurrentUser(updatedProfile);
-      toast.success('Preferences updated!');
+      // Try to update the profile (this will skip the todayActivities and preferredHangoutDuration fields)
+      await updateUserProfile({ id: currentUser.id });
+      
+      // Update local state
+      setCurrentUser(updatedUser);
+      
+      toast.success('Preferences saved locally!', {
+        description: 'Note: Database persistence for activities is coming soon.'
+      });
     } catch (error) {
       console.error('Error updating preferences:', error);
-      toast.error('Failed to update preferences');
+      toast.error('Failed to update preferences', {
+        description: 'Please try again or contact support if the issue persists.'
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -138,7 +148,7 @@ const TodayActivitiesSection: React.FC = () => {
         disabled={isUpdating || selectedActivities.length === 0}
         className="w-full"
       >
-        {isUpdating ? 'Updating...' : 'Save Preferences'}
+        {isUpdating ? 'Saving...' : 'Save Preferences'}
       </Button>
     </div>
   );
