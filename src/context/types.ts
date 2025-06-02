@@ -1,6 +1,6 @@
+
 import { ReactNode } from 'react';
 import { Profile } from '@/lib/supabase';
-import { Chat } from '@/components/chat/types';
 
 export interface Location {
   lat: number;
@@ -53,6 +53,25 @@ export interface FriendRequest {
   createdAt: string;
   duration: string;
   sender_name: string;
+  senderName?: string;
+  receiverName?: string;
+  senderProfilePic?: string;
+  receiverProfilePic?: string;
+  timestamp?: number;
+}
+
+export interface MeetupRequest {
+  id: string;
+  senderId: string;
+  receiverId: string;
+  senderName: string;
+  receiverName: string;
+  senderProfilePic?: string;
+  receiverProfilePic?: string;
+  duration: string;
+  meetLocation?: string;
+  status: 'pending' | 'accepted' | 'rejected';
+  timestamp: number;
 }
 
 export interface Message {
@@ -61,16 +80,24 @@ export interface Message {
   senderId: string;
   content: string;
   timestamp: number;
-  status: 'sent' | 'delivered' | 'read';
+  status: 'sent' | 'delivered' | 'read' | 'sending' | 'received';
   text?: string;
 }
 
 export interface Chat {
   id: string;
   participants: string[];
+  participantId?: string;
+  participantName?: string;
+  profilePic?: string;
+  name?: string;
   messages: Message[];
   createdAt: string;
   updatedAt: string;
+  lastMessage?: string;
+  lastMessageTime?: number;
+  unreadCount?: number;
+  isOnline?: boolean;
 }
 
 export interface AuthContextType {

@@ -9,7 +9,7 @@ import { X } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { updateUserProfile } from '@/services/user/userProfileService';
 import { toast } from 'sonner';
-import { PriorityCategories } from '@/components/profile/active-priorities/PriorityCategories';
+import PriorityCategories from '@/components/profile/active-priorities/PriorityCategories';
 
 const TodayActivitiesSection: React.FC = () => {
   const { currentUser, setCurrentUser } = useAppContext();
