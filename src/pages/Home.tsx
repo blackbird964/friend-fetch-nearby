@@ -24,30 +24,6 @@ const Home: React.FC = () => {
       </div>
       
       <div className="space-y-6">
-        {/* Quick Actions */}
-        <div className="grid grid-cols-2 gap-4">
-          <Button 
-            className="h-auto py-6 flex flex-col items-center justify-center space-y-2"
-            onClick={() => navigate('/map')}
-          >
-            <MapPin className="h-6 w-6" />
-            <span>Find Friends</span>
-          </Button>
-          <Button
-            variant="outline"
-            className="h-auto py-6 flex flex-col items-center justify-center space-y-2 relative"
-            onClick={() => navigate('/friends')}
-          >
-            <Users className="h-6 w-6" />
-            <span>Friends</span>
-            {friendsCount > 0 && (
-              <span className="absolute top-2 right-2 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {friendsCount}
-              </span>
-            )}
-          </Button>
-        </div>
-
         {/* App Info */}
         <Card className="bg-gray-50">
           <CardContent className="p-4">
