@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { Badge } from "@/components/ui/badge";
 
 interface UserBasicInfoProps {
   name: string;
@@ -7,6 +8,8 @@ interface UserBasicInfoProps {
   gender?: string | null;
   bio?: string | null;
   minimal?: boolean;
+  todayActivities?: string[];
+  preferredHangoutDuration?: string;
 }
 
 const UserBasicInfo: React.FC<UserBasicInfoProps> = ({ 
@@ -14,7 +17,9 @@ const UserBasicInfo: React.FC<UserBasicInfoProps> = ({
   age, 
   gender, 
   bio, 
-  minimal = false 
+  minimal = false,
+  todayActivities,
+  preferredHangoutDuration
 }) => {
   return (
     <div>
@@ -30,6 +35,30 @@ const UserBasicInfo: React.FC<UserBasicInfoProps> = ({
       
       {!minimal && bio && (
         <p className="text-sm text-gray-600 mt-2 line-clamp-2">{bio}</p>
+      )}
+
+      {!minimal && todayActivities && todayActivities.length > 0 && (
+        <div className="mt-2">
+          <p className="text-xs text-gray-500 mb-1">Wants to do today:</p>
+          <div className="flex flex-wrap gap-1">
+            {todayActivities.slice(0, 3).map((activity) => (
+              <Badge key={activity} variant="outline" className="text-xs">
+                {activity}
+              </Badge>
+            ))}
+            {todayActivities.length > 3 && (
+              <span className="text-xs text-gray-500">+{todayActivities.length - 3}</span>
+            )}
+          </div>
+        </div>
+      )}
+
+      {!minimal && preferredHangoutDuration && (
+        <div className="mt-1">
+          <span className="text-xs text-gray-500">
+            Duration: {preferredHangoutDuration} min
+          </span>
+        </div>
       )}
     </div>
   );

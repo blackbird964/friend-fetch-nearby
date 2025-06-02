@@ -39,6 +39,8 @@ const UserCard: React.FC<UserCardProps> = ({
                 gender={user.gender}
                 bio={user.bio}
                 minimal={minimal}
+                todayActivities={user.todayActivities}
+                preferredHangoutDuration={user.preferredHangoutDuration}
               />
               
               {!minimal && user.interests && (
