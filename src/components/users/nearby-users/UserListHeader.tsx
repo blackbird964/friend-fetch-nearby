@@ -18,7 +18,7 @@ const UserListHeader: React.FC<UserListHeaderProps> = ({
 }) => {
   return (
     <div className="flex justify-between items-center">
-      <h2 className="text-xl font-semibold">People Nearby ({userCount})</h2>
+      <h2 className="text-xl font-semibold">People nearby with same interests as you ({userCount})</h2>
       <div className="flex items-center gap-2">
         <span className="text-sm text-gray-500">Radius: {radiusInKm} km</span>
         <Button 
