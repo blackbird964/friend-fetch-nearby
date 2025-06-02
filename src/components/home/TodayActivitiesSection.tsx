@@ -102,7 +102,7 @@ const TodayActivitiesSection: React.FC = () => {
           )}
 
           {/* Available Activities */}
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {allActivities.slice(0, 12).map((activity) => (
               <Button
                 key={activity}
@@ -110,7 +110,7 @@ const TodayActivitiesSection: React.FC = () => {
                 size="sm"
                 onClick={() => handleActivityToggle(activity)}
                 disabled={!selectedActivities.includes(activity) && selectedActivities.length >= 5}
-                className="text-xs h-8"
+                className="text-xs h-auto py-3 px-3 whitespace-normal text-left leading-tight hyphens-none break-words"
               >
                 {activity}
               </Button>
