@@ -25,9 +25,11 @@ export function messageToFriendRequest(message: any): FriendRequest | null {
       senderProfilePic: content.sender_profile_pic,
       receiverName: content.receiver_name,
       receiverProfilePic: content.receiver_profile_pic,
-      duration: content.duration,
+      duration: String(content.duration), // Convert to string
       status: content.status,
-      timestamp: content.timestamp
+      timestamp: content.timestamp,
+      createdAt: message.created_at || new Date().toISOString(),
+      sender_name: content.sender_name
     };
   } catch (error) {
     console.error('Error parsing message to friend request:', error);
@@ -37,7 +39,7 @@ export function messageToFriendRequest(message: any): FriendRequest | null {
 
 // Create the content field for the message table
 export function createRequestMessageContent(
-  duration: number,
+  duration: string, // Change to string
   senderName: string,
   senderProfilePic: string | null,
   receiverName: string,
@@ -46,7 +48,7 @@ export function createRequestMessageContent(
 ): string {
   const content: FriendRequestMessageContent = {
     type: 'friend_request',
-    duration,
+    duration: parseInt(duration), // Parse as number for storage
     sender_name: senderName,
     sender_profile_pic: senderProfilePic,
     receiver_name: receiverName,

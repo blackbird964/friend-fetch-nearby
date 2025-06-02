@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -102,6 +103,8 @@ export function useFetchChats() {
               lastMessageTime: new Date(latestMessage.created_at).getTime(),
               messages: [],
               unreadCount: unreadCount,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
             });
           }
         }

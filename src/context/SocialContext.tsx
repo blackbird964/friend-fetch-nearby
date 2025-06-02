@@ -49,7 +49,7 @@ export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ childr
             // Determine which user is the friend based on the current user
             const isReceiver = req.receiverId === currentUser.id;
             const friendId = isReceiver ? req.senderId : req.receiverId;
-            const friendName = isReceiver ? req.senderName || 'User' : req.receiverName || 'User';
+            const friendName = isReceiver ? (req.senderName || req.sender_name || 'User') : (req.receiverName || 'User');
             const friendPic = isReceiver ? req.senderProfilePic : req.receiverProfilePic;
             
             // Only add if not already in chats
@@ -65,6 +65,8 @@ export const SocialProvider: React.FC<{ children: React.ReactNode }> = ({ childr
                 lastMessage: "Say hello!",
                 lastMessageTime: Date.now(),
                 unreadCount: 0,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
               });
             }
             

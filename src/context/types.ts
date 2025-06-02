@@ -32,6 +32,8 @@ export interface AppUser {
   age?: number;
   gender?: string;
   blockedUsers?: string[];
+  blocked_users?: string[]; // Database field name
+  is_over_18?: boolean; // Database field
   locationSettings?: {
     isManualMode: boolean;
     hideExactLocation: boolean;
@@ -41,8 +43,9 @@ export interface AppUser {
     hide_exact_location?: boolean;
   };
   active_priorities?: ActivePriority[];
-  todayActivities?: string[]; // New field for today's selected activities
-  preferredHangoutDuration?: string; // New field for hangout duration preference
+  todayActivities?: string[];
+  preferredHangoutDuration?: string;
+  chat?: Chat; // For FriendsPage usage
 }
 
 export interface FriendRequest {

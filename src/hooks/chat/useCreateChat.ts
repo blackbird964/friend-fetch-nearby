@@ -26,6 +26,8 @@ export function useCreateChat() {
         lastMessageTime: Date.now(),
         messages: [],
         unreadCount: 0,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
       };
 
       console.log("[useCreateChat] Created new chat:", newChat);

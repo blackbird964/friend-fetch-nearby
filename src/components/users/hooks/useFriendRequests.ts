@@ -49,20 +49,23 @@ export const useFriendRequests = () => {
           const newChat = {
             id: `chat-${Date.now()}`,
             participantId: request.senderId || '',
-            participantName: request.senderName || 'User',
+            participantName: request.senderName || request.sender_name || 'User',
             profilePic: request.senderProfilePic || '',
             lastMessage: "Say hello!",
             lastMessageTime: Date.now(),
             messages: [],
-            name: request.senderName || 'User',
-            participants: [currentUser.id || '', request.senderId || '']
+            name: request.senderName || request.sender_name || 'User',
+            participants: [currentUser.id || '', request.senderId || ''],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            unreadCount: 0
           };
 
           setChats([...chats, newChat]);
         }
 
         toast.success("Request Accepted", {
-          description: `You've accepted ${request.senderName}'s request.`,
+          description: `You've accepted ${request.senderName || request.sender_name}'s request.`,
         });
         
         // Refresh friend requests to get the latest data
@@ -98,7 +101,7 @@ export const useFriendRequests = () => {
         );
 
         toast.success("Request Rejected", {
-          description: `You've declined ${request.senderName}'s request.`,
+          description: `You've declined ${request.senderName || request.sender_name}'s request.`,
         });
         
         // Refresh friend requests to get the latest data

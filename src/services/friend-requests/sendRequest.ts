@@ -14,7 +14,7 @@ export async function sendFriendRequest(
   receiverId: string,
   receiverName: string,
   receiverProfilePic: string | null,
-  duration: number
+  duration: string // Change to string
 ): Promise<FriendRequest | null> {
   try {
     // Create a proper UUID for the request
@@ -31,7 +31,9 @@ export async function sendFriendRequest(
       receiverProfilePic,
       duration,
       status: 'pending',
-      timestamp: Date.now()
+      timestamp: Date.now(),
+      createdAt: new Date().toISOString(),
+      sender_name: senderName
     };
 
     console.log("Sending friend request:", newRequest);
