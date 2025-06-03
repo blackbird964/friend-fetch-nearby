@@ -40,8 +40,7 @@ export const useSignUp = (onToggleForm: () => void, onContinue: () => void) => {
       if (error) {
         console.error("Signup error details:", {
           message: error.message,
-          status: error.status,
-          statusCode: error.status
+          status: error.status
         });
         
         // Handle specific error cases with user-friendly messages
@@ -124,8 +123,7 @@ export const useSignUp = (onToggleForm: () => void, onContinue: () => void) => {
     } catch (error: any) {
       console.error('Unexpected signup error:', {
         message: error.message,
-        name: error.name,
-        stack: error.stack
+        name: error.name
       });
       
       // Handle different types of network errors
