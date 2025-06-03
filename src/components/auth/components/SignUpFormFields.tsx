@@ -16,6 +16,13 @@ const SignUpFormFields: React.FC<SignUpFormFieldsProps> = ({ form, isLoading }) 
       <FormField
         control={form.control}
         name="name"
+        rules={{
+          required: "Full name is required",
+          minLength: {
+            value: 2,
+            message: "Name must be at least 2 characters"
+          }
+        }}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Full Name</FormLabel>
@@ -25,15 +32,23 @@ const SignUpFormFields: React.FC<SignUpFormFieldsProps> = ({ form, isLoading }) 
                 {...field} 
                 disabled={isLoading}
                 required
+                aria-describedby="name-error"
               />
             </FormControl>
-            <FormMessage />
+            <FormMessage id="name-error" />
           </FormItem>
         )}
       />
       <FormField
         control={form.control}
         name="email"
+        rules={{
+          required: "Email is required",
+          pattern: {
+            value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+            message: "Please enter a valid email address"
+          }
+        }}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Email</FormLabel>
@@ -45,15 +60,23 @@ const SignUpFormFields: React.FC<SignUpFormFieldsProps> = ({ form, isLoading }) 
                 autoComplete="email"
                 disabled={isLoading}
                 required
+                aria-describedby="email-error"
               />
             </FormControl>
-            <FormMessage />
+            <FormMessage id="email-error" />
           </FormItem>
         )}
       />
       <FormField
         control={form.control}
         name="password"
+        rules={{
+          required: "Password is required",
+          minLength: {
+            value: 6,
+            message: "Password must be at least 6 characters long"
+          }
+        }}
         render={({ field }) => (
           <FormItem>
             <FormLabel>Password</FormLabel>
@@ -66,9 +89,10 @@ const SignUpFormFields: React.FC<SignUpFormFieldsProps> = ({ form, isLoading }) 
                 disabled={isLoading}
                 required
                 minLength={6}
+                aria-describedby="password-error"
               />
             </FormControl>
-            <FormMessage />
+            <FormMessage id="password-error" />
           </FormItem>
         )}
       />
