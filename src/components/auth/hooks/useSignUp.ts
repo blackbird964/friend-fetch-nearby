@@ -41,8 +41,7 @@ export const useSignUp = (onToggleForm: () => void, onContinue: () => void) => {
         console.error("Signup error details:", {
           message: error.message,
           status: error.status,
-          statusCode: error.status,
-          cause: error.cause
+          statusCode: error.status
         });
         
         // Handle specific error cases with user-friendly messages
