@@ -41,7 +41,7 @@ const UserBasicInfo: React.FC<UserBasicInfoProps> = ({
 
       {!minimal && todayActivities && todayActivities.length > 0 && (
         <div className="mt-2">
-          <p className="text-xs text-gray-500 mb-1">Wants to do today:</p>
+          <p className="text-xs text-gray-500 mb-1">I am looking for:</p>
           <div className="flex flex-wrap gap-1">
             {todayActivities.slice(0, 3).map((activity) => (
               <Badge key={activity} variant="default" className="text-xs bg-blue-500 text-white hover:bg-blue-600">
@@ -65,7 +65,7 @@ const UserBasicInfo: React.FC<UserBasicInfoProps> = ({
 
       {!minimal && interests && interests.length > 0 && (
         <div className="mt-2">
-          <p className="text-xs text-gray-500 mb-1">Interests:</p>
+          <p className="text-xs text-gray-500 mb-1">I am into:</p>
           <div className="flex flex-wrap gap-1">
             {interests.slice(0, 4).map((interest) => (
               <Badge key={interest} variant="secondary" className="text-xs">
