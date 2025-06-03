@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { useAppContext } from '@/context/AppContext';
@@ -36,6 +37,29 @@ const UserCard: React.FC<UserCardProps> = ({ user, minimal = false, onClick }) =
             
             {!minimal && user.bio && (
               <p className="text-sm text-gray-600 mt-2 line-clamp-2">{user.bio}</p>
+            )}
+
+            {!minimal && user.todayActivities && user.todayActivities.length > 0 && (
+              <div className="mt-2">
+                <div className="flex flex-wrap gap-1">
+                  {user.todayActivities.slice(0, 3).map((activity) => (
+                    <Badge key={activity} variant="default" className="text-xs bg-blue-500 text-white hover:bg-blue-600">
+                      {activity}
+                    </Badge>
+                  ))}
+                  {user.todayActivities.length > 3 && (
+                    <span className="text-xs text-gray-500">+{user.todayActivities.length - 3}</span>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {!minimal && user.preferredHangoutDuration && (
+              <div className="mt-1">
+                <span className="text-xs text-gray-500">
+                  Duration: {user.preferredHangoutDuration} min
+                </span>
+              </div>
             )}
             
             {!minimal && user.interests && user.interests.length > 0 && (
