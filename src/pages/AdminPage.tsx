@@ -6,13 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import AdminStatistics from '@/components/admin/AdminStatistics';
 import AdminReports from '@/components/admin/AdminReports';
 import AdminUserList from '@/components/admin/AdminUserList';
+import UserEmailList from '@/components/admin/UserEmailList';
 
 // List of authorized admin emails
 const ADMIN_EMAILS = ['harp.dylan@gmail.com', 'aaron.stathi@gmail.com'];
 
 const AdminPage: React.FC = () => {
   const { currentUser } = useAppContext();
-  const [activeTab, setActiveTab] = useState<'stats' | 'reports' | 'users'>('stats');
+  const [activeTab, setActiveTab] = useState<'stats' | 'reports' | 'users' | 'emails'>('stats');
   
   // Check if current user is authorized
   const isAuthorized = currentUser?.email && ADMIN_EMAILS.includes(currentUser.email);
@@ -56,12 +57,23 @@ const AdminPage: React.FC = () => {
         >
           User Management
         </button>
+        <button
+          onClick={() => setActiveTab('emails')}
+          className={`px-4 py-2 rounded-md ${
+            activeTab === 'emails' 
+              ? 'bg-primary text-white' 
+              : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+          }`}
+        >
+          Email List
+        </button>
       </div>
       
       <div className="space-y-6">
         {activeTab === 'stats' && <AdminStatistics />}
         {activeTab === 'reports' && <AdminReports />}
         {activeTab === 'users' && <AdminUserList />}
+        {activeTab === 'emails' && <UserEmailList />}
       </div>
     </div>
   );
