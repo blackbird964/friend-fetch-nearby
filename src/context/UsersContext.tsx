@@ -30,19 +30,26 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
 
     try {
-      console.log(`Fetching nearby users within ${radiusInKm}km radius`);
+      console.log(`Fetching nearby users within ${radiusInKm}km radius with updated data`);
       
-      // Get all users nearby first using the nearbyUsersService
+      // Get all users nearby with fresh data from the database
       const allUsers = await nearbyUsersService.getNearbyUsers(currentUser.location, radiusInKm);
       
       // Filter out the current user FIRST, then filter blocked users
       const otherUsers = allUsers.filter(user => user.id !== currentUser.id);
       const filteredUsers = filterBlockedUsers(otherUsers);
       
-      console.log('UsersContext - All users:', allUsers.length);
+      console.log('UsersContext - All users fetched:', allUsers.length);
       console.log('UsersContext - After removing current user:', otherUsers.length);
       console.log('UsersContext - After filtering blocked users:', filteredUsers.length);
       console.log('UsersContext - Current user ID:', currentUser.id);
+      console.log('UsersContext - Users with activities:', filteredUsers.map(u => ({
+        id: u.id,
+        name: u.name,
+        activities: u.todayActivities,
+        interests: u.interests,
+        duration: u.preferredHangoutDuration
+      })));
       
       setNearbyUsers(filteredUsers);
       
@@ -50,7 +57,7 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         const hiddenCount = otherUsers.length - filteredUsers.length;
         const message = hiddenCount > 0 
           ? `Found ${filteredUsers.length} nearby users (${hiddenCount} blocked users hidden)`
-          : `Found ${filteredUsers.length} nearby users`;
+          : `Found ${filteredUsers.length} nearby users with updated preferences`;
           
         toast.success("Updated", {
           description: message

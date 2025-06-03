@@ -12,6 +12,7 @@ const UserList: React.FC = () => {
 
   const handleRefresh = async () => {
     try {
+      console.log("UserList - Refreshing nearby users with latest data");
       await refreshNearbyUsers(true);
     } catch (error) {
       console.error("Error refreshing users:", error);
@@ -44,8 +45,15 @@ const UserList: React.FC = () => {
   }
 
   console.log("UserList component - Current user ID:", currentUser?.id);
+  console.log("UserList component - Current user activities:", currentUser?.todayActivities);
   console.log("UserList component - Displaying users:", onlineUsers.length, "out of", nearbyUsers.length);
-  console.log("UserList component - Filtered users:", onlineUsers.map(u => ({ id: u.id, name: u.name })));
+  console.log("UserList component - Filtered users with activities:", onlineUsers.map(u => ({ 
+    id: u.id, 
+    name: u.name, 
+    activities: u.todayActivities,
+    interests: u.interests,
+    duration: u.preferredHangoutDuration
+  })));
 
   const handleStartChat = (user: any) => {
     console.log("[UserList] Starting chat with user:", user.name);
