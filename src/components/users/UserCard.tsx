@@ -41,6 +41,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, minimal = false, onClick }) =
 
             {!minimal && user.todayActivities && user.todayActivities.length > 0 && (
               <div className="mt-2">
+                <p className="text-xs text-gray-500 mb-1">I am looking for:</p>
                 <div className="flex flex-wrap gap-1">
                   {user.todayActivities.slice(0, 3).map((activity) => (
                     <Badge key={activity} variant="default" className="text-xs bg-blue-500 text-white hover:bg-blue-600">
@@ -64,6 +65,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, minimal = false, onClick }) =
             
             {!minimal && user.interests && user.interests.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-2">
+                <p className="text-xs text-gray-500 mb-1 w-full">I am into:</p>
                 {user.interests.slice(0, 3).map((interest) => (
                   <Badge key={interest} variant="secondary" className="text-xs">
                     {interest}
