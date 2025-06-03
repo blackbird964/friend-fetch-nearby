@@ -39,28 +39,12 @@ const UserBasicInfo: React.FC<UserBasicInfoProps> = ({
         <p className="text-sm text-gray-600 mt-2 line-clamp-2">{bio}</p>
       )}
 
-      {!minimal && interests && interests.length > 0 && (
-        <div className="mt-2">
-          <p className="text-xs text-gray-500 mb-1">Interests:</p>
-          <div className="flex flex-wrap gap-1">
-            {interests.slice(0, 4).map((interest) => (
-              <Badge key={interest} variant="secondary" className="text-xs">
-                {interest}
-              </Badge>
-            ))}
-            {interests.length > 4 && (
-              <span className="text-xs text-gray-500">+{interests.length - 4}</span>
-            )}
-          </div>
-        </div>
-      )}
-
       {!minimal && todayActivities && todayActivities.length > 0 && (
         <div className="mt-2">
           <p className="text-xs text-gray-500 mb-1">Wants to do today:</p>
           <div className="flex flex-wrap gap-1">
             {todayActivities.slice(0, 3).map((activity) => (
-              <Badge key={activity} variant="outline" className="text-xs">
+              <Badge key={activity} variant="default" className="text-xs bg-blue-500 text-white hover:bg-blue-600">
                 {activity}
               </Badge>
             ))}
@@ -76,6 +60,22 @@ const UserBasicInfo: React.FC<UserBasicInfoProps> = ({
           <span className="text-xs text-gray-500">
             Duration: {preferredHangoutDuration} min
           </span>
+        </div>
+      )}
+
+      {!minimal && interests && interests.length > 0 && (
+        <div className="mt-2">
+          <p className="text-xs text-gray-500 mb-1">Interests:</p>
+          <div className="flex flex-wrap gap-1">
+            {interests.slice(0, 4).map((interest) => (
+              <Badge key={interest} variant="secondary" className="text-xs">
+                {interest}
+              </Badge>
+            ))}
+            {interests.length > 4 && (
+              <span className="text-xs text-gray-500">+{interests.length - 4}</span>
+            )}
+          </div>
         </div>
       )}
     </div>
