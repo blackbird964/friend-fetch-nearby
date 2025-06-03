@@ -2,9 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useToast } from '@/hooks/use-toast';
-import { Profile, ActivePriority } from '@/lib/supabase/profiles/types';
-import { ActivePriorityForm } from './active-priorities';
-import ProfileFormTabs from './form-tabs/ProfileFormTabs';
+import { Profile } from '@/lib/supabase/profiles/types';
 import BasicInfoFields from './form-sections/BasicInfoFields';
 import FormActions from './form-sections/FormActions';
 
@@ -17,11 +15,9 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
   const { currentUser, updateUserProfile } = useAppContext();
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>("basic");
   const [formData, setFormData] = useState<Partial<Profile>>({
     bio: '',
     interests: [],
-    active_priorities: [],
   });
 
   useEffect(() => {
@@ -33,7 +29,6 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
         age: currentUser.age || null,
         gender: currentUser.gender?.toLowerCase() || '',
         interests: currentUser.interests || [],
-        active_priorities: currentUser.active_priorities || [],
       });
     }
   }, [currentUser]);
@@ -47,20 +42,6 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
     const value = e.target.value;
     const interests = value.split(',').map(interest => interest.trim()).filter(Boolean);
     setFormData(prev => ({ ...prev, interests }));
-  };
-
-  const handleAddPriority = (priority: ActivePriority) => {
-    setFormData(prev => ({
-      ...prev,
-      active_priorities: [...(prev.active_priorities || []), priority]
-    }));
-  };
-
-  const handleRemovePriority = (priorityId: string) => {
-    setFormData(prev => ({
-      ...prev,
-      active_priorities: (prev.active_priorities || []).filter(p => p.id !== priorityId)
-    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -80,10 +61,9 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
         age: formData.age,
         gender: formData.gender,
         interests: formData.interests,
-        active_priorities: formData.active_priorities || [],
       };
       
-      console.log("Submitting profile update with active priorities:", updatedProfile.active_priorities);
+      console.log("Submitting profile update:", updatedProfile);
       
       await updateUserProfile(updatedProfile);
       
@@ -108,24 +88,14 @@ const EditProfileForm: React.FC<EditProfileFormProps> = ({ onCancel }) => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <ProfileFormTabs
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        basicInfoContent={
-          <BasicInfoFields
-            formData={formData}
-            handleChange={handleChange}
-            handleInterestChange={handleInterestChange}
-          />
-        }
-        prioritiesContent={
-          <ActivePriorityForm
-            priorities={formData.active_priorities || []}
-            onAddPriority={handleAddPriority}
-            onRemovePriority={handleRemovePriority}
-          />
-        }
-      />
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Basic Information</h3>
+        <BasicInfoFields
+          formData={formData}
+          handleChange={handleChange}
+          handleInterestChange={handleInterestChange}
+        />
+      </div>
       
       <FormActions loading={loading} onCancel={onCancel} />
     </form>
