@@ -2,8 +2,6 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import { X, MessageCircle } from 'lucide-react';
 import { AppUser } from '@/context/types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -30,11 +28,6 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   React.useEffect(() => {
     console.log("[UserRequestCard] Rendered for user:", user?.name);
   }, [user]);
-  
-  const handleDurationChange = (value: string) => {
-    setSelectedDuration(parseInt(value));
-    console.log("[UserRequestCard] Duration changed to:", parseInt(value));
-  };
 
   // Prevent click events from reaching the map
   const stopPropagation = (e: React.MouseEvent) => {
@@ -114,7 +107,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
           </HoverCard>
           <div>
             <h3 className="font-medium">{user.name}</h3>
-            <p className="text-xs text-muted-foreground">Select a catch-up duration</p>
+            <p className="text-xs text-muted-foreground">Wants to meet up</p>
           </div>
         </div>
         <Button 
@@ -129,37 +122,28 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
         </Button>
       </div>
       
-      {/* Display user's activities if they have any */}
-      {user.active_priorities && user.active_priorities.length > 0 && (
-        <div className="mb-4 bg-gray-50 p-2 rounded-md">
-          <h4 className="text-sm font-medium mb-1">I want to meet up for:</h4>
-          <ActivePriorities priorities={user.active_priorities} />
-        </div>
-      )}
-      
-      <RadioGroup 
-        value={selectedDuration.toString()} 
-        onValueChange={handleDurationChange}
-        className="flex gap-2 mb-4"
-        onClick={stopPropagation}
-      >
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="15" id="r1" />
-          <Label htmlFor="r1" className="text-sm">15 min</Label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="30" id="r2" />
-          <Label htmlFor="r2" className="text-sm">30 min</Label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="45" id="r3" />
-          <Label htmlFor="r3" className="text-sm">45 min</Label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="60" id="r4" />
-          <Label htmlFor="r4" className="text-sm">60 min</Label>
-        </div>
-      </RadioGroup>
+      {/* Display user's activities and preferred duration */}
+      <div className="mb-4 space-y-3">
+        {user.active_priorities && user.active_priorities.length > 0 && (
+          <div className="bg-gray-50 p-3 rounded-md">
+            <h4 className="text-sm font-medium mb-2">Wants to do:</h4>
+            <ActivePriorities priorities={user.active_priorities} />
+          </div>
+        )}
+        
+        {user.preferredHangoutDuration && (
+          <div className="bg-blue-50 p-3 rounded-md">
+            <h4 className="text-sm font-medium mb-1">Preferred duration:</h4>
+            <p className="text-sm text-blue-700">{user.preferredHangoutDuration} minutes</p>
+          </div>
+        )}
+        
+        {(!user.active_priorities || user.active_priorities.length === 0) && !user.preferredHangoutDuration && (
+          <div className="bg-gray-50 p-3 rounded-md text-center">
+            <p className="text-sm text-gray-500">No specific activities or duration set</p>
+          </div>
+        )}
+      </div>
       
       <div className="flex gap-2">
         <Button 
