@@ -41,11 +41,8 @@ const UserCard: React.FC<UserCardProps> = ({
                 minimal={minimal}
                 todayActivities={user.todayActivities}
                 preferredHangoutDuration={user.preferredHangoutDuration}
+                interests={user.interests}
               />
-              
-              {!minimal && user.interests && (
-                <UserInterests interests={user.interests} />
-              )}
 
               {!minimal && user.active_priorities && user.active_priorities.length > 0 && (
                 <div className="mt-2">

@@ -35,13 +35,19 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       // Get all users nearby first using the nearbyUsersService
       const allUsers = await nearbyUsersService.getNearbyUsers(currentUser.location, radiusInKm);
       
-      // Filter out blocked users
-      const filteredUsers = filterBlockedUsers(allUsers);
+      // Filter out the current user FIRST, then filter blocked users
+      const otherUsers = allUsers.filter(user => user.id !== currentUser.id);
+      const filteredUsers = filterBlockedUsers(otherUsers);
+      
+      console.log('UsersContext - All users:', allUsers.length);
+      console.log('UsersContext - After removing current user:', otherUsers.length);
+      console.log('UsersContext - After filtering blocked users:', filteredUsers.length);
+      console.log('UsersContext - Current user ID:', currentUser.id);
       
       setNearbyUsers(filteredUsers);
       
       if (showToast) {
-        const hiddenCount = allUsers.length - filteredUsers.length;
+        const hiddenCount = otherUsers.length - filteredUsers.length;
         const message = hiddenCount > 0 
           ? `Found ${filteredUsers.length} nearby users (${hiddenCount} blocked users hidden)`
           : `Found ${filteredUsers.length} nearby users`;

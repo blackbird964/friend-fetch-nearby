@@ -10,6 +10,7 @@ interface UserBasicInfoProps {
   minimal?: boolean;
   todayActivities?: string[];
   preferredHangoutDuration?: string;
+  interests?: string[];
 }
 
 const UserBasicInfo: React.FC<UserBasicInfoProps> = ({ 
@@ -19,7 +20,8 @@ const UserBasicInfo: React.FC<UserBasicInfoProps> = ({
   bio, 
   minimal = false,
   todayActivities,
-  preferredHangoutDuration
+  preferredHangoutDuration,
+  interests
 }) => {
   return (
     <div>
@@ -35,6 +37,22 @@ const UserBasicInfo: React.FC<UserBasicInfoProps> = ({
       
       {!minimal && bio && (
         <p className="text-sm text-gray-600 mt-2 line-clamp-2">{bio}</p>
+      )}
+
+      {!minimal && interests && interests.length > 0 && (
+        <div className="mt-2">
+          <p className="text-xs text-gray-500 mb-1">Interests:</p>
+          <div className="flex flex-wrap gap-1">
+            {interests.slice(0, 4).map((interest) => (
+              <Badge key={interest} variant="secondary" className="text-xs">
+                {interest}
+              </Badge>
+            ))}
+            {interests.length > 4 && (
+              <span className="text-xs text-gray-500">+{interests.length - 4}</span>
+            )}
+          </div>
+        </div>
       )}
 
       {!minimal && todayActivities && todayActivities.length > 0 && (

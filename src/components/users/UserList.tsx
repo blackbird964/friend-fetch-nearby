@@ -18,8 +18,10 @@ const UserList: React.FC = () => {
     }
   };
 
-  // Get only online and real users (filter out any test users if they somehow remain)
+  // Get only online and real users, excluding the current user
   let onlineUsers = nearbyUsers.filter(user => 
+    // Exclude the current user first
+    user.id !== currentUser?.id &&
     // Only include users marked as online
     user.isOnline === true &&
     // Filter out users that don't have a valid ID or have test/mock in their ID
@@ -41,7 +43,9 @@ const UserList: React.FC = () => {
     });
   }
 
+  console.log("UserList component - Current user ID:", currentUser?.id);
   console.log("UserList component - Displaying users:", onlineUsers.length, "out of", nearbyUsers.length);
+  console.log("UserList component - Filtered users:", onlineUsers.map(u => ({ id: u.id, name: u.name })));
 
   const handleStartChat = (user: any) => {
     console.log("[UserList] Starting chat with user:", user.name);
