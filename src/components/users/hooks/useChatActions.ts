@@ -16,9 +16,15 @@ export const useChatActions = () => {
 
   // Function to start a new chat or navigate to an existing one
   const startChat = useCallback(async (user: AppUser) => {
-    console.log("[useChatActions] Starting chat with:", user.name);
+    console.log("[useChatActions] Starting chat with:", user.name, "ID:", user.id);
+    
     if (!user || !user.id) {
       console.error("[useChatActions] Invalid user or missing ID:", user);
+      toast({
+        title: "Error",
+        description: "Cannot start chat: Invalid user data",
+        variant: "destructive"
+      });
       return;
     }
 
@@ -26,6 +32,8 @@ export const useChatActions = () => {
 
     try {
       console.log("[useChatActions] Checking for existing chat with user ID:", user.id);
+      console.log("[useChatActions] Current chats:", chats);
+      
       // First check if a chat with this user already exists
       const existingChat = chats.find(
         chat => chat.participants.some(
@@ -40,6 +48,7 @@ export const useChatActions = () => {
         setSelectedChat(existingChat);
         
         // Navigate to the chat page
+        console.log("[useChatActions] Navigating to existing chat");
         navigate('/chat');
         
         // Use sonner toast for notification
@@ -53,14 +62,20 @@ export const useChatActions = () => {
         const newChat = await createChat([user]);
         console.log("[useChatActions] New chat created:", newChat);
         
-        // Add the new chat to the chats list by passing the updated array directly
-        setChats([...chats, newChat]);
+        if (!newChat) {
+          throw new Error("Failed to create chat");
+        }
+        
+        // Add the new chat to the chats list
+        const updatedChats = [...chats, newChat];
+        setChats(updatedChats);
+        console.log("[useChatActions] Updated chats list with new chat");
         
         // Set the newly created chat as selected
         setSelectedChat(newChat);
         
         // Navigate to the chat page
-        console.log("[useChatActions] Navigating to chat page");
+        console.log("[useChatActions] Navigating to new chat");
         navigate('/chat');
         
         // Use sonner toast for notification
@@ -75,6 +90,7 @@ export const useChatActions = () => {
         description: "Failed to start chat. Please try again.",
         variant: "destructive"
       });
+      throw error; // Re-throw to allow caller to handle
     } finally {
       setLoading(false);
     }

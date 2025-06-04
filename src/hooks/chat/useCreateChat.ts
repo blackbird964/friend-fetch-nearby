@@ -8,29 +8,45 @@ export function useCreateChat() {
 
   const createChat = useCallback(async (participants: AppUser[]) => {
     console.log("[useCreateChat] Creating new chat with participants:", participants);
+    
     if (!currentUser) {
       console.error("[useCreateChat] Cannot create chat: No current user");
       throw new Error("User not authenticated");
     }
+    
+    if (!participants || participants.length === 0) {
+      console.error("[useCreateChat] Cannot create chat: No participants provided");
+      throw new Error("No participants provided");
+    }
+
+    const targetUser = participants[0];
+    if (!targetUser || !targetUser.id) {
+      console.error("[useCreateChat] Cannot create chat: Invalid target user", targetUser);
+      throw new Error("Invalid target user");
+    }
 
     try {
+      // Generate a unique chat ID
+      const chatId = `chat-${currentUser.id}-${targetUser.id}-${Date.now()}`;
+      
       // Create a new chat object
       const newChat: Chat = {
-        id: `chat-${participants[0].id}-${Date.now()}`,
-        name: participants[0].name || 'User',
-        participants: [currentUser.id, ...participants.map(p => p.id)],
-        participantId: participants[0].id,
-        participantName: participants[0].name || 'User',
-        profilePic: participants[0].profile_pic || '',
+        id: chatId,
+        name: targetUser.name || 'User',
+        participants: [currentUser.id, targetUser.id],
+        participantId: targetUser.id,
+        participantName: targetUser.name || 'User',
+        profilePic: targetUser.profile_pic || '',
         lastMessage: "Say hello!",
         lastMessageTime: Date.now(),
         messages: [],
         unreadCount: 0,
+        isOnline: targetUser.isOnline || false,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
 
-      console.log("[useCreateChat] Created new chat:", newChat);
+      console.log("[useCreateChat] Created new chat object:", newChat);
       return newChat;
     } catch (error) {
       console.error("[useCreateChat] Error creating chat:", error);

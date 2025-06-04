@@ -35,25 +35,30 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
     e.stopPropagation();
   };
 
-  // Handle chat button click
+  // Handle chat button click with improved error handling
   const handleChatClick = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    console.log("[UserRequestCard] Chat button clicked for user:", user?.name);
+    console.log("[UserRequestCard] Chat button clicked for user:", user?.name, "ID:", user?.id);
     
-    // Start chat with the selected user
-    if (user) {
-      console.log("[UserRequestCard] Starting chat with:", user.name);
-      try {
-        await startChat(user);
-        console.log("[UserRequestCard] Chat started successfully");
-        
-        // Call onCancel to close the card after initiating chat
+    if (!user || !user.id) {
+      console.error("[UserRequestCard] Cannot start chat: Invalid user data", user);
+      return;
+    }
+    
+    try {
+      console.log("[UserRequestCard] Attempting to start chat with user:", user.name);
+      await startChat(user);
+      console.log("[UserRequestCard] Chat started successfully, closing card");
+      
+      // Call onCancel to close the card after initiating chat
+      setTimeout(() => {
         onCancel(e);
-      } catch (error) {
-        console.error("[UserRequestCard] Error starting chat:", error);
-      }
+      }, 100); // Small delay to ensure chat navigation completes
+    } catch (error) {
+      console.error("[UserRequestCard] Error starting chat:", error);
+      // Don't close the card if there's an error
     }
   };
 
@@ -159,11 +164,10 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
           className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
           onClick={handleChatClick}
           type="button"
-          disabled={loading}
+          disabled={loading || !user?.id}
         >
           <MessageCircle className="mr-2 h-4 w-4" />
-          Chat
-          {loading && <span className="ml-2">...</span>}
+          {loading ? 'Starting...' : 'Chat'}
         </Button>
       </div>
     </Card>
