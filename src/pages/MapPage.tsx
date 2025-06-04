@@ -2,7 +2,6 @@
 import React, { useEffect, useMemo } from 'react';
 import { Tabs } from "@/components/ui/tabs";
 import { useAppContext } from '@/context/AppContext';
-import { useToast } from '@/hooks/use-toast';
 import { useLocationSettings } from '@/hooks/useLocationSettings';
 
 // Import our refactored components
@@ -15,8 +14,7 @@ import {
 } from '@/components/map/page';
 
 const MapPage: React.FC = () => {
-  const { refreshNearbyUsers, loading, currentUser, nearbyUsers } = useAppContext();
-  const { toast } = useToast();
+  const { refreshNearbyUsers, currentUser, nearbyUsers } = useAppContext();
   
   // Use our location settings hook
   const { 
@@ -34,22 +32,6 @@ const MapPage: React.FC = () => {
       refreshNearbyUsers(false);
     }
   }, [currentUser?.location, refreshNearbyUsers]);
-  
-  const handleRefresh = async (e: React.MouseEvent) => {
-    // Stop propagation to prevent event bubbling
-    e.stopPropagation();
-    
-    try {
-      await refreshNearbyUsers(true);
-    } catch (error) {
-      console.error("Error refreshing users:", error);
-      toast({
-        title: "Error",
-        description: "Failed to refresh nearby users.",
-        variant: "destructive"
-      });
-    }
-  };
 
   // Filter users based on matching activities (same logic as UserList component)
   const filteredUsers = useMemo(() => {
@@ -88,10 +70,7 @@ const MapPage: React.FC = () => {
 
   return (
     <div className="container mx-auto px-4 py-6 mb-20 max-w-4xl">
-      <MapPageHeader 
-        loading={loading} 
-        handleRefresh={handleRefresh} 
-      />
+      <MapPageHeader />
       
       <Tabs defaultValue="map" className="mb-6">
         <div className="flex flex-col gap-2">
