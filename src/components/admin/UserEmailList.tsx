@@ -2,8 +2,10 @@
 import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from '@/integrations/supabase/client';
+import { formatMessageTime } from '@/utils/dateFormatters';
 
 interface UserEmail {
   id: string;
@@ -83,15 +85,20 @@ const UserEmailList: React.FC = () => {
     });
   };
 
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return 'Never';
+    return new Date(dateString).toLocaleString();
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>User Email List</CardTitle>
+        <CardTitle>User Management</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex gap-2 mb-4">
           <Button onClick={fetchUserEmails} disabled={loading}>
-            {loading ? 'Loading...' : 'Fetch User Emails'}
+            {loading ? 'Loading...' : 'Fetch Users'}
           </Button>
           {emails.length > 0 && (
             <>
@@ -112,31 +119,41 @@ const UserEmailList: React.FC = () => {
         )}
         
         {emails.length > 0 && (
-          <div className="max-h-96 overflow-y-auto">
-            <div className="space-y-2">
-              {emails.map((user) => (
-                <div key={user.id} className="flex justify-between items-center p-2 border rounded">
-                  <div>
-                    <span className="font-medium">{user.email}</span>
-                    <div className="text-xs text-gray-500">
-                      Created: {new Date(user.created_at).toLocaleDateString()}
-                      {user.last_sign_in_at && (
-                        <span className="ml-2">
-                          Last login: {new Date(user.last_sign_in_at).toLocaleDateString()}
-                        </span>
+          <div className="max-h-96 overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Created</TableHead>
+                  <TableHead>Last Login</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {emails.map((user) => (
+                  <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.email}</TableCell>
+                    <TableCell>
+                      {user.email_confirmed_at ? (
+                        <span className="text-green-600 text-sm">Confirmed</span>
+                      ) : (
+                        <span className="text-yellow-600 text-sm">Unconfirmed</span>
                       )}
-                    </div>
-                  </div>
-                  <div className="text-xs">
-                    {user.email_confirmed_at ? (
-                      <span className="text-green-600">Confirmed</span>
-                    ) : (
-                      <span className="text-yellow-600">Unconfirmed</span>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+                    </TableCell>
+                    <TableCell className="text-sm text-gray-600">
+                      {formatDate(user.created_at)}
+                    </TableCell>
+                    <TableCell className="text-sm">
+                      {user.last_sign_in_at ? (
+                        <span className="text-blue-600">{formatDate(user.last_sign_in_at)}</span>
+                      ) : (
+                        <span className="text-gray-500">Never logged in</span>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         )}
       </CardContent>
