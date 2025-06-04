@@ -26,21 +26,14 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   
   // Log when component renders
   React.useEffect(() => {
-    console.log("[UserRequestCard] Rendered for user:", user?.name);
+    console.log("[UserRequestCard] Rendered for user:", user?.name, "ID:", user?.id);
   }, [user]);
 
-  // Prevent click events from reaching the map
-  const stopPropagation = (e: React.MouseEvent) => {
-    console.log("[UserRequestCard] Stopping propagation on card element");
-    e.stopPropagation();
-  };
-
-  // Handle chat button click with improved error handling
+  // Handle chat button click with simplified error handling
   const handleChatClick = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
     console.log("[UserRequestCard] Chat button clicked for user:", user?.name, "ID:", user?.id);
+    
+    // Don't prevent default or stop propagation here - let the button handle it naturally
     
     if (!user || !user.id) {
       console.error("[UserRequestCard] Cannot start chat: Invalid user data", user);
@@ -50,12 +43,13 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
     try {
       console.log("[UserRequestCard] Attempting to start chat with user:", user.name);
       await startChat(user);
-      console.log("[UserRequestCard] Chat started successfully, closing card");
+      console.log("[UserRequestCard] Chat started successfully");
       
-      // Call onCancel to close the card after initiating chat
+      // Close the card after a short delay to ensure navigation completes
       setTimeout(() => {
-        onCancel(e);
-      }, 100); // Small delay to ensure chat navigation completes
+        const cancelEvent = new MouseEvent('click', { bubbles: false });
+        onCancel(cancelEvent as any);
+      }, 100);
     } catch (error) {
       console.error("[UserRequestCard] Error starting chat:", error);
       // Don't close the card if there's an error
@@ -64,9 +58,6 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
 
   // Handle cancel button click
   const handleCancelClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
     console.log("[UserRequestCard] Cancel button clicked");
     onCancel(e);
   };
@@ -84,7 +75,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   return (
     <Card 
       className="p-4 bg-white shadow-lg animate-slide-in-bottom user-popup-card"
-      onClick={stopPropagation}
+      onMouseDown={(e) => e.stopPropagation()}
     >
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">

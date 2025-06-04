@@ -20,30 +20,27 @@ const RequestCardContainer: React.FC<RequestCardContainerProps> = ({
     if (!requestCardRef.current || !selectedUser) return;
     
     const handleDocumentClick = (e: MouseEvent) => {
-      // If the click is inside the request card, prevent it from propagating
-      if (requestCardRef.current && requestCardRef.current.contains(e.target as Node)) {
-        console.log("[RequestCardContainer] Click inside card detected");
-        e.stopPropagation();
+      // Only prevent map clicks if the click is outside the card
+      if (requestCardRef.current && !requestCardRef.current.contains(e.target as Node)) {
+        console.log("[RequestCardContainer] Click outside card detected, allowing map interaction");
+        return;
       }
-    };
-    
-    // Capture phase ensures our handler runs before the map click handler
-    document.addEventListener('click', handleDocumentClick, { capture: true });
-    
-    // Handle buttons separately
-    const handleButtonClick = (e: Event) => {
+      
+      // If click is inside the card but not on a button, prevent map interaction
       const target = e.target as HTMLElement;
-      if (target.tagName === 'BUTTON' || target.closest('button')) {
-        console.log("[RequestCardContainer] Button click detected, stopping propagation");
+      const isButton = target.tagName === 'BUTTON' || target.closest('button');
+      
+      if (!isButton && requestCardRef.current && requestCardRef.current.contains(e.target as Node)) {
+        console.log("[RequestCardContainer] Click inside card (non-button) detected, preventing map interaction");
         e.stopPropagation();
       }
     };
     
-    document.addEventListener('click', handleButtonClick, { capture: true });
+    // Use capture phase but be more selective about what we stop
+    document.addEventListener('click', handleDocumentClick, { capture: true });
     
     return () => {
       document.removeEventListener('click', handleDocumentClick, { capture: true });
-      document.removeEventListener('click', handleButtonClick, { capture: true });
     };
   }, [selectedUser]);
 
@@ -56,11 +53,6 @@ const RequestCardContainer: React.FC<RequestCardContainerProps> = ({
     <div 
       ref={requestCardRef}
       className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
-      onClick={(e) => {
-        console.log("[RequestCardContainer] Card container clicked");
-        stopPropagation(e);
-        e.preventDefault(); 
-      }}
     >
       {children}
     </div>
