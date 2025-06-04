@@ -29,11 +29,13 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
     console.log("[UserRequestCard] Rendered for user:", user?.name, "ID:", user?.id);
   }, [user]);
 
-  // Handle chat button click with simplified error handling
+  // Handle chat button click
   const handleChatClick = async (e: React.MouseEvent) => {
     console.log("[UserRequestCard] Chat button clicked for user:", user?.name, "ID:", user?.id);
     
-    // Don't prevent default or stop propagation here - let the button handle it naturally
+    // Prevent the click from propagating to parent elements
+    e.preventDefault();
+    e.stopPropagation();
     
     if (!user || !user.id) {
       console.error("[UserRequestCard] Cannot start chat: Invalid user data", user);
@@ -45,11 +47,8 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
       await startChat(user);
       console.log("[UserRequestCard] Chat started successfully");
       
-      // Close the card after a short delay to ensure navigation completes
-      setTimeout(() => {
-        const cancelEvent = new MouseEvent('click', { bubbles: false });
-        onCancel(cancelEvent as any);
-      }, 100);
+      // Close the card after starting chat
+      onCancel(e);
     } catch (error) {
       console.error("[UserRequestCard] Error starting chat:", error);
       // Don't close the card if there's an error
@@ -59,6 +58,16 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   // Handle cancel button click
   const handleCancelClick = (e: React.MouseEvent) => {
     console.log("[UserRequestCard] Cancel button clicked");
+    e.preventDefault();
+    e.stopPropagation();
+    onCancel(e);
+  };
+
+  // Handle X button click
+  const handleCloseClick = (e: React.MouseEvent) => {
+    console.log("[UserRequestCard] Close (X) button clicked");
+    e.preventDefault();
+    e.stopPropagation();
     onCancel(e);
   };
 
@@ -73,10 +82,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   };
 
   return (
-    <Card 
-      className="p-4 bg-white shadow-lg animate-slide-in-bottom user-popup-card"
-      onMouseDown={(e) => e.stopPropagation()}
-    >
+    <Card className="p-4 bg-white shadow-lg animate-slide-in-bottom user-popup-card">
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-center gap-3">
           <HoverCard>
@@ -110,7 +116,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
           variant="ghost" 
           size="sm"
           className="rounded-full h-8 w-8 p-0"
-          onClick={handleCancelClick}
+          onClick={handleCloseClick}
           type="button"
         >
           <X className="h-4 w-4" />

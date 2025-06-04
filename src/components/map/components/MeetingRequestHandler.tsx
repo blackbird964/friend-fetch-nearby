@@ -34,18 +34,15 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
     return nearbyUsers.find(user => user.id === selectedUser);
   }, [selectedUser, nearbyUsers]);
 
-  // Handle click to prevent propagation to map
+  // Handle click to prevent propagation to map - this will be used to close the card when clicking outside
   const stopPropagation = (e: React.MouseEvent) => {
-    console.log("Stopping propagation on request card container");
-    e.stopPropagation();
-    e.preventDefault();
+    console.log("Closing card from MeetingRequestHandler");
+    onCancel();
   };
   
   // Handle cancel with proper event handling
   const handleCancel = (e: React.MouseEvent) => {
     console.log("Cancel handler called in MeetingRequestHandler");
-    e.stopPropagation();
-    e.preventDefault();
     onCancel();
   };
 

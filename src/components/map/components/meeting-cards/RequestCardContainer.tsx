@@ -20,29 +20,22 @@ const RequestCardContainer: React.FC<RequestCardContainerProps> = ({
     if (!requestCardRef.current || !selectedUser) return;
     
     const handleDocumentClick = (e: MouseEvent) => {
-      // Only prevent map clicks if the click is outside the card
+      // Only close the card if the click is outside the card entirely
       if (requestCardRef.current && !requestCardRef.current.contains(e.target as Node)) {
-        console.log("[RequestCardContainer] Click outside card detected, allowing map interaction");
-        return;
-      }
-      
-      // If click is inside the card but not on a button, prevent map interaction
-      const target = e.target as HTMLElement;
-      const isButton = target.tagName === 'BUTTON' || target.closest('button');
-      
-      if (!isButton && requestCardRef.current && requestCardRef.current.contains(e.target as Node)) {
-        console.log("[RequestCardContainer] Click inside card (non-button) detected, preventing map interaction");
-        e.stopPropagation();
+        console.log("[RequestCardContainer] Click outside card detected, closing card");
+        // Trigger the onCancel callback to close the card
+        const cancelEvent = new MouseEvent('click', { bubbles: false });
+        stopPropagation(cancelEvent as any);
       }
     };
     
-    // Use capture phase but be more selective about what we stop
-    document.addEventListener('click', handleDocumentClick, { capture: true });
+    // Add the event listener
+    document.addEventListener('click', handleDocumentClick, { capture: false });
     
     return () => {
-      document.removeEventListener('click', handleDocumentClick, { capture: true });
+      document.removeEventListener('click', handleDocumentClick, { capture: false });
     };
-  }, [selectedUser]);
+  }, [selectedUser, stopPropagation]);
 
   // Don't render if no selected user
   if (!selectedUser) {
@@ -53,6 +46,10 @@ const RequestCardContainer: React.FC<RequestCardContainerProps> = ({
     <div 
       ref={requestCardRef}
       className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-50 w-[90%] max-w-md"
+      onClick={(e) => {
+        // Stop propagation only for the container, but allow button clicks to bubble up normally
+        e.stopPropagation();
+      }}
     >
       {children}
     </div>
