@@ -2,7 +2,6 @@
 import React from 'react';
 import { AppUser } from '@/context/types';
 import UserRequestCard from './UserRequestCard';
-import RequestCardContainer from './meeting-cards/RequestCardContainer';
 
 interface MeetingRequestHandlerProps {
   selectedUser: string | null;
@@ -21,11 +20,7 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   selectedDuration,
   setSelectedDuration,
   onCancel,
-  nearbyUsers,
-  movingUsers,
-  completedMoves,
-  setMovingUsers,
-  setCompletedMoves
+  nearbyUsers
 }) => {
   // Find the selected user's data
   const userDetails = React.useMemo(() => {
@@ -34,12 +29,6 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
     return nearbyUsers.find(user => user.id === selectedUser);
   }, [selectedUser, nearbyUsers]);
 
-  // Handle click to prevent propagation to map - this will be used to close the card when clicking outside
-  const stopPropagation = (e: React.MouseEvent) => {
-    console.log("Closing card from MeetingRequestHandler");
-    onCancel();
-  };
-  
   // Handle cancel with proper event handling
   const handleCancel = (e: React.MouseEvent) => {
     console.log("Cancel handler called in MeetingRequestHandler");
@@ -59,17 +48,12 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
   }
 
   return (
-    <RequestCardContainer 
-      selectedUser={selectedUser}
-      stopPropagation={stopPropagation}
-    >
-      <UserRequestCard
-        user={userDetails}
-        selectedDuration={selectedDuration}
-        setSelectedDuration={setSelectedDuration}
-        onCancel={handleCancel}
-      />
-    </RequestCardContainer>
+    <UserRequestCard
+      user={userDetails}
+      selectedDuration={selectedDuration}
+      setSelectedDuration={setSelectedDuration}
+      onCancel={handleCancel}
+    />
   );
 };
 
