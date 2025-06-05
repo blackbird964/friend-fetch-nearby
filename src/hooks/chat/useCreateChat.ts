@@ -26,6 +26,17 @@ export function useCreateChat() {
     }
 
     try {
+      // Check if chat already exists
+      const existingChat = chats.find(chat => 
+        chat.participants.includes(targetUser.id) && 
+        chat.participants.includes(currentUser.id)
+      );
+
+      if (existingChat) {
+        console.log("[useCreateChat] Found existing chat:", existingChat.id);
+        return existingChat;
+      }
+
       // Generate a unique chat ID
       const chatId = `chat-${currentUser.id}-${targetUser.id}-${Date.now()}`;
       
@@ -52,7 +63,7 @@ export function useCreateChat() {
       console.error("[useCreateChat] Error creating chat:", error);
       throw error;
     }
-  }, [currentUser]);
+  }, [currentUser, chats]);
 
   return { 
     createChat,

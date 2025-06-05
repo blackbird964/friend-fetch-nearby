@@ -1,9 +1,9 @@
 
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { AppUser, Chat } from '@/context/types';
+import { AppUser } from '@/context/types';
 import { useToast } from '@/hooks/use-toast';
-import { useChatList } from '@/hooks/useChatList';
+import { useCreateChat } from '@/hooks/chat/useCreateChat';
 import { useAppContext } from '@/context/AppContext';
 import { toast as sonnerToast } from 'sonner';
 
@@ -11,7 +11,7 @@ export const useChatActions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState<boolean>(false);
-  const { chats, setChats, createChat } = useChatList();
+  const { createChat, chats, setChats } = useCreateChat();
   const { setSelectedChat } = useAppContext();
 
   // Function to start a new chat or navigate to an existing one
@@ -41,15 +41,11 @@ export const useChatActions = () => {
         )
       );
 
+      let chatToSelect;
+
       if (existingChat) {
         console.log("[useChatActions] Found existing chat:", existingChat.id);
-        
-        // Set the selected chat
-        setSelectedChat(existingChat);
-        
-        // Navigate to the chat page
-        console.log("[useChatActions] Navigating to existing chat");
-        navigate('/chat');
+        chatToSelect = existingChat;
         
         // Use sonner toast for notification
         sonnerToast.success("Opening chat", {
@@ -71,18 +67,22 @@ export const useChatActions = () => {
         setChats(updatedChats);
         console.log("[useChatActions] Updated chats list with new chat");
         
-        // Set the newly created chat as selected
-        setSelectedChat(newChat);
-        
-        // Navigate to the chat page
-        console.log("[useChatActions] Navigating to new chat");
-        navigate('/chat');
+        chatToSelect = newChat;
         
         // Use sonner toast for notification
         sonnerToast.success("Chat created", {
           description: `Started a new chat with ${user.name}`
         });
       }
+      
+      // Set the chat as selected
+      console.log("[useChatActions] Setting selected chat:", chatToSelect.id);
+      setSelectedChat(chatToSelect);
+      
+      // Navigate to the chat page
+      console.log("[useChatActions] Navigating to chat page");
+      navigate('/chat');
+      
     } catch (error) {
       console.error("[useChatActions] Error starting chat:", error);
       toast({
