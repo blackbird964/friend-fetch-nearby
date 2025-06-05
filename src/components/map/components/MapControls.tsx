@@ -36,19 +36,19 @@ const MapControls: React.FC<MapControlsProps> = ({
     currentUser
   });
 
-  // Add zoom controls functionality
+  // Add proper zoom controls functionality
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
     const mapInstance = map.current;
     
-    // Add zoom functionality to existing controls
+    // Create zoom functions
     const handleZoomIn = () => {
       const view = mapInstance.getView();
       const currentZoom = view.getZoom();
       if (currentZoom !== undefined) {
         view.animate({
-          zoom: currentZoom + 1,
+          zoom: Math.min(currentZoom + 1, 19), // Max zoom limit
           duration: 250
         });
       }
@@ -59,39 +59,75 @@ const MapControls: React.FC<MapControlsProps> = ({
       const currentZoom = view.getZoom();
       if (currentZoom !== undefined) {
         view.animate({
-          zoom: currentZoom - 1,
+          zoom: Math.max(currentZoom - 1, 2), // Min zoom limit
           duration: 250
         });
       }
     };
 
-    // Find the zoom buttons in the DOM and add click handlers
-    const addZoomListeners = () => {
+    // Function to repeatedly try to find and attach zoom controls
+    const attachZoomControls = () => {
       const zoomInButton = document.querySelector('.ol-zoom-in');
       const zoomOutButton = document.querySelector('.ol-zoom-out');
       
-      if (zoomInButton) {
+      if (zoomInButton && zoomOutButton) {
+        console.log('MapControls - Found zoom buttons, attaching listeners');
+        
+        // Remove any existing listeners first
+        zoomInButton.removeEventListener('click', handleZoomIn);
+        zoomOutButton.removeEventListener('click', handleZoomOut);
+        zoomInButton.removeEventListener('touchend', handleZoomIn);
+        zoomOutButton.removeEventListener('touchend', handleZoomOut);
+        
+        // Add new listeners
         zoomInButton.addEventListener('click', handleZoomIn);
-      }
-      if (zoomOutButton) {
         zoomOutButton.addEventListener('click', handleZoomOut);
+        zoomInButton.addEventListener('touchend', handleZoomIn);
+        zoomOutButton.addEventListener('touchend', handleZoomOut);
+        
+        // Ensure buttons are touchable on mobile
+        (zoomInButton as HTMLElement).style.touchAction = 'manipulation';
+        (zoomOutButton as HTMLElement).style.touchAction = 'manipulation';
+        
+        return true; // Success
       }
+      return false; // Not found yet
     };
 
-    // Add listeners after a short delay to ensure controls are rendered
-    const timeout = setTimeout(addZoomListeners, 100);
+    // Try to attach controls immediately
+    if (!attachZoomControls()) {
+      // If not found, try again with intervals
+      let attempts = 0;
+      const maxAttempts = 20;
+      
+      const interval = setInterval(() => {
+        attempts++;
+        
+        if (attachZoomControls() || attempts >= maxAttempts) {
+          clearInterval(interval);
+          if (attempts >= maxAttempts) {
+            console.warn('MapControls - Could not find zoom buttons after', maxAttempts, 'attempts');
+          }
+        }
+      }, 100);
+      
+      return () => {
+        clearInterval(interval);
+      };
+    }
 
+    // Cleanup function for when controls are found immediately
     return () => {
-      clearTimeout(timeout);
-      // Clean up event listeners
       const zoomInButton = document.querySelector('.ol-zoom-in');
       const zoomOutButton = document.querySelector('.ol-zoom-out');
       
       if (zoomInButton) {
         zoomInButton.removeEventListener('click', handleZoomIn);
+        zoomInButton.removeEventListener('touchend', handleZoomIn);
       }
       if (zoomOutButton) {
         zoomOutButton.removeEventListener('click', handleZoomOut);
+        zoomOutButton.removeEventListener('touchend', handleZoomOut);
       }
     };
   }, [map, mapLoaded]);
