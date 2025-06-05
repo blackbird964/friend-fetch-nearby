@@ -28,7 +28,7 @@ const BottomNavigation: React.FC = () => {
       path: '/chat',
       label: 'Chats',
       icon: <MessageSquare className="h-6 w-6" />,
-      badge: unreadMessageCount,
+      badge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
     },
     {
       path: '/profile',
@@ -75,7 +75,7 @@ const BottomNavigation: React.FC = () => {
           >
             <div className="relative">
               {route.icon}
-              {route.badge && route.badge > 0 && (
+              {route.badge && (
                 <Badge className="absolute -top-2 -right-2 px-1 min-h-5 min-w-5 h-5 w-5 flex items-center justify-center text-[10px] bg-red-500 text-white rounded-full">
                   {route.badge}
                 </Badge>
