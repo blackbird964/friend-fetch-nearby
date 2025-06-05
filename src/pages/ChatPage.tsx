@@ -12,13 +12,9 @@ import { useNavigate, useLocation } from 'react-router-dom';
 
 const ChatPage: React.FC = () => {
   const { 
-    friendRequests, 
-    meetupRequests, 
     selectedChat, 
     setSelectedChat, 
     loading, 
-    refreshFriendRequests, 
-    refreshMeetupRequests,
     chats
   } = useAppContext();
   
@@ -30,15 +26,6 @@ const ChatPage: React.FC = () => {
   
   // Configure viewport for mobile devices
   useViewportConfig(isMobile);
-  
-  // Calculate pending requests counts
-  const pendingFriendRequests = friendRequests.filter(r => 
-    r.status === 'pending' && r.receiverId === friendRequests[0]?.receiverId
-  ).length;
-
-  const pendingMeetupRequests = meetupRequests.filter(r => 
-    r.status === 'pending' && r.receiverId === meetupRequests[0]?.receiverId
-  ).length;
 
   // Log when component mounts or chats change
   useEffect(() => {
@@ -56,12 +43,6 @@ const ChatPage: React.FC = () => {
       }
     };
   }, [isMobile, setSelectedChat]);
-  
-  // Refresh requests when component mounts
-  useEffect(() => {
-    refreshFriendRequests();
-    refreshMeetupRequests();
-  }, [refreshFriendRequests, refreshMeetupRequests]);
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-3xl flex flex-col h-[calc(100vh-130px)]">
@@ -82,8 +63,8 @@ const ChatPage: React.FC = () => {
                 setActiveTab={setActiveTab}
                 activeRequestsTab={activeRequestsTab}
                 setActiveRequestsTab={setActiveRequestsTab}
-                pendingFriendRequests={pendingFriendRequests}
-                pendingMeetupRequests={pendingMeetupRequests}
+                pendingFriendRequests={0}
+                pendingMeetupRequests={0}
               />
             </div>
           )}
@@ -105,7 +86,7 @@ const ChatPage: React.FC = () => {
           )}
           
           {/* Show a placeholder if no chat is selected (desktop only) */}
-          {!selectedChat && !isMobile && activeTab === 'chats' && (
+          {!selectedChat && !isMobile && (
             <div className="hidden md:flex md:w-2/3 md:items-center md:justify-center h-full">
               <ChatPlaceholder />
             </div>

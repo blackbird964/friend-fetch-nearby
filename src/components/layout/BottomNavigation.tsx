@@ -9,25 +9,9 @@ const BottomNavigation: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { 
-    friendRequests, 
     currentUser, 
-    refreshFriendRequests,
     unreadMessageCount 
   } = useAppContext();
-  
-  // Refresh friend requests when component mounts
-  useEffect(() => {
-    if (currentUser) {
-      refreshFriendRequests();
-    }
-  }, [currentUser, refreshFriendRequests]);
-  
-  const pendingRequests = friendRequests.filter(r => 
-    r.status === 'pending' && r.receiverId === currentUser?.id
-  ).length;
-  
-  // Total notifications for the chat tab
-  const totalNotifications = pendingRequests + unreadMessageCount;
   
   const routes = [
     {
@@ -44,7 +28,7 @@ const BottomNavigation: React.FC = () => {
       path: '/chat',
       label: 'Chats',
       icon: <MessageSquare className="h-6 w-6" />,
-      badge: totalNotifications,
+      badge: unreadMessageCount,
     },
     {
       path: '/profile',
