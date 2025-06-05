@@ -31,24 +31,19 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
     }
     
     try {
+      console.log("[UserRequestCard] Starting chat with user:", user.name);
       await startChat(user);
+      console.log("[UserRequestCard] Chat started successfully, closing card");
       onClose(); // Close the card after starting chat
     } catch (error) {
       console.error("[UserRequestCard] Error starting chat:", error);
     }
   };
 
-  const handleCancelClick = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log("[UserRequestCard] Cancel button clicked");
-    onClose();
-  };
-
   const handleCloseClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log("[UserRequestCard] Close (X) button clicked");
+    console.log("[UserRequestCard] Close button clicked");
     onClose();
   };
 
@@ -125,8 +120,9 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
           <Button 
             variant="outline" 
             className="flex-1 hover:bg-gray-50 border-gray-300"
-            onClick={handleCancelClick}
+            onClick={handleCloseClick}
             disabled={loading}
+            type="button"
           >
             Close
           </Button>
@@ -134,6 +130,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
             className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
             onClick={handleChatClick}
             disabled={loading || !user?.id}
+            type="button"
           >
             <MessageCircle className="mr-2 h-4 w-4" />
             {loading ? 'Starting...' : 'Start Chat'}
