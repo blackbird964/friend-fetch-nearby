@@ -22,16 +22,29 @@ const MeetingRequestHandler: React.FC<MeetingRequestHandlerProps> = ({
 }) => {
   // Find the selected user's data
   const userDetails = React.useMemo(() => {
-    console.log("Looking for user with ID:", selectedUser);
-    console.log("Available users:", nearbyUsers.map(u => ({ id: u.id, name: u.name })));
-    return nearbyUsers.find(user => user.id === selectedUser);
+    console.log("MeetingRequestHandler - Looking for user with ID:", selectedUser);
+    console.log("MeetingRequestHandler - Available users:", nearbyUsers.map(u => ({ id: u.id, name: u.name })));
+    
+    if (!selectedUser) return null;
+    
+    const user = nearbyUsers.find(user => user.id === selectedUser);
+    console.log("MeetingRequestHandler - Found user:", user ? user.name : 'not found');
+    return user;
   }, [selectedUser, nearbyUsers]);
 
-  // Don't render if no user is selected or user details not found
-  if (!selectedUser || !userDetails) {
-    console.log("Not rendering card - no selectedUser or userDetails not found");
+  // Don't render if no user is selected
+  if (!selectedUser) {
+    console.log("MeetingRequestHandler - No selectedUser, not rendering");
     return null;
   }
+
+  // Don't render if user details not found
+  if (!userDetails) {
+    console.log("MeetingRequestHandler - User details not found for ID:", selectedUser);
+    return null;
+  }
+
+  console.log("MeetingRequestHandler - Rendering UserRequestCard for:", userDetails.name);
 
   return (
     <UserRequestCard
