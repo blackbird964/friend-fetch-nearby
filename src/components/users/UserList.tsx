@@ -1,95 +1,81 @@
-import React, { useMemo, useState } from 'react';
+
+import React from 'react';
 import { useAppContext } from '@/context/AppContext';
-import UsersList from './nearby-users/UsersList';
 import UserListHeader from './nearby-users/UserListHeader';
 import EmptyUserList from './nearby-users/EmptyUserList';
-import UserRequestCard from '@/components/map/components/UserRequestCard';
+import UsersList from './nearby-users/UsersList';
 import { useChatActions } from './hooks/useChatActions';
-import { AppUser } from '@/context/types';
-import { useNearbyUsersRefresh } from './hooks/useNearbyUsersRefresh';
 
 const UserList: React.FC = () => {
-  const { currentUser, nearbyUsers, radiusInKm } = useAppContext();
-  const { startChat } = useChatActions();
-  const [selectedUser, setSelectedUser] = useState<AppUser | null>(null);
-  const { handleRefresh, loading } = useNearbyUsersRefresh();
+  const { nearbyUsers, radiusInKm, currentUser, loading, refreshNearbyUsers } = useAppContext();
+  const { startChat, loading: chatLoading } = useChatActions();
 
-  // Filter users based on matching activities (same logic as MapPage)
-  const filteredUsers = useMemo(() => {
-    // Get only online and real users, excluding the current user
-    let onlineUsers = nearbyUsers.filter(user => 
-      // Exclude the current user first
-      user.id !== currentUser?.id &&
-      // Only include users marked as online
-      user.isOnline === true &&
-      // Filter out users that don't have a valid ID or have test/mock in their ID
-      user.id && !String(user.id).includes('test') && !String(user.id).includes('mock')
-    );
-
-    // Filter users based on matching activities if current user has selected today's activities
-    if (currentUser?.todayActivities && currentUser.todayActivities.length > 0) {
-      onlineUsers = onlineUsers.filter(user => {
-        // If the user doesn't have today's activities set, don't show them
-        if (!user.todayActivities || user.todayActivities.length === 0) {
-          return false;
-        }
-        
-        // Check if there's at least one matching activity
-        return user.todayActivities.some(activity => 
-          currentUser.todayActivities!.includes(activity)
-        );
-      });
-    }
-
-    return onlineUsers;
-  }, [nearbyUsers, currentUser]);
-
-  const handleStartChat = async (user: AppUser) => {
-    console.log("[UserList] Starting chat with user:", user.name);
+  const handleRefresh = async () => {
     try {
-      await startChat(user);
-      setSelectedUser(null); // Close the card after starting chat
+      console.log("UserList - Refreshing nearby users with latest data");
+      await refreshNearbyUsers(true);
     } catch (error) {
-      console.error("[UserList] Error starting chat:", error);
+      console.error("Error refreshing users:", error);
     }
   };
 
-  const handleSelectUser = (user: AppUser) => {
-    console.log("[UserList] User selected:", user.name);
-    setSelectedUser(user);
-  };
+  // Get only online and real users, excluding the current user
+  let onlineUsers = nearbyUsers.filter(user => 
+    // Exclude the current user first
+    user.id !== currentUser?.id &&
+    // Only include users marked as online
+    user.isOnline === true &&
+    // Filter out users that don't have a valid ID or have test/mock in their ID
+    user.id && !String(user.id).includes('test') && !String(user.id).includes('mock')
+  );
 
-  const handleCloseCard = () => {
-    console.log("[UserList] Closing user card");
-    setSelectedUser(null);
+  // Filter users based on matching activities if current user has selected today's activities
+  if (currentUser?.todayActivities && currentUser.todayActivities.length > 0) {
+    onlineUsers = onlineUsers.filter(user => {
+      // If the user doesn't have today's activities set, don't show them
+      if (!user.todayActivities || user.todayActivities.length === 0) {
+        return false;
+      }
+      
+      // Check if there's at least one matching activity
+      return user.todayActivities.some(activity => 
+        currentUser.todayActivities!.includes(activity)
+      );
+    });
+  }
+
+  console.log("UserList component - Current user ID:", currentUser?.id);
+  console.log("UserList component - Current user activities:", currentUser?.todayActivities);
+  console.log("UserList component - Displaying users:", onlineUsers.length, "out of", nearbyUsers.length);
+  console.log("UserList component - Filtered users with activities:", onlineUsers.map(u => ({ 
+    id: u.id, 
+    name: u.name, 
+    activities: u.todayActivities,
+    interests: u.interests,
+    duration: u.preferredHangoutDuration
+  })));
+
+  const handleStartChat = (user: any) => {
+    console.log("[UserList] Starting chat with user:", user.name);
+    startChat(user);
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <UserListHeader 
-        userCount={filteredUsers.length}
+        userCount={onlineUsers.length}
         radiusInKm={radiusInKm}
-        loading={loading}
+        loading={loading || chatLoading}
         onRefresh={handleRefresh}
       />
       
-      {filteredUsers.length === 0 ? (
+      {onlineUsers.length === 0 ? (
         <EmptyUserList hasLocation={!!currentUser?.location} />
       ) : (
-        <>
-          <UsersList 
-            users={filteredUsers} 
-            onStartChat={handleSelectUser} // This will show the card instead of directly starting chat
-          />
-          
-          {/* Show UserRequestCard when a user is selected */}
-          {selectedUser && (
-            <UserRequestCard
-              user={selectedUser}
-              onClose={handleCloseCard}
-            />
-          )}
-        </>
+        <UsersList 
+          users={onlineUsers}
+          onStartChat={handleStartChat}
+        />
       )}
     </div>
   );
