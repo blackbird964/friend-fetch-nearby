@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Button } from "@/components/ui/button";
@@ -19,9 +18,10 @@ type LoginFormValues = {
 
 interface LoginFormProps {
   onToggleForm: () => void;
+  onToggleBusinessForm?: () => void;
 }
 
-const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm }) => {
+const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm, onToggleBusinessForm }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [forgotPassword, setForgotPassword] = useState(false);
   const [resetEmailSent, setResetEmailSent] = useState(false);
@@ -203,6 +203,18 @@ const LoginForm: React.FC<LoginFormProps> = ({ onToggleForm }) => {
                 Sign Up
               </button>
             </div>
+            {onToggleBusinessForm && (
+              <div className="text-sm text-center text-gray-500">
+                Are you a business wanting to be listed?{" "}
+                <button
+                  onClick={onToggleBusinessForm}
+                  className="text-primary underline font-medium hover:text-primary/80"
+                  disabled={isLoading}
+                >
+                  Sign up here
+                </button>
+              </div>
+            )}
             <div className="text-sm text-center text-gray-500">
               <button
                 onClick={() => setForgotPassword(!forgotPassword)}

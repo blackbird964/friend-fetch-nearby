@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import LoginForm from '@/components/auth/LoginForm';
 import SignUpForm from '@/components/auth/SignUpForm';
+import BusinessSignUpForm from '@/components/auth/BusinessSignUpForm';
 import ProfileSetupForm from '@/components/auth/ProfileSetupForm';
 import { useAppContext } from '@/context/AppContext';
 import { Navigate, useSearchParams } from 'react-router-dom';
@@ -11,7 +12,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 
 const Auth: React.FC = () => {
-  const [formState, setFormState] = useState<'login' | 'signup' | 'profile-setup'>('login');
+  const [formState, setFormState] = useState<'login' | 'signup' | 'business-signup' | 'profile-setup'>('login');
   const { isAuthenticated, loading, setIsAuthenticated, setSupabaseUser, currentUser } = useAppContext();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
@@ -104,7 +105,10 @@ const Auth: React.FC = () => {
       )}
 
       {formState === 'login' ? (
-        <LoginForm onToggleForm={() => setFormState('signup')} />
+        <LoginForm 
+          onToggleForm={() => setFormState('signup')}
+          onToggleBusinessForm={() => setFormState('business-signup')}
+        />
       ) : formState === 'signup' ? (
         <SignUpForm 
           onToggleForm={() => setFormState('login')} 
@@ -112,6 +116,10 @@ const Auth: React.FC = () => {
             console.log("User signed up, showing profile setup");
             setFormState('profile-setup');
           }}
+        />
+      ) : formState === 'business-signup' ? (
+        <BusinessSignUpForm 
+          onToggleForm={() => setFormState('login')}
         />
       ) : null}
     </div>
