@@ -1,4 +1,3 @@
-
 import React, { useMemo, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import UsersList from './nearby-users/UsersList';
@@ -13,7 +12,7 @@ const UserList: React.FC = () => {
   const { currentUser, nearbyUsers, radiusInKm } = useAppContext();
   const { startChat } = useChatActions();
   const [selectedUser, setSelectedUser] = useState<AppUser | null>(null);
-  const { refreshNearbyUsers, loading } = useNearbyUsersRefresh();
+  const { handleRefresh, loading } = useNearbyUsersRefresh();
 
   // Filter users based on matching activities (same logic as MapPage)
   const filteredUsers = useMemo(() => {
@@ -71,7 +70,7 @@ const UserList: React.FC = () => {
         userCount={filteredUsers.length}
         radiusInKm={radiusInKm}
         loading={loading}
-        onRefresh={refreshNearbyUsers}
+        onRefresh={handleRefresh}
       />
       
       {filteredUsers.length === 0 ? (
