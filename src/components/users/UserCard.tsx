@@ -11,9 +11,10 @@ interface UserCardProps {
   user: AppUser;
   onClick?: () => void;
   className?: string;
+  minimal?: boolean;
 }
 
-const UserCard: React.FC<UserCardProps> = ({ user, onClick, className = "" }) => {
+const UserCard: React.FC<UserCardProps> = ({ user, onClick, className = "", minimal = false }) => {
   const getInitials = (name: string) => {
     return name
       .split(' ')
@@ -28,9 +29,9 @@ const UserCard: React.FC<UserCardProps> = ({ user, onClick, className = "" }) =>
       className={`cursor-pointer hover:shadow-md transition-shadow ${className}`}
       onClick={onClick}
     >
-      <CardContent className="p-4">
+      <CardContent className={minimal ? "p-3" : "p-4"}>
         <div className="flex items-start space-x-3">
-          <Avatar className="h-12 w-12 border-2 border-primary">
+          <Avatar className={`${minimal ? "h-10 w-10" : "h-12 w-12"} border-2 border-primary`}>
             <AvatarImage src={user.profile_pic} />
             <AvatarFallback className="bg-primary/10 text-primary font-semibold">
               {getInitials(user.name || 'User')}
@@ -39,7 +40,7 @@ const UserCard: React.FC<UserCardProps> = ({ user, onClick, className = "" }) =>
           
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
-              <h3 className="font-semibold text-lg truncate">{user.name}</h3>
+              <h3 className={`font-semibold ${minimal ? "text-base" : "text-lg"} truncate`}>{user.name}</h3>
               {user.distance && (
                 <div className="flex items-center text-sm text-muted-foreground">
                   <MapPin className="h-3 w-3 mr-1" />
@@ -52,12 +53,12 @@ const UserCard: React.FC<UserCardProps> = ({ user, onClick, className = "" }) =>
               <p className="text-sm text-muted-foreground mb-2">{user.age} • {user.gender}</p>
             )}
             
-            {user.bio && (
+            {!minimal && user.bio && (
               <p className="text-sm text-gray-600 italic mb-3 line-clamp-2">"{user.bio}"</p>
             )}
             
             {/* Display user's activities */}
-            <div className="mb-3 space-y-2">
+            <div className={`${minimal ? "mb-2" : "mb-3"} space-y-2`}>
               {user.active_priorities && user.active_priorities.length > 0 && (
                 <div className="bg-blue-50 p-2 rounded-lg border border-blue-200">
                   <h4 className="text-xs font-medium mb-1 text-blue-800">Looking to do:</h4>
@@ -77,14 +78,14 @@ const UserCard: React.FC<UserCardProps> = ({ user, onClick, className = "" }) =>
             
             {user.interests && user.interests.length > 0 && (
               <div className="flex flex-wrap gap-1">
-                {user.interests.slice(0, 3).map((interest) => (
+                {user.interests.slice(0, minimal ? 2 : 3).map((interest) => (
                   <Badge key={interest} variant="secondary" className="text-xs">
                     {interest}
                   </Badge>
                 ))}
-                {user.interests.length > 3 && (
+                {user.interests.length > (minimal ? 2 : 3) && (
                   <Badge variant="outline" className="text-xs">
-                    +{user.interests.length - 3} more
+                    +{user.interests.length - (minimal ? 2 : 3)} more
                   </Badge>
                 )}
               </div>
