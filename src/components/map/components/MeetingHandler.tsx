@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { AppUser } from '@/context/types';
@@ -40,12 +39,10 @@ const MeetingHandler: React.FC<MeetingHandlerProps> = ({
 
   // Handle cancel request
   const handleCancel = () => {
-    console.log("[MeetingHandler] Cancel request called");
+    console.log("Cancel request");
     setSelectedUser(null);
-    setSelectedDuration(30); // Reset to default duration
     setMovingUsers(new Set());
     setCompletedMoves(new Set());
-    setRequestSent(false);
   };
 
   return (
