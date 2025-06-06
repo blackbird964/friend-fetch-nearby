@@ -23,6 +23,14 @@ export {
   updateUserLocation
 } from './profiles';
 
+// Re-export business profile types and functions
+export {
+  type BusinessProfile,
+  createBusinessProfile,
+  getBusinessProfile,
+  updateBusinessProfile
+} from './businessProfiles';
+
 // Re-export message types and functions
 export {
   type Message,

@@ -4,6 +4,7 @@ import { useForm } from 'react-hook-form';
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { signUp } from '@/lib/supabase';
+import { createBusinessProfile } from '@/lib/supabase/businessProfiles';
 import { useAppContext } from '@/context/AppContext';
 import BusinessSignUpFormHeader from './components/BusinessSignUpFormHeader';
 import BusinessSignUpFormFields from './components/BusinessSignUpFormFields';
@@ -100,6 +101,40 @@ const BusinessSignUpForm: React.FC<BusinessSignUpFormProps> = ({ onToggleForm })
       
       if (data && data.user) {
         console.log("Business signup successful for user:", data.user.id);
+        
+        // Create business profile in the business_profiles table
+        try {
+          const businessProfileData = {
+            user_id: data.user.id,
+            business_name: values.businessName.trim(),
+            contact_person: values.contactPerson.trim(),
+            phone: values.phone?.trim() || undefined,
+            address: values.address?.trim() || undefined,
+            description: values.description?.trim() || undefined,
+          };
+          
+          const { data: profileData, error: profileError } = await createBusinessProfile(businessProfileData);
+          
+          if (profileError) {
+            console.error("Error creating business profile:", profileError);
+            toast({
+              title: "Business profile creation failed",
+              description: "Account created but business profile setup failed. Please try again.",
+              variant: "destructive",
+            });
+            return;
+          }
+          
+          console.log("Business profile created successfully:", profileData);
+        } catch (profileError: any) {
+          console.error("Unexpected error creating business profile:", profileError);
+          toast({
+            title: "Business profile creation failed",
+            description: "Account created but business profile setup failed. Please try again.",
+            variant: "destructive",
+          });
+          return;
+        }
         
         if (data.session) {
           console.log("Business user authenticated immediately with session");
