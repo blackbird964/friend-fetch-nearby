@@ -7,12 +7,14 @@ import ProfileSetupForm from '@/components/auth/ProfileSetupForm';
 import { useAppContext } from '@/context/AppContext';
 import { Navigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
+import { getBusinessProfile } from '@/lib/supabase/businessProfiles';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Info } from 'lucide-react';
 
 const Auth: React.FC = () => {
   const [formState, setFormState] = useState<'login' | 'signup' | 'business-signup' | 'profile-setup'>('login');
+  const [isBusinessUser, setIsBusinessUser] = useState<boolean | null>(null);
   const { isAuthenticated, loading, setIsAuthenticated, setSupabaseUser, currentUser } = useAppContext();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
@@ -25,6 +27,23 @@ const Auth: React.FC = () => {
     if (isAuthenticated) {
       console.log("Auth component - User is authenticated:", { currentUser });
     }
+  }, [isAuthenticated, currentUser]);
+  
+  // Check if user is a business user
+  useEffect(() => {
+    const checkBusinessUser = async () => {
+      if (isAuthenticated && currentUser) {
+        try {
+          const businessProfile = await getBusinessProfile(currentUser.id);
+          setIsBusinessUser(!!businessProfile);
+        } catch (error) {
+          console.error('Error checking business profile:', error);
+          setIsBusinessUser(false);
+        }
+      }
+    };
+    
+    checkBusinessUser();
   }, [isAuthenticated, currentUser]);
   
   useEffect(() => {
@@ -48,6 +67,7 @@ const Auth: React.FC = () => {
       } else {
         setIsAuthenticated(false);
         setSupabaseUser(null);
+        setIsBusinessUser(null);
       }
     });
     
@@ -56,14 +76,20 @@ const Auth: React.FC = () => {
     };
   }, [setIsAuthenticated, setSupabaseUser]);
 
+  // If authenticated and is a business user, redirect to map
+  if (isAuthenticated && isBusinessUser === true && !loading) {
+    console.log("Business user authenticated, redirecting to map");
+    return <Navigate to="/map" replace />;
+  }
+
   // If authenticated and has a complete profile, redirect to home
-  if (isAuthenticated && currentUser?.bio && !loading) {
+  if (isAuthenticated && isBusinessUser === false && currentUser?.bio && !loading) {
     console.log("User has complete profile, redirecting to home");
     return <Navigate to="/home" replace />;
   }
   
-  // If authenticated but profile is incomplete, show profile setup
-  if (isAuthenticated && currentUser && !loading) {
+  // If authenticated but profile is incomplete (and not a business user), show profile setup
+  if (isAuthenticated && isBusinessUser === false && currentUser && !loading) {
     if (!currentUser.bio) {
       console.log("User profile is incomplete, showing profile setup");
       return (
@@ -78,7 +104,7 @@ const Auth: React.FC = () => {
     }
   }
 
-  if (loading) {
+  if (loading || (isAuthenticated && isBusinessUser === null)) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
