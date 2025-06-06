@@ -1,78 +1,91 @@
 
 import React from 'react';
-import { Badge } from "@/components/ui/badge";
-import { useAppContext } from '@/context/AppContext';
-import { AppUser } from '@/context/types';
 import { Card, CardContent } from "@/components/ui/card";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { User } from 'lucide-react';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { MapPin, Clock } from 'lucide-react';
+import { AppUser } from '@/context/types';
+import ActivePriorities from '@/components/users/nearby-users/user-details/ActivePriorities';
 
 interface UserCardProps {
   user: AppUser;
-  minimal?: boolean;
   onClick?: () => void;
+  className?: string;
 }
 
-const UserCard: React.FC<UserCardProps> = ({ user, minimal = false, onClick }) => {
+const UserCard: React.FC<UserCardProps> = ({ user, onClick, className = "" }) => {
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(part => part[0])
+      .join('')
+      .toUpperCase()
+      .substring(0, 2);
+  };
+
   return (
     <Card 
-      className={`${onClick ? 'cursor-pointer hover:bg-gray-50' : ''} ${minimal ? '' : 'shadow-md'}`}
+      className={`cursor-pointer hover:shadow-md transition-shadow ${className}`}
       onClick={onClick}
     >
-      <CardContent className={`${minimal ? 'p-3' : 'p-4'}`}>
-        <div className="flex items-center space-x-3">
-          <Avatar className={minimal ? 'h-10 w-10' : 'h-12 w-12'}>
-            <AvatarImage src={user.profile_pic || ''} alt={user.name || 'User'} />
-            <AvatarFallback>
-              <User className={minimal ? 'h-5 w-5' : 'h-6 w-6'} />
+      <CardContent className="p-4">
+        <div className="flex items-start space-x-3">
+          <Avatar className="h-12 w-12 border-2 border-primary">
+            <AvatarImage src={user.profile_pic} />
+            <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+              {getInitials(user.name || 'User')}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-1">
-            <h3 className={`${minimal ? 'text-sm' : 'text-base'} font-medium`}>{user.name}</h3>
-            <div className="flex items-center mt-1">
-              <span className="text-xs text-gray-500 mr-2">
-                {user.age} • {user.gender}
-              </span>
+          
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="font-semibold text-lg truncate">{user.name}</h3>
+              {user.distance && (
+                <div className="flex items-center text-sm text-muted-foreground">
+                  <MapPin className="h-3 w-3 mr-1" />
+                  {user.distance.toFixed(1)}km
+                </div>
+              )}
             </div>
             
-            {!minimal && user.bio && (
-              <p className="text-sm text-gray-600 mt-2 line-clamp-2">{user.bio}</p>
-            )}
-
-            {!minimal && user.todayActivities && user.todayActivities.length > 0 && (
-              <div className="mt-2">
-                <p className="text-xs text-gray-500 mb-1">I am looking for:</p>
-                <div className="flex flex-wrap gap-1">
-                  {user.todayActivities.slice(0, 3).map((activity) => (
-                    <Badge key={activity} variant="default" className="text-xs bg-blue-500 text-white hover:bg-blue-600">
-                      {activity}
-                    </Badge>
-                  ))}
-                  {user.todayActivities.length > 3 && (
-                    <span className="text-xs text-gray-500">+{user.todayActivities.length - 3}</span>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {!minimal && user.preferredHangoutDuration && (
-              <div className="mt-1">
-                <span className="text-xs text-gray-500">
-                  Duration: {user.preferredHangoutDuration} min
-                </span>
-              </div>
+            {user.age && user.gender && (
+              <p className="text-sm text-muted-foreground mb-2">{user.age} • {user.gender}</p>
             )}
             
-            {!minimal && user.interests && user.interests.length > 0 && (
-              <div className="flex flex-wrap gap-1 mt-2">
-                <p className="text-xs text-gray-500 mb-1 w-full">I am into:</p>
+            {user.bio && (
+              <p className="text-sm text-gray-600 italic mb-3 line-clamp-2">"{user.bio}"</p>
+            )}
+            
+            {/* Display user's activities */}
+            <div className="mb-3 space-y-2">
+              {user.active_priorities && user.active_priorities.length > 0 && (
+                <div className="bg-blue-50 p-2 rounded-lg border border-blue-200">
+                  <h4 className="text-xs font-medium mb-1 text-blue-800">Looking to do:</h4>
+                  <ActivePriorities priorities={user.active_priorities} />
+                </div>
+              )}
+              
+              {user.preferredHangoutDuration && (
+                <div className="bg-green-50 p-2 rounded-lg border border-green-200">
+                  <div className="flex items-center gap-1">
+                    <Clock className="h-3 w-3 text-green-700" />
+                    <span className="text-xs text-green-700 font-medium">{user.preferredHangoutDuration} min</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {user.interests && user.interests.length > 0 && (
+              <div className="flex flex-wrap gap-1">
                 {user.interests.slice(0, 3).map((interest) => (
                   <Badge key={interest} variant="secondary" className="text-xs">
                     {interest}
                   </Badge>
                 ))}
                 {user.interests.length > 3 && (
-                  <span className="text-xs text-gray-500">+{user.interests.length - 3}</span>
+                  <Badge variant="outline" className="text-xs">
+                    +{user.interests.length - 3} more
+                  </Badge>
                 )}
               </div>
             )}
