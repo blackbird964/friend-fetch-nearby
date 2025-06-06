@@ -2,10 +2,10 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { X, MessageCircle } from 'lucide-react';
+import { X } from 'lucide-react';
 import { AppUser } from '@/context/types';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useChatActions } from '@/components/users/hooks/useChatActions';
+import { Badge } from "@/components/ui/badge";
 import ActivePriorities from '@/components/users/nearby-users/user-details/ActivePriorities';
 
 interface UserRequestCardProps {
@@ -17,29 +17,6 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   user,
   onClose
 }) => {
-  const { startChat, loading } = useChatActions();
-
-  const handleChatClick = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    console.log("[UserRequestCard] Chat button clicked for user:", user?.name);
-    
-    if (!user || !user.id) {
-      console.error("[UserRequestCard] Cannot start chat: Invalid user data", user);
-      return;
-    }
-    
-    try {
-      console.log("[UserRequestCard] Starting chat with user:", user.name);
-      await startChat(user);
-      console.log("[UserRequestCard] Chat started successfully, closing card");
-      onClose(); // Close the card after starting chat
-    } catch (error) {
-      console.error("[UserRequestCard] Error starting chat:", error);
-    }
-  };
-
   const handleCloseClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
@@ -115,27 +92,20 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
             </div>
           )}
         </div>
-        
-        <div className="flex gap-3">
-          <Button 
-            variant="outline" 
-            className="flex-1 hover:bg-gray-50 border-gray-300"
-            onClick={handleCloseClick}
-            disabled={loading}
-            type="button"
-          >
-            Close
-          </Button>
-          <Button 
-            className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
-            onClick={handleChatClick}
-            disabled={loading || !user?.id}
-            type="button"
-          >
-            <MessageCircle className="mr-2 h-4 w-4" />
-            {loading ? 'Starting...' : 'Start Chat'}
-          </Button>
-        </div>
+
+        {/* Display user's interests */}
+        {user.interests && user.interests.length > 0 && (
+          <div className="bg-purple-50 p-3 rounded-lg border border-purple-200">
+            <h4 className="text-sm font-medium mb-2 text-purple-800">Interests:</h4>
+            <div className="flex flex-wrap gap-1.5">
+              {user.interests.map((interest) => (
+                <Badge key={interest} variant="secondary" className="text-xs bg-purple-100 text-purple-700 hover:bg-purple-200">
+                  {interest}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
       </Card>
     </div>
   );
