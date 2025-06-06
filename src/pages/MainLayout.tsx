@@ -48,10 +48,18 @@ const MainLayout: React.FC = () => {
   useEffect(() => {
     if (isAuthenticated && currentUser && location.pathname === '/') {
       if (isBusinessUser === true || currentUser.bio) {
-        navigate('/home');
+        // Business users go to map, regular users go to home
+        navigate(isBusinessUser ? '/map' : '/home');
       }
     }
   }, [isAuthenticated, currentUser, isBusinessUser, location.pathname, navigate]);
+
+  // Redirect business users away from home page if they somehow get there
+  useEffect(() => {
+    if (isAuthenticated && isBusinessUser === true && location.pathname === '/home') {
+      navigate('/map');
+    }
+  }, [isAuthenticated, isBusinessUser, location.pathname, navigate]);
 
   return (
     <>

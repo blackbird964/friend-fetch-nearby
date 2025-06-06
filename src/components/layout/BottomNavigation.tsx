@@ -1,9 +1,10 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { MapPin, MessageSquare, User, Home } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { Badge } from "@/components/ui/badge";
+import { getBusinessProfile } from '@/lib/supabase/businessProfiles';
 
 const BottomNavigation: React.FC = () => {
   const location = useLocation();
@@ -12,13 +13,32 @@ const BottomNavigation: React.FC = () => {
     currentUser, 
     unreadMessageCount 
   } = useAppContext();
+  const [isBusinessUser, setIsBusinessUser] = useState<boolean | null>(null);
+  
+  // Check if user is a business user
+  useEffect(() => {
+    const checkBusinessUser = async () => {
+      if (currentUser) {
+        try {
+          const businessProfile = await getBusinessProfile(currentUser.id);
+          setIsBusinessUser(!!businessProfile);
+        } catch (error) {
+          console.error('Error checking business profile:', error);
+          setIsBusinessUser(false);
+        }
+      }
+    };
+    
+    checkBusinessUser();
+  }, [currentUser]);
   
   const routes = [
-    {
+    // Only show Home for non-business users
+    ...(isBusinessUser ? [] : [{
       path: '/home',
       label: 'Home',
       icon: <Home className="h-6 w-6" />,
-    },
+    }]),
     {
       path: '/map',
       label: 'Find',
