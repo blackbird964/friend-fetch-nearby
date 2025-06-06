@@ -1,3 +1,4 @@
+
 import { useEffect, useCallback, useRef } from 'react';
 import { AppUser } from '@/context/types';
 import { Vector as VectorSource } from 'ol/source';
@@ -23,7 +24,7 @@ export const useMarkerUpdater = (
   
   // Create a throttled update function for better performance
   const throttledUpdateMarkers = useCallback(
-    throttle((
+    throttle(async (
       source: VectorSource,
       users: AppUser[],
       user: AppUser | null,
@@ -44,14 +45,14 @@ export const useMarkerUpdater = (
       
       // ALWAYS add markers for nearby users, regardless of tracking state
       // This ensures users are clickable even when tracking is off
-      addNearbyUserMarkers(onlineUsers, user, radius, source);
+      await addNearbyUserMarkers(onlineUsers, user, radius, source);
       
       // Check if privacy is enabled for current user
       const isPrivacyEnabled = shouldObfuscateLocation(user);
       
       // Only add user marker if privacy is OFF and tracking is ON
       if (tracking && user && !isPrivacyEnabled) {
-        addCurrentUserMarker(user, source);
+        await addCurrentUserMarker(user, source);
       }
       
     }, 100, { leading: true, trailing: true }),

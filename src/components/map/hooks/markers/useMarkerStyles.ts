@@ -1,5 +1,5 @@
 
-import { Style, Circle as CircleStyle, Fill, Stroke, Text } from 'ol/style';
+import { Style, Circle as CircleStyle, Fill, Stroke, Text, Icon } from 'ol/style';
 import Feature from 'ol/Feature';
 import Geometry from 'ol/geom/Geometry';
 import { FriendRequest } from '@/context/types';
@@ -10,6 +10,19 @@ export const useMarkerStyles = (
   completedMoves: Set<string>,
   friendRequests: FriendRequest[]
 ) => {
+  // Create a star icon SVG
+  const createStarIcon = (color: string) => {
+    const svg = `
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" 
+              fill="${color}" 
+              stroke="white" 
+              stroke-width="2"/>
+      </svg>
+    `;
+    return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  };
+
   // Create marker style based on feature properties
   const getMarkerStyle = (feature: Feature<Geometry>) => {
     const userId = feature.get('userId');
@@ -20,6 +33,7 @@ export const useMarkerStyles = (
     const isCircle = feature.get('isCircle');
     const isHeatMap = feature.get('isHeatMap');
     const circleType = feature.get('circleType');
+    const isBusiness = feature.get('isBusiness');
     const userName = feature.get('name') || (userId ? `User-${userId.substring(0, 4)}` : '');
     
     // Special style for heatmap marker (privacy mode)
@@ -117,7 +131,24 @@ export const useMarkerStyles = (
       });
     }
     
-    // For regular users or the current user
+    // For business users, use star icon
+    if (isBusiness) {
+      return new Style({
+        image: new Icon({
+          src: createStarIcon(markerColor),
+          scale: 1,
+          anchor: [0.5, 0.5]
+        }),
+        text: new Text({
+          text: userName,
+          offsetY: -20,
+          fill: new Fill({ color: '#374151' }),
+          stroke: new Stroke({ color: 'white', width: 2 })
+        })
+      });
+    }
+    
+    // For regular users or the current user (circle markers)
     return new Style({
       image: new CircleStyle({
         radius: isUser ? 14 : 12,

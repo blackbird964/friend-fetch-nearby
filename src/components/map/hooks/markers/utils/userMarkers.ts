@@ -6,11 +6,12 @@ import { Vector as VectorSource } from 'ol/source';
 import { AppUser } from '@/context/types';
 import { getDisplayLocation, shouldObfuscateLocation } from '@/utils/privacyUtils';
 import { isUserWithinRadius } from './markerUtils';
+import { getBusinessProfile } from '@/lib/supabase/businessProfiles';
 
 /**
  * Add markers for nearby users to the map
  */
-export const addNearbyUserMarkers = (
+export const addNearbyUserMarkers = async (
   onlineUsers: AppUser[], 
   currentUser: AppUser | null,
   radiusInKm: number,
@@ -21,22 +22,22 @@ export const addNearbyUserMarkers = (
   const features: Feature[] = [];
   const processedUserIds = new Set<string>();
   
-  onlineUsers.forEach(user => {
+  for (const user of onlineUsers) {
     // Skip the current user - we'll add them separately
     if (currentUser && user.id === currentUser.id) {
-      return;
+      continue;
     }
     
     // Skip already processed users to avoid duplicates
     if (processedUserIds.has(user.id)) {
-      return;
+      continue;
     }
     
-    if (!user.location || !user.location.lat || !user.location.lng) return;
+    if (!user.location || !user.location.lat || !user.location.lng) continue;
     
     // Skip users outside the radius if we have user location
     if (!isUserWithinRadius(user, currentUser, radiusInKm)) {
-      return;
+      continue;
     }
     
     // Check if user has privacy enabled
@@ -45,15 +46,20 @@ export const addNearbyUserMarkers = (
     // Get the appropriate display location
     const displayLocation = isPrivacyEnabled ? getDisplayLocation(user) : user.location;
     
-    if (!displayLocation) return;
+    if (!displayLocation) continue;
     
     try {
+      // Check if this user is a business
+      const businessProfile = await getBusinessProfile(user.id);
+      const isBusiness = !!businessProfile;
+      
       // Create the standard marker
       const userFeature = new Feature({
         geometry: new Point(fromLonLat([displayLocation.lng, displayLocation.lat])),
         userId: user.id,
-        name: user.name || `User-${user.id.substring(0, 4)}`,
-        isPrivacyEnabled: isPrivacyEnabled
+        name: isBusiness ? businessProfile?.business_name : (user.name || `User-${user.id.substring(0, 4)}`),
+        isPrivacyEnabled: isPrivacyEnabled,
+        isBusiness: isBusiness
       });
       
       features.push(userFeature);
@@ -72,7 +78,7 @@ export const addNearbyUserMarkers = (
     } catch (error) {
       console.error(`Error adding user ${user.id} to map:`, error);
     }
-  });
+  }
   
   // Add all features in a single batch for better performance
   if (features.length > 0) {
@@ -83,7 +89,7 @@ export const addNearbyUserMarkers = (
 /**
  * Add marker for the current user to the map
  */
-export const addCurrentUserMarker = (currentUser: AppUser | null, vectorSource: VectorSource) => {
+export const addCurrentUserMarker = async (currentUser: AppUser | null, vectorSource: VectorSource) => {
   if (!currentUser?.location?.lat || !currentUser?.location?.lng || !vectorSource) return;
   
   try {
@@ -103,13 +109,18 @@ export const addCurrentUserMarker = (currentUser: AppUser | null, vectorSource: 
       }
     });
     
+    // Check if current user is a business
+    const businessProfile = await getBusinessProfile(currentUser.id);
+    const isBusiness = !!businessProfile;
+    
     // Only add marker if privacy mode is disabled
     const userFeature = new Feature({
       geometry: new Point(fromLonLat([currentUser.location.lng, currentUser.location.lat])),
       isCurrentUser: true,
       userId: currentUser.id,
-      name: 'You',
-      isPrivacyEnabled: false
+      name: isBusiness ? businessProfile?.business_name : 'You',
+      isPrivacyEnabled: false,
+      isBusiness: isBusiness
     });
     
     vectorSource.addFeature(userFeature);
