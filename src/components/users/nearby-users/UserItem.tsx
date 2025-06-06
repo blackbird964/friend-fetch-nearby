@@ -15,10 +15,10 @@ const UserItem: React.FC<UserItemProps> = ({
   onStartChat,
   onSelect
 }) => {
-  // Memoize the handlers to prevent unnecessary re-renders
+  // Updated to show card instead of directly starting chat
   const handleStartChat = React.useCallback(() => {
-    console.log("[UserItem] Starting chat with user:", user.name);
-    onStartChat(user);
+    console.log("[UserItem] Showing card for user:", user.name);
+    onStartChat(user); // This will now show the card
   }, [user, onStartChat]);
   
   const handleSelect = React.useCallback(() => {
@@ -35,7 +35,7 @@ const UserItem: React.FC<UserItemProps> = ({
       <UserActions 
         user={user} 
         hasLocation={!!user.location} 
-        onStartChat={handleStartChat}
+        onStartChat={handleStartChat} // This will show the card
       />
     </div>
   );
