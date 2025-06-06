@@ -1,15 +1,28 @@
 
-import React from 'react';
+import React, { ReactNode } from 'react';
 
-type MapContainerProps = {
-  children: React.ReactNode;
-};
+interface MapContainerProps {
+  children: ReactNode;
+}
 
 const MapContainer: React.FC<MapContainerProps> = ({ children }) => {
   return (
-    <div className="flex flex-col h-full relative">
-      <div className="flex-1 relative bg-gray-100 rounded-lg overflow-hidden shadow-inner" style={{ minHeight: "400px" }}>
-        <div id="map-container" className="absolute inset-0 w-full h-full" />
+    <div className="relative w-full h-full overflow-hidden">
+      {/* Map container with proper z-index */}
+      <div 
+        id="map-container" 
+        className="absolute inset-0 w-full h-full"
+        style={{ 
+          zIndex: 1,
+          pointerEvents: 'auto'
+        }}
+      />
+      
+      {/* Overlay components with proper layering */}
+      <div 
+        className="absolute inset-0 pointer-events-none"
+        style={{ zIndex: 10 }}
+      >
         {children}
       </div>
     </div>

@@ -36,14 +36,17 @@ const MapControls: React.FC<MapControlsProps> = ({
     currentUser
   });
 
-  // Add proper zoom controls functionality
+  // Add proper zoom controls functionality with improved event handling
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
     const mapInstance = map.current;
     
     // Create zoom functions
-    const handleZoomIn = () => {
+    const handleZoomIn = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
       const view = mapInstance.getView();
       const currentZoom = view.getZoom();
       if (currentZoom !== undefined) {
@@ -54,7 +57,10 @@ const MapControls: React.FC<MapControlsProps> = ({
       }
     };
 
-    const handleZoomOut = () => {
+    const handleZoomOut = (e: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+      
       const view = mapInstance.getView();
       const currentZoom = view.getZoom();
       if (currentZoom !== undefined) {
@@ -79,15 +85,19 @@ const MapControls: React.FC<MapControlsProps> = ({
         zoomInButton.removeEventListener('touchend', handleZoomIn);
         zoomOutButton.removeEventListener('touchend', handleZoomOut);
         
-        // Add new listeners
-        zoomInButton.addEventListener('click', handleZoomIn);
-        zoomOutButton.addEventListener('click', handleZoomOut);
-        zoomInButton.addEventListener('touchend', handleZoomIn);
-        zoomOutButton.addEventListener('touchend', handleZoomOut);
+        // Add new listeners with proper event handling
+        zoomInButton.addEventListener('click', handleZoomIn, { capture: true });
+        zoomOutButton.addEventListener('click', handleZoomOut, { capture: true });
+        zoomInButton.addEventListener('touchend', handleZoomIn, { capture: true });
+        zoomOutButton.addEventListener('touchend', handleZoomOut, { capture: true });
         
-        // Ensure buttons are touchable on mobile
+        // Ensure buttons are touchable on mobile and have proper z-index
         (zoomInButton as HTMLElement).style.touchAction = 'manipulation';
         (zoomOutButton as HTMLElement).style.touchAction = 'manipulation';
+        (zoomInButton as HTMLElement).style.pointerEvents = 'auto';
+        (zoomOutButton as HTMLElement).style.pointerEvents = 'auto';
+        (zoomInButton as HTMLElement).style.zIndex = '1000';
+        (zoomOutButton as HTMLElement).style.zIndex = '1000';
         
         return true; // Success
       }
@@ -122,12 +132,12 @@ const MapControls: React.FC<MapControlsProps> = ({
       const zoomOutButton = document.querySelector('.ol-zoom-out');
       
       if (zoomInButton) {
-        zoomInButton.removeEventListener('click', handleZoomIn);
-        zoomInButton.removeEventListener('touchend', handleZoomIn);
+        zoomInButton.removeEventListener('click', handleZoomIn, { capture: true });
+        zoomInButton.removeEventListener('touchend', handleZoomIn, { capture: true });
       }
       if (zoomOutButton) {
-        zoomOutButton.removeEventListener('click', handleZoomOut);
-        zoomOutButton.removeEventListener('touchend', handleZoomOut);
+        zoomOutButton.removeEventListener('click', handleZoomOut, { capture: true });
+        zoomOutButton.removeEventListener('touchend', handleZoomOut, { capture: true });
       }
     };
   }, [map, mapLoaded]);

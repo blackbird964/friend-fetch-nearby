@@ -19,7 +19,10 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
 }) => {
   const { startChat, loading } = useChatActions();
 
-  const handleChatClick = async () => {
+  const handleChatClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     console.log("[UserRequestCard] Chat button clicked for user:", user?.name);
     
     if (!user || !user.id) {
@@ -37,9 +40,16 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
     }
   };
 
-  const handleCloseClick = () => {
+  const handleCloseClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     console.log("[UserRequestCard] Close button clicked");
     onClose();
+  };
+
+  const handleCardClick = (e: React.MouseEvent) => {
+    // Stop propagation to prevent map clicks when interacting with the card
+    e.stopPropagation();
   };
 
   const getInitials = (name: string) => {
@@ -54,7 +64,11 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
   console.log("[UserRequestCard] Rendering card for user:", user.name);
 
   return (
-    <div className="fixed bottom-20 left-1/2 transform -translate-x-1/2 z-[60] w-[90%] max-w-md">
+    <div 
+      className="fixed bottom-20 left-1/2 transform -translate-x-1/2 w-[90%] max-w-md"
+      style={{ zIndex: 1000 }}
+      onClick={handleCardClick}
+    >
       <Card className="p-4 bg-white shadow-xl border-2 animate-fade-in">
         <div className="flex justify-between items-start mb-4">
           <div className="flex items-center gap-3">
@@ -76,6 +90,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
             size="sm"
             className="rounded-full h-8 w-8 p-0 hover:bg-gray-100 text-gray-400 hover:text-gray-600"
             onClick={handleCloseClick}
+            style={{ pointerEvents: 'auto' }}
           >
             <X className="h-4 w-4" />
           </Button>
@@ -117,6 +132,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
             className="flex-1 hover:bg-gray-50 border-gray-300"
             onClick={handleCloseClick}
             disabled={loading}
+            style={{ pointerEvents: 'auto' }}
           >
             Close
           </Button>
@@ -124,6 +140,7 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
             className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 shadow-md"
             onClick={handleChatClick}
             disabled={loading || !user?.id}
+            style={{ pointerEvents: 'auto' }}
           >
             <MessageCircle className="mr-2 h-4 w-4" />
             {loading ? 'Starting...' : 'Start Chat'}

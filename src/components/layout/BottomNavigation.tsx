@@ -37,7 +37,7 @@ const BottomNavigation: React.FC = () => {
     },
   ];
 
-  // Navigation handler with event capture
+  // Navigation handler with improved event handling
   const handleNavigate = (path: string, event: React.MouseEvent | React.TouchEvent) => {
     event.preventDefault();
     event.stopPropagation();
@@ -47,9 +47,8 @@ const BottomNavigation: React.FC = () => {
 
   return (
     <div 
-      className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg z-[9999]"
+      className="fixed bottom-0 left-0 right-0 bg-white border-t shadow-lg"
       style={{ 
-        position: 'fixed',
         zIndex: 9999,
         pointerEvents: 'auto'
       }}
@@ -65,12 +64,14 @@ const BottomNavigation: React.FC = () => {
                 : 'text-gray-500 hover:text-gray-700'
             }`}
             onClick={(e) => handleNavigate(route.path, e)}
-            onTouchEnd={(e) => handleNavigate(route.path, e)}
+            onTouchEnd={(e) => {
+              e.preventDefault();
+              handleNavigate(route.path, e);
+            }}
             style={{ 
               WebkitTapHighlightColor: 'transparent',
               touchAction: 'manipulation',
-              pointerEvents: 'auto',
-              zIndex: 10000
+              pointerEvents: 'auto'
             }}
           >
             <div className="relative">
