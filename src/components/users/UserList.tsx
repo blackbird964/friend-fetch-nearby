@@ -7,11 +7,13 @@ import EmptyUserList from './nearby-users/EmptyUserList';
 import UserRequestCard from '@/components/map/components/UserRequestCard';
 import { useChatActions } from './hooks/useChatActions';
 import { AppUser } from '@/context/types';
+import { useNearbyUsersRefresh } from './hooks/useNearbyUsersRefresh';
 
 const UserList: React.FC = () => {
-  const { currentUser, nearbyUsers } = useAppContext();
+  const { currentUser, nearbyUsers, radiusInKm } = useAppContext();
   const { startChat } = useChatActions();
   const [selectedUser, setSelectedUser] = useState<AppUser | null>(null);
+  const { refreshNearbyUsers, loading } = useNearbyUsersRefresh();
 
   // Filter users based on matching activities (same logic as MapPage)
   const filteredUsers = useMemo(() => {
@@ -65,16 +67,20 @@ const UserList: React.FC = () => {
 
   return (
     <div className="space-y-4">
-      <UserListHeader count={filteredUsers.length} />
+      <UserListHeader 
+        userCount={filteredUsers.length}
+        radiusInKm={radiusInKm}
+        loading={loading}
+        onRefresh={refreshNearbyUsers}
+      />
       
       {filteredUsers.length === 0 ? (
-        <EmptyUserList />
+        <EmptyUserList hasLocation={!!currentUser?.location} />
       ) : (
         <>
           <UsersList 
             users={filteredUsers} 
             onStartChat={handleSelectUser} // This will show the card instead of directly starting chat
-            onSelect={handleSelectUser}
           />
           
           {/* Show UserRequestCard when a user is selected */}
