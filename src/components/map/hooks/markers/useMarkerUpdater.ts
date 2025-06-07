@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react';
+import React, { useEffect, useCallback, useRef, useState } from 'react';
 import { AppUser } from '@/context/types';
 import { Vector as VectorSource } from 'ol/source';
 import { throttle } from 'lodash';
@@ -21,7 +21,7 @@ export const useMarkerUpdater = (
   const updateTimeoutRef = useRef<number | null>(null);
   const nearbyUsersRef = useRef(nearbyUsers);
   const currentUserRef = useRef(currentUser);
-  const [isBusinessUser, setIsBusinessUser] = React.useState<boolean | null>(null);
+  const [isBusinessUser, setIsBusinessUser] = useState<boolean | null>(null);
   
   // Check if current user is a business user
   useEffect(() => {
