@@ -5,10 +5,29 @@ import UserListHeader from './nearby-users/UserListHeader';
 import EmptyUserList from './nearby-users/EmptyUserList';
 import UsersList from './nearby-users/UsersList';
 import { useChatActions } from './hooks/useChatActions';
+import { getBusinessProfile } from '@/lib/supabase/businessProfiles';
 
 const UserList: React.FC = () => {
   const { nearbyUsers, radiusInKm, currentUser, loading, refreshNearbyUsers } = useAppContext();
   const { startChat, loading: chatLoading } = useChatActions();
+  const [isBusinessUser, setIsBusinessUser] = React.useState<boolean | null>(null);
+
+  // Check if current user is a business user
+  React.useEffect(() => {
+    const checkBusinessUser = async () => {
+      if (currentUser) {
+        try {
+          const businessProfile = await getBusinessProfile(currentUser.id);
+          setIsBusinessUser(!!businessProfile);
+        } catch (error) {
+          console.error('Error checking business profile:', error);
+          setIsBusinessUser(false);
+        }
+      }
+    };
+    
+    checkBusinessUser();
+  }, [currentUser]);
 
   const handleRefresh = async () => {
     try {
@@ -47,19 +66,40 @@ const UserList: React.FC = () => {
   console.log("UserList component - Current user ID:", currentUser?.id);
   console.log("UserList component - Current user activities:", currentUser?.todayActivities);
   console.log("UserList component - Displaying users:", onlineUsers.length, "out of", nearbyUsers.length);
-  console.log("UserList component - Filtered users with activities:", onlineUsers.map(u => ({ 
-    id: u.id, 
-    name: u.name, 
-    activities: u.todayActivities,
-    interests: u.interests,
-    duration: u.preferredHangoutDuration
-  })));
+  console.log("UserList component - Is business user:", isBusinessUser);
 
   const handleStartChat = (user: any) => {
     console.log("[UserList] Starting chat with user:", user.name);
     startChat(user);
   };
 
+  // If business user, show only count
+  if (isBusinessUser) {
+    return (
+      <div className="space-y-6">
+        <UserListHeader 
+          userCount={onlineUsers.length}
+          radiusInKm={radiusInKm}
+          loading={loading || chatLoading}
+          onRefresh={handleRefresh}
+        />
+        
+        <div className="bg-white rounded-lg shadow-md p-8 text-center">
+          <div className="text-4xl font-bold text-primary mb-2">
+            {onlineUsers.length}
+          </div>
+          <p className="text-gray-600">
+            {onlineUsers.length === 1 ? 'user' : 'users'} within {radiusInKm}km radius
+          </p>
+          <p className="text-sm text-gray-500 mt-2">
+            Business accounts can see user count only
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Regular user view - show full list
   return (
     <div className="space-y-6">
       <UserListHeader 

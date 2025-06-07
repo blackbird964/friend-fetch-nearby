@@ -1,4 +1,3 @@
-
 import { useEffect, useCallback, useRef } from 'react';
 import { AppUser } from '@/context/types';
 import { Vector as VectorSource } from 'ol/source';
@@ -6,6 +5,7 @@ import { throttle } from 'lodash';
 import { clearExistingUserMarkers, filterOnlineAndUnblockedUsers } from './utils/markerUtils';
 import { addNearbyUserMarkers, addCurrentUserMarker } from './utils/userMarkers';
 import { shouldObfuscateLocation } from '@/utils/privacyUtils';
+import { getBusinessProfile } from '@/lib/supabase/businessProfiles';
 
 export const useMarkerUpdater = (
   vectorSource: React.MutableRefObject<VectorSource | null>,
@@ -21,6 +21,24 @@ export const useMarkerUpdater = (
   const updateTimeoutRef = useRef<number | null>(null);
   const nearbyUsersRef = useRef(nearbyUsers);
   const currentUserRef = useRef(currentUser);
+  const [isBusinessUser, setIsBusinessUser] = React.useState<boolean | null>(null);
+  
+  // Check if current user is a business user
+  useEffect(() => {
+    const checkBusinessUser = async () => {
+      if (currentUser) {
+        try {
+          const businessProfile = await getBusinessProfile(currentUser.id);
+          setIsBusinessUser(!!businessProfile);
+        } catch (error) {
+          console.error('Error checking business profile:', error);
+          setIsBusinessUser(false);
+        }
+      }
+    };
+    
+    checkBusinessUser();
+  }, [currentUser]);
   
   // Create a throttled update function for better performance
   const throttledUpdateMarkers = useCallback(
@@ -29,15 +47,22 @@ export const useMarkerUpdater = (
       users: AppUser[],
       user: AppUser | null,
       radius: number,
-      tracking: boolean
+      tracking: boolean,
+      isBusiness: boolean
     ) => {
       // Don't proceed if there's no source
       if (!source) return;
       
-      console.log("updateMarkers: tracking=", tracking, "users=", users.length);
+      console.log("updateMarkers: tracking=", tracking, "users=", users.length, "isBusiness=", isBusiness);
       
       // Clear existing user markers (but keep circle markers)
       clearExistingUserMarkers(source);
+      
+      // For business users, don't add any user markers - they only see counts
+      if (isBusiness) {
+        console.log("Business user - not adding any user markers");
+        return;
+      }
       
       // Filter to only show online and unblocked users
       const onlineUsers = filterOnlineAndUnblockedUsers(users, user);
@@ -69,9 +94,9 @@ export const useMarkerUpdater = (
   
   // Main effect to update map markers
   useEffect(() => {
-    if (!mapLoaded || !vectorSource.current) return;
+    if (!mapLoaded || !vectorSource.current || isBusinessUser === null) return;
     
-    console.log("useMarkerUpdater effect triggered, isTracking:", isTracking);
+    console.log("useMarkerUpdater effect triggered, isTracking:", isTracking, "isBusinessUser:", isBusinessUser);
     
     // Schedule update with a slight delay for better performance
     if (updateTimeoutRef.current) {
@@ -84,7 +109,8 @@ export const useMarkerUpdater = (
         nearbyUsers, 
         currentUser, 
         radiusInKm, 
-        isTracking
+        isTracking,
+        isBusinessUser || false
       );
       updateTimeoutRef.current = null;
     }, 50);
@@ -106,13 +132,14 @@ export const useMarkerUpdater = (
     currentUser?.location_settings?.hide_exact_location, 
     currentUser?.blockedUsers, 
     isTracking,
+    isBusinessUser,
     throttledUpdateMarkers
   ]);
 
   // Create a separate event listener manager
   useEffect(() => {
     const handleLocationChange = () => {
-      if (!vectorSource.current || !mapLoaded) return;
+      if (!vectorSource.current || !mapLoaded || isBusinessUser === null) return;
       
       // Use timeout to avoid too frequent updates
       if (updateTimeoutRef.current) {
@@ -125,7 +152,8 @@ export const useMarkerUpdater = (
           nearbyUsersRef.current, 
           currentUserRef.current, 
           prevRadiusRef.current, 
-          prevTrackingRef.current
+          prevTrackingRef.current,
+          isBusinessUser || false
         );
         updateTimeoutRef.current = null;
       }, 50);
@@ -133,7 +161,7 @@ export const useMarkerUpdater = (
     
     // Handle privacy mode changes
     const handlePrivacyModeChange = (event: CustomEvent) => {
-      if (!vectorSource.current || !mapLoaded) return;
+      if (!vectorSource.current || !mapLoaded || isBusinessUser === null) return;
       
       if (event.detail && event.detail.isPrivacyEnabled !== undefined) {
         // Clear all user markers first to avoid duplicates
@@ -145,14 +173,15 @@ export const useMarkerUpdater = (
           nearbyUsersRef.current, 
           currentUserRef.current, 
           prevRadiusRef.current, 
-          prevTrackingRef.current
+          prevTrackingRef.current,
+          isBusinessUser || false
         );
       }
     };
     
     // Handle tracking mode changes
     const handleTrackingModeChange = (event: Event) => {
-      if (!vectorSource.current || !mapLoaded) return;
+      if (!vectorSource.current || !mapLoaded || isBusinessUser === null) return;
       
       const customEvent = event as CustomEvent;
       const isTracking = customEvent.detail?.isTracking;
@@ -169,7 +198,8 @@ export const useMarkerUpdater = (
           nearbyUsersRef.current, 
           currentUserRef.current, 
           prevRadiusRef.current, 
-          isTracking
+          isTracking,
+          isBusinessUser || false
         );
       }
     };
@@ -190,5 +220,5 @@ export const useMarkerUpdater = (
       // Cancel any pending throttled updates
       throttledUpdateMarkers.cancel();
     };
-  }, [throttledUpdateMarkers, mapLoaded]);
+  }, [throttledUpdateMarkers, mapLoaded, isBusinessUser]);
 };
