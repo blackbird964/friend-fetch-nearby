@@ -1,3 +1,4 @@
+
 import React, { useEffect, useCallback, useRef, useState } from 'react';
 import { AppUser } from '@/context/types';
 import { Vector as VectorSource } from 'ol/source';
@@ -58,9 +59,18 @@ export const useMarkerUpdater = (
       // Clear existing user markers (but keep circle markers)
       clearExistingUserMarkers(source);
       
-      // For business users, don't add any user markers - they only see counts
+      // For business users, only add their own marker - no other user markers
       if (isBusiness) {
-        console.log("Business user - not adding any user markers");
+        console.log("Business user - only adding own marker");
+        
+        // Check if privacy is enabled for current user
+        const isPrivacyEnabled = shouldObfuscateLocation(user);
+        
+        // Only add business user's own marker if privacy is OFF and tracking is ON
+        if (tracking && user && !isPrivacyEnabled) {
+          await addCurrentUserMarker(user, source);
+        }
+        
         return;
       }
       
