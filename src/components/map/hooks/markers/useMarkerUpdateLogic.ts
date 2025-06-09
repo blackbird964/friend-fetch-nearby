@@ -1,3 +1,4 @@
+
 import { useCallback } from 'react';
 import { throttle } from 'lodash';
 import { Vector as VectorSource } from 'ol/source';
@@ -5,6 +6,18 @@ import { AppUser } from '@/context/types';
 import { clearExistingUserMarkers, filterOnlineAndUnblockedUsers } from './utils/markerUtils';
 import { addNearbyUserMarkers, addCurrentUserMarker } from './utils/userMarkers';
 import { shouldObfuscateLocation } from '@/utils/privacyUtils';
+
+// Define the throttled function type with cancel method
+type ThrottledUpdateFunction = ((
+  source: VectorSource,
+  users: AppUser[],
+  user: AppUser | null,
+  radius: number,
+  tracking: boolean,
+  isBusiness: boolean
+) => void) & {
+  cancel(): void;
+};
 
 export const useMarkerUpdateLogic = () => {
   // Create a throttled update function for better performance
@@ -58,7 +71,7 @@ export const useMarkerUpdateLogic = () => {
       
     }, 100, { leading: true, trailing: true }),
     []
-  );
+  ) as ThrottledUpdateFunction;
   
   return { throttledUpdateMarkers };
 };
