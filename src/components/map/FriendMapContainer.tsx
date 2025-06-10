@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 
@@ -108,6 +107,18 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
   console.log("- movingUsers:", Array.from(movingUsers));
   console.log("- completedMoves:", Array.from(completedMoves));
 
+  // Filter online users for count
+  const onlineUsers = nearbyUsers.filter(user => 
+    user.id !== currentUser?.id && 
+    user.isOnline === true &&
+    user.id && 
+    !String(user.id).includes('test') && 
+    !String(user.id).includes('mock')
+  );
+
+  console.log('[FriendMapContainer] Online users count:', onlineUsers.length);
+  console.log('[FriendMapContainer] Drawer state - isOpen:', isDrawerOpen, 'isMobile:', isMobile);
+
   // Create side panel content
   const sidePanelContent = (
     <MapSidePanel
@@ -116,15 +127,6 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
       radiusInKm={radiusInKm}
       onUserSelect={handleUserSelect}
     />
-  );
-
-  // Filter online users for count
-  const onlineUsers = nearbyUsers.filter(user => 
-    user.id !== currentUser?.id && 
-    user.isOnline === true &&
-    user.id && 
-    !String(user.id).includes('test') && 
-    !String(user.id).includes('mock')
   );
 
   // Create mobile drawer

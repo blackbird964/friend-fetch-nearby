@@ -12,6 +12,7 @@ const DrawerHandle: React.FC<DrawerHandleProps> = ({ onClick, userCount }) => {
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
+    console.log('[DrawerHandle] Button clicked, userCount:', userCount);
     onClick();
   };
 

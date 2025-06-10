@@ -17,6 +17,8 @@ const MapContainer: React.FC<MapContainerProps> = ({
 }) => {
   const isMobile = useIsMobile();
 
+  console.log('[MapContainer] Rendering, isMobile:', isMobile, 'showSidePanel:', showSidePanel);
+
   return (
     <div className="flex h-full relative">
       {/* Map Area */}
@@ -34,8 +36,8 @@ const MapContainer: React.FC<MapContainerProps> = ({
         </div>
       )}
 
-      {/* Mobile Drawer */}
-      {isMobile && mobileDrawer}
+      {/* Mobile Drawer - Always render to ensure it works */}
+      {mobileDrawer}
     </div>
   );
 };
