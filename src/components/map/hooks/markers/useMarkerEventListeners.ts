@@ -4,18 +4,23 @@ import { Vector as VectorSource } from 'ol/source';
 import { AppUser } from '@/context/types';
 import { clearExistingUserMarkers } from './utils/markerUtils';
 
+// Define the throttled function type with cancel method
+type ThrottledUpdateFunction = ((
+  source: VectorSource,
+  users: AppUser[],
+  user: AppUser | null,
+  radius: number,
+  tracking: boolean,
+  isBusiness: boolean
+) => void) & {
+  cancel(): void;
+};
+
 export const useMarkerEventListeners = (
   vectorSource: React.MutableRefObject<VectorSource | null>,
   mapLoaded: boolean,
   isBusinessUser: boolean | null,
-  throttledUpdateMarkers: (
-    source: VectorSource,
-    users: AppUser[],
-    user: AppUser | null,
-    radius: number,
-    tracking: boolean,
-    isBusiness: boolean
-  ) => void,
+  throttledUpdateMarkers: ThrottledUpdateFunction,
   nearbyUsersRef: React.MutableRefObject<AppUser[]>,
   currentUserRef: React.MutableRefObject<AppUser | null>,
   prevRadiusRef: React.MutableRefObject<number>,
