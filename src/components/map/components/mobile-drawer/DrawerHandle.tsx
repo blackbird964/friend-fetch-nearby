@@ -11,7 +11,6 @@ const DrawerHandle: React.FC<DrawerHandleProps> = ({ userCount, onClick }) => {
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    e.stopImmediatePropagation();
     
     // Add safety check
     if (typeof onClick === 'function') {
