@@ -1,5 +1,5 @@
 
-import { Style, Text, Fill, Stroke, Icon } from 'ol/style';
+import { Style, Icon } from 'ol/style';
 import Feature from 'ol/Feature';
 import Geometry from 'ol/geom/Geometry';
 import { createStarIcon } from './starIconUtils';
@@ -14,7 +14,6 @@ export const createBusinessMarkerStyle = (
   const isMoving = movingUsers.has(userId);
   const isUser = feature.get('isCurrentUser');
   const hasMoved = completedMoves.has(userId);
-  const userName = feature.get('name') || (userId ? `User-${userId.substring(0, 4)}` : '');
   
   // Determine marker color based on status
   let markerColor = '#6366f1'; // Default purple color
@@ -32,12 +31,7 @@ export const createBusinessMarkerStyle = (
       src: createStarIcon(markerColor),
       scale: 1,
       anchor: [0.5, 0.5]
-    }),
-    text: new Text({
-      text: userName,
-      offsetY: -20,
-      fill: new Fill({ color: '#374151' }),
-      stroke: new Stroke({ color: 'white', width: 2 })
     })
+    // Removed text property to clean up markers
   });
 };

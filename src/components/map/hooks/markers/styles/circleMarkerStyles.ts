@@ -1,11 +1,10 @@
 
-import { Style, Circle as CircleStyle, Fill, Stroke, Text } from 'ol/style';
+import { Style, Circle as CircleStyle, Fill, Stroke } from 'ol/style';
 import Feature from 'ol/Feature';
 import Geometry from 'ol/geom/Geometry';
 
 export const createCircleMarkerStyles = (feature: Feature<Geometry>) => {
   const circleType = feature.get('circleType');
-  const userName = feature.get('name');
   
   if (circleType === 'radius') {
     return new Style({
@@ -19,7 +18,7 @@ export const createCircleMarkerStyles = (feature: Feature<Geometry>) => {
       })
     });
   } else if (circleType === 'privacy') {
-    // Privacy circle style with purple color
+    // Privacy circle style with purple color - removed text
     return new Style({
       stroke: new Stroke({
         color: 'rgba(155, 135, 245, 0.8)', // Purple color for privacy
@@ -27,13 +26,8 @@ export const createCircleMarkerStyles = (feature: Feature<Geometry>) => {
       }),
       fill: new Fill({
         color: 'rgba(155, 135, 245, 0.3)' // This opacity will be animated
-      }),
-      text: userName ? new Text({
-        text: userName,
-        offsetY: -20,
-        fill: new Fill({ color: '#374151' }),
-        stroke: new Stroke({ color: 'white', width: 2 })
-      }) : undefined
+      })
+      // Removed text property to clean up markers
     });
   }
   

@@ -1,5 +1,5 @@
 
-import { Style, Circle as CircleStyle, Fill, Stroke, Text } from 'ol/style';
+import { Style, Circle as CircleStyle, Fill, Stroke } from 'ol/style';
 import Feature from 'ol/Feature';
 import Geometry from 'ol/geom/Geometry';
 import { FriendRequest } from '@/context/types';
@@ -16,7 +16,6 @@ export const createUserMarkerStyle = (
   const isUser = feature.get('isCurrentUser');
   const hasMoved = completedMoves.has(userId);
   const isPrivacyEnabled = feature.get('isPrivacyEnabled');
-  const userName = feature.get('name') || (userId ? `User-${userId.substring(0, 4)}` : '');
   
   // Check if there are any pending friend requests for this user
   const sentRequest = friendRequests.find(req => 
@@ -51,24 +50,19 @@ export const createUserMarkerStyle = (
     markerColor = '#6366f1'; // Purple for selected users
   }
   
-  // For privacy mode users, show both text and a small marker
+  // For privacy mode users, show only a small marker without text
   if (isPrivacyEnabled && !isUser) {
     return new Style({
       image: new CircleStyle({
         radius: 8, // Smaller marker for privacy users
         fill: new Fill({ color: markerColor }),
         stroke: new Stroke({ color: 'white', width: 2 })
-      }),
-      text: new Text({
-        text: "Someone in area online",
-        offsetY: -20,
-        fill: new Fill({ color: '#374151' }),
-        stroke: new Stroke({ color: 'white', width: 2 })
       })
+      // Removed text property to clean up markers
     });
   }
   
-  // For regular users or the current user (circle markers)
+  // For regular users or the current user (circle markers) - no text labels
   return new Style({
     image: new CircleStyle({
       radius: isUser ? 14 : 12,
@@ -77,12 +71,7 @@ export const createUserMarkerStyle = (
         color: isUser ? '#0369a1' : 'white', 
         width: isUser ? 3 : 2
       })
-    }),
-    text: new Text({
-      text: userName,
-      offsetY: -20,
-      fill: new Fill({ color: '#374151' }),
-      stroke: new Stroke({ color: 'white', width: 2 })
     })
+    // Removed text property to clean up markers
   });
 };
