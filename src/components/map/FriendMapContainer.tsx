@@ -16,6 +16,7 @@ import MapControlPanel from './components/MapControlPanel';
 import MapControls from './components/MapControls';
 import { MapSidePanel } from './components/side-panel';
 import UserDetailsDrawer from '../users/nearby-users/UserDetailsDrawer';
+import { useChatActions } from '../users/hooks/useChatActions';
 
 interface FriendMapContainerProps {
   isManualMode: boolean;
@@ -73,10 +74,23 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
   // State for user details drawer
   const [drawerSelectedUser, setDrawerSelectedUser] = useState(null);
 
+  // Chat actions hook
+  const { startChat } = useChatActions();
+
   // Handle user selection from side panel
   const handleUserSelect = (user) => {
     console.log("[FriendMapContainer] User selected from side panel:", user.name);
     setDrawerSelectedUser(user);
+  };
+
+  // Handle starting chat from drawer
+  const handleStartChat = async (user) => {
+    console.log("[FriendMapContainer] Starting chat with user:", user.name);
+    try {
+      await startChat(user);
+    } catch (error) {
+      console.error("[FriendMapContainer] Error starting chat:", error);
+    }
   };
 
   // Important: Clear meeting state when a user is selected
@@ -205,7 +219,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         user={drawerSelectedUser}
         isOpen={!!drawerSelectedUser}
         onClose={() => setDrawerSelectedUser(null)}
-        onStartChat={() => {}} // Implement chat functionality if needed
+        onStartChat={handleStartChat}
       />
     </>
   );

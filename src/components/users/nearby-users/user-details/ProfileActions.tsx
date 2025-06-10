@@ -3,21 +3,19 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { MessageCircle } from 'lucide-react';
 import { AppUser } from '@/context/types';
-import { useChatActions } from '@/components/users/hooks/useChatActions';
 
 interface ProfileActionsProps {
-  user?: AppUser; // Making user optional but will get it from parent context
+  user?: AppUser;
+  onStartChat?: (user: AppUser) => void;
 }
 
-const ProfileActions: React.FC<ProfileActionsProps> = ({ user }) => {
-  const { startChat } = useChatActions();
-  
+const ProfileActions: React.FC<ProfileActionsProps> = ({ user, onStartChat }) => {
   const handleStartChat = () => {
-    if (user) {
+    if (user && onStartChat) {
       console.log("Starting chat with user:", user.name);
-      startChat(user);
+      onStartChat(user);
     } else {
-      console.error("Cannot start chat: User is undefined");
+      console.error("Cannot start chat: User or onStartChat handler is undefined");
     }
   };
   
@@ -26,6 +24,7 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({ user }) => {
       <Button 
         onClick={handleStartChat}
         className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+        disabled={!user || !onStartChat}
       >
         <MessageCircle className="mr-2 h-4 w-4" />
         Chat

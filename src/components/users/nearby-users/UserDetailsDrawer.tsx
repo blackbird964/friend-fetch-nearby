@@ -60,6 +60,12 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
     }
   };
 
+  const handleStartChat = () => {
+    console.log("[UserDetailsDrawer] Starting chat with user:", user.name);
+    onStartChat(user);
+    onClose(); // Close the drawer after starting chat
+  };
+
   return (
     <>
       <Drawer open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -84,6 +90,7 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
           <DrawerFooter className="flex-col gap-3 pt-2">
             <ProfileActions 
               user={user}
+              onStartChat={handleStartChat}
             />
             
             <ModerationActions 
