@@ -1,53 +1,35 @@
 
-import React, { memo } from 'react';
+import React from 'react';
 
 type MapContainerProps = {
   children: React.ReactNode;
   sidePanel?: React.ReactNode;
   showSidePanel?: boolean;
-  mobileDrawer?: React.ReactNode;
-  drawerHandle?: React.ReactNode;
 };
 
-const MapContainer: React.FC<MapContainerProps> = memo(({ 
+const MapContainer: React.FC<MapContainerProps> = ({ 
   children, 
   sidePanel,
-  showSidePanel = false,
-  mobileDrawer,
-  drawerHandle
+  showSidePanel = false 
 }) => {
   return (
     <div className="flex h-full relative">
-      {/* Desktop Map Area */}
+      {/* Map Area */}
       <div className={`flex flex-col relative bg-gray-100 rounded-lg overflow-hidden shadow-inner transition-all duration-300 ${
-        showSidePanel ? 'flex-1 rounded-r-none hidden md:flex' : 'hidden md:flex w-full'
+        showSidePanel ? 'flex-1 rounded-r-none' : 'w-full'
       }`} style={{ minHeight: "400px" }}>
         <div id="map-container" className="absolute inset-0 w-full h-full" />
         {children}
       </div>
       
-      {/* Mobile-only full width map */}
-      <div className="flex flex-col relative bg-gray-100 rounded-lg overflow-hidden shadow-inner md:hidden w-full" style={{ minHeight: "400px" }}>
-        <div id="map-container-mobile" className="absolute inset-0 w-full h-full" />
-        {children}
-        
-        {/* Mobile drawer handle - only show on mobile */}
-        {drawerHandle}
-      </div>
-      
-      {/* Desktop Side Panel */}
+      {/* Side Panel */}
       {showSidePanel && sidePanel && (
-        <div className="w-80 flex-shrink-0 rounded-r-lg overflow-hidden shadow-inner hidden md:block">
+        <div className="w-80 flex-shrink-0 rounded-r-lg overflow-hidden shadow-inner">
           {sidePanel}
         </div>
       )}
-      
-      {/* Mobile Drawer - rendered at root level to avoid z-index issues */}
-      {mobileDrawer}
     </div>
   );
-});
-
-MapContainer.displayName = 'MapContainer';
+};
 
 export default MapContainer;

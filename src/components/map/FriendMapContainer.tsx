@@ -1,5 +1,5 @@
 
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 
 // Import custom hooks
@@ -9,7 +9,6 @@ import { usePrivacyMode } from './hooks/usePrivacyMode';
 import { useUserDetailsDrawer } from './hooks/useUserDetailsDrawer';
 import { useMeetingStateCleanup } from './hooks/useMeetingStateCleanup';
 import { useTrackingModeEvents } from './hooks/useTrackingModeEvents';
-import { useMobileDrawer } from './hooks/useMobileDrawer';
 
 // Import refactored components
 import MapContainer from './components/MapContainer';
@@ -20,7 +19,6 @@ import MapControlPanel from './components/MapControlPanel';
 import MapControls from './components/MapControls';
 import { MapSidePanel } from './components/side-panel';
 import UserDetailsDrawerContainer from './components/UserDetailsDrawerContainer';
-import { MobileDrawer, DrawerHandle } from './components/mobile-drawer';
 
 interface FriendMapContainerProps {
   isManualMode: boolean;
@@ -83,14 +81,6 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     handleCloseDrawer
   } = useUserDetailsDrawer();
 
-  // Mobile drawer management with safety checks
-  const {
-    isDrawerOpen,
-    openDrawer,
-    closeDrawer,
-    toggleDrawer
-  } = useMobileDrawer();
-
   // Handle meeting state cleanup when user is selected
   useMeetingStateCleanup({
     selectedUser,
@@ -101,69 +91,25 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
   // Handle tracking mode events
   useTrackingModeEvents(isTracking);
   
-  // Debug state on render - with safety checks
+  // Debug state on render
   console.log("[FriendMapContainer] Current state:");
   console.log("- selectedUser:", selectedUser);
-  console.log("- movingUsers:", Array.from(movingUsers || []));
-  console.log("- completedMoves:", Array.from(completedMoves || []));
+  console.log("- movingUsers:", Array.from(movingUsers));
+  console.log("- completedMoves:", Array.from(completedMoves));
 
-  // Filter online users for count with safety checks
-  const onlineUsers = useMemo(() => {
-    if (!Array.isArray(nearbyUsers)) return [];
-    return nearbyUsers.filter(user => 
-      user && 
-      user.id !== currentUser?.id && 
-      user.isOnline === true &&
-      user.id && 
-      !String(user.id).includes('test') && 
-      !String(user.id).includes('mock')
-    );
-  }, [nearbyUsers, currentUser?.id]);
-
-  // Create side panel for desktop with memoization
-  const sidePanel = useMemo(() => (
+  // Create side panel
+  const sidePanel = (
     <MapSidePanel
-      users={nearbyUsers || []}
+      users={nearbyUsers}
       currentUser={currentUser}
       radiusInKm={radiusInKm}
       onUserSelect={handleUserSelect}
     />
-  ), [nearbyUsers, currentUser, radiusInKm, handleUserSelect]);
-
-  // Create mobile drawer with proper event handling and memoization
-  const mobileDrawer = useMemo(() => (
-    <MobileDrawer
-      isOpen={isDrawerOpen}
-      onClose={closeDrawer}
-      users={nearbyUsers || []}
-      currentUser={currentUser}
-      radiusInKm={radiusInKm}
-      onUserSelect={handleUserSelect}
-    />
-  ), [isDrawerOpen, closeDrawer, nearbyUsers, currentUser, radiusInKm, handleUserSelect]);
-
-  // Create drawer handle with proper event handling and memoization
-  const drawerHandle = useMemo(() => (
-    <DrawerHandle
-      userCount={onlineUsers.length}
-      onClick={openDrawer}
-    />
-  ), [onlineUsers.length, openDrawer]);
-
-  // Safety check for critical dependencies
-  if (!currentUser) {
-    console.warn('[FriendMapContainer] No current user available');
-    return null;
-  }
+  );
 
   return (
     <>
-      <MapContainer 
-        showSidePanel={true} 
-        sidePanel={sidePanel}
-        mobileDrawer={mobileDrawer}
-        drawerHandle={drawerHandle}
-      >
+      <MapContainer showSidePanel={true} sidePanel={sidePanel}>
         <MapFeatures 
           map={map}
           vectorSource={vectorSource}
@@ -171,13 +117,13 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
           routeLayer={routeLayer}
           mapLoaded={mapLoaded}
           currentUser={currentUser}
-          nearbyUsers={nearbyUsers || []}
+          nearbyUsers={nearbyUsers}
           radiusInKm={radiusInKm}
           selectedUser={selectedUser}
           setSelectedUser={setSelectedUser}
-          movingUsers={movingUsers || new Set()}
-          completedMoves={completedMoves || new Set()}
-          friendRequests={friendRequests || []}
+          movingUsers={movingUsers}
+          completedMoves={completedMoves}
+          friendRequests={friendRequests}
           isTracking={isTracking}
           setMovingUsers={setMovingUsers}
           setCompletedMoves={setCompletedMoves}
@@ -221,7 +167,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
           setMovingUsers={(prev) => prev} // No-op function to prevent state changes
           completedMoves={new Set()} // IMPORTANT: Pass empty sets to prevent state changes
           setCompletedMoves={(prev) => prev} // No-op function to prevent state changes
-          nearbyUsers={nearbyUsers || []}
+          nearbyUsers={nearbyUsers}
           WYNYARD_COORDS={WYNYARD_COORDS as [number, number]}
         />
 
