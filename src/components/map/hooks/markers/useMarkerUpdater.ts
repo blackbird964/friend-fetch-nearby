@@ -3,7 +3,7 @@ import { useEffect, useRef } from 'react';
 import { AppUser } from '@/context/types';
 import { Vector as VectorSource } from 'ol/source';
 import { useBusinessUserMarkers } from './useBusinessUserMarkers';
-import { useMarkerUpdateLogic } from './useMarkerUpdateLogic';
+import { useOptimizedMarkerUpdater } from './useOptimizedMarkerUpdater';
 import { useMarkerEventListeners } from './useMarkerEventListeners';
 
 export const useMarkerUpdater = (
@@ -24,8 +24,8 @@ export const useMarkerUpdater = (
   // Get business user status
   const { isBusinessUser } = useBusinessUserMarkers(currentUser);
   
-  // Get marker update logic
-  const { throttledUpdateMarkers } = useMarkerUpdateLogic();
+  // Get optimized marker update logic
+  const { debouncedUpdateMarkers } = useOptimizedMarkerUpdater();
   
   // Update refs when props change to use in cleanup functions
   useEffect(() => {
@@ -35,28 +35,31 @@ export const useMarkerUpdater = (
     prevTrackingRef.current = isTracking;
   }, [nearbyUsers, currentUser, radiusInKm, isTracking]);
   
-  // Main effect to update map markers
+  // Main effect to update map markers with reduced frequency
   useEffect(() => {
     if (!mapLoaded || !vectorSource.current || isBusinessUser === null) return;
     
     console.log("useMarkerUpdater effect triggered, isTracking:", isTracking, "isBusinessUser:", isBusinessUser);
     
-    // Schedule update with a slight delay for better performance
+    // Use longer delay to prevent rapid updates
     if (updateTimeoutRef.current) {
       window.clearTimeout(updateTimeoutRef.current);
     }
     
     updateTimeoutRef.current = window.setTimeout(() => {
-      throttledUpdateMarkers(
+      const useHeatmap = nearbyUsers.length > 10; // Enable clustering for large groups
+      
+      debouncedUpdateMarkers(
         vectorSource.current!, 
         nearbyUsers, 
         currentUser, 
         radiusInKm, 
         isTracking,
-        isBusinessUser || false
+        isBusinessUser || false,
+        useHeatmap
       );
       updateTimeoutRef.current = null;
-    }, 50);
+    }, 200); // Increased delay to 200ms
     
     // Cleanup function
     return () => {
@@ -66,25 +69,26 @@ export const useMarkerUpdater = (
       }
     };
   }, [
-    nearbyUsers, 
+    nearbyUsers.length, // Only trigger on count change, not full array
     mapLoaded, 
-    currentUser?.location, 
+    currentUser?.id, // Only trigger on user ID change
+    currentUser?.location?.lat, 
+    currentUser?.location?.lng,
     vectorSource, 
     radiusInKm, 
     currentUser?.locationSettings?.hideExactLocation, 
     currentUser?.location_settings?.hide_exact_location, 
-    currentUser?.blockedUsers, 
     isTracking,
     isBusinessUser,
-    throttledUpdateMarkers
+    debouncedUpdateMarkers
   ]);
 
-  // Set up event listeners
+  // Set up event listeners with optimized function
   useMarkerEventListeners(
     vectorSource,
     mapLoaded,
     isBusinessUser,
-    throttledUpdateMarkers,
+    debouncedUpdateMarkers as any, // Type assertion for compatibility
     nearbyUsersRef,
     currentUserRef,
     prevRadiusRef,
