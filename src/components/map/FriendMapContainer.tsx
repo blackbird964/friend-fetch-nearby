@@ -1,11 +1,14 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 
 // Import custom hooks
 import { useMapInitialization } from './hooks/useMapInitialization';
 import { useMapUIState } from './hooks/useMapUIState';
 import { usePrivacyMode } from './hooks/usePrivacyMode';
+import { useUserDetailsDrawer } from './hooks/useUserDetailsDrawer';
+import { useMeetingStateCleanup } from './hooks/useMeetingStateCleanup';
+import { useTrackingModeEvents } from './hooks/useTrackingModeEvents';
 
 // Import refactored components
 import MapContainer from './components/MapContainer';
@@ -15,8 +18,7 @@ import MeetingHandler from './components/MeetingHandler';
 import MapControlPanel from './components/MapControlPanel';
 import MapControls from './components/MapControls';
 import { MapSidePanel } from './components/side-panel';
-import UserDetailsDrawer from '../users/nearby-users/UserDetailsDrawer';
-import { useChatActions } from '../users/hooks/useChatActions';
+import UserDetailsDrawerContainer from './components/UserDetailsDrawerContainer';
 
 interface FriendMapContainerProps {
   isManualMode: boolean;
@@ -71,62 +73,23 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     setCompletedMoves
   } = useMapUIState();
 
-  // State for user details drawer
-  const [drawerSelectedUser, setDrawerSelectedUser] = useState(null);
+  // User details drawer management
+  const {
+    drawerSelectedUser,
+    handleUserSelect,
+    handleStartChat,
+    handleCloseDrawer
+  } = useUserDetailsDrawer();
 
-  // Chat actions hook
-  const { startChat } = useChatActions();
+  // Handle meeting state cleanup when user is selected
+  useMeetingStateCleanup({
+    selectedUser,
+    setMovingUsers,
+    setCompletedMoves
+  });
 
-  // Handle user selection from side panel
-  const handleUserSelect = (user) => {
-    console.log("[FriendMapContainer] User selected from side panel:", user.name);
-    setDrawerSelectedUser(user);
-  };
-
-  // Handle starting chat from drawer
-  const handleStartChat = async (user) => {
-    console.log("[FriendMapContainer] Starting chat with user:", user.name);
-    try {
-      await startChat(user);
-    } catch (error) {
-      console.error("[FriendMapContainer] Error starting chat:", error);
-    }
-  };
-
-  // Important: Clear meeting state when a user is selected
-  useEffect(() => {
-    console.log(`[FriendMapContainer] selectedUser changed to: ${selectedUser}`);
-    
-    if (selectedUser) {
-      // Immediately clear the selected user from meeting states
-      setMovingUsers(prev => {
-        const next = new Set(prev);
-        if (next.has(selectedUser)) {
-          console.log(`[FriendMapContainer] Removing ${selectedUser} from movingUsers`);
-          next.delete(selectedUser);
-        }
-        return next;
-      });
-      
-      setCompletedMoves(prev => {
-        const next = new Set(prev);
-        if (next.has(selectedUser)) {
-          console.log(`[FriendMapContainer] Removing ${selectedUser} from completedMoves`);
-          next.delete(selectedUser);
-        }
-        return next;
-      });
-    }
-  }, [selectedUser, setMovingUsers, setCompletedMoves]);
-
-  // Dispatch tracking mode event when isTracking changes
-  useEffect(() => {
-    console.log("FriendMapContainer - isTracking changed:", isTracking);
-    const event = new CustomEvent('tracking-mode-changed', { 
-      detail: { isTracking } 
-    });
-    window.dispatchEvent(event);
-  }, [isTracking]);
+  // Handle tracking mode events
+  useTrackingModeEvents(isTracking);
   
   // Debug state on render
   console.log("[FriendMapContainer] Current state:");
@@ -215,10 +178,10 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
       </MapContainer>
 
       {/* User Details Drawer */}
-      <UserDetailsDrawer
+      <UserDetailsDrawerContainer
         user={drawerSelectedUser}
         isOpen={!!drawerSelectedUser}
-        onClose={() => setDrawerSelectedUser(null)}
+        onClose={handleCloseDrawer}
         onStartChat={handleStartChat}
       />
     </>
