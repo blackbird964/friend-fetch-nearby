@@ -16,11 +16,24 @@ const DrawerHandle: React.FC<DrawerHandleProps> = ({ onClick, userCount }) => {
     onClick();
   };
 
+  const handleTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('[DrawerHandle] Touch started, userCount:', userCount);
+    onClick();
+  };
+
   return (
     <Button
       onClick={handleClick}
-      className="fixed top-20 right-4 z-30 md:hidden bg-white text-gray-900 shadow-lg hover:bg-gray-50 border border-gray-200"
+      onTouchStart={handleTouchStart}
+      className="fixed top-20 right-4 z-50 md:hidden bg-white text-gray-900 shadow-lg hover:bg-gray-50 border border-gray-200 touch-manipulation"
       size="sm"
+      style={{ 
+        minHeight: '44px', 
+        minWidth: '44px',
+        touchAction: 'manipulation'
+      }}
     >
       <Users className="h-4 w-4 mr-2" />
       <span>{userCount}</span>

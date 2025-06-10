@@ -20,13 +20,19 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
     } else {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
     }
     
     // Cleanup on unmount
     return () => {
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
+      document.body.style.position = '';
+      document.body.style.width = '';
     };
   }, [isOpen]);
 
@@ -37,7 +43,18 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({
     onClose();
   };
 
+  const handleBackdropTouchStart = (e: React.TouchEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log('[MobileDrawer] Backdrop touched, closing drawer');
+    onClose();
+  };
+
   const handleDrawerClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+  };
+
+  const handleDrawerTouchStart = (e: React.TouchEvent) => {
     e.stopPropagation();
   };
 
@@ -51,12 +68,16 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({
       <div 
         className="fixed inset-0 bg-black/50 z-40 md:hidden animate-fade-in"
         onClick={handleBackdropClick}
+        onTouchStart={handleBackdropTouchStart}
+        style={{ touchAction: 'manipulation' }}
       />
       
       {/* Drawer */}
       <div 
         className="fixed inset-y-0 right-0 z-50 w-80 max-w-[80vw] bg-background shadow-lg md:hidden animate-slide-in-right"
         onClick={handleDrawerClick}
+        onTouchStart={handleDrawerTouchStart}
+        style={{ touchAction: 'pan-y' }}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
@@ -65,14 +86,20 @@ const MobileDrawer: React.FC<MobileDrawerProps> = ({
             variant="ghost"
             size="sm"
             onClick={onClose}
+            onTouchStart={onClose}
             className="h-8 w-8 p-0"
+            style={{ 
+              minHeight: '44px', 
+              minWidth: '44px',
+              touchAction: 'manipulation'
+            }}
           >
             <X className="h-4 w-4" />
           </Button>
         </div>
         
         {/* Content */}
-        <div className="flex-1 overflow-auto h-[calc(100vh-65px)]">
+        <div className="flex-1 overflow-auto h-[calc(100vh-65px)]" style={{ touchAction: 'pan-y' }}>
           {children}
         </div>
       </div>

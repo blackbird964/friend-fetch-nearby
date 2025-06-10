@@ -21,7 +21,11 @@ export const useMobileDrawer = () => {
   const toggleDrawer = useCallback(() => {
     console.log('[useMobileDrawer] Toggling drawer, current state:', isDrawerOpen, 'isMobile:', isMobile);
     if (isMobile) {
-      setIsDrawerOpen(prev => !prev);
+      setIsDrawerOpen(prev => {
+        const newState = !prev;
+        console.log('[useMobileDrawer] New drawer state:', newState);
+        return newState;
+      });
     }
   }, [isMobile, isDrawerOpen]);
 
