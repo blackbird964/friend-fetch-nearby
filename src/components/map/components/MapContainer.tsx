@@ -18,23 +18,20 @@ const MapContainer: React.FC<MapContainerProps> = ({
 }) => {
   return (
     <div className="flex h-full relative">
-      {/* Map Area */}
+      {/* Desktop Map Area */}
       <div className={`flex flex-col relative bg-gray-100 rounded-lg overflow-hidden shadow-inner transition-all duration-300 ${
-        showSidePanel ? 'flex-1 rounded-r-none hidden md:flex' : 'w-full'
+        showSidePanel ? 'flex-1 rounded-r-none hidden md:flex' : 'hidden md:flex w-full'
       }`} style={{ minHeight: "400px" }}>
         <div id="map-container" className="absolute inset-0 w-full h-full" />
         {children}
-        
-        {/* Mobile drawer handle */}
-        {drawerHandle}
       </div>
       
       {/* Mobile-only full width map */}
       <div className="flex flex-col relative bg-gray-100 rounded-lg overflow-hidden shadow-inner md:hidden w-full" style={{ minHeight: "400px" }}>
-        <div id="map-container" className="absolute inset-0 w-full h-full" />
+        <div id="map-container-mobile" className="absolute inset-0 w-full h-full" />
         {children}
         
-        {/* Mobile drawer handle */}
+        {/* Mobile drawer handle - only show on mobile */}
         {drawerHandle}
       </div>
       
@@ -45,7 +42,7 @@ const MapContainer: React.FC<MapContainerProps> = ({
         </div>
       )}
       
-      {/* Mobile Drawer */}
+      {/* Mobile Drawer - rendered at root level to avoid z-index issues */}
       {mobileDrawer}
     </div>
   );

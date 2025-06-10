@@ -126,7 +126,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     />
   );
 
-  // Create mobile drawer
+  // Create mobile drawer with proper event handling
   const mobileDrawer = (
     <MobileDrawer
       isOpen={isDrawerOpen}
@@ -138,7 +138,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     />
   );
 
-  // Create drawer handle
+  // Create drawer handle with proper event handling
   const drawerHandle = (
     <DrawerHandle
       userCount={onlineUsers.length}
