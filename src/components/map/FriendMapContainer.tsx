@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { useAppContext } from '@/context/AppContext';
 
 // Import custom hooks
@@ -83,7 +83,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     handleCloseDrawer
   } = useUserDetailsDrawer();
 
-  // Mobile drawer management
+  // Mobile drawer management with safety checks
   const {
     isDrawerOpen,
     openDrawer,
@@ -101,50 +101,60 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
   // Handle tracking mode events
   useTrackingModeEvents(isTracking);
   
-  // Debug state on render
+  // Debug state on render - with safety checks
   console.log("[FriendMapContainer] Current state:");
   console.log("- selectedUser:", selectedUser);
-  console.log("- movingUsers:", Array.from(movingUsers));
-  console.log("- completedMoves:", Array.from(completedMoves));
+  console.log("- movingUsers:", Array.from(movingUsers || []));
+  console.log("- completedMoves:", Array.from(completedMoves || []));
 
-  // Filter online users for count
-  const onlineUsers = nearbyUsers.filter(user => 
-    user.id !== currentUser?.id && 
-    user.isOnline === true &&
-    user.id && 
-    !String(user.id).includes('test') && 
-    !String(user.id).includes('mock')
-  );
+  // Filter online users for count with safety checks
+  const onlineUsers = useMemo(() => {
+    if (!Array.isArray(nearbyUsers)) return [];
+    return nearbyUsers.filter(user => 
+      user && 
+      user.id !== currentUser?.id && 
+      user.isOnline === true &&
+      user.id && 
+      !String(user.id).includes('test') && 
+      !String(user.id).includes('mock')
+    );
+  }, [nearbyUsers, currentUser?.id]);
 
-  // Create side panel for desktop
-  const sidePanel = (
+  // Create side panel for desktop with memoization
+  const sidePanel = useMemo(() => (
     <MapSidePanel
-      users={nearbyUsers}
+      users={nearbyUsers || []}
       currentUser={currentUser}
       radiusInKm={radiusInKm}
       onUserSelect={handleUserSelect}
     />
-  );
+  ), [nearbyUsers, currentUser, radiusInKm, handleUserSelect]);
 
-  // Create mobile drawer with proper event handling
-  const mobileDrawer = (
+  // Create mobile drawer with proper event handling and memoization
+  const mobileDrawer = useMemo(() => (
     <MobileDrawer
       isOpen={isDrawerOpen}
       onClose={closeDrawer}
-      users={nearbyUsers}
+      users={nearbyUsers || []}
       currentUser={currentUser}
       radiusInKm={radiusInKm}
       onUserSelect={handleUserSelect}
     />
-  );
+  ), [isDrawerOpen, closeDrawer, nearbyUsers, currentUser, radiusInKm, handleUserSelect]);
 
-  // Create drawer handle with proper event handling
-  const drawerHandle = (
+  // Create drawer handle with proper event handling and memoization
+  const drawerHandle = useMemo(() => (
     <DrawerHandle
       userCount={onlineUsers.length}
       onClick={openDrawer}
     />
-  );
+  ), [onlineUsers.length, openDrawer]);
+
+  // Safety check for critical dependencies
+  if (!currentUser) {
+    console.warn('[FriendMapContainer] No current user available');
+    return null;
+  }
 
   return (
     <>
@@ -161,13 +171,13 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
           routeLayer={routeLayer}
           mapLoaded={mapLoaded}
           currentUser={currentUser}
-          nearbyUsers={nearbyUsers}
+          nearbyUsers={nearbyUsers || []}
           radiusInKm={radiusInKm}
           selectedUser={selectedUser}
           setSelectedUser={setSelectedUser}
-          movingUsers={movingUsers}
-          completedMoves={completedMoves}
-          friendRequests={friendRequests}
+          movingUsers={movingUsers || new Set()}
+          completedMoves={completedMoves || new Set()}
+          friendRequests={friendRequests || []}
           isTracking={isTracking}
           setMovingUsers={setMovingUsers}
           setCompletedMoves={setCompletedMoves}
@@ -211,7 +221,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
           setMovingUsers={(prev) => prev} // No-op function to prevent state changes
           completedMoves={new Set()} // IMPORTANT: Pass empty sets to prevent state changes
           setCompletedMoves={(prev) => prev} // No-op function to prevent state changes
-          nearbyUsers={nearbyUsers}
+          nearbyUsers={nearbyUsers || []}
           WYNYARD_COORDS={WYNYARD_COORDS as [number, number]}
         />
 

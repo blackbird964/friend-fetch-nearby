@@ -24,6 +24,9 @@ html, body {
 button, [role="button"] {
   touch-action: manipulation;
   -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
 }
 
 /* Improve touch targets on mobile */
@@ -147,14 +150,16 @@ button, [role="button"] {
   }
 }
 
-/* Mobile Drawer Styles */
+/* Mobile Drawer Styles - Improved Performance */
 .mobile-drawer-backdrop {
   backdrop-filter: blur(2px);
+  will-change: opacity;
 }
 
 .mobile-drawer-content {
   transform: translateX(100%);
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 
 .mobile-drawer-content.open {
@@ -163,7 +168,8 @@ button, [role="button"] {
 
 /* Map container styles to prevent conflicts */
 #map-container, #map-container-mobile {
-  touch-action: none;
+  touch-action: pan-x pan-y;
+  overflow: hidden;
 }
 
 /* Ensure proper z-index layering */
@@ -189,4 +195,23 @@ button, [role="button"] {
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+}
+
+/* Performance optimizations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Fix potential memory leaks from animations */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

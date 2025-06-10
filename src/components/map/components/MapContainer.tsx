@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { memo } from 'react';
 
 type MapContainerProps = {
   children: React.ReactNode;
@@ -9,7 +9,7 @@ type MapContainerProps = {
   drawerHandle?: React.ReactNode;
 };
 
-const MapContainer: React.FC<MapContainerProps> = ({ 
+const MapContainer: React.FC<MapContainerProps> = memo(({ 
   children, 
   sidePanel,
   showSidePanel = false,
@@ -46,6 +46,8 @@ const MapContainer: React.FC<MapContainerProps> = ({
       {mobileDrawer}
     </div>
   );
-};
+});
+
+MapContainer.displayName = 'MapContainer';
 
 export default MapContainer;
