@@ -1,3 +1,4 @@
+
 import { Style, Circle as CircleStyle, Fill, Stroke, Text, Icon } from 'ol/style';
 import Feature from 'ol/Feature';
 import Geometry from 'ol/geom/Geometry';
@@ -35,9 +36,37 @@ export const useMarkerStyles = (
     const isBusiness = feature.get('isBusiness');
     const userName = feature.get('name') || (userId ? `User-${userId.substring(0, 4)}` : '');
     
-    // Handle cluster markers
+    // Handle cluster markers FIRST, but check if it's a business user cluster
     const isCluster = feature.get('isCluster');
     const clusterSize = feature.get('clusterSize') || 1;
+    
+    // For business users, ALWAYS use star icon regardless of cluster
+    if (isBusiness) {
+      // Determine marker color based on status
+      let markerColor = '#6366f1'; // Default purple color
+      
+      if (isUser) {
+        markerColor = '#0ea5e9'; // Blue for current user
+      } else if (isMoving || hasMoved) {
+        markerColor = '#10b981'; // Green for moving/completed users
+      } else if (selectedUser === userId) {
+        markerColor = '#6366f1'; // Purple for selected users
+      }
+      
+      return new Style({
+        image: new Icon({
+          src: createStarIcon(markerColor),
+          scale: 1,
+          anchor: [0.5, 0.5]
+        }),
+        text: new Text({
+          text: userName,
+          offsetY: -20,
+          fill: new Fill({ color: '#374151' }),
+          stroke: new Stroke({ color: 'white', width: 2 })
+        })
+      });
+    }
     
     if (isCluster && clusterSize > 1) {
       // Cluster marker style - size based on number of users
@@ -160,23 +189,6 @@ export const useMarkerStyles = (
         }),
         text: new Text({
           text: "Someone in area online",
-          offsetY: -20,
-          fill: new Fill({ color: '#374151' }),
-          stroke: new Stroke({ color: 'white', width: 2 })
-        })
-      });
-    }
-    
-    // For business users, use star icon
-    if (isBusiness) {
-      return new Style({
-        image: new Icon({
-          src: createStarIcon(markerColor),
-          scale: 1,
-          anchor: [0.5, 0.5]
-        }),
-        text: new Text({
-          text: userName,
           offsetY: -20,
           fill: new Fill({ color: '#374151' }),
           stroke: new Stroke({ color: 'white', width: 2 })

@@ -64,18 +64,7 @@ export const useOptimizedMarkerUpdater = () => {
       // Remove in batch
       markersToRemove.forEach(feature => source.removeFeature(feature));
       
-      // For business users, only add their own marker
-      if (isBusiness) {
-        console.log("Business user - only adding own marker");
-        const isPrivacyEnabled = shouldObfuscateLocation(user);
-        
-        if (tracking && user && !isPrivacyEnabled) {
-          await addCurrentUserMarker(user, source);
-        }
-        return;
-      }
-      
-      // Filter users
+      // Filter users (always show all online users, regardless of current user being business)
       const onlineUsers = filterOnlineAndUnblockedUsers(users, user);
       console.log(`Filtered to ${onlineUsers.length} online users`);
       
@@ -91,7 +80,7 @@ export const useOptimizedMarkerUpdater = () => {
         await addNearbyUserMarkers(onlineUsers, user, radius, source);
       }
       
-      // Add current user marker
+      // Add current user marker (for both business and regular users)
       const isPrivacyEnabled = shouldObfuscateLocation(user);
       if (tracking && user && !isPrivacyEnabled) {
         await addCurrentUserMarker(user, source);
