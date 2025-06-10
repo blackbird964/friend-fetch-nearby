@@ -9,6 +9,7 @@ import { usePrivacyMode } from './hooks/usePrivacyMode';
 import { useUserDetailsDrawer } from './hooks/useUserDetailsDrawer';
 import { useMeetingStateCleanup } from './hooks/useMeetingStateCleanup';
 import { useTrackingModeEvents } from './hooks/useTrackingModeEvents';
+import { useMobileDrawer } from './hooks/useMobileDrawer';
 
 // Import refactored components
 import MapContainer from './components/MapContainer';
@@ -19,6 +20,7 @@ import MapControlPanel from './components/MapControlPanel';
 import MapControls from './components/MapControls';
 import { MapSidePanel } from './components/side-panel';
 import UserDetailsDrawerContainer from './components/UserDetailsDrawerContainer';
+import { MobileDrawer, DrawerHandle } from './components/mobile-drawer';
 
 interface FriendMapContainerProps {
   isManualMode: boolean;
@@ -81,6 +83,15 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     handleCloseDrawer
   } = useUserDetailsDrawer();
 
+  // Mobile drawer management
+  const {
+    isDrawerOpen,
+    openDrawer,
+    closeDrawer,
+    toggleDrawer,
+    isMobile
+  } = useMobileDrawer();
+
   // Handle meeting state cleanup when user is selected
   useMeetingStateCleanup({
     selectedUser,
@@ -97,8 +108,8 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
   console.log("- movingUsers:", Array.from(movingUsers));
   console.log("- completedMoves:", Array.from(completedMoves));
 
-  // Create side panel
-  const sidePanel = (
+  // Create side panel content
+  const sidePanelContent = (
     <MapSidePanel
       users={nearbyUsers}
       currentUser={currentUser}
@@ -107,9 +118,38 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     />
   );
 
+  // Filter online users for count
+  const onlineUsers = nearbyUsers.filter(user => 
+    user.id !== currentUser?.id && 
+    user.isOnline === true &&
+    user.id && 
+    !String(user.id).includes('test') && 
+    !String(user.id).includes('mock')
+  );
+
+  // Create mobile drawer
+  const mobileDrawer = (
+    <>
+      <DrawerHandle 
+        onClick={toggleDrawer}
+        userCount={onlineUsers.length}
+      />
+      <MobileDrawer
+        isOpen={isDrawerOpen}
+        onClose={closeDrawer}
+      >
+        {sidePanelContent}
+      </MobileDrawer>
+    </>
+  );
+
   return (
     <>
-      <MapContainer showSidePanel={true} sidePanel={sidePanel}>
+      <MapContainer 
+        showSidePanel={true} 
+        sidePanel={sidePanelContent}
+        mobileDrawer={mobileDrawer}
+      >
         <MapFeatures 
           map={map}
           vectorSource={vectorSource}
