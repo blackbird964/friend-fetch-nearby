@@ -20,8 +20,13 @@ const MapSidePanel: React.FC<MapSidePanelProps> = ({
   className = ""
 }) => {
   // Filter out business users for the business count
-  const businessUsers = users.filter(user => user.isBusiness || false);
-  const regularUsers = users.filter(user => !user.isBusiness);
+  // Note: AppUser doesn't have isBusiness property, so we'll check if they have business-related data
+  const businessUsers = users.filter(user => {
+    // Check if user has business-related properties or is marked as business in some way
+    // For now, we'll assume all users are regular users since isBusiness doesn't exist in AppUser type
+    return false; // Placeholder - will need business user detection logic
+  });
+  const regularUsers = users.filter(user => true); // All users are regular users for now
 
   return (
     <div className={`flex flex-col h-full bg-white border-l border-gray-200 ${className}`}>

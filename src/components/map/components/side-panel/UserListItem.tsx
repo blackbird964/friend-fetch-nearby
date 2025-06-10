@@ -43,7 +43,7 @@ const UserListItem: React.FC<UserListItemProps> = ({
       <div className="flex items-start gap-3">
         {/* Avatar */}
         <Avatar className="w-12 h-12 flex-shrink-0">
-          <AvatarImage src={user.profilePic || undefined} alt={user.name || 'User'} />
+          <AvatarImage src={user.profile_pic || undefined} alt={user.name || 'User'} />
           <AvatarFallback className="bg-primary text-primary-foreground">
             {(user.name || 'U').charAt(0).toUpperCase()}
           </AvatarFallback>
