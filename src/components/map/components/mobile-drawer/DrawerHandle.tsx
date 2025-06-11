@@ -27,7 +27,7 @@ const DrawerHandle: React.FC<DrawerHandleProps> = ({ onClick, userCount }) => {
     <Button
       onClick={handleClick}
       onTouchStart={handleTouchStart}
-      className="fixed top-20 right-4 z-50 md:hidden bg-white text-gray-900 shadow-lg hover:bg-gray-50 border border-gray-200 touch-manipulation"
+      className="fixed bottom-24 right-4 z-50 md:hidden bg-white text-gray-900 shadow-lg hover:bg-gray-50 border border-gray-200 touch-manipulation"
       size="sm"
       style={{ 
         minHeight: '44px', 
