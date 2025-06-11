@@ -10,18 +10,28 @@ interface ProfileActionsProps {
 }
 
 const ProfileActions: React.FC<ProfileActionsProps> = ({ user, onStartChat }) => {
-  const handleStartChat = (e: React.MouseEvent) => {
+  const handleStartChat = async (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     
-    if (user && onStartChat) {
-      console.log("[ProfileActions] Starting chat with user:", user.name);
-      onStartChat();
-    } else {
-      console.error("[ProfileActions] Cannot start chat: User or onStartChat handler is undefined", {
-        user: !!user,
-        onStartChat: !!onStartChat
-      });
+    console.log("[ProfileActions] Chat button clicked for user:", user?.name, "ID:", user?.id);
+    
+    if (!user) {
+      console.error("[ProfileActions] No user provided");
+      return;
+    }
+    
+    if (!onStartChat) {
+      console.error("[ProfileActions] No onStartChat handler provided");
+      return;
+    }
+    
+    try {
+      console.log("[ProfileActions] Calling onStartChat handler");
+      await onStartChat();
+      console.log("[ProfileActions] onStartChat completed");
+    } catch (error) {
+      console.error("[ProfileActions] Error in onStartChat:", error);
     }
   };
   

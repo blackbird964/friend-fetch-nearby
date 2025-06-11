@@ -90,7 +90,9 @@ export const useChatActions = () => {
         description: "Failed to start chat. Please try again.",
         variant: "destructive"
       });
-      throw error; // Re-throw to allow caller to handle
+      sonnerToast.error("Failed to start chat", {
+        description: "Please try again"
+      });
     } finally {
       setLoading(false);
     }

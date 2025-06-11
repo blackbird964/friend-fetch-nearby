@@ -13,15 +13,27 @@ export const useUserDetailsDrawer = () => {
   };
 
   const handleStartChat = async (user: AppUser) => {
-    console.log("[useUserDetailsDrawer] Starting chat with user:", user.name);
+    console.log("[useUserDetailsDrawer] Starting chat with user:", user.name, "ID:", user.id);
+    
+    if (!user || !user.id) {
+      console.error("[useUserDetailsDrawer] Invalid user data:", user);
+      return;
+    }
+
     try {
+      console.log("[useUserDetailsDrawer] Calling startChat with user:", user);
       await startChat(user);
+      console.log("[useUserDetailsDrawer] Chat started successfully");
+      
+      // Close the drawer after successful chat start
+      setDrawerSelectedUser(null);
     } catch (error) {
       console.error("[useUserDetailsDrawer] Error starting chat:", error);
     }
   };
 
   const handleCloseDrawer = () => {
+    console.log("[useUserDetailsDrawer] Closing drawer");
     setDrawerSelectedUser(null);
   };
 
