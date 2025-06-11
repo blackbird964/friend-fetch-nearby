@@ -16,6 +16,12 @@ const UserDetailsDrawerContainer: React.FC<UserDetailsDrawerContainerProps> = ({
   onClose,
   onStartChat
 }) => {
+  console.log("[UserDetailsDrawerContainer] Props received:", {
+    user: user?.name,
+    isOpen,
+    onStartChat: !!onStartChat
+  });
+
   return (
     <UserDetailsDrawer
       user={user}

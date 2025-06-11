@@ -37,6 +37,12 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   
+  console.log("[UserDetailsDrawer] Rendering with:", {
+    user: user?.name,
+    isOpen,
+    onStartChat: !!onStartChat
+  });
+
   if (!user || !currentUser) return null;
 
   // Don't show block/report options for your own profile
@@ -62,8 +68,15 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
 
   const handleStartChat = () => {
     console.log("[UserDetailsDrawer] Starting chat with user:", user.name);
-    onStartChat(user);
-    onClose(); // Close the drawer after starting chat
+    if (onStartChat && user) {
+      onStartChat(user);
+      onClose(); // Close the drawer after starting chat
+    } else {
+      console.error("[UserDetailsDrawer] Cannot start chat - missing handler or user:", {
+        onStartChat: !!onStartChat,
+        user: !!user
+      });
+    }
   };
 
   return (
