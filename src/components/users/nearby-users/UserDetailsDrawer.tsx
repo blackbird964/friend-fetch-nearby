@@ -60,9 +60,9 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
     }
   };
 
-  const handleStartChat = (chatUser: AppUser) => {
-    console.log("[UserDetailsDrawer] Starting chat with user:", chatUser.name);
-    onStartChat(chatUser);
+  const handleStartChat = () => {
+    console.log("[UserDetailsDrawer] Starting chat with user:", user.name);
+    onStartChat(user);
     onClose(); // Close the drawer after starting chat
   };
 

@@ -6,7 +6,7 @@ import { AppUser } from '@/context/types';
 
 interface ProfileActionsProps {
   user?: AppUser;
-  onStartChat?: (user: AppUser) => void;
+  onStartChat?: () => void;
 }
 
 const ProfileActions: React.FC<ProfileActionsProps> = ({ user, onStartChat }) => {
@@ -16,7 +16,7 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({ user, onStartChat }) =>
     
     if (user && onStartChat) {
       console.log("[ProfileActions] Starting chat with user:", user.name);
-      onStartChat(user);
+      onStartChat();
     } else {
       console.error("[ProfileActions] Cannot start chat: User or onStartChat handler is undefined", {
         user: !!user,
