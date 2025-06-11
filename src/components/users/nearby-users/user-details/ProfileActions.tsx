@@ -6,7 +6,7 @@ import { AppUser } from '@/context/types';
 
 interface ProfileActionsProps {
   user?: AppUser;
-  onStartChat?: () => void;
+  onStartChat?: (user: AppUser) => void;
 }
 
 const ProfileActions: React.FC<ProfileActionsProps> = ({ user, onStartChat }) => {
@@ -27,8 +27,8 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({ user, onStartChat }) =>
     }
     
     try {
-      console.log("[ProfileActions] Calling onStartChat handler");
-      await onStartChat();
+      console.log("[ProfileActions] Calling onStartChat handler with user:", user);
+      await onStartChat(user);
       console.log("[ProfileActions] onStartChat completed");
     } catch (error) {
       console.error("[ProfileActions] Error in onStartChat:", error);

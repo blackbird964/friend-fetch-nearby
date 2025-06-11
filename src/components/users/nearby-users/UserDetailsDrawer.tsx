@@ -67,23 +67,25 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
     }
   };
 
-  const handleStartChat = async () => {
-    console.log("[UserDetailsDrawer] Chat button clicked for user:", user.name, "ID:", user.id);
+  const handleStartChat = async (userToChat: AppUser) => {
+    console.log("[UserDetailsDrawer] Chat handler called with user:", userToChat.name, "ID:", userToChat.id);
     
     if (!onStartChat) {
       console.error("[UserDetailsDrawer] No onStartChat handler provided");
       return;
     }
     
-    if (!user || !user.id) {
-      console.error("[UserDetailsDrawer] Invalid user data:", user);
+    if (!userToChat || !userToChat.id) {
+      console.error("[UserDetailsDrawer] Invalid user data:", userToChat);
       return;
     }
 
     try {
-      console.log("[UserDetailsDrawer] Calling onStartChat with user:", user);
-      await onStartChat(user);
+      console.log("[UserDetailsDrawer] Calling parent onStartChat with user:", userToChat);
+      await onStartChat(userToChat);
       console.log("[UserDetailsDrawer] onStartChat completed successfully");
+      // Close the drawer after successful chat start
+      onClose();
     } catch (error) {
       console.error("[UserDetailsDrawer] Error in onStartChat:", error);
     }
