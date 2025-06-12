@@ -1,4 +1,3 @@
-
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppUser } from '@/context/types';
@@ -27,13 +26,16 @@ export const useChatActions = () => {
     }
 
     setLoading(true);
-
+    
     try {
       console.log("[useChatActions] Checking for existing chat with user ID:", user.id);
       
+      // Ensure chats is an array before using find
+      const chatsList = Array.isArray(chats) ? chats : [];
+      
       // Check if a chat with this user already exists
-      const existingChat = chats.find(
-        chat => chat.participants.includes(user.id)
+      const existingChat = chatsList.find(
+        chat => chat?.participants && Array.isArray(chat.participants) && chat.participants.includes(user.id)
       );
 
       let chatToSelect;
@@ -70,7 +72,11 @@ export const useChatActions = () => {
         console.log("[useChatActions] New chat created:", newChat);
         
         // Add the new chat to the chats list
-        setChats(prevChats => [...prevChats, newChat]);
+        setChats(prevChats => {
+          const prevChatsList = Array.isArray(prevChats) ? prevChats : [];
+          return [...prevChatsList, newChat];
+        });
+        
         chatToSelect = newChat;
         
         sonnerToast.success("New chat created", {
@@ -82,19 +88,30 @@ export const useChatActions = () => {
       console.log("[useChatActions] Setting selected chat:", chatToSelect.id);
       setSelectedChat(chatToSelect);
       
+      // Small delay to ensure state updates are processed
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
       // Navigate to the chat page
       console.log("[useChatActions] Navigating to chat page");
       navigate('/chat', { replace: true });
       
     } catch (error) {
       console.error("[useChatActions] Error starting chat:", error);
+      
+      // More detailed error logging
+      if (error instanceof Error) {
+        console.error("[useChatActions] Error message:", error.message);
+        console.error("[useChatActions] Error stack:", error.stack);
+      }
+      
       toast({
         title: "Error",
-        description: "Failed to start chat. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to start chat. Please try again.",
         variant: "destructive"
       });
+      
       sonnerToast.error("Failed to start chat", {
-        description: "Please try again"
+        description: error instanceof Error ? error.message : "Please try again"
       });
     } finally {
       setLoading(false);
