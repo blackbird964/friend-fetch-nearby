@@ -57,12 +57,21 @@ const BottomNavigation: React.FC = () => {
     },
   ];
 
-  // Navigation handler with event capture
+  // Navigation handler with improved event handling
   const handleNavigate = (path: string, event: React.MouseEvent | React.TouchEvent) => {
     event.preventDefault();
     event.stopPropagation();
+    
     console.log(`[BottomNavigation] Navigating from ${location.pathname} to ${path}`);
-    navigate(path);
+    
+    // Force navigation even if we're on the same path
+    if (location.pathname === path) {
+      // If we're already on the path, force a refresh by navigating away and back
+      navigate('/', { replace: true });
+      setTimeout(() => navigate(path, { replace: true }), 10);
+    } else {
+      navigate(path, { replace: true });
+    }
   };
 
   return (
