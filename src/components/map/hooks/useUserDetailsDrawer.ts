@@ -29,6 +29,7 @@ export const useUserDetailsDrawer = () => {
       setDrawerSelectedUser(null);
     } catch (error) {
       console.error("[useUserDetailsDrawer] Error starting chat:", error);
+      // Don't close drawer on error so user can try again
     }
   };
 
