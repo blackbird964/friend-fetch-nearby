@@ -57,13 +57,15 @@ const BottomNavigation: React.FC = () => {
     },
   ];
 
-  // Simplified navigation handler
+  // Simplified navigation handler that just navigates without complex logic
   const handleNavigate = (path: string, event: React.MouseEvent | React.TouchEvent) => {
     event.preventDefault();
     event.stopPropagation();
     
     console.log(`[BottomNavigation] Navigating from ${location.pathname} to ${path}`);
-    navigate(path);
+    
+    // Force navigation with replace to avoid history issues
+    navigate(path, { replace: false });
   };
 
   return (

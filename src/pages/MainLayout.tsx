@@ -8,6 +8,7 @@ import { getBusinessProfile } from '@/lib/supabase/businessProfiles';
 const MainLayout: React.FC = () => {
   const { isAuthenticated, currentUser } = useAppContext();
   const [isBusinessUser, setIsBusinessUser] = useState<boolean | null>(null);
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -28,38 +29,41 @@ const MainLayout: React.FC = () => {
     checkBusinessUser();
   }, [isAuthenticated, currentUser]);
 
-  // If user isn't authenticated, navigate to auth page
+  // Handle initial authentication redirect only
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/');
+      return;
     }
-  }, [isAuthenticated, navigate]);
 
-  // If user is authenticated but doesn't have a complete profile and is not a business user
-  // They should complete their profile first
-  useEffect(() => {
-    if (isAuthenticated && isBusinessUser === false && currentUser && !currentUser.bio) {
-      console.log("User needs to complete profile:", currentUser);
-      navigate('/');
-    }
-  }, [isAuthenticated, currentUser, isBusinessUser, navigate]);
-
-  // If user is authenticated and has completed their profile (or is a business user), they can access the app
-  useEffect(() => {
-    if (isAuthenticated && currentUser && location.pathname === '/') {
-      if (isBusinessUser === true || currentUser.bio) {
-        // Business users go to map, regular users go to home
+    // Only handle initial redirects, not ongoing navigation
+    if (isInitialLoad && isAuthenticated && currentUser && isBusinessUser !== null) {
+      if (!currentUser.bio && isBusinessUser === false) {
+        // User needs to complete profile
+        console.log("User needs to complete profile:", currentUser);
+        navigate('/');
+      } else if (location.pathname === '/') {
+        // User is authenticated and has complete profile, redirect to default page
         navigate(isBusinessUser ? '/map' : '/home');
       }
+      setIsInitialLoad(false);
     }
-  }, [isAuthenticated, currentUser, isBusinessUser, location.pathname, navigate]);
+  }, [isAuthenticated, currentUser, isBusinessUser, location.pathname, navigate, isInitialLoad]);
 
-  // Redirect business users away from home page if they somehow get there
+  // Only prevent business users from accessing home page
   useEffect(() => {
     if (isAuthenticated && isBusinessUser === true && location.pathname === '/home') {
       navigate('/map');
     }
   }, [isAuthenticated, isBusinessUser, location.pathname, navigate]);
+
+  console.log("[MainLayout] Current state:", {
+    isAuthenticated,
+    currentPath: location.pathname,
+    isBusinessUser,
+    isInitialLoad,
+    hasCurrentUser: !!currentUser
+  });
 
   return (
     <>
