@@ -19,12 +19,13 @@ import {
   ReportUserDialog
 } from './user-details';
 import ActivePriorities from './user-details/ActivePriorities';
+import { useChatActions } from '../hooks/useChatActions';
 
 interface UserDetailsDrawerProps {
   user: AppUser | null;
   isOpen: boolean;
   onClose: () => void;
-  onStartChat: (user: AppUser) => void;
+  onStartChat?: (user: AppUser) => void;
 }
 
 const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({ 
@@ -36,12 +37,13 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
   const { currentUser, blockUser, unblockUser, reportUser } = useAppContext();
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
+  const { startChat } = useChatActions();
   
   console.log("[UserDetailsDrawer] Rendering with:", {
     user: user?.name,
     userId: user?.id,
     isOpen,
-    onStartChat: !!onStartChat
+    hasUser: !!user
   });
 
   if (!user || !currentUser) return null;
@@ -68,26 +70,14 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
   };
 
   const handleStartChat = async () => {
-    console.log("[UserDetailsDrawer] Chat handler called for user:", user.name, "ID:", user.id);
+    console.log("[UserDetailsDrawer] Starting chat with user:", user.name, "ID:", user.id);
     
-    if (!onStartChat) {
-      console.error("[UserDetailsDrawer] No onStartChat handler provided");
-      return;
-    }
-    
-    if (!user || !user.id) {
-      console.error("[UserDetailsDrawer] Invalid user data:", user);
-      return;
-    }
-
     try {
-      console.log("[UserDetailsDrawer] Calling parent onStartChat with user:", user);
-      await onStartChat(user);
-      console.log("[UserDetailsDrawer] onStartChat completed successfully");
-      // Close the drawer after successful chat start
+      await startChat(user);
+      console.log("[UserDetailsDrawer] Chat started successfully, closing drawer");
       onClose();
     } catch (error) {
-      console.error("[UserDetailsDrawer] Error in onStartChat:", error);
+      console.error("[UserDetailsDrawer] Error starting chat:", error);
     }
   };
 

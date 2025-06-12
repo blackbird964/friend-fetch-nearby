@@ -29,18 +29,22 @@ const ProfileActions: React.FC<ProfileActionsProps> = ({ user, onStartChat }) =>
     try {
       console.log("[ProfileActions] Calling onStartChat handler");
       await onStartChat();
-      console.log("[ProfileActions] onStartChat completed");
+      console.log("[ProfileActions] onStartChat completed successfully");
     } catch (error) {
       console.error("[ProfileActions] Error in onStartChat:", error);
     }
   };
+  
+  if (!user) {
+    console.log("[ProfileActions] No user provided, not rendering button");
+    return null;
+  }
   
   return (
     <div className="flex gap-3 w-full">
       <Button 
         onClick={handleStartChat}
         className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
-        disabled={!user || !onStartChat}
         type="button"
       >
         <MessageCircle className="mr-2 h-4 w-4" />
