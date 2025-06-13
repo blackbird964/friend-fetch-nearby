@@ -1,3 +1,4 @@
+
 import { useState, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AppUser } from '@/context/types';
@@ -9,7 +10,7 @@ export const useChatActions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState<boolean>(false);
-  const { chats, setChats, setSelectedChat } = useAppContext();
+  const { chats, setChats, setSelectedChat, currentUser } = useAppContext();
 
   // Simplified function to start a chat
   const startChat = useCallback(async (user: AppUser) => {
@@ -20,6 +21,16 @@ export const useChatActions = () => {
       toast({
         title: "Error",
         description: "Cannot start chat: Invalid user data",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    if (!currentUser) {
+      console.error("[useChatActions] No current user found");
+      toast({
+        title: "Error",
+        description: "You must be logged in to start a chat",
         variant: "destructive"
       });
       return;
@@ -74,7 +85,7 @@ export const useChatActions = () => {
         // Add the new chat to the chats list
         setChats(prevChats => {
           const prevChatsList = Array.isArray(prevChats) ? prevChats : [];
-          return [...prevChatsList, newChat];
+          return [newChat, ...prevChatsList];
         });
         
         chatToSelect = newChat;
@@ -88,12 +99,9 @@ export const useChatActions = () => {
       console.log("[useChatActions] Setting selected chat:", chatToSelect.id);
       setSelectedChat(chatToSelect);
       
-      // Small delay to ensure state updates are processed
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
-      // Navigate to the chat page
+      // Navigate to the chat page immediately
       console.log("[useChatActions] Navigating to chat page");
-      navigate('/chat', { replace: true });
+      navigate('/chat');
       
     } catch (error) {
       console.error("[useChatActions] Error starting chat:", error);
@@ -116,7 +124,7 @@ export const useChatActions = () => {
     } finally {
       setLoading(false);
     }
-  }, [chats, navigate, setChats, toast, setSelectedChat]);
+  }, [chats, navigate, setChats, toast, setSelectedChat, currentUser]);
 
   return {
     startChat,
