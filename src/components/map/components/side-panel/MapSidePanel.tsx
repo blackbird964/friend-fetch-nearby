@@ -12,7 +12,7 @@ interface MapSidePanelProps {
   onUserSelect: (user: AppUser) => void;
 }
 
-export const MapSidePanel: React.FC<MapSidePanelProps> = ({
+const MapSidePanel: React.FC<MapSidePanelProps> = ({
   users,
   currentUser,
   radiusInKm,
@@ -34,6 +34,9 @@ export const MapSidePanel: React.FC<MapSidePanelProps> = ({
     currentUser && user.id !== currentUser.id
   );
 
+  // For now, we'll set businessCount to 0 since we don't have business data yet
+  const businessCount = 0;
+
   return (
     <div className="h-full flex flex-col bg-white">
       <div className="flex-1 overflow-hidden">
@@ -45,8 +48,13 @@ export const MapSidePanel: React.FC<MapSidePanelProps> = ({
         />
       </div>
       <div className="border-t">
-        <BusinessCountPanel />
+        <BusinessCountPanel 
+          businessCount={businessCount}
+          radiusInKm={radiusInKm}
+        />
       </div>
     </div>
   );
 };
+
+export default MapSidePanel;
