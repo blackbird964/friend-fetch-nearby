@@ -65,7 +65,6 @@ export const useFriendMapContainer = ({
   const {
     drawerSelectedUser,
     handleUserSelect,
-    handleStartChat,
     handleCloseDrawer
   } = useUserDetailsDrawer();
 
@@ -125,7 +124,6 @@ export const useFriendMapContainer = ({
     // User details drawer
     drawerSelectedUser,
     handleUserSelect,
-    handleStartChat,
     handleCloseDrawer,
     
     // Mobile drawer
