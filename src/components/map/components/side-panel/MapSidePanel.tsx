@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { AppUser } from '@/context/types';
+import { useChatActions } from '@/components/users/hooks/useChatActions';
 import UserListPanel from './UserListPanel';
 import BusinessCountPanel from './BusinessCountPanel';
 
@@ -9,42 +10,43 @@ interface MapSidePanelProps {
   currentUser: AppUser | null;
   radiusInKm: number;
   onUserSelect: (user: AppUser) => void;
-  className?: string;
 }
 
-const MapSidePanel: React.FC<MapSidePanelProps> = ({
+export const MapSidePanel: React.FC<MapSidePanelProps> = ({
   users,
   currentUser,
   radiusInKm,
-  onUserSelect,
-  className = ""
+  onUserSelect
 }) => {
-  // For now, we don't have business user detection logic
-  // All users are treated as regular users
-  const businessUsers: AppUser[] = [];
-  const regularUsers = users;
+  const { startChat } = useChatActions();
+
+  const handleStartChat = async (user: AppUser) => {
+    console.log("[MapSidePanel] Starting chat with user:", user.name);
+    try {
+      await startChat(user);
+    } catch (error) {
+      console.error("[MapSidePanel] Error starting chat:", error);
+    }
+  };
+
+  // Filter out current user from the list
+  const filteredUsers = users.filter(user => 
+    currentUser && user.id !== currentUser.id
+  );
 
   return (
-    <div className={`flex flex-col h-full bg-white border-l border-gray-200 ${className}`}>
-      {/* User List Section - Takes most of the space */}
-      <div className="flex-1 min-h-0">
+    <div className="h-full flex flex-col bg-white">
+      <div className="flex-1 overflow-hidden">
         <UserListPanel 
-          users={regularUsers}
-          currentUser={currentUser}
+          users={filteredUsers}
           radiusInKm={radiusInKm}
           onUserSelect={onUserSelect}
+          onStartChat={handleStartChat}
         />
       </div>
-      
-      {/* Business Count Section - Fixed height at bottom */}
-      <div className="flex-shrink-0">
-        <BusinessCountPanel 
-          businessCount={businessUsers.length}
-          radiusInKm={radiusInKm}
-        />
+      <div className="border-t">
+        <BusinessCountPanel />
       </div>
     </div>
   );
 };
-
-export default MapSidePanel;

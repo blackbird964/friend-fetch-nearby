@@ -1,8 +1,16 @@
 
 import React from 'react';
 import { AppUser } from '@/context/types';
-import { MobileDrawer, DrawerHandle } from './mobile-drawer';
-import { MapSidePanel } from './side-panel';
+import { useChatActions } from '@/components/users/hooks/useChatActions';
+import UserItem from '@/components/users/nearby-users/UserItem';
+import {
+  Drawer,
+  DrawerContent,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { Button } from "@/components/ui/button";
+import { X } from 'lucide-react';
 
 interface MobileDrawerContainerProps {
   nearbyUsers: AppUser[];
@@ -20,44 +28,57 @@ const MobileDrawerContainer: React.FC<MobileDrawerContainerProps> = ({
   radiusInKm,
   onUserSelect,
   isDrawerOpen,
-  onToggleDrawer,
   onCloseDrawer
 }) => {
-  // Filter online users for count
-  const onlineUsers = nearbyUsers.filter(user => 
-    user.id !== currentUser?.id && 
-    user.isOnline === true &&
-    user.id && 
-    !String(user.id).includes('test') && 
-    !String(user.id).includes('mock')
-  );
+  const { startChat } = useChatActions();
 
-  console.log('[MobileDrawerContainer] Online users count:', onlineUsers.length);
-  console.log('[MobileDrawerContainer] Drawer state - isOpen:', isDrawerOpen);
+  const handleStartChat = async (user: AppUser) => {
+    console.log("[MobileDrawerContainer] Starting chat with user:", user.name);
+    try {
+      await startChat(user);
+      onCloseDrawer(); // Close the drawer after starting chat
+    } catch (error) {
+      console.error("[MobileDrawerContainer] Error starting chat:", error);
+    }
+  };
 
-  // Create side panel content
-  const sidePanelContent = (
-    <MapSidePanel
-      users={nearbyUsers}
-      currentUser={currentUser}
-      radiusInKm={radiusInKm}
-      onUserSelect={onUserSelect}
-    />
+  const filteredUsers = nearbyUsers.filter(user => 
+    currentUser && user.id !== currentUser.id
   );
 
   return (
-    <>
-      <DrawerHandle 
-        onClick={onToggleDrawer}
-        userCount={onlineUsers.length}
-      />
-      <MobileDrawer
-        isOpen={isDrawerOpen}
-        onClose={onCloseDrawer}
-      >
-        {sidePanelContent}
-      </MobileDrawer>
-    </>
+    <Drawer open={isDrawerOpen} onOpenChange={(open) => !open && onCloseDrawer()}>
+      <DrawerContent className="max-h-[85vh]">
+        <DrawerHeader className="flex items-center justify-between">
+          <DrawerTitle>Nearby Users ({filteredUsers.length})</DrawerTitle>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onCloseDrawer}
+            className="h-8 w-8 p-0"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        </DrawerHeader>
+        
+        <div className="px-4 pb-8 space-y-4 overflow-y-auto">
+          {filteredUsers.length === 0 ? (
+            <div className="text-center text-gray-500 py-8">
+              <p>No users found within {radiusInKm}km</p>
+            </div>
+          ) : (
+            filteredUsers.map((user) => (
+              <UserItem
+                key={user.id}
+                user={user}
+                onStartChat={handleStartChat}
+                onSelect={onUserSelect}
+              />
+            ))
+          )}
+        </div>
+      </DrawerContent>
+    </Drawer>
   );
 };
 
