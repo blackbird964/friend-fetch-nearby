@@ -38,6 +38,34 @@ const UserListItem: React.FC<UserListItemProps> = ({
     onSelect(user);
   };
 
+  // Safely handle active_priorities - ensure it's always an array
+  const activePriorities = React.useMemo(() => {
+    if (!user.active_priorities) return [];
+    
+    // If it's already an array, use it
+    if (Array.isArray(user.active_priorities)) {
+      return user.active_priorities;
+    }
+    
+    // If it's a string (JSON), try to parse it
+    if (typeof user.active_priorities === 'string') {
+      try {
+        const parsed = JSON.parse(user.active_priorities);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        console.warn('Failed to parse active_priorities:', error);
+        return [];
+      }
+    }
+    
+    // If it's a single object, wrap it in an array
+    if (typeof user.active_priorities === 'object' && user.active_priorities !== null) {
+      return [user.active_priorities];
+    }
+    
+    return [];
+  }, [user.active_priorities]);
+
   return (
     <div className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer" onClick={handleSelect}>
       <div className="flex items-center space-x-3">
@@ -70,17 +98,17 @@ const UserListItem: React.FC<UserListItemProps> = ({
       </div>
       
       {/* User's active priorities */}
-      {user.active_priorities && user.active_priorities.length > 0 && (
+      {activePriorities.length > 0 && (
         <div className="mt-2">
           <div className="flex flex-wrap gap-1">
-            {user.active_priorities.slice(0, 2).map((priority) => (
-              <Badge key={priority.id} variant="secondary" className="text-xs">
+            {activePriorities.slice(0, 2).map((priority, index) => (
+              <Badge key={priority.id || index} variant="secondary" className="text-xs">
                 {priority.activity}
               </Badge>
             ))}
-            {user.active_priorities.length > 2 && (
+            {activePriorities.length > 2 && (
               <Badge variant="outline" className="text-xs">
-                +{user.active_priorities.length - 2}
+                +{activePriorities.length - 2}
               </Badge>
             )}
           </div>
