@@ -52,7 +52,6 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     // User details drawer
     drawerSelectedUser,
     handleUserSelect,
-    handleStartChat,
     handleCloseDrawer,
     
     // Mobile drawer
@@ -128,7 +127,6 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
         user={drawerSelectedUser}
         isOpen={!!drawerSelectedUser}
         onClose={handleCloseDrawer}
-        onStartChat={handleStartChat}
       />
     </>
   );

@@ -19,6 +19,7 @@ import {
   ReportUserDialog
 } from './user-details';
 import ActivePriorities from './user-details/ActivePriorities';
+import { useChatActions } from '../hooks/useChatActions';
 
 interface UserDetailsDrawerProps {
   user: AppUser | null;
@@ -34,6 +35,7 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
   onStartChat
 }) => {
   const { currentUser, blockUser, unblockUser, reportUser } = useAppContext();
+  const { startChat } = useChatActions();
   const [showBlockDialog, setShowBlockDialog] = useState(false);
   const [showReportDialog, setShowReportDialog] = useState(false);
   
@@ -71,13 +73,8 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
   const handleStartChat = async () => {
     console.log("[UserDetailsDrawer] Starting chat with user:", user.name, "ID:", user.id);
     
-    if (!onStartChat) {
-      console.error("[UserDetailsDrawer] No onStartChat handler provided");
-      return;
-    }
-    
     try {
-      await onStartChat(user);
+      await startChat(user);
       console.log("[UserDetailsDrawer] Chat started successfully, closing drawer");
       onClose();
     } catch (error) {
@@ -109,7 +106,7 @@ const UserDetailsDrawer: React.FC<UserDetailsDrawerProps> = ({
           <DrawerFooter className="flex-col gap-3 pt-2">
             <ProfileActions 
               user={user}
-              onStartChat={onStartChat ? handleStartChat : undefined}
+              onStartChat={handleStartChat}
             />
             
             <ModerationActions 
