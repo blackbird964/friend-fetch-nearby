@@ -31,13 +31,14 @@ const FriendshipDetailsModal: React.FC<FriendshipDetailsModalProps> = ({
 }) => {
   const [showMeetUpModal, setShowMeetUpModal] = useState(false);
 
-  // Calculate friendship duration (using chat creation date as proxy)
+  // For now, use chat creation date as proxy for friendship start
+  // In the future, this should come from a proper friendships table
   const friendshipStartDate = friend.chat?.createdAt ? new Date(friend.chat.createdAt) : new Date();
   const friendshipDuration = formatDistanceToNow(friendshipStartDate, { addSuffix: false });
   
-  // Mock data for total time spent together (this would come from actual activity data)
-  const totalTimeSpent = "2h 30m";
-  const activitiesCount = 3;
+  // Set time together to 0 for everyone for now - will be updated when meetups are completed
+  const totalTimeSpent = "0h 0m";
+  const activitiesCount = 0; // Will be tracked when meetup system is fully implemented
 
   const handleMeetUp = () => {
     setShowMeetUpModal(true);
