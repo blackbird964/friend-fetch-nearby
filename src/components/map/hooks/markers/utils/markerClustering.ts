@@ -39,17 +39,17 @@ const calculateDynamicClusterRadius = (users: AppUser[], baseRadius: number = 0.
   
   if (diagonalDistance > 50) {
     // Very large area (50+ km diagonal) - use larger clusters
-    adaptiveRadius = Math.min(5.0, Math.max(2.0, diagonalDistance / 20));
+    adaptiveRadius = Math.min(3.0, Math.max(1.5, diagonalDistance / 25));
   } else if (diagonalDistance > 20) {
-    // Large metropolitan area (20-50 km diagonal) - moderate clusters
-    adaptiveRadius = Math.min(3.0, Math.max(1.0, diagonalDistance / 15));
+    // Large metropolitan area (20-50 km diagonal) - moderate clusters  
+    adaptiveRadius = Math.min(2.0, Math.max(1.0, diagonalDistance / 20));
   } else if (diagonalDistance > 10) {
     // Medium area (10-20 km diagonal) - smaller clusters
-    adaptiveRadius = Math.min(2.0, Math.max(0.8, diagonalDistance / 12));
+    adaptiveRadius = Math.min(1.5, Math.max(0.8, diagonalDistance / 15));
   } else {
     // Small area - use base radius with minor adjustments
     const density = usersWithLocation.length / Math.max(diagonalDistance, 1);
-    adaptiveRadius = density > 10 ? baseRadius * 0.7 : baseRadius;
+    adaptiveRadius = density > 10 ? baseRadius * 0.8 : baseRadius * 1.2;
   }
   
   console.log(`Dynamic clustering for ${usersWithLocation.length} users across ${diagonalDistance.toFixed(1)}km diagonal: radius ${adaptiveRadius.toFixed(2)}km`);
@@ -58,7 +58,7 @@ const calculateDynamicClusterRadius = (users: AppUser[], baseRadius: number = 0.
 };
 
 /**
- * Enhanced clustering algorithm for large metropolitan areas
+ * Enhanced clustering algorithm that ensures nearby users are properly grouped
  */
 export const clusterNearbyUsers = (users: AppUser[], baseClusterRadius: number = 0.5): ClusterGroup[] => {
   if (users.length === 0) return [];
@@ -74,97 +74,32 @@ export const clusterNearbyUsers = (users: AppUser[], baseClusterRadius: number =
   // Calculate dynamic cluster radius for the geographic spread
   const clusterRadius = calculateDynamicClusterRadius(usersWithLocation, baseClusterRadius);
   
-  // For very sparse distributions, use a grid-based approach
-  const shouldUseGridClustering = usersWithLocation.length > 20 && clusterRadius > 2.0;
-  
-  if (shouldUseGridClustering) {
-    return createGridBasedClusters(usersWithLocation, clusterRadius);
-  }
-  
-  // Standard density-based clustering for smaller areas
-  return createDensityBasedClusters(usersWithLocation, clusterRadius, processedUsers);
-};
-
-/**
- * Grid-based clustering for very large areas with many users
- */
-const createGridBasedClusters = (users: AppUser[], clusterRadius: number): ClusterGroup[] => {
-  const clusters: ClusterGroup[] = [];
-  const processedUsers = new Set<string>();
-  
-  // Create a grid based on cluster radius
-  const gridSize = clusterRadius * 0.8; // Slightly smaller than cluster radius for overlap
-  const userGrid = new Map<string, AppUser[]>();
-  
-  // Assign users to grid cells
-  users.forEach(user => {
-    if (!user.location) return;
-    
-    const gridX = Math.floor(user.location.lat / gridSize);
-    const gridY = Math.floor(user.location.lng / gridSize);
-    const gridKey = `${gridX},${gridY}`;
-    
-    if (!userGrid.has(gridKey)) {
-      userGrid.set(gridKey, []);
-    }
-    userGrid.get(gridKey)!.push(user);
-  });
-  
-  // Process each grid cell and adjacent cells
-  for (const [gridKey, gridUsers] of userGrid.entries()) {
-    if (gridUsers.length === 0) continue;
-    
-    // Find center of users in this grid area
-    const totalLat = gridUsers.reduce((sum, u) => sum + u.location!.lat, 0);
-    const totalLng = gridUsers.reduce((sum, u) => sum + u.location!.lng, 0);
-    
-    const cluster: ClusterGroup = {
-      center: {
-        lat: totalLat / gridUsers.length,
-        lng: totalLng / gridUsers.length
-      },
-      users: [...gridUsers],
-      radius: clusterRadius
-    };
-    
-    gridUsers.forEach(user => processedUsers.add(user.id));
-    clusters.push(cluster);
-  }
-  
-  console.log(`Grid-based clustering: ${users.length} users into ${clusters.length} clusters`);
-  return clusters;
-};
-
-/**
- * Traditional density-based clustering for smaller areas
- */
-const createDensityBasedClusters = (users: AppUser[], clusterRadius: number, processedUsers: Set<string>): ClusterGroup[] => {
-  const clusters: ClusterGroup[] = [];
-  
-  // Sort users by density (users with more neighbors get processed first)
-  const usersWithNeighborCounts = users.map(user => {
-    const neighborCount = users.filter(otherUser => {
-      if (otherUser.id === user.id || !otherUser.location || !user.location) return false;
+  // Sort users by their density (number of nearby users) to process dense areas first
+  const usersWithDensity = usersWithLocation.map(user => {
+    const nearbyCount = usersWithLocation.filter(otherUser => {
+      if (otherUser.id === user.id) return false;
       
       const distance = calculateDistance(
-        user.location.lat,
-        user.location.lng,
-        otherUser.location.lat,
-        otherUser.location.lng
+        user.location!.lat,
+        user.location!.lng,
+        otherUser.location!.lat,
+        otherUser.location!.lng
       );
       
       return distance <= clusterRadius;
     }).length;
     
-    return { user, neighborCount };
+    return { user, nearbyCount };
   });
   
-  // Sort by neighbor count (descending) to process dense areas first
-  usersWithNeighborCounts.sort((a, b) => b.neighborCount - a.neighborCount);
+  // Sort by density (descending) - process densest areas first
+  usersWithDensity.sort((a, b) => b.nearbyCount - a.nearbyCount);
   
-  for (const { user } of usersWithNeighborCounts) {
+  // Process each user as a potential cluster center
+  for (const { user } of usersWithDensity) {
     if (processedUsers.has(user.id) || !user.location) continue;
     
+    // Create new cluster with this user as seed
     const cluster: ClusterGroup = {
       center: { ...user.location },
       users: [user],
@@ -173,8 +108,8 @@ const createDensityBasedClusters = (users: AppUser[], clusterRadius: number, pro
     
     processedUsers.add(user.id);
     
-    // Find all users within cluster radius of this user
-    const nearbyUsers = users.filter(otherUser => {
+    // Find all users within cluster radius and add them to this cluster
+    const nearbyUsers = usersWithLocation.filter(otherUser => {
       if (processedUsers.has(otherUser.id) || !otherUser.location) return false;
       
       const distance = calculateDistance(
@@ -187,7 +122,7 @@ const createDensityBasedClusters = (users: AppUser[], clusterRadius: number, pro
       return distance <= clusterRadius;
     });
     
-    // Add nearby users to cluster
+    // Add all nearby users to this cluster
     nearbyUsers.forEach(nearbyUser => {
       cluster.users.push(nearbyUser);
       processedUsers.add(nearbyUser.id);
@@ -207,7 +142,11 @@ const createDensityBasedClusters = (users: AppUser[], clusterRadius: number, pro
     clusters.push(cluster);
   }
   
-  console.log(`Density-based clustering: ${users.length} users into ${clusters.length} clusters`);
+  console.log(`Clustering complete: ${users.length} users grouped into ${clusters.length} clusters`);
+  clusters.forEach((cluster, i) => {
+    console.log(`Cluster ${i + 1}: ${cluster.users.length} users at (${cluster.center.lat.toFixed(4)}, ${cluster.center.lng.toFixed(4)})`);
+  });
+  
   return clusters;
 };
 
