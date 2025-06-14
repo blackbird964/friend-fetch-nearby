@@ -99,9 +99,9 @@ export const useOptimizedMarkerUpdater = () => {
       const onlineUsers = filterOnlineAndUnblockedUsers(users, user);
       console.log(`Filtered to ${onlineUsers.length} online users`);
       
-      // Add user markers with clustering if enabled and there are many users
-      if (useHeatmap && onlineUsers.length > 10) {
-        console.log("Using cluster mode for", onlineUsers.length, "users");
+      // Always use heatmap/clustering when there are more than 5 users (lowered threshold)
+      if (useHeatmap && onlineUsers.length > 5) {
+        console.log("Using cluster/heatmap mode for", onlineUsers.length, "users");
         const clusters = clusterNearbyUsers(onlineUsers, 0.3); // 300m cluster radius
         const clusterFeatures = createClusterMarkers(clusters, source, user);
         source.addFeatures(clusterFeatures);

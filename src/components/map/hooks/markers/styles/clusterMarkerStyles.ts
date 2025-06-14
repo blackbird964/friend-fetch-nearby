@@ -5,35 +5,48 @@ import Geometry from 'ol/geom/Geometry';
 
 export const createClusterMarkerStyle = (feature: Feature<Geometry>) => {
   const clusterSize = feature.get('clusterSize') || 1;
+  const isBusiness = feature.get('isBusiness');
   
-  // Cluster marker style - size based on number of users
-  const baseRadius = 15;
-  const maxRadius = 35;
-  const radius = Math.min(baseRadius + (clusterSize * 2), maxRadius);
+  // For single users that got put in a cluster (edge case)
+  if (clusterSize === 1) {
+    // Use a simple circle for single users
+    return new Style({
+      image: new CircleStyle({
+        radius: 12,
+        fill: new Fill({ 
+          color: isBusiness ? '#10b981' : '#6366f1' // Green for business, purple for regular
+        }),
+        stroke: new Stroke({ 
+          color: 'white', 
+          width: 2 
+        })
+      })
+    });
+  }
   
-  // Color intensity based on cluster size
-  const intensity = Math.min(clusterSize / 20, 1);
-  const red = Math.floor(100 + (155 * intensity));
-  const green = Math.floor(100 + (55 * (1 - intensity)));
-  const blue = Math.floor(150 + (105 * (1 - intensity)));
+  // Calculate cluster appearance based on size
+  const radius = Math.min(25, 15 + Math.sqrt(clusterSize) * 2);
+  const color = isBusiness ? '#10b981' : '#6366f1'; // Green for business, purple for regular
   
   return new Style({
     image: new CircleStyle({
       radius: radius,
       fill: new Fill({ 
-        color: `rgba(${red}, ${green}, ${blue}, 0.7)` 
+        color: color + '80' // Semi-transparent
       }),
       stroke: new Stroke({ 
-        color: 'white', 
+        color: color, 
         width: 3 
       })
     }),
     text: new Text({
       text: clusterSize.toString(),
       fill: new Fill({ color: 'white' }),
-      stroke: new Stroke({ color: 'rgba(0,0,0,0.5)', width: 1 }),
-      font: 'bold 12px Arial',
-      offsetY: 0
+      font: 'bold 14px Arial',
+      stroke: new Stroke({ 
+        color: color, 
+        width: 2 
+      })
     })
   });
 };
