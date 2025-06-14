@@ -3,18 +3,17 @@ import { useEffect, useRef } from 'react';
 import { Vector as VectorSource } from 'ol/source';
 
 /**
- * Custom hook to manage marker visibility based on tracking state and zoom events
+ * Custom hook to manage marker visibility based on tracking state
  */
 export const useMarkerVisibility = (
   vectorSource: React.MutableRefObject<VectorSource | null>,
   isTracking: boolean,
   mapLoaded: boolean
 ) => {
-  const isHandlingZoomRef = useRef(false);
   
   // Update marker visibility when tracking state changes
   useEffect(() => {
-    if (!vectorSource.current || !mapLoaded || isHandlingZoomRef.current) return;
+    if (!vectorSource.current || !mapLoaded) return;
     
     console.log("useMarkerVisibility - Tracking changed:", isTracking);
     
@@ -65,46 +64,6 @@ export const useMarkerVisibility = (
     }));
     
   }, [isTracking, vectorSource, mapLoaded]);
-  
-  // Handle zoom events to prevent markers from disappearing
-  useEffect(() => {
-    if (!vectorSource.current || !mapLoaded) return;
-    
-    const handleZoomStart = () => {
-      isHandlingZoomRef.current = true;
-      console.log("Zoom started - preserving marker visibility");
-    };
-    
-    const handleZoomEnd = () => {
-      // Delay to ensure zoom operation is complete
-      setTimeout(() => {
-        isHandlingZoomRef.current = false;
-        
-        if (vectorSource.current && isTracking) {
-          const features = vectorSource.current.getFeatures();
-          
-          // Ensure all non-circle markers are visible after zoom
-          features.forEach(feature => {
-            if (!feature.get('isCircle')) {
-              feature.set('visible', true);
-            }
-          });
-          
-          vectorSource.current.changed();
-          console.log("Zoom ended - markers visibility restored");
-        }
-      }, 100);
-    };
-    
-    // Listen for zoom events on the window
-    window.addEventListener('map-zoom-start', handleZoomStart);
-    window.addEventListener('map-zoom-end', handleZoomEnd);
-    
-    return () => {
-      window.removeEventListener('map-zoom-start', handleZoomStart);
-      window.removeEventListener('map-zoom-end', handleZoomEnd);
-    };
-  }, [vectorSource, mapLoaded, isTracking]);
   
   return null;
 };

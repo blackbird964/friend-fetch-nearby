@@ -86,47 +86,22 @@ const MapEventListeners: React.FC<MapEventListenersProps> = ({
     };
   }, [map, mapLoaded, vectorLayer, selectedUser, setSelectedUser, movingUsers, completedMoves]);
 
-  // Add zoom event listeners to preserve marker visibility
+  // Simplified zoom event listeners - just for notification, not blocking
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
 
-    let zoomTimeout: number | null = null;
-
-    const handleZoomStart = () => {
-      window.dispatchEvent(new CustomEvent('map-zoom-start'));
-      
-      // Clear any existing timeout
-      if (zoomTimeout) {
-        window.clearTimeout(zoomTimeout);
-      }
+    const handleZoomChange = () => {
+      // Simply notify that zoom changed, don't block updates
+      window.dispatchEvent(new CustomEvent('map-zoom-changed'));
     };
 
-    const handleZoomEnd = () => {
-      // Debounce zoom end events
-      if (zoomTimeout) {
-        window.clearTimeout(zoomTimeout);
-      }
-      
-      zoomTimeout = window.setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('map-zoom-end'));
-        zoomTimeout = null;
-      }, 150);
-    };
-
-    // Listen for view changes (zoom and pan)
     const view = map.current.getView();
     
-    // Use proper event names for OpenLayers View
-    view.on('change:resolution', handleZoomStart);
-    view.on('change:center', handleZoomEnd);
+    // Listen for resolution changes (zoom)
+    view.on('change:resolution', handleZoomChange);
 
     return () => {
-      view.un('change:resolution', handleZoomStart);
-      view.un('change:center', handleZoomEnd);
-      
-      if (zoomTimeout) {
-        window.clearTimeout(zoomTimeout);
-      }
+      view.un('change:resolution', handleZoomChange);
     };
   }, [map, mapLoaded]);
 
