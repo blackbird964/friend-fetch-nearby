@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { MapPin, MessageSquare, User, Home } from 'lucide-react';
+import { MapPin, MessageSquare, User, Home, Users } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { Badge } from "@/components/ui/badge";
 import { getBusinessProfile } from '@/lib/supabase/businessProfiles';
@@ -49,6 +49,11 @@ const BottomNavigation: React.FC = () => {
       label: 'Chats',
       icon: <MessageSquare className="h-6 w-6" />,
       badge: unreadMessageCount > 0 ? unreadMessageCount : undefined,
+    },
+    {
+      path: '/friends',
+      label: 'Friends',
+      icon: <Users className="h-6 w-6" />,
     },
     {
       path: '/profile',
