@@ -95,12 +95,13 @@ const CheckInModal: React.FC<CheckInModalProps> = ({
         return (
           <div className="space-y-6">
             <div className="text-center">
-              <UserAvatar
-                src={checkIn.userPhoto}
-                alt={checkIn.userName}
-                size="lg"
-                className="mx-auto mb-4"
-              />
+              <div className="mx-auto mb-4">
+                <UserAvatar
+                  src={checkIn.userPhoto}
+                  alt={checkIn.userName}
+                  size="lg"
+                />
+              </div>
               <h3 className="text-lg font-semibold mb-2">
                 How was your time with {checkIn.userName}?
               </h3>
