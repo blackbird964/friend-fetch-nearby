@@ -1,9 +1,10 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Clock, Star, ThumbsUp, ThumbsDown, MessageSquare } from 'lucide-react';
 import UserAvatar from '@/components/users/cards/UserAvatar';
 import CheckInModal from './CheckInModal';
+import { useAppContext } from '@/context/AppContext';
 
 interface CheckIn {
   id: string;
@@ -18,40 +19,44 @@ interface CheckIn {
 }
 
 const CheckInsList: React.FC = () => {
-  const [checkIns, setCheckIns] = useState<CheckIn[]>([]);
+  const { chats } = useAppContext();
   const [selectedCheckIn, setSelectedCheckIn] = useState<CheckIn | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [completedCheckIns, setCompletedCheckIns] = useState<string[]>([]);
 
-  // Mock data for demonstration
-  useEffect(() => {
-    const mockCheckIns: CheckIn[] = [
-      {
-        id: '1',
-        userId: 'user1',
-        userName: 'Alex Johnson',
-        userPhoto: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-        interactionDate: new Date(Date.now() - 45 * 60 * 1000), // 45 minutes ago
-        interactionType: 'meeting',
-        status: 'pending',
-        expiresAt: new Date(Date.now() + 15 * 60 * 1000), // 15 minutes from now
-        meetingDuration: 60
-      },
-      {
-        id: '2',
-        userId: 'user2',
-        userName: 'Sarah Chen',
-        userPhoto: 'https://images.unsplash.com/photo-1494790108755-2616b612b786?w=100&h=100&fit=crop&crop=face',
-        interactionDate: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
-        interactionType: 'chat',
-        status: 'completed',
-        expiresAt: new Date(Date.now() - 30 * 60 * 1000)
-      }
-    ];
-    setCheckIns(mockCheckIns);
-  }, []);
+  // Generate check-ins from real chat data
+  const checkIns = useMemo(() => {
+    return chats.map(chat => {
+      const lastMessageTime = chat.lastMessageTime || Date.now();
+      const interactionDate = new Date(lastMessageTime);
+      const now = new Date();
+      const timeSinceInteraction = now.getTime() - interactionDate.getTime();
+      const minutesSinceInteraction = Math.floor(timeSinceInteraction / (1000 * 60));
+      
+      // Show check-in if interaction was within last 24 hours but more than 30 minutes ago
+      const shouldShowCheckIn = minutesSinceInteraction >= 30 && minutesSinceInteraction <= 1440; // 30 minutes to 24 hours
+      
+      if (!shouldShowCheckIn) return null;
+      
+      const isCompleted = completedCheckIns.includes(chat.id);
+      const expiresAt = new Date(interactionDate.getTime() + (24 * 60 * 60 * 1000)); // 24 hours after interaction
+      
+      return {
+        id: chat.id,
+        userId: chat.participantId || '',
+        userName: chat.participantName || chat.name || 'Unknown User',
+        userPhoto: chat.profilePic,
+        interactionDate,
+        interactionType: 'chat' as const,
+        status: isCompleted ? 'completed' as const : 'pending' as const,
+        expiresAt,
+        meetingDuration: undefined
+      };
+    }).filter(Boolean) as CheckIn[];
+  }, [chats, completedCheckIns]);
 
   const pendingCheckIns = checkIns.filter(checkIn => checkIn.status === 'pending');
-  const completedCheckIns = checkIns.filter(checkIn => checkIn.status === 'completed');
+  const completedCheckInsData = checkIns.filter(checkIn => checkIn.status === 'completed');
 
   const handleCheckInClick = (checkIn: CheckIn) => {
     setSelectedCheckIn(checkIn);
@@ -59,11 +64,7 @@ const CheckInsList: React.FC = () => {
   };
 
   const handleCheckInComplete = (checkInId: string, feedback: any) => {
-    setCheckIns(prev => prev.map(checkIn => 
-      checkIn.id === checkInId 
-        ? { ...checkIn, status: 'completed' as const }
-        : checkIn
-    ));
+    setCompletedCheckIns(prev => [...prev, checkInId]);
     setIsModalOpen(false);
   };
 
@@ -116,7 +117,7 @@ const CheckInsList: React.FC = () => {
                       <h4 className="font-medium text-gray-900">{checkIn.userName}</h4>
                       <div className="flex items-center space-x-2 text-sm text-gray-600">
                         <MessageSquare className="h-3 w-3" />
-                        <span>{checkIn.interactionType === 'meeting' ? 'Met up' : 'Chatted'}</span>
+                        <span>Chatted</span>
                         <span>•</span>
                         <span>{formatTimeAgo(checkIn.interactionDate)}</span>
                       </div>
@@ -139,14 +140,14 @@ const CheckInsList: React.FC = () => {
       )}
 
       {/* Recent Check-ins */}
-      {completedCheckIns.length > 0 && (
+      {completedCheckInsData.length > 0 && (
         <div>
           <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
             <ThumbsUp className="h-5 w-5 text-green-500" />
             Recent Check-ins
           </h3>
           <div className="space-y-3">
-            {completedCheckIns.map((checkIn) => (
+            {completedCheckInsData.map((checkIn) => (
               <div 
                 key={checkIn.id}
                 className="bg-green-50 border border-green-200 rounded-lg p-4"
@@ -162,7 +163,7 @@ const CheckInsList: React.FC = () => {
                       <h4 className="font-medium text-gray-900">{checkIn.userName}</h4>
                       <div className="flex items-center space-x-2 text-sm text-gray-600">
                         <MessageSquare className="h-3 w-3" />
-                        <span>{checkIn.interactionType === 'meeting' ? 'Met up' : 'Chatted'}</span>
+                        <span>Chatted</span>
                         <span>•</span>
                         <span>{formatTimeAgo(checkIn.interactionDate)}</span>
                       </div>
@@ -184,7 +185,7 @@ const CheckInsList: React.FC = () => {
           <Clock className="h-12 w-12 mx-auto text-gray-400 mb-3" />
           <h3 className="text-lg font-medium text-gray-900 mb-1">No recent interactions</h3>
           <p className="text-gray-500">
-            Your check-ins will appear here after you chat or meet with someone
+            Your check-ins will appear here after you chat with someone
           </p>
         </div>
       )}
