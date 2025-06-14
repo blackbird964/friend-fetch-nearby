@@ -1,6 +1,6 @@
 
 import { Message as SupabaseMessage } from '@/integrations/supabase/types';
-import { Message } from '@/context/types';
+import { Message, Chat } from '@/context/types';
 
 export const formatMessage = (msg: SupabaseMessage): Message => {
   return {
@@ -29,4 +29,33 @@ export const formatMessages = (messages: SupabaseMessage[]): Message[] => {
     .filter(msg => shouldDisplayMessage(msg.content))
     .map(formatMessage)
     .sort((a, b) => a.timestamp - b.timestamp);
+};
+
+export const createOptimisticMessage = (
+  content: string,
+  chat: Chat,
+  tempId: string,
+  timestamp: number
+): Message => {
+  return {
+    id: tempId,
+    chatId: chat.id,
+    senderId: 'current',
+    content,
+    text: content,
+    timestamp,
+    status: 'sending'
+  };
+};
+
+export const createRealTimeMessage = (dbMessage: any, chat: Chat): Message => {
+  return {
+    id: dbMessage.id,
+    chatId: chat.id,
+    senderId: dbMessage.sender_id,
+    content: dbMessage.content,
+    text: dbMessage.content,
+    timestamp: new Date(dbMessage.created_at).getTime(),
+    status: 'received'
+  };
 };

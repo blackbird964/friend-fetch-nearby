@@ -9,10 +9,11 @@ interface CheckIn {
   userName: string;
   userPhoto?: string;
   interactionDate: Date;
-  interactionType: 'chat' | 'meeting';
+  interactionType: 'chat' | 'meeting' | 'meetup_request';
   status: 'pending' | 'completed' | 'expired';
   expiresAt: Date;
   meetingDuration?: number;
+  activity?: string;
 }
 
 interface PendingCheckInsSectionProps {
