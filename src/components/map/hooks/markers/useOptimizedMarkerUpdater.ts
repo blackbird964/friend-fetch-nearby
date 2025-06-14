@@ -99,14 +99,17 @@ export const useOptimizedMarkerUpdater = () => {
       const onlineUsers = filterOnlineAndUnblockedUsers(users, user);
       console.log(`Filtered to ${onlineUsers.length} online users`);
       
-      // Always use heatmap/clustering when there are more than 5 users (lowered threshold)
-      if (useHeatmap && onlineUsers.length > 5) {
+      // Use clustering for 3+ users (lowered threshold for better clustering across map)
+      if (useHeatmap && onlineUsers.length >= 3) {
         console.log("Using cluster/heatmap mode for", onlineUsers.length, "users");
-        const clusters = clusterNearbyUsers(onlineUsers, 0.3); // 300m cluster radius
+        
+        // Use dynamic cluster radius based on user distribution
+        const baseRadius = onlineUsers.length > 20 ? 0.3 : onlineUsers.length > 10 ? 0.5 : 0.8;
+        const clusters = clusterNearbyUsers(onlineUsers, baseRadius);
         const clusterFeatures = createClusterMarkers(clusters, source, user);
         source.addFeatures(clusterFeatures);
       } else {
-        // Use individual markers for smaller groups
+        // Use individual markers for very small groups
         const { addNearbyUserMarkers } = await import('./utils/userMarkers');
         await addNearbyUserMarkers(onlineUsers, user, radius, source);
       }
