@@ -18,9 +18,13 @@ export interface ClusterGroup {
 const calculateDynamicClusterRadius = (users: AppUser[], baseRadius: number = 0.5): number => {
   if (users.length < 10) return baseRadius;
   
+  // Filter users with valid locations
+  const usersWithLocation = users.filter(u => u.location);
+  if (usersWithLocation.length === 0) return baseRadius;
+  
   // Calculate the geographic spread of users
-  const lats = users.map(u => u.location!.lat);
-  const lngs = users.map(u => u.location!.lng);
+  const lats = usersWithLocation.map(u => u.location!.lat);
+  const lngs = usersWithLocation.map(u => u.location!.lng);
   
   const latRange = Math.max(...lats) - Math.min(...lats);
   const lngRange = Math.max(...lngs) - Math.min(...lngs);
@@ -29,17 +33,15 @@ const calculateDynamicClusterRadius = (users: AppUser[], baseRadius: number = 0.
   let totalDistance = 0;
   let distanceCount = 0;
   
-  for (let i = 0; i < users.length - 1; i++) {
-    for (let j = i + 1; j < users.length; j++) {
-      if (users[i].location && users[j].location) {
-        totalDistance += calculateDistance(
-          users[i].location.lat,
-          users[i].location.lng,
-          users[j].location.lat,
-          users[j].location.lng
-        );
-        distanceCount++;
-      }
+  for (let i = 0; i < usersWithLocation.length - 1; i++) {
+    for (let j = i + 1; j < usersWithLocation.length; j++) {
+      totalDistance += calculateDistance(
+        usersWithLocation[i].location!.lat,
+        usersWithLocation[i].location!.lng,
+        usersWithLocation[j].location!.lat,
+        usersWithLocation[j].location!.lng
+      );
+      distanceCount++;
     }
   }
   
@@ -47,7 +49,7 @@ const calculateDynamicClusterRadius = (users: AppUser[], baseRadius: number = 0.
   
   // Scale cluster radius based on user density and geographic spread
   const geographicSpread = Math.max(latRange, lngRange);
-  const density = users.length / Math.max(geographicSpread, 0.01);
+  const density = usersWithLocation.length / Math.max(geographicSpread, 0.01);
   
   // Adaptive radius: larger radius for sparse distributions, smaller for dense
   let adaptiveRadius = baseRadius;
@@ -63,7 +65,7 @@ const calculateDynamicClusterRadius = (users: AppUser[], baseRadius: number = 0.
     adaptiveRadius = Math.min(2.0, baseRadius * 1.5);
   }
   
-  console.log(`Dynamic clustering: ${users.length} users, density: ${density.toFixed(2)}, radius: ${adaptiveRadius.toFixed(2)}km`);
+  console.log(`Dynamic clustering: ${usersWithLocation.length} users, density: ${density.toFixed(2)}, radius: ${adaptiveRadius.toFixed(2)}km`);
   
   return adaptiveRadius;
 };
@@ -77,21 +79,22 @@ export const clusterNearbyUsers = (users: AppUser[], baseClusterRadius: number =
   const clusters: ClusterGroup[] = [];
   const processedUsers = new Set<string>();
   
+  // Filter users with valid locations
+  const usersWithLocation = users.filter(u => u.location);
+  
   // Calculate dynamic cluster radius
-  const clusterRadius = calculateDynamicClusterRadius(users, baseClusterRadius);
+  const clusterRadius = calculateDynamicClusterRadius(usersWithLocation, baseClusterRadius);
   
   // Sort users by density (users with more neighbors get processed first)
-  const usersWithNeighborCounts = users.map(user => {
-    if (!user.location) return { user, neighborCount: 0 };
-    
-    const neighborCount = users.filter(otherUser => {
-      if (!otherUser.location || otherUser.id === user.id) return false;
+  const usersWithNeighborCounts = usersWithLocation.map(user => {
+    const neighborCount = usersWithLocation.filter(otherUser => {
+      if (otherUser.id === user.id) return false;
       
       const distance = calculateDistance(
-        user.location.lat,
-        user.location.lng,
-        otherUser.location.lat,
-        otherUser.location.lng
+        user.location!.lat,
+        user.location!.lng,
+        otherUser.location!.lat,
+        otherUser.location!.lng
       );
       
       return distance <= clusterRadius;
@@ -104,10 +107,10 @@ export const clusterNearbyUsers = (users: AppUser[], baseClusterRadius: number =
   usersWithNeighborCounts.sort((a, b) => b.neighborCount - a.neighborCount);
   
   for (const { user } of usersWithNeighborCounts) {
-    if (processedUsers.has(user.id) || !user.location) continue;
+    if (processedUsers.has(user.id)) continue;
     
     const cluster: ClusterGroup = {
-      center: user.location,
+      center: user.location!,
       users: [user],
       radius: clusterRadius
     };
@@ -115,14 +118,14 @@ export const clusterNearbyUsers = (users: AppUser[], baseClusterRadius: number =
     processedUsers.add(user.id);
     
     // Find all users within cluster radius of this user
-    const nearbyUsers = users.filter(otherUser => {
-      if (processedUsers.has(otherUser.id) || !otherUser.location) return false;
+    const nearbyUsers = usersWithLocation.filter(otherUser => {
+      if (processedUsers.has(otherUser.id)) return false;
       
       const distance = calculateDistance(
-        user.location.lat,
-        user.location.lng,
-        otherUser.location.lat,
-        otherUser.location.lng
+        user.location!.lat,
+        user.location!.lng,
+        otherUser.location!.lat,
+        otherUser.location!.lng
       );
       
       return distance <= clusterRadius;
@@ -148,7 +151,7 @@ export const clusterNearbyUsers = (users: AppUser[], baseClusterRadius: number =
     clusters.push(cluster);
   }
   
-  console.log(`Clustered ${users.length} users into ${clusters.length} clusters`);
+  console.log(`Clustered ${usersWithLocation.length} users into ${clusters.length} clusters`);
   console.log(`Cluster sizes:`, clusters.map(c => c.users.length));
   
   return clusters;
@@ -167,13 +170,9 @@ export const createClusterMarkers = (
   for (const cluster of clusters) {
     const userCount = cluster.users.length;
     
-    // Determine if this cluster contains business users
-    const hasBusinessUsers = cluster.users.some(u => u.accountType === 'business' || u.account_type === 'business');
-    
     if (userCount === 1) {
       // Single user - create normal marker
       const user = cluster.users[0];
-      const isBusiness = user.accountType === 'business' || user.account_type === 'business';
       
       const feature = new Feature({
         geometry: new Point(fromLonLat([user.location!.lng, user.location!.lat])),
@@ -181,7 +180,7 @@ export const createClusterMarkers = (
         name: user.name || `User-${user.id.substring(0, 4)}`,
         isCluster: false,
         clusterSize: 1,
-        isBusiness: isBusiness
+        isBusiness: false // Default to false since we don't have business type info
       });
       features.push(feature);
     } else {
@@ -192,7 +191,7 @@ export const createClusterMarkers = (
         clusterSize: userCount,
         clusterUsers: cluster.users,
         name: `${userCount} users nearby`,
-        isBusiness: hasBusinessUsers // Mark cluster as business if it contains any business users
+        isBusiness: false // Default to false since we don't have business type info
       });
       features.push(feature);
     }
