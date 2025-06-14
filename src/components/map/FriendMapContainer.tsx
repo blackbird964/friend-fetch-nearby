@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useFriendMapContainer } from './hooks/useFriendMapContainer';
 import MapContainer from './components/MapContainer';
@@ -7,6 +6,7 @@ import UserDetailsDrawerContainer from './components/UserDetailsDrawerContainer'
 import MobileDrawerContainer from './components/MobileDrawerContainer';
 // Import DrawerHandle for mobile button!
 import { DrawerHandle } from './components/mobile-drawer';
+import MapContentContainer from './components/MapContentContainer';
 
 interface FriendMapContainerProps {
   isManualMode: boolean;
@@ -146,4 +146,3 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
 };
 
 export default FriendMapContainer;
-
