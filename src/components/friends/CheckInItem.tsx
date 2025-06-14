@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { MessageSquare } from 'lucide-react';
+import { MessageSquare, Calendar, Clock } from 'lucide-react';
 import UserAvatar from '@/components/users/cards/UserAvatar';
 
 interface CheckIn {
@@ -10,10 +10,11 @@ interface CheckIn {
   userName: string;
   userPhoto?: string;
   interactionDate: Date;
-  interactionType: 'chat' | 'meeting';
+  interactionType: 'chat' | 'meeting' | 'meetup_request';
   status: 'pending' | 'completed' | 'expired';
   expiresAt: Date;
   meetingDuration?: number;
+  activity?: string;
 }
 
 interface CheckInItemProps {
@@ -54,9 +55,40 @@ const CheckInItem: React.FC<CheckInItemProps> = ({
     return `${diffHours}h ${diffMins % 60}m left`;
   };
 
+  const getInteractionIcon = () => {
+    switch (checkIn.interactionType) {
+      case 'meetup_request':
+        return <Calendar className="h-3 w-3" />;
+      case 'meeting':
+        return <Clock className="h-3 w-3" />;
+      default:
+        return <MessageSquare className="h-3 w-3" />;
+    }
+  };
+
+  const getInteractionText = () => {
+    switch (checkIn.interactionType) {
+      case 'meetup_request':
+        return `Wants to meet for ${checkIn.activity} (${checkIn.meetingDuration}min)`;
+      case 'meeting':
+        return 'Met up';
+      default:
+        return 'Chatted';
+    }
+  };
+
   const containerClass = variant === 'pending' 
-    ? 'bg-orange-50 border border-orange-200 rounded-lg p-4'
+    ? checkIn.interactionType === 'meetup_request' 
+      ? 'bg-blue-50 border border-blue-200 rounded-lg p-4'
+      : 'bg-orange-50 border border-orange-200 rounded-lg p-4'
     : 'bg-green-50 border border-green-200 rounded-lg p-4';
+
+  const getButtonText = () => {
+    if (checkIn.interactionType === 'meetup_request') {
+      return 'Respond';
+    }
+    return buttonText;
+  };
 
   return (
     <div className={containerClass}>
@@ -70,13 +102,15 @@ const CheckInItem: React.FC<CheckInItemProps> = ({
           <div>
             <h4 className="font-medium text-gray-900">{checkIn.userName}</h4>
             <div className="flex items-center space-x-2 text-sm text-gray-600">
-              <MessageSquare className="h-3 w-3" />
-              <span>Chatted</span>
+              {getInteractionIcon()}
+              <span>{getInteractionText()}</span>
               <span>•</span>
               <span>{formatTimeAgo(checkIn.interactionDate)}</span>
             </div>
             {variant === 'pending' && (
-              <div className="text-xs text-orange-600 mt-1">
+              <div className={`text-xs mt-1 ${
+                checkIn.interactionType === 'meetup_request' ? 'text-blue-600' : 'text-orange-600'
+              }`}>
                 {formatTimeUntilExpiry(checkIn.expiresAt)}
               </div>
             )}
@@ -85,9 +119,13 @@ const CheckInItem: React.FC<CheckInItemProps> = ({
         {showButton && onCheckInClick && (
           <Button 
             onClick={() => onCheckInClick(checkIn)}
-            className="bg-orange-500 hover:bg-orange-600"
+            className={
+              checkIn.interactionType === 'meetup_request' 
+                ? 'bg-blue-500 hover:bg-blue-600'
+                : 'bg-orange-500 hover:bg-orange-600'
+            }
           >
-            {buttonText}
+            {getButtonText()}
           </Button>
         )}
         {variant === 'completed' && (

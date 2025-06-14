@@ -12,14 +12,15 @@ interface CheckIn {
   userName: string;
   userPhoto?: string;
   interactionDate: Date;
-  interactionType: 'chat' | 'meeting';
+  interactionType: 'chat' | 'meeting' | 'meetup_request';
   status: 'pending' | 'completed' | 'expired';
   expiresAt: Date;
   meetingDuration?: number;
+  activity?: string;
 }
 
 const CheckInsList: React.FC = () => {
-  const { chats } = useAppContext();
+  const { chats, meetupRequests, currentUser } = useAppContext();
   const [selectedCheckIn, setSelectedCheckIn] = useState<CheckIn | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [completedCheckIns, setCompletedCheckIns] = useState<string[]>([]);
@@ -35,9 +36,9 @@ const CheckInsList: React.FC = () => {
     return ids;
   }, [chats]);
 
-  // Generate check-ins from real chat data, but exclude friends
+  // Generate check-ins from real chat data and meetup requests
   const checkIns = useMemo(() => {
-    return chats.map(chat => {
+    const chatCheckIns = chats.map(chat => {
       const lastMessageTime = chat.lastMessageTime || Date.now();
       const interactionDate = new Date(lastMessageTime);
       const now = new Date();
@@ -67,7 +68,33 @@ const CheckInsList: React.FC = () => {
         meetingDuration: undefined
       };
     }).filter(Boolean) as CheckIn[];
-  }, [chats, completedCheckIns, friendIds]);
+
+    // Add meetup requests as check-ins where current user is the receiver
+    const meetupCheckIns = meetupRequests
+      .filter(request => 
+        request.receiverId === currentUser?.id && 
+        request.status === 'pending'
+      )
+      .map(request => {
+        const requestDate = new Date(request.timestamp);
+        const expiresAt = new Date(requestDate.getTime() + (24 * 60 * 60 * 1000)); // 24 hours to respond
+        
+        return {
+          id: request.id,
+          userId: request.senderId,
+          userName: request.senderName,
+          userPhoto: request.senderProfilePic,
+          interactionDate: requestDate,
+          interactionType: 'meetup_request' as const,
+          status: 'pending' as const,
+          expiresAt,
+          meetingDuration: request.duration,
+          activity: request.meetLocation
+        };
+      });
+
+    return [...chatCheckIns, ...meetupCheckIns];
+  }, [chats, meetupRequests, currentUser, completedCheckIns, friendIds]);
 
   const pendingCheckIns = checkIns.filter(checkIn => checkIn.status === 'pending');
   const completedCheckInsData = checkIns.filter(checkIn => checkIn.status === 'completed');
