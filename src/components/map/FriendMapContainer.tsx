@@ -5,7 +5,8 @@ import MapContainer from './components/MapContainer';
 import { MapSidePanel } from './components/side-panel';
 import UserDetailsDrawerContainer from './components/UserDetailsDrawerContainer';
 import MobileDrawerContainer from './components/MobileDrawerContainer';
-import MapContentContainer from './components/MapContentContainer';
+// Import DrawerHandle for mobile button!
+import { DrawerHandle } from './components/mobile-drawer';
 
 interface FriendMapContainerProps {
   isManualMode: boolean;
@@ -56,8 +57,10 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     
     // Mobile drawer
     isDrawerOpen,
+    openDrawer,
     closeDrawer,
-    toggleDrawer
+    toggleDrawer,
+    isMobile
   } = useFriendMapContainer({
     isManualMode,
     isTracking,
@@ -87,8 +90,18 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     />
   );
 
+  // Exclude currentUser from count for DrawerHandle!
+  const userCount = currentUser
+    ? nearbyUsers.filter(user => user.id !== currentUser.id).length
+    : nearbyUsers.length;
+
   return (
     <>
+      {/* DrawerHandle button for mobile: floating button to open people drawer */}
+      {isMobile && (
+        <DrawerHandle userCount={userCount} onClick={openDrawer} />
+      )}
+
       <MapContainer 
         showSidePanel={true} 
         sidePanel={sidePanelContent}
@@ -133,3 +146,4 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
 };
 
 export default FriendMapContainer;
+
