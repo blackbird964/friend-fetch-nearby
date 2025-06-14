@@ -116,12 +116,13 @@ const MapEventListeners: React.FC<MapEventListenersProps> = ({
     // Listen for view changes (zoom and pan)
     const view = map.current.getView();
     
+    // Use proper event names for OpenLayers View
     view.on('change:resolution', handleZoomStart);
-    view.on('moveend', handleZoomEnd);
+    view.on('change:center', handleZoomEnd);
 
     return () => {
       view.un('change:resolution', handleZoomStart);
-      view.un('moveend', handleZoomEnd);
+      view.un('change:center', handleZoomEnd);
       
       if (zoomTimeout) {
         window.clearTimeout(zoomTimeout);
