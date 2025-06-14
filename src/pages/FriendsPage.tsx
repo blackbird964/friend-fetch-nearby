@@ -18,7 +18,8 @@ const FriendsPage: React.FC = () => {
     refreshFriendRequests();
   }, [refreshFriendRequests]);
 
-  // Extract real friends from chats
+  // Extract real friends from chats - include ALL chats as friends
+  // regardless of check-in status
   const friends = chats.map(chat => {
     const friend: AppUser = {
       id: chat.participantId || '',
@@ -31,7 +32,7 @@ const FriendsPage: React.FC = () => {
     };
     
     return friend;
-  }).filter(friend => friend.id !== '');
+  }).filter(friend => friend.id !== ''); // Only filter out empty IDs
 
   const handleFriendClick = (chat: Chat) => {
     setSelectedChat(chat);
