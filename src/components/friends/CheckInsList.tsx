@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Clock, Star, ThumbsUp, ThumbsDown, MessageSquare } from 'lucide-react';
@@ -24,7 +23,18 @@ const CheckInsList: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [completedCheckIns, setCompletedCheckIns] = useState<string[]>([]);
 
-  // Generate check-ins from real chat data
+  // Get list of friend IDs from chats (deduplicated)
+  const friendIds = useMemo(() => {
+    const ids = new Set<string>();
+    chats.forEach(chat => {
+      if (chat.participantId) {
+        ids.add(chat.participantId);
+      }
+    });
+    return ids;
+  }, [chats]);
+
+  // Generate check-ins from real chat data, but exclude friends
   const checkIns = useMemo(() => {
     return chats.map(chat => {
       const lastMessageTime = chat.lastMessageTime || Date.now();
@@ -36,14 +46,17 @@ const CheckInsList: React.FC = () => {
       // Show check-in if interaction was within last 24 hours but more than 30 minutes ago
       const shouldShowCheckIn = minutesSinceInteraction >= 30 && minutesSinceInteraction <= 1440; // 30 minutes to 24 hours
       
-      if (!shouldShowCheckIn) return null;
+      // Skip if this person is already a friend or if we shouldn't show check-in
+      if (!shouldShowCheckIn || !chat.participantId || friendIds.has(chat.participantId)) {
+        return null;
+      }
       
       const isCompleted = completedCheckIns.includes(chat.id);
       const expiresAt = new Date(interactionDate.getTime() + (24 * 60 * 60 * 1000)); // 24 hours after interaction
       
       return {
         id: chat.id,
-        userId: chat.participantId || '',
+        userId: chat.participantId,
         userName: chat.participantName || chat.name || 'Unknown User',
         userPhoto: chat.profilePic,
         interactionDate,
@@ -53,7 +66,7 @@ const CheckInsList: React.FC = () => {
         meetingDuration: undefined
       };
     }).filter(Boolean) as CheckIn[];
-  }, [chats, completedCheckIns]);
+  }, [chats, completedCheckIns, friendIds]);
 
   const pendingCheckIns = checkIns.filter(checkIn => checkIn.status === 'pending');
   const completedCheckInsData = checkIns.filter(checkIn => checkIn.status === 'completed');
@@ -185,7 +198,7 @@ const CheckInsList: React.FC = () => {
           <Clock className="h-12 w-12 mx-auto text-gray-400 mb-3" />
           <h3 className="text-lg font-medium text-gray-900 mb-1">No recent interactions</h3>
           <p className="text-gray-500">
-            Your check-ins will appear here after you chat with someone
+            Your check-ins will appear here after you chat with someone new
           </p>
         </div>
       )}
