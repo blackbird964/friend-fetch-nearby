@@ -2,7 +2,7 @@
 import React from 'react';
 import { AppUser, Chat } from '@/context/types';
 import { Button } from '@/components/ui/button';
-import { UserPlus, MessageCircle, CalendarPlus } from 'lucide-react';
+import { UserPlus, MessageCircle, CalendarPlus, UserMinus } from 'lucide-react';
 import UserAvatar from '@/components/users/cards/UserAvatar';
 
 interface FriendsListProps {
@@ -20,6 +20,13 @@ const FriendsList: React.FC<FriendsListProps> = ({
     if (friend.chat) {
       onFriendClick(friend.chat);
     }
+  };
+
+  const handleRemoveFriend = (friend: AppUser) => {
+    // TODO: Implement remove friend functionality
+    console.log('Remove friend:', friend.name);
+    // This would typically call a service to remove the friendship
+    // and update the local state
   };
 
   if (friends.length === 0) {
@@ -70,6 +77,15 @@ const FriendsList: React.FC<FriendsListProps> = ({
               </div>
 
               <div className="flex space-x-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleRemoveFriend(friend)}
+                  className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  <UserMinus className="h-4 w-4" />
+                  Remove
+                </Button>
                 <Button 
                   variant="outline" 
                   size="sm"
