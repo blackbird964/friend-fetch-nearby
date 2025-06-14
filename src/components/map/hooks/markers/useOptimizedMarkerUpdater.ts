@@ -15,6 +15,34 @@ export const useOptimizedMarkerUpdater = () => {
     tracking: boolean;
     privacy: boolean;
   }>({ users: [], currentUserId: null, tracking: false, privacy: false });
+  
+  const isZoomingRef = useRef(false);
+
+  // Listen for zoom events to prevent updates during zoom
+  const setupZoomListeners = useCallback(() => {
+    const handleZoomStart = () => {
+      isZoomingRef.current = true;
+    };
+    
+    const handleZoomEnd = () => {
+      setTimeout(() => {
+        isZoomingRef.current = false;
+      }, 200);
+    };
+    
+    window.addEventListener('map-zoom-start', handleZoomStart);
+    window.addEventListener('map-zoom-end', handleZoomEnd);
+    
+    return () => {
+      window.removeEventListener('map-zoom-start', handleZoomStart);
+      window.removeEventListener('map-zoom-end', handleZoomEnd);
+    };
+  }, []);
+
+  // Set up zoom listeners on first render
+  React.useEffect(() => {
+    return setupZoomListeners();
+  }, [setupZoomListeners]);
 
   // Debounced update function to prevent rapid flickering
   const debouncedUpdateMarkers = useCallback(
@@ -27,7 +55,10 @@ export const useOptimizedMarkerUpdater = () => {
       isBusiness: boolean,
       useHeatmap: boolean = true
     ) => {
-      if (!source) return;
+      if (!source || isZoomingRef.current) {
+        console.log("Skipping marker update - zooming in progress");
+        return;
+      }
       
       console.log("Optimized marker update: tracking=", tracking, "users=", users.length, "isBusiness=", isBusiness);
       

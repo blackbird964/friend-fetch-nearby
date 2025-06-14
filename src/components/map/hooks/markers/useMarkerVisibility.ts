@@ -1,31 +1,35 @@
 
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Vector as VectorSource } from 'ol/source';
 
 /**
- * Custom hook to manage marker visibility based on tracking state
+ * Custom hook to manage marker visibility based on tracking state and zoom events
  */
 export const useMarkerVisibility = (
   vectorSource: React.MutableRefObject<VectorSource | null>,
   isTracking: boolean,
   mapLoaded: boolean
 ) => {
+  const isHandlingZoomRef = useRef(false);
+  
   // Update marker visibility when tracking state changes
   useEffect(() => {
-    if (!vectorSource.current || !mapLoaded) return;
+    if (!vectorSource.current || !mapLoaded || isHandlingZoomRef.current) return;
     
     console.log("useMarkerVisibility - Tracking changed:", isTracking);
     
     // When tracking is disabled, hide all markers temporarily
     if (!isTracking) {
-      // Store each feature's original visibility in a property
       const features = vectorSource.current.getFeatures();
       
       features.forEach(feature => {
         // Skip circle features (radius and privacy)
         if (feature.get('isCircle')) return;
         
-        // Hide normal markers when tracking is off
+        // Store original visibility and hide normal markers when tracking is off
+        if (!feature.get('originalVisible')) {
+          feature.set('originalVisible', feature.get('visible') !== false);
+        }
         feature.set('visible', false);
       });
       
@@ -41,8 +45,12 @@ export const useMarkerVisibility = (
         // Skip circle features (radius and privacy)
         if (feature.get('isCircle')) return;
         
-        // Show normal markers when tracking is on
-        feature.set('visible', true);
+        // Restore original visibility or set to true
+        const originalVisible = feature.get('originalVisible');
+        feature.set('visible', originalVisible !== false);
+        
+        // Clean up the temporary property
+        feature.unset('originalVisible');
       });
       
       // Force refresh
@@ -57,6 +65,46 @@ export const useMarkerVisibility = (
     }));
     
   }, [isTracking, vectorSource, mapLoaded]);
+  
+  // Handle zoom events to prevent markers from disappearing
+  useEffect(() => {
+    if (!vectorSource.current || !mapLoaded) return;
+    
+    const handleZoomStart = () => {
+      isHandlingZoomRef.current = true;
+      console.log("Zoom started - preserving marker visibility");
+    };
+    
+    const handleZoomEnd = () => {
+      // Delay to ensure zoom operation is complete
+      setTimeout(() => {
+        isHandlingZoomRef.current = false;
+        
+        if (vectorSource.current && isTracking) {
+          const features = vectorSource.current.getFeatures();
+          
+          // Ensure all non-circle markers are visible after zoom
+          features.forEach(feature => {
+            if (!feature.get('isCircle')) {
+              feature.set('visible', true);
+            }
+          });
+          
+          vectorSource.current.changed();
+          console.log("Zoom ended - markers visibility restored");
+        }
+      }, 100);
+    };
+    
+    // Listen for zoom events on the window
+    window.addEventListener('map-zoom-start', handleZoomStart);
+    window.addEventListener('map-zoom-end', handleZoomEnd);
+    
+    return () => {
+      window.removeEventListener('map-zoom-start', handleZoomStart);
+      window.removeEventListener('map-zoom-end', handleZoomEnd);
+    };
+  }, [vectorSource, mapLoaded, isTracking]);
   
   return null;
 };
