@@ -19,20 +19,40 @@ const FriendsPage: React.FC = () => {
   }, [refreshFriendRequests]);
 
   // Extract real friends from chats - include ALL chats as friends
-  // regardless of check-in status
-  const friends = chats.map(chat => {
-    const friend: AppUser = {
-      id: chat.participantId || '',
-      name: chat.participantName || '',
-      email: '',
-      interests: [],
-      profile_pic: chat.profilePic,
-      isOnline: chat.isOnline,
-      chat: chat
-    };
+  // regardless of check-in status, but deduplicate by participant ID
+  const friends = chats.reduce((uniqueFriends: AppUser[], chat) => {
+    const participantId = chat.participantId || '';
     
-    return friend;
-  }).filter(friend => friend.id !== ''); // Only filter out empty IDs
+    // Skip if no participant ID
+    if (!participantId) return uniqueFriends;
+    
+    // Check if we already have this friend
+    const existingFriend = uniqueFriends.find(friend => friend.id === participantId);
+    
+    if (!existingFriend) {
+      const friend: AppUser = {
+        id: participantId,
+        name: chat.participantName || '',
+        email: '',
+        interests: [],
+        profile_pic: chat.profilePic,
+        isOnline: chat.isOnline,
+        chat: chat
+      };
+      
+      uniqueFriends.push(friend);
+    } else {
+      // Update with the most recent chat data if this chat is newer
+      if (chat.lastMessageTime && (!existingFriend.chat?.lastMessageTime || chat.lastMessageTime > existingFriend.chat.lastMessageTime)) {
+        existingFriend.chat = chat;
+        existingFriend.isOnline = chat.isOnline;
+        existingFriend.profile_pic = chat.profilePic;
+        existingFriend.name = chat.participantName || existingFriend.name;
+      }
+    }
+    
+    return uniqueFriends;
+  }, []);
 
   const handleFriendClick = (chat: Chat) => {
     setSelectedChat(chat);
