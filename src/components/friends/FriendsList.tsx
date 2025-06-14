@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { AppUser, Chat } from '@/context/types';
 import { Button } from '@/components/ui/button';
-import { UserPlus, MessageCircle, CalendarPlus, UserMinus } from 'lucide-react';
+import { UserPlus, Eye } from 'lucide-react';
 import UserAvatar from '@/components/users/cards/UserAvatar';
+import FriendshipDetailsModal from './FriendshipDetailsModal';
 
 interface FriendsListProps {
   friends: AppUser[];
@@ -16,17 +17,40 @@ const FriendsList: React.FC<FriendsListProps> = ({
   onFriendClick, 
   onFindFriends 
 }) => {
-  const handleMessageFriend = (friend: AppUser) => {
-    if (friend.chat) {
-      onFriendClick(friend.chat);
+  const [selectedFriend, setSelectedFriend] = useState<AppUser | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleViewFriendship = (friend: AppUser) => {
+    setSelectedFriend(friend);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedFriend(null);
+  };
+
+  const handleMessageFriend = () => {
+    if (selectedFriend?.chat) {
+      onFriendClick(selectedFriend.chat);
+      handleCloseModal();
     }
   };
 
-  const handleRemoveFriend = (friend: AppUser) => {
-    // TODO: Implement remove friend functionality
-    console.log('Remove friend:', friend.name);
-    // This would typically call a service to remove the friendship
-    // and update the local state
+  const handleMeetUp = () => {
+    if (selectedFriend) {
+      // TODO: Implement meet up request flow
+      console.log('Request meetup with', selectedFriend.name);
+      handleCloseModal();
+    }
+  };
+
+  const handleRemoveFriend = () => {
+    if (selectedFriend) {
+      // TODO: Implement remove friend functionality
+      console.log('Remove friend:', selectedFriend.name);
+      handleCloseModal();
+    }
   };
 
   if (friends.length === 0) {
@@ -45,74 +69,65 @@ const FriendsList: React.FC<FriendsListProps> = ({
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Your Friends ({friends.length})</h3>
-        <Button variant="outline" size="sm" onClick={onFindFriends}>
-          <UserPlus className="h-4 w-4 mr-2" />
-          Find More
-        </Button>
-      </div>
+    <>
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h3 className="text-lg font-semibold">Your Friends ({friends.length})</h3>
+          <Button variant="outline" size="sm" onClick={onFindFriends}>
+            <UserPlus className="h-4 w-4 mr-2" />
+            Find More
+          </Button>
+        </div>
 
-      <div className="space-y-3">
-        {friends.map((friend) => (
-          <div 
-            key={friend.id}
-            className="bg-white border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-          >
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <UserAvatar
-                  src={friend.profile_pic}
-                  alt={friend.name || 'Friend'}
-                  size="md"
-                />
-                <div>
-                  <h4 className="font-medium text-gray-900">{friend.name || 'Friend'}</h4>
-                  <div className="flex items-center space-x-2 text-sm text-gray-500">
-                    <div className={`w-2 h-2 rounded-full ${friend.isOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
-                    <span>{friend.isOnline ? 'Online' : 'Offline'}</span>
+        <div className="space-y-3">
+          {friends.map((friend) => (
+            <div 
+              key={friend.id}
+              className="bg-white border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3 flex-1">
+                  <UserAvatar
+                    src={friend.profile_pic}
+                    alt={friend.name || 'Friend'}
+                    size="md"
+                  />
+                  <div className="flex-1">
+                    <h4 className="font-medium text-gray-900">{friend.name || 'Friend'}</h4>
+                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                      <div className={`w-2 h-2 rounded-full ${friend.isOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
+                      <span>{friend.isOnline ? 'Online' : 'Offline'}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="flex space-x-2">
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => handleMessageFriend(friend)}
-                  className="flex items-center gap-2"
+                  onClick={() => handleViewFriendship(friend)}
+                  className="flex items-center gap-2 shrink-0"
                 >
-                  <MessageCircle className="h-4 w-4" />
-                  Message
-                </Button>
-                <Button 
-                  variant="default" 
-                  size="sm"
-                  className="flex items-center gap-2"
-                  onClick={() => {
-                    // TODO: Implement meet up request flow
-                    console.log('Request meetup with', friend.name);
-                  }}
-                >
-                  <CalendarPlus className="h-4 w-4" />
-                  Meet Up
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => handleRemoveFriend(friend)}
-                  className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
-                >
-                  <UserMinus className="h-4 w-4" />
-                  Remove
+                  <Eye className="h-4 w-4" />
+                  View Friendship
                 </Button>
               </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+
+      {/* Friendship Details Modal */}
+      {selectedFriend && (
+        <FriendshipDetailsModal
+          friend={selectedFriend}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+          onMessage={handleMessageFriend}
+          onMeetUp={handleMeetUp}
+          onRemove={handleRemoveFriend}
+        />
+      )}
+    </>
   );
 };
 
