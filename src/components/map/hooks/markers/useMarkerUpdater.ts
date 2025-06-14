@@ -24,8 +24,8 @@ export const useMarkerUpdater = (
   // Get business user status
   const { isBusinessUser } = useBusinessUserMarkers(currentUser);
   
-  // Get optimized marker update logic
-  const { debouncedUpdateMarkers } = useOptimizedMarkerUpdater();
+  // Get optimized marker update logic with zoom handling
+  const { debouncedUpdateMarkers, handleZoomStart, handleZoomEnd } = useOptimizedMarkerUpdater();
   
   // Update refs when props change to use in cleanup functions
   useEffect(() => {
@@ -34,6 +34,26 @@ export const useMarkerUpdater = (
     prevRadiusRef.current = radiusInKm;
     prevTrackingRef.current = isTracking;
   }, [nearbyUsers, currentUser, radiusInKm, isTracking]);
+
+  // Set up zoom event listeners to prevent updates during zoom
+  useEffect(() => {
+    const handleZoomChangeStart = () => {
+      handleZoomStart();
+    };
+
+    const handleZoomChangeEnd = () => {
+      handleZoomEnd();
+    };
+
+    // Listen for zoom events
+    window.addEventListener('map-zoom-start', handleZoomChangeStart);
+    window.addEventListener('map-zoom-end', handleZoomChangeEnd);
+
+    return () => {
+      window.removeEventListener('map-zoom-start', handleZoomChangeStart);
+      window.removeEventListener('map-zoom-end', handleZoomChangeEnd);
+    };
+  }, [handleZoomStart, handleZoomEnd]);
   
   // Main effect to update map markers with reduced frequency
   useEffect(() => {
@@ -59,7 +79,7 @@ export const useMarkerUpdater = (
         useHeatmap
       );
       updateTimeoutRef.current = null;
-    }, 200); // Increased delay to 200ms
+    }, 250); // Increased delay to 250ms
     
     // Cleanup function
     return () => {

@@ -44,6 +44,9 @@ const MapControls: React.FC<MapControlsProps> = ({
     
     // Create zoom functions
     const handleZoomIn = () => {
+      // Dispatch zoom start event
+      window.dispatchEvent(new CustomEvent('map-zoom-start'));
+      
       const view = mapInstance.getView();
       const currentZoom = view.getZoom();
       if (currentZoom !== undefined) {
@@ -51,10 +54,18 @@ const MapControls: React.FC<MapControlsProps> = ({
           zoom: Math.min(currentZoom + 1, 19), // Max zoom limit
           duration: 250
         });
+        
+        // Dispatch zoom end event after animation
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('map-zoom-end'));
+        }, 300);
       }
     };
 
     const handleZoomOut = () => {
+      // Dispatch zoom start event
+      window.dispatchEvent(new CustomEvent('map-zoom-start'));
+      
       const view = mapInstance.getView();
       const currentZoom = view.getZoom();
       if (currentZoom !== undefined) {
@@ -62,6 +73,11 @@ const MapControls: React.FC<MapControlsProps> = ({
           zoom: Math.max(currentZoom - 1, 2), // Min zoom limit
           duration: 250
         });
+        
+        // Dispatch zoom end event after animation
+        setTimeout(() => {
+          window.dispatchEvent(new CustomEvent('map-zoom-end'));
+        }, 300);
       }
     };
 
@@ -94,6 +110,30 @@ const MapControls: React.FC<MapControlsProps> = ({
       return false; // Not found yet
     };
 
+    // Set up view change listeners to detect zoom changes
+    const view = mapInstance.getView();
+    let isZooming = false;
+    
+    const handleViewChangeStart = () => {
+      if (!isZooming) {
+        isZooming = true;
+        window.dispatchEvent(new CustomEvent('map-zoom-start'));
+      }
+    };
+    
+    const handleViewChangeEnd = () => {
+      if (isZooming) {
+        setTimeout(() => {
+          isZooming = false;
+          window.dispatchEvent(new CustomEvent('map-zoom-end'));
+        }, 100);
+      }
+    };
+    
+    // Listen for resolution changes (zoom) via mouse wheel or pinch
+    view.on('change:resolution', handleViewChangeStart);
+    view.on('change:center', handleViewChangeEnd);
+
     // Try to attach controls immediately
     if (!attachZoomControls()) {
       // If not found, try again with intervals
@@ -113,6 +153,8 @@ const MapControls: React.FC<MapControlsProps> = ({
       
       return () => {
         clearInterval(interval);
+        view.un('change:resolution', handleViewChangeStart);
+        view.un('change:center', handleViewChangeEnd);
       };
     }
 
@@ -129,6 +171,9 @@ const MapControls: React.FC<MapControlsProps> = ({
         zoomOutButton.removeEventListener('click', handleZoomOut);
         zoomOutButton.removeEventListener('touchend', handleZoomOut);
       }
+      
+      view.un('change:resolution', handleViewChangeStart);
+      view.un('change:center', handleViewChangeEnd);
     };
   }, [map, mapLoaded]);
 

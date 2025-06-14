@@ -16,7 +16,21 @@ export const useOptimizedMarkerUpdater = () => {
     privacy: boolean;
   }>({ users: [], currentUserId: null, tracking: false, privacy: false });
 
-  // Debounced update function - removed zoom blocking
+  const isZoomingRef = useRef(false);
+
+  // Track zoom state to prevent updates during zoom
+  const handleZoomStart = useCallback(() => {
+    isZoomingRef.current = true;
+  }, []);
+
+  const handleZoomEnd = useCallback(() => {
+    // Add a small delay to ensure zoom animation is complete
+    setTimeout(() => {
+      isZoomingRef.current = false;
+    }, 300);
+  }, []);
+
+  // Enhanced debounced update function that respects zoom state
   const debouncedUpdateMarkers = useCallback(
     debounce(async (
       source: VectorSource,
@@ -29,6 +43,12 @@ export const useOptimizedMarkerUpdater = () => {
     ) => {
       if (!source) {
         console.log("Skipping marker update - no source");
+        return;
+      }
+
+      // Skip updates during zoom operations
+      if (isZoomingRef.current) {
+        console.log("Skipping marker update - zoom in progress");
         return;
       }
       
@@ -92,9 +112,13 @@ export const useOptimizedMarkerUpdater = () => {
         await addCurrentUserMarker(user, source);
       }
       
-    }, 100, { leading: false, trailing: true }), // Reduced debounce time
+    }, 150, { leading: false, trailing: true }),
     []
   );
   
-  return { debouncedUpdateMarkers };
+  return { 
+    debouncedUpdateMarkers, 
+    handleZoomStart, 
+    handleZoomEnd 
+  };
 };

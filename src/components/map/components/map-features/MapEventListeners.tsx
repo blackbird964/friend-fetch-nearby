@@ -86,25 +86,6 @@ const MapEventListeners: React.FC<MapEventListenersProps> = ({
     };
   }, [map, mapLoaded, vectorLayer, selectedUser, setSelectedUser, movingUsers, completedMoves]);
 
-  // Simplified zoom event listeners - just for notification, not blocking
-  useEffect(() => {
-    if (!map.current || !mapLoaded) return;
-
-    const handleZoomChange = () => {
-      // Simply notify that zoom changed, don't block updates
-      window.dispatchEvent(new CustomEvent('map-zoom-changed'));
-    };
-
-    const view = map.current.getView();
-    
-    // Listen for resolution changes (zoom)
-    view.on('change:resolution', handleZoomChange);
-
-    return () => {
-      view.un('change:resolution', handleZoomChange);
-    };
-  }, [map, mapLoaded]);
-
   return null;
 };
 
