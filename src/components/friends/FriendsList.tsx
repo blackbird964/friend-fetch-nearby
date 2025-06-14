@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { AppUser, Chat } from '@/context/types';
 import { Button } from '@/components/ui/button';
@@ -33,14 +32,6 @@ const FriendsList: React.FC<FriendsListProps> = ({
   const handleMessageFriend = () => {
     if (selectedFriend?.chat) {
       onFriendClick(selectedFriend.chat);
-      handleCloseModal();
-    }
-  };
-
-  const handleMeetUp = () => {
-    if (selectedFriend) {
-      // TODO: Implement meet up request flow
-      console.log('Request meetup with', selectedFriend.name);
       handleCloseModal();
     }
   };
@@ -123,7 +114,6 @@ const FriendsList: React.FC<FriendsListProps> = ({
           isOpen={isModalOpen}
           onClose={handleCloseModal}
           onMessage={handleMessageFriend}
-          onMeetUp={handleMeetUp}
           onRemove={handleRemoveFriend}
         />
       )}
