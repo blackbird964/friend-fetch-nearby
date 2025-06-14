@@ -80,15 +80,6 @@ const FriendsList: React.FC<FriendsListProps> = ({
                 <Button 
                   variant="outline" 
                   size="sm"
-                  onClick={() => handleRemoveFriend(friend)}
-                  className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
-                >
-                  <UserMinus className="h-4 w-4" />
-                  Remove
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
                   onClick={() => handleMessageFriend(friend)}
                   className="flex items-center gap-2"
                 >
@@ -106,6 +97,15 @@ const FriendsList: React.FC<FriendsListProps> = ({
                 >
                   <CalendarPlus className="h-4 w-4" />
                   Meet Up
+                </Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleRemoveFriend(friend)}
+                  className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
+                >
+                  <UserMinus className="h-4 w-4" />
+                  Remove
                 </Button>
               </div>
             </div>
