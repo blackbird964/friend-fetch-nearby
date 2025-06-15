@@ -83,7 +83,7 @@ export async function fetchNearbyUsers(
           is_online: user.is_online,
           isOnline: user.is_online, // For backwards compatibility
           is_over_18: user.is_over_18,
-          active_priorities: user.active_priorities || [],
+          active_priorities: Array.isArray(user.active_priorities) ? user.active_priorities : [],
           preferredHangoutDuration: user.preferred_hangout_duration ? parseInt(user.preferred_hangout_duration) : null,
           todayActivities: user.today_activities || [],
           blockedUsers: user.blocked_users || [],
@@ -116,3 +116,8 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
   const distance = R * c;
   return distance;
 }
+
+// Create the service object
+export const nearbyUsersService = {
+  getNearbyUsers: fetchNearbyUsers
+};

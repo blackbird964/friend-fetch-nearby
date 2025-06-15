@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { FriendRequest } from './types';
+import { FriendRequest } from '@/context/types';
 import { generateRequestId, createFriendRequestMessageContent } from './utils';
 
 /**
