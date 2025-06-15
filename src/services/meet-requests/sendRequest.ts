@@ -69,26 +69,20 @@ export async function sendMeetupRequest(
       console.log('Meetup request saved to database:', data);
     }
 
-    // Get receiver's email to send notification
-    const { data: receiverProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('id', receiverId)
-      .single();
+    // Get receiver's email from auth.users to send notification
+    const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(receiverId);
 
-    if (!profileError && receiverProfile) {
-      // For now, we'll use a placeholder email since we can't access auth.users directly
-      // In a real implementation, you might store email in the profiles table
-      // or use a different approach to get the user's email
-      console.log('Would send email notification to receiver if email was available');
+    if (!userError && user?.email) {
+      console.log('Sending email notification to:', user.email);
       
-      // If you have the receiver's email stored somewhere accessible, uncomment this:
-      // await sendMeetupRequestEmail(
-      //   receiverEmail,
-      //   senderName,
-      //   duration,
-      //   meetLocation || 'a location'
-      // );
+      await sendMeetupRequestEmail(
+        user.email,
+        senderName,
+        duration,
+        meetLocation || 'a location'
+      );
+    } else {
+      console.error('Could not fetch user email for notification:', userError);
     }
 
     return newRequest;
