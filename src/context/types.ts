@@ -1,3 +1,4 @@
+
 import { Profile } from '@/lib/supabase';
 
 export interface Location {
@@ -9,9 +10,38 @@ export interface FriendRequest {
   id: string;
   senderId: string;
   senderName: string;
+  senderProfilePic?: string | null;
   receiverId: string;
   receiverName: string;
+  receiverProfilePic?: string | null;
   timestamp: number;
+  status?: 'pending' | 'accepted' | 'rejected';
+  duration?: number;
+  sender_name?: string; // For backwards compatibility
+}
+
+export interface MeetupRequest {
+  id: string;
+  senderId: string;
+  senderName: string;
+  senderProfilePic?: string | null;
+  receiverId: string;
+  receiverName: string;
+  receiverProfilePic?: string | null;
+  duration: number | string;
+  status: 'pending' | 'accepted' | 'rejected';
+  timestamp: number;
+  type: 'meetup';
+  meetLocation?: string;
+}
+
+export interface Message {
+  id: string;
+  senderId: string;
+  content?: string;
+  text?: string;
+  timestamp: number | string;
+  status?: 'sending' | 'sent' | 'delivered' | 'read';
 }
 
 export interface ChatMessage {
@@ -23,8 +53,18 @@ export interface ChatMessage {
 
 export interface Chat {
   id: string;
+  name?: string;
   participants: string[];
+  participantId?: string;
+  participantName?: string;
+  profilePic?: string;
   messages: ChatMessage[];
+  lastMessage?: string;
+  lastMessageTime?: number;
+  unreadCount?: number;
+  isOnline?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ActivePriority {
@@ -56,6 +96,7 @@ export interface AppUser {
   distance?: number;
   last_seen?: string | null;
   is_online?: boolean | null;
+  isOnline?: boolean | null; // For backwards compatibility
   is_over_18?: boolean | null;
   active_priorities?: ActivePriority[];
   preferredHangoutDuration?: number | null;
@@ -66,6 +107,8 @@ export interface AppUser {
     hide_exact_location?: boolean;
   };
   email_notifications_enabled?: boolean;
+  blockedUsers?: string[];
+  chat?: Chat; // For compatibility with friends list
 }
 
 export interface AppContextType {

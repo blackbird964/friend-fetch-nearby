@@ -23,7 +23,7 @@ const TodayActivitiesSection: React.FC = () => {
       setSelectedActivities(currentUser.todayActivities);
     }
     if (currentUser?.preferredHangoutDuration) {
-      setHangoutDuration(currentUser.preferredHangoutDuration);
+      setHangoutDuration(String(currentUser.preferredHangoutDuration));
     }
   }, [currentUser]);
 
@@ -61,7 +61,7 @@ const TodayActivitiesSection: React.FC = () => {
       const updatedUser = {
         ...currentUser,
         todayActivities: selectedActivities,
-        preferredHangoutDuration: hangoutDuration
+        preferredHangoutDuration: parseInt(hangoutDuration)
       };
       setCurrentUser(updatedUser);
       
