@@ -1,8 +1,7 @@
 
-import { Message as SupabaseMessage } from '@/integrations/supabase/types';
-import { Message, Chat } from '@/context/types';
+import { Message as ContextMessage, Chat } from '@/context/types';
 
-export const formatMessage = (msg: SupabaseMessage): Message => {
+export const formatMessage = (msg: any): ContextMessage => {
   return {
     id: msg.id,
     chatId: `chat-${msg.sender_id}-${msg.receiver_id}`,
@@ -24,7 +23,7 @@ export const shouldDisplayMessage = (content: string): boolean => {
   }
 };
 
-export const formatMessages = (messages: SupabaseMessage[]): Message[] => {
+export const formatMessages = (messages: any[]): ContextMessage[] => {
   return messages
     .filter(msg => shouldDisplayMessage(msg.content))
     .map(formatMessage)
@@ -36,7 +35,7 @@ export const createOptimisticMessage = (
   chat: Chat,
   tempId: string,
   timestamp: number
-): Message => {
+): ContextMessage => {
   return {
     id: tempId,
     chatId: chat.id,
@@ -48,7 +47,7 @@ export const createOptimisticMessage = (
   };
 };
 
-export const createRealTimeMessage = (dbMessage: any, chat: Chat): Message => {
+export const createRealTimeMessage = (dbMessage: any, chat: Chat): ContextMessage => {
   return {
     id: dbMessage.id,
     chatId: chat.id,

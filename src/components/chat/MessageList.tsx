@@ -3,6 +3,7 @@ import React, { useRef, useEffect, useState, memo } from 'react';
 import { Message } from '@/context/types';
 import { Loader2 } from 'lucide-react';
 import { formatMessageTime } from '@/utils/dateFormatters';
+import { useAppContext } from '@/context/AppContext';
 
 interface MessageListProps {
   messages: Message[];
@@ -12,7 +13,8 @@ interface MessageListProps {
 
 // Memoized message item to prevent unnecessary re-renders
 const MessageItem = memo(({ message }: { message: Message }) => {
-  const isCurrentUser = message.senderId === 'current';
+  const { currentUser } = useAppContext();
+  const isCurrentUser = message.senderId === currentUser?.id || message.senderId === 'current';
   const timestamp = typeof message.timestamp === 'string' ? parseInt(message.timestamp, 10) : message.timestamp;
   
   const renderMessageContent = (message: Message) => {
@@ -97,7 +99,7 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
   useEffect(() => {
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage && lastMessage.senderId === 'current') {
+      if (lastMessage && (lastMessage.senderId === 'current' || lastMessage.status === 'sending')) {
         setUserScrolled(false);
       }
     }
@@ -111,12 +113,14 @@ const MessageList: React.FC<MessageListProps> = ({ messages, isLoading, fetchErr
         clearTimeout(timeoutId);
         timeoutId = setTimeout(() => {
           const element = e.currentTarget;
-          const scrollPosition = element.scrollHeight - element.scrollTop - element.clientHeight;
-          
-          if (scrollPosition > 50) {
-            setUserScrolled(true);
-          } else if (scrollPosition < 10) {
-            setUserScrolled(false);
+          if (element) {
+            const scrollPosition = element.scrollHeight - element.scrollTop - element.clientHeight;
+            
+            if (scrollPosition > 50) {
+              setUserScrolled(true);
+            } else if (scrollPosition < 10) {
+              setUserScrolled(false);
+            }
           }
         }, 100);
       };
