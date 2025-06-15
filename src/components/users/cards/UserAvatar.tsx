@@ -16,7 +16,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   src, 
   alt = 'User', 
   size = 'md',
-  showStatus = false,
+  showStatus = true, // Changed default to true to show status everywhere
   isOnline = false,
   friendStatus = 'none'
 }) => {
@@ -42,7 +42,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
   };
   
   // Determine status color class based on online status
-  let statusColorClass = isOnline ? 'bg-green-500' : 'bg-gray-500';
+  let statusColorClass = isOnline ? 'bg-green-500' : 'bg-gray-400';
   let statusIcon = null;
   
   // Override with friend status if specified
@@ -67,7 +67,7 @@ const UserAvatar: React.FC<UserAvatarProps> = ({
       </Avatar>
       
       {showStatus && (
-        <span className={`absolute ${statusSize[size]} border-2 border-white rounded-full ${statusColorClass} flex items-center justify-center`}>
+        <span className={`absolute ${statusSize[size]} border-2 border-white rounded-full ${statusColorClass} flex items-center justify-center z-10`}>
           {statusIcon}
         </span>
       )}

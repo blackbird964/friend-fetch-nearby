@@ -2,9 +2,9 @@
 import React from 'react';
 import { AppUser } from '@/context/types';
 import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { MessageCircle, MapPin } from 'lucide-react';
+import UserAvatar from '@/components/users/cards/UserAvatar';
 
 interface UserListItemProps {
   user: AppUser;
@@ -17,15 +17,6 @@ const UserListItem: React.FC<UserListItemProps> = ({
   onSelect,
   onStartChat
 }) => {
-  const getInitials = (name: string) => {
-    return name
-      .split(' ')
-      .map(part => part[0])
-      .join('')
-      .toUpperCase()
-      .substring(0, 2);
-  };
-
   const handleChatClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     e.preventDefault();
@@ -69,18 +60,19 @@ const UserListItem: React.FC<UserListItemProps> = ({
   return (
     <div className="border rounded-lg p-3 hover:bg-gray-50 cursor-pointer" onClick={handleSelect}>
       <div className="flex items-center space-x-3">
-        <Avatar className="h-10 w-10 border">
-          <AvatarImage src={user.profile_pic} />
-          <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-            {getInitials(user.name || 'User')}
-          </AvatarFallback>
-        </Avatar>
+        <UserAvatar 
+          src={user.profile_pic} 
+          alt={user.name} 
+          size="md"
+          showStatus={true}
+          isOnline={user.isOnline}
+        />
         
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="font-medium text-sm truncate">{user.name}</h3>
             {user.isOnline && (
-              <div className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" />
+              <span className="text-xs text-green-600 font-medium">Online</span>
             )}
           </div>
           

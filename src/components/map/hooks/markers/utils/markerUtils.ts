@@ -1,77 +1,16 @@
 
-import Feature from 'ol/Feature';
-import Point from 'ol/geom/Point';
-import { fromLonLat } from 'ol/proj';
-import { Vector as VectorSource } from 'ol/source';
 import { AppUser } from '@/context/types';
 import { calculateDistance } from '@/utils/locationUtils';
-import { getDisplayLocation, shouldObfuscateLocation } from '@/utils/privacyUtils';
 
 /**
- * Clear existing user markers from the vector source
- */
-export const clearExistingUserMarkers = (vectorSource: VectorSource) => {
-  if (!vectorSource) return;
-  
-  // Use batch operation for better performance
-  const featuresToRemove: Feature[] = [];
-  
-  vectorSource.getFeatures().forEach(feature => {
-    const isCircle = feature.get('isCircle');
-    const isUserMarker = feature.get('isCurrentUser') || feature.get('userId');
-    const isHeatMap = feature.get('isHeatMap');
-    const circleType = feature.get('circleType');
-    
-    // Don't remove privacy circles, only user markers and heatmaps
-    if ((!isCircle && isUserMarker) || isHeatMap || (isCircle && circleType !== 'privacy')) {
-      featuresToRemove.push(feature);
-    }
-  });
-  
-  // Remove all features in a single batch
-  featuresToRemove.forEach(feature => {
-    vectorSource.removeFeature(feature);
-  });
-};
-
-/**
- * Filter users to display only online and unblocked users
- */
-export const filterOnlineAndUnblockedUsers = (nearbyUsers: AppUser[], currentUser: AppUser | null): AppUser[] => {
-  console.log("Filtering users - total count:", nearbyUsers.length);
-  
-  return nearbyUsers
-    .filter(user => {
-      // Only include users that are explicitly marked as online
-      const isOnline = user.isOnline === true;
-      if (!isOnline) {
-        console.log(`Filtering out offline user: ${user.id}`);
-      }
-      return isOnline;
-    })
-    .filter(user => {
-      // Filter out users that the current user has blocked
-      if (currentUser?.blockedUsers?.includes(user.id)) {
-        console.log(`Filtering out blocked user: ${user.id}`);
-        return false;
-      }
-      return true;
-    });
-};
-
-/**
- * Check if user is within the specified radius
+ * Check if a user is within the specified radius of the current user
  */
 export const isUserWithinRadius = (
-  user: AppUser, 
+  user: AppUser,
   currentUser: AppUser | null,
   radiusInKm: number
 ): boolean => {
-  // If no current user or current user has no location, consider all users in radius
-  if (!currentUser?.location) return true;
-  
-  // If user has no location, they're not in any radius
-  if (!user.location || !user.location.lat || !user.location.lng) return false;
+  if (!currentUser?.location || !user.location) return false;
   
   const distance = calculateDistance(
     currentUser.location.lat,
@@ -81,4 +20,51 @@ export const isUserWithinRadius = (
   );
   
   return distance <= radiusInKm;
+};
+
+/**
+ * Filter users to only show online and unblocked users
+ * CRITICAL: Only show users who are actually online (logged into platform)
+ */
+export const filterOnlineAndUnblockedUsers = (
+  users: AppUser[],
+  currentUser: AppUser | null
+): AppUser[] => {
+  if (!currentUser) return [];
+  
+  return users.filter(user => {
+    // Don't show the current user
+    if (user.id === currentUser.id) return false;
+    
+    // CRITICAL: Only show users who are actually online (logged into platform)
+    if (!user.isOnline) {
+      console.log(`Filtering out offline user: ${user.name} (isOnline: ${user.isOnline})`);
+      return false;
+    }
+    
+    // Don't show blocked users
+    if (currentUser.blockedUsers?.includes(user.id)) return false;
+    
+    // Don't show users who have blocked the current user
+    if (user.blockedUsers?.includes(currentUser.id)) return false;
+    
+    return true;
+  });
+};
+
+/**
+ * Get distance between two locations in kilometers
+ */
+export const getDistanceBetweenUsers = (
+  user1: AppUser,
+  user2: AppUser
+): number => {
+  if (!user1.location || !user2.location) return Infinity;
+  
+  return calculateDistance(
+    user1.location.lat,
+    user1.location.lng,
+    user2.location.lat,
+    user2.location.lng
+  );
 };

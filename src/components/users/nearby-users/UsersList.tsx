@@ -26,10 +26,18 @@ const UsersList: React.FC<UsersListProps> = ({ users, onStartChat }) => {
     onStartChat(user);
   };
 
+  // Filter to only show truly online users
+  const onlineUsers = users.filter(user => {
+    console.log(`UsersList: User ${user.name} isOnline: ${user.isOnline}`);
+    return user.isOnline === true;
+  });
+
+  console.log(`UsersList: Showing ${onlineUsers.length} online users out of ${users.length} total users`);
+
   return (
     <>
       <div className="grid grid-cols-1 gap-4">
-        {users.map((user) => (
+        {onlineUsers.map((user) => (
           <UserItem 
             key={user.id} 
             user={user} 

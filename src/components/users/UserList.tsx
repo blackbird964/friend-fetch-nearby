@@ -42,14 +42,23 @@ const UserList: React.FC = () => {
   let onlineUsers = nearbyUsers.filter(user => 
     // Exclude the current user first
     user.id !== currentUser?.id &&
-    // Only include users marked as online
+    // CRITICAL: Only include users who are actually online (logged into platform)
     user.isOnline === true &&
     // Filter out users that don't have a valid ID or have test/mock in their ID
     user.id && !String(user.id).includes('test') && !String(user.id).includes('mock')
   );
 
+  console.log("UserList component - All nearby users:", nearbyUsers.length);
+  console.log("UserList component - Online users:", onlineUsers.length);
+  console.log("UserList component - Online user details:", onlineUsers.map(u => ({ 
+    id: u.id, 
+    name: u.name, 
+    isOnline: u.isOnline 
+  })));
+
   // Filter users based on matching activities if current user has selected today's activities
   if (currentUser?.todayActivities && currentUser.todayActivities.length > 0) {
+    const beforeActivityFilter = onlineUsers.length;
     onlineUsers = onlineUsers.filter(user => {
       // If the user doesn't have today's activities set, don't show them
       if (!user.todayActivities || user.todayActivities.length === 0) {
@@ -61,11 +70,12 @@ const UserList: React.FC = () => {
         currentUser.todayActivities!.includes(activity)
       );
     });
+    console.log(`UserList component - After activity filter: ${onlineUsers.length} (was ${beforeActivityFilter})`);
   }
 
   console.log("UserList component - Current user ID:", currentUser?.id);
   console.log("UserList component - Current user activities:", currentUser?.todayActivities);
-  console.log("UserList component - Displaying users:", onlineUsers.length, "out of", nearbyUsers.length);
+  console.log("UserList component - Final displaying users:", onlineUsers.length);
   console.log("UserList component - Is business user:", isBusinessUser);
 
   const handleStartChat = (user: any) => {
@@ -89,15 +99,14 @@ const UserList: React.FC = () => {
             {onlineUsers.length}
           </div>
           <p className="text-gray-600">
-            {onlineUsers.length === 1 ? 'user' : 'users'} within {radiusInKm}km radius
+            {onlineUsers.length === 1 ? 'user' : 'users'} online within {radiusInKm}km radius
           </p>
           <p className="text-sm text-gray-500 mt-2">
             Business accounts can see user count only
           </p>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
   // Regular user view - show full list
   return (
