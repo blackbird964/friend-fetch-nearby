@@ -48,11 +48,11 @@ export function useFriendships() {
                   age: profile.age || null,
                   gender: profile.gender || null,
                   location: profile.location ? {
-                    lat: profile.location.x || 0,
-                    lng: profile.location.y || 0
+                    lat: profile.location.lat || 0,
+                    lng: profile.location.lng || 0
                   } : null,
-                  preferredHangoutDuration: profile.preferred_hangout_duration || '30',
-                  todayActivities: profile.today_activities || [],
+                  preferredHangoutDuration: '30', // Default value since not in ProfileWithBlockedUsers
+                  todayActivities: [], // Default value since not in ProfileWithBlockedUsers
                   blockedUsers: [],
                   blocked_users: profile.blocked_users || [],
                   friendshipDate: friendship.created_at
