@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import ChatWindow from '@/components/chat/ChatWindow';
@@ -9,6 +10,7 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { useViewportConfig } from '@/hooks/useViewportConfig';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useFriendActions } from '@/components/users/hooks/useFriendActions';
+import { useFriendships } from '@/hooks/useFriendships';
 import { AppUser } from '@/context/types';
 
 const ChatPage: React.FC = () => {
@@ -21,6 +23,7 @@ const ChatPage: React.FC = () => {
     friendRequests
   } = useAppContext();
   
+  const { friends } = useFriendships();
   const [activeTab, setActiveTab] = useState('chats');
   const [activeRequestsTab, setActiveRequestsTab] = useState('friends');
   const isMobile = useIsMobile();
@@ -32,10 +35,16 @@ const ChatPage: React.FC = () => {
   useViewportConfig(isMobile);
 
   // Check if the current chat participant is already a friend
-  const isFriend = selectedChat ? friendRequests.some(req => 
-    req.status === 'accepted' && 
-    ((req.receiverId === selectedChat.participantId && req.senderId === currentUser?.id) ||
-     (req.senderId === selectedChat.participantId && req.receiverId === currentUser?.id))
+  // Check both friend requests (accepted) and the friendships table
+  const isFriend = selectedChat ? (
+    // Check friend requests with accepted status
+    friendRequests.some(req => 
+      req.status === 'accepted' && 
+      ((req.receiverId === selectedChat.participantId && req.senderId === currentUser?.id) ||
+       (req.senderId === selectedChat.participantId && req.receiverId === currentUser?.id))
+    ) ||
+    // Check actual friendships table
+    friends.some(friend => friend.id === selectedChat.participantId)
   ) : false;
 
   const handleSendFriendRequest = () => {
@@ -68,7 +77,9 @@ const ChatPage: React.FC = () => {
     console.log("[ChatPage] Selected chat:", selectedChat?.id);
     console.log("[ChatPage] Route:", location.pathname);
     console.log("[ChatPage] Is mobile:", isMobile);
-  }, [chats, selectedChat, location, isMobile]);
+    console.log("[ChatPage] Is friend:", isFriend);
+    console.log("[ChatPage] Friends count:", friends.length);
+  }, [chats, selectedChat, location, isMobile, isFriend, friends]);
   
   // Reset selected chat when navigating away on mobile
   useEffect(() => {
