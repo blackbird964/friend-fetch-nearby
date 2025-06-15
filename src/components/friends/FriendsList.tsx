@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { UserPlus, Eye } from 'lucide-react';
 import UserAvatar from '@/components/users/cards/UserAvatar';
 import FriendshipDetailsModal from './FriendshipDetailsModal';
-import AddFriendByNameButton from './AddFriendByNameButton';
 
 interface FriendsListProps {
   friends: AppUser[];
@@ -60,9 +59,6 @@ const FriendsList: React.FC<FriendsListProps> = ({
             Find More
           </Button>
         </div>
-
-        {/* Add Friend by Name - for testing */}
-        <AddFriendByNameButton />
 
         {friends.length === 0 ? (
           <div className="text-center py-10">
