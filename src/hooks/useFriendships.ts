@@ -13,6 +13,9 @@ export function useFriendships() {
 
   useEffect(() => {
     if (!currentUser) {
+      console.log("useFriendships: No current user, setting loading to false");
+      setFriendships([]);
+      setFriends([]);
       setIsLoading(false);
       return;
     }
@@ -21,23 +24,31 @@ export function useFriendships() {
       try {
         setIsLoading(true);
         
-        console.log("Fetching friendships for user:", currentUser.id);
+        console.log("useFriendships: Fetching friendships for user:", currentUser.id);
         
         // Get all friendships for the current user
         const userFriendships = await getUserFriendships();
-        console.log("Found friendships:", userFriendships);
+        console.log("useFriendships: Raw friendships from DB:", userFriendships);
         setFriendships(userFriendships);
 
+        if (userFriendships.length === 0) {
+          console.log("useFriendships: No friendships found");
+          setFriends([]);
+          setIsLoading(false);
+          return;
+        }
+
         // Fetch profile data for each friend
+        console.log("useFriendships: Fetching profiles for", userFriendships.length, "friends");
         const friendProfiles = await Promise.all(
           userFriendships.map(async (friendship) => {
             try {
-              console.log("Fetching profile for friend:", friendship.friend_id);
+              console.log("useFriendships: Fetching profile for friend:", friendship.friend_id);
               const profile = await getProfile(friendship.friend_id);
-              console.log("Profile data:", profile);
+              console.log("useFriendships: Profile data for", friendship.friend_id, ":", profile);
               
               if (profile) {
-                return {
+                const friendUser: AppUser = {
                   id: friendship.friend_id,
                   name: profile.name || 'Friend',
                   email: '', // Not stored in profiles table
@@ -54,24 +65,28 @@ export function useFriendships() {
                   preferredHangoutDuration: '30', // Default value since not in ProfileWithBlockedUsers
                   todayActivities: [], // Default value since not in ProfileWithBlockedUsers
                   blockedUsers: [],
-                  blocked_users: profile.blocked_users || [],
-                  friendshipDate: friendship.created_at
-                } as AppUser & { friendshipDate: string };
+                  blocked_users: profile.blocked_users || []
+                };
+                
+                console.log("useFriendships: Created friend user object:", friendUser);
+                return friendUser;
               }
               return null;
             } catch (error) {
-              console.error("Error fetching profile for friend:", friendship.friend_id, error);
+              console.error("useFriendships: Error fetching profile for friend:", friendship.friend_id, error);
               return null;
             }
           })
         );
 
         // Filter out null profiles and set friends
-        const validFriends = friendProfiles.filter(Boolean) as (AppUser & { friendshipDate: string })[];
-        console.log("Valid friends found:", validFriends);
+        const validFriends = friendProfiles.filter(Boolean) as AppUser[];
+        console.log("useFriendships: Valid friends found:", validFriends.length);
+        console.log("useFriendships: Friends data:", validFriends);
         setFriends(validFriends);
       } catch (error) {
-        console.error('Error fetching friendships:', error);
+        console.error('useFriendships: Error fetching friendships:', error);
+        setFriends([]);
       } finally {
         setIsLoading(false);
       }
@@ -80,13 +95,15 @@ export function useFriendships() {
     fetchFriendships();
   }, [currentUser]);
 
+  console.log("useFriendships: Returning - friends count:", friends.length, "isLoading:", isLoading);
+
   return {
     friendships,
     friends,
     isLoading,
     refetch: () => {
       if (currentUser) {
-        // Re-run the effect by updating a dependency (can be optimized later)
+        console.log("useFriendships: Manual refetch triggered");
         setIsLoading(true);
       }
     }

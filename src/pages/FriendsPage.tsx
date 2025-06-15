@@ -18,25 +18,33 @@ const FriendsPage: React.FC = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('friends');
 
+  console.log("FriendsPage: Component rendered");
+  console.log("FriendsPage: Friends from useFriendships:", friends);
+  console.log("FriendsPage: Friends count:", friends.length);
+  console.log("FriendsPage: Is loading:", friendshipsLoading);
+
   useEffect(() => {
     refreshFriendRequests();
   }, [refreshFriendRequests]);
 
   const handleFriendClick = (friend: any) => {
+    console.log("FriendsPage: handleFriendClick called with:", friend);
     // Find the corresponding chat for this friend
     const friendChat = chats.find(chat => chat.participantId === friend.id);
     
     if (friendChat) {
+      console.log("FriendsPage: Found chat for friend, navigating to chat");
       setSelectedChat(friendChat);
       navigate('/chat');
     } else {
       // If no chat exists, we could create one or handle this case
-      console.log('No chat found for friend:', friend.name);
+      console.log('FriendsPage: No chat found for friend:', friend.name);
     }
   };
 
   // Show loading state while friendships are being fetched
   if (friendshipsLoading) {
+    console.log("FriendsPage: Showing loading state");
     return (
       <div className="container mx-auto px-4 py-6 mb-20 max-w-3xl">
         <div className="flex items-center gap-2 mb-6">
@@ -60,6 +68,8 @@ const FriendsPage: React.FC = () => {
       </div>
     );
   }
+
+  console.log("FriendsPage: Rendering main content with", friends.length, "friends");
 
   return (
     <div className="container mx-auto px-4 py-6 mb-20 max-w-3xl">
