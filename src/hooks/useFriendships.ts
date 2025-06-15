@@ -62,7 +62,7 @@ export function useFriendships() {
                     lat: profile.location.lat || 0,
                     lng: profile.location.lng || 0
                   } : null,
-                  preferredHangoutDuration: '30', // Default value since not in ProfileWithBlockedUsers
+                  preferredHangoutDuration: profile.preferred_hangout_duration ? parseInt(profile.preferred_hangout_duration) : null,
                   todayActivities: [], // Default value since not in ProfileWithBlockedUsers
                   blockedUsers: [],
                   blocked_users: profile.blocked_users || []

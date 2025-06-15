@@ -1,5 +1,3 @@
-
-
 import { Profile } from '@/lib/supabase';
 
 export interface Location {
@@ -16,8 +14,8 @@ export interface FriendRequest {
   receiverName: string;
   receiverProfilePic?: string | null;
   timestamp: number;
-  status?: 'pending' | 'accepted' | 'rejected';
-  duration?: number;
+  status: 'pending' | 'accepted' | 'rejected';
+  duration: number;
   sender_name?: string; // For backwards compatibility
 }
 
@@ -112,6 +110,7 @@ export interface AppUser {
   blockedUsers?: string[];
   blocked_users?: string[]; // For backwards compatibility
   chat?: Chat; // For compatibility with friends list
+  friendRequest?: FriendRequest; // Add this property
 }
 
 export interface AppContextType {

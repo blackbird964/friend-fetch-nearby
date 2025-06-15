@@ -23,8 +23,8 @@ export const useNearbyUsers = () => {
       radiusInKm: number = 2,
       showToast: boolean = false
     ) => {
-      if (!location) {
-        console.warn('No location provided for fetching nearby users');
+      if (!location || !currentUser) {
+        console.warn('No location or current user provided for fetching nearby users');
         setError('No location available');
         return [];
       }
@@ -37,6 +37,7 @@ export const useNearbyUsers = () => {
 
         // Get users from database
         const fetchedUsers = await nearbyUsersService.getNearbyUsers(
+          currentUser.id,
           location,
           radiusInKm
         );

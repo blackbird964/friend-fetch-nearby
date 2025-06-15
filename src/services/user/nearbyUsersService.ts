@@ -1,6 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { AppUser } from '@/context/types';
+import { AppUser, ActivePriority } from '@/context/types';
 
 export async function fetchNearbyUsers(
   currentUserId: string,
@@ -68,6 +68,26 @@ export async function fetchNearbyUsers(
 
         if (distance > radiusInKm) return null;
 
+        // Handle active_priorities type conversion
+        let activePriorities: ActivePriority[] = [];
+        if (user.active_priorities) {
+          try {
+            if (Array.isArray(user.active_priorities)) {
+              activePriorities = user.active_priorities.filter(
+                (p): p is ActivePriority => 
+                  typeof p === 'object' && 
+                  p !== null && 
+                  'id' in p && 
+                  'category' in p && 
+                  'activity' in p
+              );
+            }
+          } catch (e) {
+            console.warn('Failed to parse active_priorities:', e);
+            activePriorities = [];
+          }
+        }
+
         const appUser: AppUser = {
           id: user.id,
           name: user.name || '',
@@ -83,7 +103,7 @@ export async function fetchNearbyUsers(
           is_online: user.is_online,
           isOnline: user.is_online, // For backwards compatibility
           is_over_18: user.is_over_18,
-          active_priorities: Array.isArray(user.active_priorities) ? user.active_priorities : [],
+          active_priorities: activePriorities,
           preferredHangoutDuration: user.preferred_hangout_duration ? parseInt(user.preferred_hangout_duration) : null,
           todayActivities: user.today_activities || [],
           blockedUsers: user.blocked_users || [],

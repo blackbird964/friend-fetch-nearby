@@ -60,7 +60,7 @@ const ChatPage: React.FC = () => {
         age: null,
         interests: [],
         location: null,
-        preferredHangoutDuration: '30',
+        preferredHangoutDuration: 30, // Changed to number
         todayActivities: [],
         isOnline: selectedChat.isOnline || false,
         blockedUsers: [],
