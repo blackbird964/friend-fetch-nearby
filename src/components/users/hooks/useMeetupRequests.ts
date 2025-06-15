@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 import { sendMessage } from '@/lib/supabase/messages';
 import { createUpcomingSession } from '@/services/upcoming-sessions';
+import { sendMeetupAcceptanceEmail } from '@/services/notifications/meetupNotifications';
 
 export const useMeetupRequests = () => {
   const { currentUser, meetupRequests, setMeetupRequests, chats, setChats } = useAppContext();
@@ -89,6 +90,20 @@ export const useMeetupRequests = () => {
           request.meetLocation || 'Meetup',
           parseInt(request.duration)
         );
+
+        // Get sender's email to send notification
+        const { data: senderProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('id')
+          .eq('id', request.senderId)
+          .single();
+
+        if (!profileError && senderProfile) {
+          // Get sender's email from auth.users (we need to use a different approach since we can't query auth.users directly)
+          // For now, we'll skip the email notification if we can't get the email
+          // In a real implementation, you might store email in the profiles table
+          console.log('Would send email notification to sender if email was available');
+        }
 
         // Update request status in local state
         setMeetupRequests(
