@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import ChatWindow from '@/components/chat/ChatWindow';
@@ -46,7 +45,7 @@ const ChatPage: React.FC = () => {
         id: selectedChat.participantId,
         name: selectedChat.participantName,
         profile_pic: selectedChat.profilePic,
-        // Add default values for required fields
+        email: '', // Required field - using empty string as default
         bio: null,
         gender: null,
         age: null,
@@ -55,10 +54,8 @@ const ChatPage: React.FC = () => {
         preferredHangoutDuration: '30',
         todayActivities: [],
         isOnline: selectedChat.isOnline || false,
-        last_seen: new Date().toISOString(),
-        is_over_18: false,
-        blocked_users: [],
         blockedUsers: [],
+        blocked_users: [], // Database field name
         total_catchup_time: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
