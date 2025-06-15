@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Badge } from "@/components/ui/badge";
-import { LogOut, Edit, Camera, ShieldCheck } from 'lucide-react';
+import { LogOut, Edit, Camera, ShieldCheck, Bell, BellOff } from 'lucide-react';
 import { signOut } from '@/lib/supabase';
 import EditProfileForm from './EditProfileForm';
 import ProfilePictureUpload from './ProfilePictureUpload';
@@ -12,15 +13,18 @@ import UserAvatar from '../users/cards/UserAvatar';
 import { Link } from 'react-router-dom';
 import { Separator } from "@/components/ui/separator";
 import PriorityDisplay from './active-priorities/PriorityDisplay';
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 // List of authorized admin emails
 const ADMIN_EMAILS = ['harp.dylan@gmail.com', 'aaron.stathi@gmail.com'];
 
 const ProfilePage: React.FC = () => {
-  const { currentUser, setCurrentUser, setIsAuthenticated } = useAppContext();
+  const { currentUser, setCurrentUser, setIsAuthenticated, updateUserProfile } = useAppContext();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [showPictureUpload, setShowPictureUpload] = useState(false);
+  const [isUpdatingNotifications, setIsUpdatingNotifications] = useState(false);
 
   // Check if current user is an admin
   const isAdmin = currentUser?.email && ADMIN_EMAILS.includes(currentUser.email);
@@ -58,6 +62,38 @@ const ProfilePage: React.FC = () => {
       });
     }
     setShowPictureUpload(false);
+  };
+
+  const handleEmailNotificationToggle = async (enabled: boolean) => {
+    if (!currentUser) return;
+
+    setIsUpdatingNotifications(true);
+    try {
+      await updateUserProfile({
+        id: currentUser.id,
+        email_notifications_enabled: enabled
+      });
+
+      setCurrentUser({
+        ...currentUser,
+        email_notifications_enabled: enabled
+      });
+
+      toast({
+        title: enabled ? "Email notifications enabled" : "Email notifications disabled",
+        description: enabled 
+          ? "You will receive email notifications for meetup requests" 
+          : "You will no longer receive email notifications",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error updating notification settings",
+        description: error.message || "Failed to update notification preferences",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingNotifications(false);
+    }
   };
 
   if (!currentUser) return null;
@@ -197,10 +233,40 @@ const ProfilePage: React.FC = () => {
         <CardHeader>
           <CardTitle className="text-lg">Account Information</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-2">
+        <CardContent className="space-y-4">
           <div>
             <span className="text-sm font-medium text-gray-500">Email:</span>
             <p>{currentUser.email}</p>
+          </div>
+          
+          <Separator />
+          
+          <div className="space-y-3">
+            <h3 className="text-sm font-medium">Notification Preferences</h3>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                {currentUser.email_notifications_enabled !== false ? (
+                  <Bell className="h-4 w-4 text-blue-600" />
+                ) : (
+                  <BellOff className="h-4 w-4 text-gray-400" />
+                )}
+                <Label htmlFor="email-notifications" className="text-sm">
+                  Email notifications for meetup requests
+                </Label>
+              </div>
+              <Switch
+                id="email-notifications"
+                checked={currentUser.email_notifications_enabled !== false}
+                onCheckedChange={handleEmailNotificationToggle}
+                disabled={isUpdatingNotifications}
+              />
+            </div>
+            <p className="text-xs text-gray-500">
+              {currentUser.email_notifications_enabled !== false 
+                ? "You will receive email notifications when someone sends you a meetup request"
+                : "Email notifications are disabled. You won't receive emails for meetup requests"
+              }
+            </p>
           </div>
         </CardContent>
       </Card>

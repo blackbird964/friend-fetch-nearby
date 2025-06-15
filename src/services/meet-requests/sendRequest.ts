@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { MeetupRequest } from './types';
 import { generateRequestId, createMeetupRequestMessageContent } from './utils';
@@ -69,20 +68,34 @@ export async function sendMeetupRequest(
       console.log('Meetup request saved to database:', data);
     }
 
-    // Get receiver's email from auth.users to send notification
-    const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(receiverId);
+    // Check if receiver has email notifications enabled before sending email
+    const { data: receiverProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('email_notifications_enabled')
+      .eq('id', receiverId)
+      .single();
 
-    if (!userError && user?.email) {
-      console.log('Sending email notification to:', user.email);
-      
-      await sendMeetupRequestEmail(
-        user.email,
-        senderName,
-        duration,
-        meetLocation || 'a location'
-      );
+    // Default to true if field doesn't exist (backwards compatibility)
+    const emailNotificationsEnabled = receiverProfile?.email_notifications_enabled !== false;
+
+    if (emailNotificationsEnabled) {
+      // Get receiver's email from auth.users to send notification
+      const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(receiverId);
+
+      if (!userError && user?.email) {
+        console.log('Sending email notification to:', user.email);
+        
+        await sendMeetupRequestEmail(
+          user.email,
+          senderName,
+          duration,
+          meetLocation || 'a location'
+        );
+      } else {
+        console.error('Could not fetch user email for notification:', userError);
+      }
     } else {
-      console.error('Could not fetch user email for notification:', userError);
+      console.log('Email notifications disabled for user:', receiverId);
     }
 
     return newRequest;
