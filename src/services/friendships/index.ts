@@ -153,3 +153,6 @@ export async function removeFriendship(friendId: string): Promise<boolean> {
     return false;
   }
 }
+
+// Re-export direct friendship functions
+export { addDirectFriend, addFriendByName } from './directFriendship';
