@@ -33,7 +33,7 @@ export async function createUpcomingSession(
 
   try {
     const { data: session, error } = await supabase
-      .from('upcoming_sessions')
+      .from('upcoming_sessions' as any)
       .insert({
         user_id: user.id,
         friend_id: friendId,
@@ -72,7 +72,7 @@ export async function getUpcomingSessions(): Promise<UpcomingSession[]> {
 
   try {
     const { data: sessions, error } = await supabase
-      .from('upcoming_sessions')
+      .from('upcoming_sessions' as any)
       .select('*')
       .eq('user_id', user.id)
       .eq('status', 'scheduled')
@@ -104,7 +104,7 @@ export async function completeSession(sessionId: string): Promise<boolean> {
   try {
     // Get the session details first
     const { data: session, error: fetchError } = await supabase
-      .from('upcoming_sessions')
+      .from('upcoming_sessions' as any)
       .select('*')
       .eq('id', sessionId)
       .eq('user_id', user.id)
@@ -117,7 +117,7 @@ export async function completeSession(sessionId: string): Promise<boolean> {
 
     // Mark session as completed
     const { error: updateError } = await supabase
-      .from('upcoming_sessions')
+      .from('upcoming_sessions' as any)
       .update({ status: 'completed' })
       .eq('id', sessionId);
 
@@ -138,12 +138,12 @@ export async function completeSession(sessionId: string): Promise<boolean> {
       return false;
     }
 
-    const currentTotal = profile?.total_catchup_time || 0;
-    const newTotal = currentTotal + session.duration;
+    const currentTotal = (profile as any)?.total_catchup_time || 0;
+    const newTotal = currentTotal + (session as any).duration;
 
     const { error: updateProfileError } = await supabase
       .from('profiles')
-      .update({ total_catchup_time: newTotal })
+      .update({ total_catchup_time: newTotal } as any)
       .eq('id', user.id);
 
     if (updateProfileError) {

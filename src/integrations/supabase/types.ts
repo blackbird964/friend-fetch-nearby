@@ -153,6 +153,7 @@ export type Database = {
           preferred_hangout_duration: string | null
           profile_pic: string | null
           today_activities: string[] | null
+          total_catchup_time: number | null
           updated_at: string | null
         }
         Insert: {
@@ -172,6 +173,7 @@ export type Database = {
           preferred_hangout_duration?: string | null
           profile_pic?: string | null
           today_activities?: string[] | null
+          total_catchup_time?: number | null
           updated_at?: string | null
         }
         Update: {
@@ -191,7 +193,50 @@ export type Database = {
           preferred_hangout_duration?: string | null
           profile_pic?: string | null
           today_activities?: string[] | null
+          total_catchup_time?: number | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      upcoming_sessions: {
+        Row: {
+          activity: string
+          created_at: string
+          duration: number
+          friend_id: string
+          friend_name: string
+          friend_profile_pic: string | null
+          id: string
+          scheduled_at: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          activity: string
+          created_at?: string
+          duration: number
+          friend_id: string
+          friend_name: string
+          friend_profile_pic?: string | null
+          id?: string
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          activity?: string
+          created_at?: string
+          duration?: number
+          friend_id?: string
+          friend_name?: string
+          friend_profile_pic?: string | null
+          id?: string
+          scheduled_at?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
