@@ -36,6 +36,7 @@ export interface Profile {
   is_over_18: boolean | null;
   interests: string[] | null;
   active_priorities: ActivePriority[] | null;
+  preferred_hangout_duration: string | null;
   email_notifications_enabled?: boolean | null;
   location_settings?: {
     is_manual_mode?: boolean;
