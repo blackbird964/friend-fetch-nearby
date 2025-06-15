@@ -105,8 +105,9 @@ const UserList: React.FC = () => {
             Business accounts can see user count only
           </p>
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
   // Regular user view - show full list
   return (
