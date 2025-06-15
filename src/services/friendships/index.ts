@@ -47,7 +47,7 @@ export async function createFriendship(friendId: string): Promise<Friendship | n
         status: 'active'
       });
 
-    return friendship;
+    return friendship as Friendship;
   } catch (error) {
     console.error('Error creating friendship:', error);
     return null;
@@ -79,7 +79,7 @@ export async function getFriendship(friendId: string): Promise<Friendship | null
       return null;
     }
 
-    return friendship;
+    return friendship as Friendship;
   } catch (error) {
     console.error('Error fetching friendship:', error);
     return null;
@@ -110,7 +110,7 @@ export async function getUserFriendships(): Promise<Friendship[]> {
       return [];
     }
 
-    return friendships || [];
+    return (friendships || []) as Friendship[];
   } catch (error) {
     console.error('Error fetching friendships:', error);
     return [];

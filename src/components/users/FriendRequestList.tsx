@@ -30,11 +30,19 @@ const FriendRequestList: React.FC = () => {
     );
   }
 
+  // Create wrapper function to match expected signature
+  const handleAcceptRequest = (requestId: string) => {
+    const request = pendingRequests.find(req => req.id === requestId);
+    if (request) {
+      handleAccept(requestId, request.senderId);
+    }
+  };
+
   return (
     <div className="space-y-3">
       <PendingRequests 
         requests={pendingRequests} 
-        onAccept={handleAccept} 
+        onAccept={handleAcceptRequest} 
         onReject={handleReject}
       />
       

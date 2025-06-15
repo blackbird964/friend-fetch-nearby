@@ -8,6 +8,7 @@ import {
 } from '@/services/friend-requests';
 import { createFriendship } from '@/services/friendships';
 import { toast } from 'sonner';
+import { FriendRequest } from '@/context/types';
 
 export function useFriendRequests() {
   const { 
@@ -42,8 +43,8 @@ export function useFriendRequests() {
         // Create friendship record
         await createFriendship(senderId);
         
-        // Remove from local state
-        setFriendRequests(prev => 
+        // Remove from local state with proper typing
+        setFriendRequests((prev: FriendRequest[]) => 
           prev.filter(req => req.id !== requestId)
         );
         
@@ -70,8 +71,8 @@ export function useFriendRequests() {
       const success = await updateFriendRequestStatus(requestId, 'rejected');
       
       if (success) {
-        // Remove from local state
-        setFriendRequests(prev => 
+        // Remove from local state with proper typing
+        setFriendRequests((prev: FriendRequest[]) => 
           prev.filter(req => req.id !== requestId)
         );
         
@@ -98,8 +99,8 @@ export function useFriendRequests() {
       const success = await cancelFriendRequest(requestId);
       
       if (success) {
-        // Remove from local state
-        setFriendRequests(prev => 
+        // Remove from local state with proper typing
+        setFriendRequests((prev: FriendRequest[]) => 
           prev.filter(req => req.id !== requestId)
         );
         
