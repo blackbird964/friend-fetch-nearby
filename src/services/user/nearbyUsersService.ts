@@ -75,15 +75,17 @@ export async function fetchNearbyUsers(
           try {
             // Convert Json to ActivePriority with proper type checking
             const priorities = Array.isArray(user.active_priorities) ? user.active_priorities : [];
-            activePriorities = priorities.filter((p: Json): p is ActivePriority => {
-              if (typeof p !== 'object' || p === null) return false;
-              const priority = p as Record<string, any>;
-              return (
-                typeof priority.id === 'string' &&
-                typeof priority.category === 'string' &&
-                typeof priority.activity === 'string'
-              );
-            }) as ActivePriority[];
+            activePriorities = priorities
+              .filter((p: Json) => {
+                if (typeof p !== 'object' || p === null) return false;
+                const priority = p as Record<string, any>;
+                return (
+                  typeof priority.id === 'string' &&
+                  typeof priority.category === 'string' &&
+                  typeof priority.activity === 'string'
+                );
+              })
+              .map((p: Json) => p as unknown as ActivePriority);
           } catch (e) {
             console.warn('Failed to parse active_priorities:', e);
             activePriorities = [];
