@@ -55,10 +55,7 @@ const ChatPage: React.FC = () => {
         todayActivities: [],
         isOnline: selectedChat.isOnline || false,
         blockedUsers: [],
-        blocked_users: [], // Database field name
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        active_priorities: []
+        blocked_users: [] // Database field name
       };
       
       handleAddFriend(participant);

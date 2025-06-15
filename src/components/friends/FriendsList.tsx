@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { AppUser, Chat } from '@/context/types';
 import { Button } from '@/components/ui/button';
@@ -18,6 +19,10 @@ const FriendsList: React.FC<FriendsListProps> = ({
 }) => {
   const [selectedFriend, setSelectedFriend] = useState<AppUser | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+
+  // Add debugging
+  console.log("FriendsList - Received friends:", friends);
+  console.log("FriendsList - Friends count:", friends.length);
 
   const handleViewFriendship = (friend: AppUser) => {
     setSelectedFriend(friend);
