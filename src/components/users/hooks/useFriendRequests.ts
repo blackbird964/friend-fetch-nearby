@@ -44,9 +44,8 @@ export function useFriendRequests() {
         await createFriendship(senderId);
         
         // Remove from local state with proper typing
-        setFriendRequests((prev: FriendRequest[]) => 
-          prev.filter(req => req.id !== requestId)
-        );
+        const updatedRequests = friendRequests.filter(req => req.id !== requestId);
+        setFriendRequests(updatedRequests);
         
         toast.success('Friend request accepted!');
         
@@ -72,9 +71,8 @@ export function useFriendRequests() {
       
       if (success) {
         // Remove from local state with proper typing
-        setFriendRequests((prev: FriendRequest[]) => 
-          prev.filter(req => req.id !== requestId)
-        );
+        const updatedRequests = friendRequests.filter(req => req.id !== requestId);
+        setFriendRequests(updatedRequests);
         
         toast.success('Friend request rejected');
         
@@ -100,9 +98,8 @@ export function useFriendRequests() {
       
       if (success) {
         // Remove from local state with proper typing
-        setFriendRequests((prev: FriendRequest[]) => 
-          prev.filter(req => req.id !== requestId)
-        );
+        const updatedRequests = friendRequests.filter(req => req.id !== requestId);
+        setFriendRequests(updatedRequests);
         
         toast.success('Friend request canceled');
         
