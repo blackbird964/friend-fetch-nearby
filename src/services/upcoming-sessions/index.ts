@@ -52,7 +52,7 @@ export async function createUpcomingSession(
       return null;
     }
 
-    return session as UpcomingSession;
+    return session as unknown as UpcomingSession;
   } catch (error) {
     console.error('Error creating upcoming session:', error);
     return null;
@@ -83,7 +83,7 @@ export async function getUpcomingSessions(): Promise<UpcomingSession[]> {
       return [];
     }
 
-    return (sessions || []) as UpcomingSession[];
+    return (sessions || []) as unknown as UpcomingSession[];
   } catch (error) {
     console.error('Error fetching upcoming sessions:', error);
     return [];
