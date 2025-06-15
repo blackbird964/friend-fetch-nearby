@@ -56,7 +56,6 @@ const ChatPage: React.FC = () => {
         isOnline: selectedChat.isOnline || false,
         blockedUsers: [],
         blocked_users: [], // Database field name
-        total_catchup_time: 0,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
         active_priorities: []
