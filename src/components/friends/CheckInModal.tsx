@@ -1,15 +1,12 @@
 
 import React, { useState } from 'react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Star, Heart, UserPlus, Ban, Flag } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Star, MessageSquare, Calendar, Clock } from 'lucide-react';
 import UserAvatar from '@/components/users/cards/UserAvatar';
-import { toast } from 'sonner';
 
 interface CheckIn {
   id: string;
@@ -17,220 +14,263 @@ interface CheckIn {
   userName: string;
   userPhoto?: string;
   interactionDate: Date;
-  interactionType: 'chat' | 'meeting';
+  interactionType: 'chat' | 'meeting' | 'meetup_request';
   status: 'pending' | 'completed' | 'expired';
   expiresAt: Date;
   meetingDuration?: number;
+  activity?: string;
 }
 
 interface CheckInModalProps {
   isOpen: boolean;
   onClose: () => void;
   checkIn: CheckIn;
-  onComplete: (checkInId: string, feedback: CheckInFeedback) => void;
+  onComplete: (checkInId: string, feedback: any) => void;
 }
 
-interface CheckInFeedback {
-  didMeet: boolean;
-  rating?: number;
-  connectionPreference: 'friend' | 'maybe' | 'no' | 'block';
-}
-
-const CheckInModal: React.FC<CheckInModalProps> = ({ 
-  isOpen, 
-  onClose, 
-  checkIn, 
-  onComplete 
+const CheckInModal: React.FC<CheckInModalProps> = ({
+  isOpen,
+  onClose,
+  checkIn,
+  onComplete
 }) => {
-  const [step, setStep] = useState(1);
-  const [feedback, setFeedback] = useState<CheckInFeedback>({
-    didMeet: false,
-    connectionPreference: 'maybe'
-  });
+  const [didMeet, setDidMeet] = useState<string>('');
+  const [rating, setRating] = useState<number>(0);
+  const [connectionPreference, setConnectionPreference] = useState<string>('');
+  const [feedback, setFeedback] = useState<string>('');
 
-  const handleMeetingConfirmation = (didMeet: boolean) => {
-    setFeedback(prev => ({ ...prev, didMeet }));
-    setStep(didMeet ? 2 : 3);
-  };
-
-  const handleRating = (rating: number) => {
-    setFeedback(prev => ({ ...prev, rating }));
-    setStep(3);
-  };
-
-  const handleConnectionPreference = (preference: CheckInFeedback['connectionPreference']) => {
-    const finalFeedback = { ...feedback, connectionPreference: preference };
-    setFeedback(finalFeedback);
+  const handleSubmit = () => {
+    const feedbackData = {
+      didMeet: didMeet === 'yes',
+      rating: didMeet === 'yes' ? rating : null,
+      connectionPreference,
+      feedback
+    };
     
-    // Show appropriate feedback message
-    switch (preference) {
-      case 'friend':
-        toast.success('Friend request sent!', {
-          description: `You've added ${checkIn.userName} as a friend.`
-        });
-        break;
-      case 'maybe':
-        toast.info('Maybe later', {
-          description: 'You can always connect later if you change your mind.'
-        });
-        break;
-      case 'no':
-        toast.info('No connection made', {
-          description: 'No worries, you won\'t see each other in suggestions.'
-        });
-        break;
-      case 'block':
-        toast.success('User blocked', {
-          description: 'They won\'t be able to contact you again.'
-        });
-        break;
+    onComplete(checkIn.id, feedbackData);
+    onClose();
+    
+    // Reset form
+    setDidMeet('');
+    setRating(0);
+    setConnectionPreference('');
+    setFeedback('');
+  };
+
+  const getInteractionIcon = () => {
+    switch (checkIn.interactionType) {
+      case 'meetup_request':
+        return <Calendar className="h-4 w-4" />;
+      case 'meeting':
+        return <Clock className="h-4 w-4" />;
+      default:
+        return <MessageSquare className="h-4 w-4" />;
     }
-    
-    onComplete(checkIn.id, finalFeedback);
   };
 
-  const renderStep = () => {
-    switch (step) {
-      case 1:
-        return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <div className="mx-auto mb-4">
-                <UserAvatar
-                  src={checkIn.userPhoto}
-                  alt={checkIn.userName}
-                  size="lg"
+  const getInteractionText = () => {
+    switch (checkIn.interactionType) {
+      case 'meetup_request':
+        return `Meetup request for ${checkIn.activity} (${checkIn.meetingDuration}min)`;
+      case 'meeting':
+        return 'In-person meeting';
+      default:
+        return 'Chat conversation';
+    }
+  };
+
+  const getModalTitle = () => {
+    switch (checkIn.interactionType) {
+      case 'meetup_request':
+        return 'Meetup Request Response';
+      default:
+        return 'Check-in with';
+    }
+  };
+
+  const getSubmitButtonText = () => {
+    switch (checkIn.interactionType) {
+      case 'meetup_request':
+        return 'Respond to Request';
+      default:
+        return 'Complete Check-in';
+    }
+  };
+
+  if (checkIn.interactionType === 'meetup_request') {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{getModalTitle()}</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="flex items-center space-x-3">
+              <UserAvatar
+                src={checkIn.userPhoto}
+                alt={checkIn.userName}
+                size="md"
+              />
+              <div>
+                <h4 className="font-medium">{checkIn.userName}</h4>
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  {getInteractionIcon()}
+                  <span>{getInteractionText()}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium">Response</Label>
+                <RadioGroup value={connectionPreference} onValueChange={setConnectionPreference}>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="accept" id="accept" />
+                    <Label htmlFor="accept">Accept meetup</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="decline" id="decline" />
+                    <Label htmlFor="decline">Decline meetup</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
+              <div>
+                <Label htmlFor="feedback" className="text-sm font-medium">
+                  Message (optional)
+                </Label>
+                <Textarea
+                  id="feedback"
+                  placeholder="Add a message..."
+                  value={feedback}
+                  onChange={(e) => setFeedback(e.target.value)}
+                  className="mt-1"
                 />
               </div>
-              <h3 className="text-lg font-semibold mb-2">
-                How was your time with {checkIn.userName}?
-              </h3>
-              <p className="text-gray-600 text-sm">
-                {checkIn.interactionType === 'meeting' 
-                  ? 'Let us know if you met up and how it went'
-                  : 'Tell us about your chat experience'
-                }
-              </p>
             </div>
 
-            <div className="space-y-3">
-              <p className="font-medium text-center">Did you meet up?</p>
-              <div className="flex gap-3">
-                <Button
-                  variant="outline"
-                  className="flex-1 h-12"
-                  onClick={() => handleMeetingConfirmation(true)}
-                >
-                  Yes, we met
-                </Button>
-                <Button
-                  variant="outline"
-                  className="flex-1 h-12"
-                  onClick={() => handleMeetingConfirmation(false)}
-                >
-                  No, just chatted
-                </Button>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 2:
-        return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold mb-2">How was your meeting?</h3>
-              <p className="text-gray-600 text-sm">Rate your experience (optional)</p>
-            </div>
-
-            <div className="flex justify-center space-x-2">
-              {[1, 2, 3, 4, 5].map((rating) => (
-                <button
-                  key={rating}
-                  onClick={() => handleRating(rating)}
-                  className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                >
-                  <Star
-                    className={`h-8 w-8 ${
-                      feedback.rating && feedback.rating >= rating
-                        ? 'text-yellow-400 fill-current'
-                        : 'text-gray-300'
-                    }`}
-                  />
-                </button>
-              ))}
-            </div>
-
-            <div className="text-center">
-              <Button variant="ghost" onClick={() => setStep(3)}>
-                Skip rating
+            <div className="flex justify-end space-x-2">
+              <Button variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button 
+                onClick={handleSubmit}
+                disabled={!connectionPreference}
+              >
+                {getSubmitButtonText()}
               </Button>
             </div>
           </div>
-        );
-
-      case 3:
-        return (
-          <div className="space-y-6">
-            <div className="text-center">
-              <h3 className="text-lg font-semibold mb-2">
-                Stay connected with {checkIn.userName}?
-              </h3>
-              <p className="text-gray-600 text-sm">
-                Choose how you'd like to proceed
-              </p>
-            </div>
-
-            <div className="space-y-3">
-              <Button
-                onClick={() => handleConnectionPreference('friend')}
-                className="w-full h-12 bg-green-500 hover:bg-green-600 flex items-center justify-center gap-2"
-              >
-                <UserPlus className="h-5 w-5" />
-                Add as Friend
-              </Button>
-
-              <Button
-                variant="outline"
-                onClick={() => handleConnectionPreference('maybe')}
-                className="w-full h-12 flex items-center justify-center gap-2"
-              >
-                <Heart className="h-5 w-5" />
-                Maybe Later
-              </Button>
-
-              <Button
-                variant="outline"
-                onClick={() => handleConnectionPreference('no')}
-                className="w-full h-12 flex items-center justify-center gap-2 text-gray-600"
-              >
-                No Thanks
-              </Button>
-
-              <Button
-                variant="outline"
-                onClick={() => handleConnectionPreference('block')}
-                className="w-full h-12 flex items-center justify-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
-              >
-                <Ban className="h-5 w-5" />
-                Block User
-              </Button>
-            </div>
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-center">Check-in</DialogTitle>
+          <DialogTitle>{getModalTitle()} {checkIn.userName}</DialogTitle>
         </DialogHeader>
-        {renderStep()}
+        
+        <div className="space-y-4">
+          <div className="flex items-center space-x-3">
+            <UserAvatar
+              src={checkIn.userPhoto}
+              alt={checkIn.userName}
+              size="md"
+            />
+            <div>
+              <h4 className="font-medium">{checkIn.userName}</h4>
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                {getInteractionIcon()}
+                <span>{getInteractionText()}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium">Did you meet up in person?</Label>
+              <RadioGroup value={didMeet} onValueChange={setDidMeet}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="yes" id="yes" />
+                  <Label htmlFor="yes">Yes, we met in person</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="no" id="no" />
+                  <Label htmlFor="no">No, we didn't meet</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            {didMeet === 'yes' && (
+              <div>
+                <Label className="text-sm font-medium">How was your experience?</Label>
+                <div className="flex space-x-1 mt-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setRating(star)}
+                      className="focus:outline-none"
+                    >
+                      <Star
+                        className={`h-6 w-6 ${
+                          star <= rating ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <Label className="text-sm font-medium">Would you like to connect with them again?</Label>
+              <RadioGroup value={connectionPreference} onValueChange={setConnectionPreference}>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="yes" id="connect-yes" />
+                  <Label htmlFor="connect-yes">Yes, I'd like to hang out again</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="no" id="connect-no" />
+                  <Label htmlFor="connect-no">No, not interested</Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="maybe" id="connect-maybe" />
+                  <Label htmlFor="connect-maybe">Maybe in the future</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
+            <div>
+              <Label htmlFor="feedback" className="text-sm font-medium">
+                Additional feedback (optional)
+              </Label>
+              <Textarea
+                id="feedback"
+                placeholder="Share your thoughts about this interaction..."
+                value={feedback}
+                onChange={(e) => setFeedback(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end space-x-2">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmit}
+              disabled={!didMeet || !connectionPreference}
+            >
+              {getSubmitButtonText()}
+            </Button>
+          </div>
+        </div>
       </DialogContent>
     </Dialog>
   );
