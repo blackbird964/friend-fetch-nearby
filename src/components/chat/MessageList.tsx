@@ -29,10 +29,17 @@ const MessageItem = memo(({ message }: { message: Message }) => {
         if (jsonData.type === 'friend_request') {
           return (
             <div className="bg-primary-50 p-3 rounded-md border border-primary-100">
-              <p className="font-medium mb-1">Friend Request {jsonData.status === 'accepted' ? '(Accepted)' : ''}</p>
-              <p className="text-sm">
-                {jsonData.duration} minute meetup with {jsonData.sender_name}
+              <p className="font-medium mb-1">
+                {jsonData.status === 'accepted' 
+                  ? 'Friend request accepted!' 
+                  : 'You have a new friend request'
+                }
               </p>
+              {jsonData.duration && (
+                <p className="text-sm">
+                  {jsonData.duration} minute meetup with {jsonData.sender_name}
+                </p>
+              )}
             </div>
           );
         }
