@@ -1,61 +1,37 @@
 
-import { FriendRequest } from '@/context/types';
-import { FriendRequestMessageContent } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
-// Generate a new UUID for friend requests
-export function generateRequestId(): string {
+export const generateRequestId = (): string => {
   return uuidv4();
-}
+};
 
-// Convert a message to a friend request object
-export function messageToFriendRequest(message: any): FriendRequest | null {
-  try {
-    const content = JSON.parse(message.content) as FriendRequestMessageContent;
-    
-    if (content.type !== 'friend_request') {
-      return null;
-    }
-
-    return {
-      id: message.id,
-      senderId: message.sender_id,
-      receiverId: message.receiver_id,
-      senderName: content.sender_name,
-      senderProfilePic: content.sender_profile_pic,
-      receiverName: content.receiver_name,
-      receiverProfilePic: content.receiver_profile_pic,
-      duration: String(content.duration), // Convert to string
-      status: content.status,
-      timestamp: content.timestamp,
-      createdAt: message.created_at || new Date().toISOString(),
-      sender_name: content.sender_name
-    };
-  } catch (error) {
-    console.error('Error parsing message to friend request:', error);
-    return null;
-  }
-}
-
-// Create the content field for the message table
-export function createRequestMessageContent(
-  duration: string, // Change to string
+export const createFriendRequestMessageContent = (
+  duration: number,
   senderName: string,
   senderProfilePic: string | null,
   receiverName: string,
-  receiverProfilePic: string | null,
-  status: 'pending' | 'accepted' | 'rejected' = 'pending'
-): string {
-  const content: FriendRequestMessageContent = {
+  receiverProfilePic: string | null
+): string => {
+  const messageData = {
     type: 'friend_request',
-    duration: parseInt(duration), // Parse as number for storage
+    status: 'pending',
+    duration,
     sender_name: senderName,
-    sender_profile_pic: senderProfilePic,
-    receiver_name: receiverName,
-    receiver_profile_pic: receiverProfilePic,
-    status,
+    senderName,
+    senderProfilePic,
+    receiverName,
+    receiverProfilePic,
     timestamp: Date.now()
   };
+  
+  return JSON.stringify(messageData);
+};
 
-  return JSON.stringify(content);
-}
+export const parseFriendRequestContent = (content: string) => {
+  try {
+    return JSON.parse(content);
+  } catch (error) {
+    console.error('Error parsing friend request content:', error);
+    return null;
+  }
+};

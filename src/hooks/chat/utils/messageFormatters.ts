@@ -4,9 +4,8 @@ import { Message as ContextMessage, Chat } from '@/context/types';
 export const formatMessage = (msg: any): ContextMessage => {
   return {
     id: msg.id,
-    chatId: `chat-${msg.sender_id}-${msg.receiver_id}`,
     senderId: msg.sender_id,
-    content: msg.content,
+    content: msg.content || '', // Ensure content is never undefined
     timestamp: new Date(msg.created_at).getTime(),
     status: msg.read ? 'read' : 'delivered'
   };
@@ -83,7 +82,6 @@ export const createOptimisticMessage = (
 ): ContextMessage => {
   return {
     id: tempId,
-    chatId: chat.id,
     senderId: 'current',
     content,
     text: content,
@@ -95,11 +93,10 @@ export const createOptimisticMessage = (
 export const createRealTimeMessage = (dbMessage: any, chat: Chat): ContextMessage => {
   return {
     id: dbMessage.id,
-    chatId: chat.id,
     senderId: dbMessage.sender_id,
     content: formatMessageContent(dbMessage.content),
     text: formatMessageContent(dbMessage.content),
     timestamp: new Date(dbMessage.created_at).getTime(),
-    status: 'received'
+    status: 'delivered'
   };
 };

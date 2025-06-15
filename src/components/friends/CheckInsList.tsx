@@ -88,7 +88,7 @@ const CheckInsList: React.FC = () => {
           interactionType: 'meetup_request' as const,
           status: 'pending' as const,
           expiresAt,
-          meetingDuration: parseInt(request.duration),
+          meetingDuration: typeof request.duration === 'string' ? parseInt(request.duration) : request.duration,
           activity: request.meetLocation
         };
       });

@@ -88,7 +88,7 @@ export const useMeetupRequests = () => {
           request.senderName,
           request.senderProfilePic || null,
           request.meetLocation || 'Meetup',
-          parseInt(request.duration)
+          request.duration
         );
 
         // Get sender's email to send notification

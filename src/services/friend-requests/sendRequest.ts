@@ -1,8 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { FriendRequest } from '@/context/types';
-import { generateRequestId, createRequestMessageContent } from './utils';
-import { SendFriendRequestInput } from './types';
+import { FriendRequest } from './types';
+import { generateRequestId, createFriendRequestMessageContent } from './utils';
 
 /**
  * Send a friend request from one user to another
@@ -14,7 +13,7 @@ export async function sendFriendRequest(
   receiverId: string,
   receiverName: string,
   receiverProfilePic: string | null,
-  duration: string // Change to string
+  duration: number
 ): Promise<FriendRequest | null> {
   try {
     // Create a proper UUID for the request
@@ -29,17 +28,16 @@ export async function sendFriendRequest(
       receiverId,
       receiverName,
       receiverProfilePic,
-      duration,
-      status: 'pending',
       timestamp: Date.now(),
-      createdAt: new Date().toISOString(),
-      sender_name: senderName
+      status: 'pending',
+      duration,
+      sender_name: senderName // For backwards compatibility
     };
 
     console.log("Sending friend request:", newRequest);
 
     // Create message content
-    const content = createRequestMessageContent(
+    const content = createFriendRequestMessageContent(
       duration,
       senderName,
       senderProfilePic,
@@ -47,8 +45,7 @@ export async function sendFriendRequest(
       receiverProfilePic
     );
 
-    // Since we don't have a friend_requests table in the database yet,
-    // we'll use messages table as a temporary solution
+    // Use messages table to store the request
     const { data, error } = await supabase
       .from('messages')
       .insert({
@@ -68,7 +65,6 @@ export async function sendFriendRequest(
       console.log('Friend request saved to database:', data);
     }
 
-    // Return the request object to handle in the context
     return newRequest;
   } catch (error) {
     console.error('Error sending friend request:', error);

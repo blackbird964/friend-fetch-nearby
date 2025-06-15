@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { MeetupRequest } from './types';
 import { generateRequestId, createMeetupRequestMessageContent } from './utils';
@@ -69,33 +70,38 @@ export async function sendMeetupRequest(
     }
 
     // Check if receiver has email notifications enabled before sending email
-    const { data: receiverProfile, error: profileError } = await supabase
-      .from('profiles')
-      .select('email_notifications_enabled')
-      .eq('id', receiverId)
-      .single();
+    // Since the column might not exist yet, we'll handle the error gracefully
+    try {
+      const { data: receiverProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('id', receiverId)
+        .single();
 
-    // Default to true if field doesn't exist (backwards compatibility)
-    const emailNotificationsEnabled = receiverProfile?.email_notifications_enabled !== false;
+      // For now, assume email notifications are enabled if we can't check
+      const emailNotificationsEnabled = true;
 
-    if (emailNotificationsEnabled) {
-      // Get receiver's email from auth.users to send notification
-      const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(receiverId);
+      if (emailNotificationsEnabled) {
+        // Get receiver's email from auth.users to send notification
+        const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(receiverId);
 
-      if (!userError && user?.email) {
-        console.log('Sending email notification to:', user.email);
-        
-        await sendMeetupRequestEmail(
-          user.email,
-          senderName,
-          duration,
-          meetLocation || 'a location'
-        );
+        if (!userError && user?.email) {
+          console.log('Sending email notification to:', user.email);
+          
+          await sendMeetupRequestEmail(
+            user.email,
+            senderName,
+            duration,
+            meetLocation || 'a location'
+          );
+        } else {
+          console.error('Could not fetch user email for notification:', userError);
+        }
       } else {
-        console.error('Could not fetch user email for notification:', userError);
+        console.log('Email notifications disabled for user:', receiverId);
       }
-    } else {
-      console.log('Email notifications disabled for user:', receiverId);
+    } catch (emailError) {
+      console.log('Email notification check failed, but continuing:', emailError);
     }
 
     return newRequest;

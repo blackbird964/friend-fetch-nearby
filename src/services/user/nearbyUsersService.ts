@@ -1,85 +1,118 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { AppUser } from '@/context/types';
-import { processNearbyUsers, filterUsersByDistance } from './userFilterService';
-import { extractLocationFromPgPoint } from './userLocationService';
 
-/**
- * Service for managing nearby users functionality
- */
-export const nearbyUsersService = {
-  /**
-   * Get nearby users for a specific location and radius with fresh data
-   */
-  getNearbyUsers: async (
-    location: { lat: number, lng: number }, 
-    radiusKm: number
-  ): Promise<AppUser[]> => {
-    try {
-      console.log(`Getting nearby users within ${radiusKm}km radius with fresh data`);
-      
-      // Fetch all profiles from the database with the most current data
-      const { data: profiles, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('updated_at', { ascending: false }); // Get most recently updated first
-        
-      if (error) {
-        console.error("Error fetching profiles:", error);
-        throw error;
-      }
+export async function fetchNearbyUsers(
+  currentUserId: string,
+  userLocation: { lat: number; lng: number },
+  radiusInKm: number = 5
+): Promise<AppUser[]> {
+  try {
+    console.log('Fetching nearby users for user:', currentUserId);
+    console.log('User location:', userLocation);
+    console.log('Radius:', radiusInKm);
 
-      console.log("All fetched profiles with fresh data:", profiles?.length);
-      
-      // Convert to AppUser type with all current preferences
-      const otherUsers = profiles?.map(profile => {
-        // Use type assertion to handle properties that might not be in the type
-        const typedProfile = profile as any;
-        const userData: AppUser = {
-          id: profile.id,
-          name: profile.name || 'User',
-          email: '', // We don't have emails for other users
-          avatar: profile.profile_pic || undefined,
-          location: profile.location ? extractLocationFromPgPoint(profile.location) : undefined,
-          interests: Array.isArray(profile.interests) ? profile.interests : [],
-          profile_pic: profile.profile_pic || undefined,
-          bio: profile.bio || undefined,
-          age: profile.age || undefined,
-          gender: profile.gender || undefined,
-          isOnline: typedProfile.is_online || false,
-          blockedUsers: typedProfile.blocked_users || [],
-          todayActivities: Array.isArray(typedProfile.today_activities) ? typedProfile.today_activities : [],
-          preferredHangoutDuration: typedProfile.preferred_hangout_duration || '30',
-          active_priorities: typedProfile.active_priorities || []
-        };
-        
-        console.log(`Processed user: ${profile.id}, name: ${userData.name}, activities: ${userData.todayActivities}, interests: ${userData.interests}, duration: ${userData.preferredHangoutDuration}`);
-        return userData;
-      }) || [];
+    // Fetch users within radius using ST_DWithin (distance in meters)
+    const radiusInMeters = radiusInKm * 1000;
+    
+    const { data: users, error } = await supabase
+      .from('profiles')
+      .select(`
+        id,
+        name,
+        bio,
+        age,
+        gender,
+        interests,
+        profile_pic,
+        location,
+        last_seen,
+        is_online,
+        is_over_18,
+        active_priorities,
+        preferred_hangout_duration,
+        today_activities,
+        blocked_users
+      `)
+      .neq('id', currentUserId)
+      .not('location', 'is', null)
+      .eq('is_online', true);
 
-      console.log(`Found ${otherUsers.length} users with updated preferences`);
-      
-      // If we have a location, calculate distance and filter by radius
-      if (location && location.lat && location.lng) {
-        // Calculate distance for each user
-        const usersWithDistance = processNearbyUsers(otherUsers, location);
-        
-        // Filter users by distance
-        const nearbyUsers = filterUsersByDistance(usersWithDistance, radiusKm);
-        
-        console.log(`After distance filtering: ${nearbyUsers.length} users within ${radiusKm}km with current preferences`);
-        return nearbyUsers;
-      } else {
-        // If no location provided, return all users without distance filtering
-        console.log("No location provided, returning all users with current preferences");
-        return otherUsers;
-      }
-    } catch (error) {
-      console.error("Error getting nearby users with fresh data:", error);
+    if (error) {
+      console.error('Error fetching nearby users:', error);
       return [];
     }
-  }
-};
 
-// Also export individual functions for direct access if needed
-export { processNearbyUsers, filterUsersByDistance };
+    if (!users || users.length === 0) {
+      console.log('No users found');
+      return [];
+    }
+
+    // Calculate distances and filter by radius
+    const usersWithDistance = users
+      .map(user => {
+        if (!user.location) return null;
+
+        const userLat = (user.location as any).x || (user.location as any).lat;
+        const userLng = (user.location as any).y || (user.location as any).lng;
+
+        if (!userLat || !userLng) return null;
+
+        // Calculate distance using Haversine formula
+        const distance = calculateDistance(
+          userLocation.lat,
+          userLocation.lng,
+          userLat,
+          userLng
+        );
+
+        if (distance > radiusInKm) return null;
+
+        const appUser: AppUser = {
+          id: user.id,
+          name: user.name || '',
+          bio: user.bio,
+          age: user.age,
+          gender: user.gender,
+          interests: user.interests || [],
+          profile_pic: user.profile_pic,
+          email: '', // Email not available in profiles table
+          location: { lat: userLat, lng: userLng },
+          distance,
+          last_seen: user.last_seen,
+          is_online: user.is_online,
+          isOnline: user.is_online, // For backwards compatibility
+          is_over_18: user.is_over_18,
+          active_priorities: user.active_priorities || [],
+          preferredHangoutDuration: user.preferred_hangout_duration ? parseInt(user.preferred_hangout_duration) : null,
+          todayActivities: user.today_activities || [],
+          blockedUsers: user.blocked_users || [],
+          blocked_users: user.blocked_users || [] // For backwards compatibility
+        };
+
+        return appUser;
+      })
+      .filter((user): user is AppUser => user !== null)
+      .sort((a, b) => (a.distance || 0) - (b.distance || 0));
+
+    console.log(`Found ${usersWithDistance.length} nearby users within ${radiusInKm}km`);
+    return usersWithDistance;
+  } catch (error) {
+    console.error('Error in fetchNearbyUsers:', error);
+    return [];
+  }
+}
+
+// Haversine formula to calculate distance between two points
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371; // Radius of the Earth in kilometers
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = 
+    Math.sin(dLat/2) * Math.sin(dLat/2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+    Math.sin(dLon/2) * Math.sin(dLon/2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  const distance = R * c;
+  return distance;
+}

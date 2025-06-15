@@ -1,4 +1,5 @@
 
+
 import { Profile } from '@/lib/supabase';
 
 export interface Location {
@@ -28,7 +29,7 @@ export interface MeetupRequest {
   receiverId: string;
   receiverName: string;
   receiverProfilePic?: string | null;
-  duration: number | string;
+  duration: number;
   status: 'pending' | 'accepted' | 'rejected';
   timestamp: number;
   type: 'meetup';
@@ -38,10 +39,11 @@ export interface MeetupRequest {
 export interface Message {
   id: string;
   senderId: string;
-  content?: string;
+  content: string; // Make required to match ChatMessage
   text?: string;
-  timestamp: number | string;
+  timestamp: number;
   status?: 'sending' | 'sent' | 'delivered' | 'read';
+  chatId?: string; // Add optional chatId
 }
 
 export interface ChatMessage {
@@ -108,6 +110,7 @@ export interface AppUser {
   };
   email_notifications_enabled?: boolean;
   blockedUsers?: string[];
+  blocked_users?: string[]; // For backwards compatibility
   chat?: Chat; // For compatibility with friends list
 }
 
