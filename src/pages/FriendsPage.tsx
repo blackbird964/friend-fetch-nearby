@@ -7,12 +7,14 @@ import { ArrowLeft, Users, Clock } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CheckInsList from '@/components/friends/CheckInsList';
 import FriendsList from '@/components/friends/FriendsList';
-import { Chat, AppUser } from '@/context/types';
+import { Chat } from '@/context/types';
 import { useChatList } from '@/hooks/useChatList';
+import { useFriendships } from '@/hooks/useFriendships';
 
 const FriendsPage: React.FC = () => {
   const { setSelectedChat, friendRequests, refreshFriendRequests } = useAppContext();
-  const { chats, isLoading } = useChatList();
+  const { chats } = useChatList();
+  const { friends, isLoading: friendshipsLoading } = useFriendships();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('friends');
 
@@ -20,53 +22,21 @@ const FriendsPage: React.FC = () => {
     refreshFriendRequests();
   }, [refreshFriendRequests]);
 
-  // Extract real friends from chats - include ALL chats as friends
-  // regardless of check-in status, but deduplicate by participant ID
-  const friends = React.useMemo(() => {
-    if (!chats || chats.length === 0) return [];
+  const handleFriendClick = (friend: any) => {
+    // Find the corresponding chat for this friend
+    const friendChat = chats.find(chat => chat.participantId === friend.id);
     
-    return chats.reduce((uniqueFriends: AppUser[], chat) => {
-      const participantId = chat.participantId || '';
-      
-      // Skip if no participant ID
-      if (!participantId) return uniqueFriends;
-      
-      // Check if we already have this friend
-      const existingFriend = uniqueFriends.find(friend => friend.id === participantId);
-      
-      if (!existingFriend) {
-        const friend: AppUser = {
-          id: participantId,
-          name: chat.participantName || '',
-          email: '',
-          interests: [],
-          profile_pic: chat.profilePic,
-          isOnline: chat.isOnline,
-          chat: chat
-        };
-        
-        uniqueFriends.push(friend);
-      } else {
-        // Update with the most recent chat data if this chat is newer
-        if (chat.lastMessageTime && (!existingFriend.chat?.lastMessageTime || chat.lastMessageTime > existingFriend.chat.lastMessageTime)) {
-          existingFriend.chat = chat;
-          existingFriend.isOnline = chat.isOnline;
-          existingFriend.profile_pic = chat.profilePic;
-          existingFriend.name = chat.participantName || existingFriend.name;
-        }
-      }
-      
-      return uniqueFriends;
-    }, []);
-  }, [chats]);
-
-  const handleFriendClick = (chat: Chat) => {
-    setSelectedChat(chat);
-    navigate('/chat');
+    if (friendChat) {
+      setSelectedChat(friendChat);
+      navigate('/chat');
+    } else {
+      // If no chat exists, we could create one or handle this case
+      console.log('No chat found for friend:', friend.name);
+    }
   };
 
-  // Show loading state while chats are being fetched
-  if (isLoading) {
+  // Show loading state while friendships are being fetched
+  if (friendshipsLoading) {
     return (
       <div className="container mx-auto px-4 py-6 mb-20 max-w-3xl">
         <div className="flex items-center gap-2 mb-6">

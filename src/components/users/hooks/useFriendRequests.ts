@@ -1,158 +1,129 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { FriendRequest } from '@/context/types';
-import { useToast } from "@/hooks/use-toast";
-import { updateFriendRequestStatus, cancelFriendRequest } from '@/services/friend-requests';
-import { toast } from "sonner";
+import { 
+  fetchFriendRequests, 
+  updateFriendRequestStatus, 
+  cancelFriendRequest 
+} from '@/services/friend-requests';
+import { createFriendship } from '@/services/friendships';
+import { toast } from 'sonner';
 
-export const useFriendRequests = () => {
-  const { currentUser, friendRequests, setFriendRequests, chats, setChats, refreshFriendRequests } = useAppContext();
-  const [loading, setLoading] = useState(false);
+export function useFriendRequests() {
+  const { 
+    friendRequests, 
+    setFriendRequests, 
+    currentUser, 
+    refreshFriendRequests 
+  } = useAppContext();
 
-  // Filter to show pending requests and requests sent by current user
-  const pendingRequests = friendRequests.filter(r => 
-    r.status === 'pending' && r.receiverId === currentUser?.id
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Filter requests
+  const pendingRequests = friendRequests.filter(
+    req => req.receiverId === currentUser?.id && req.status === 'pending'
   );
   
-  const sentRequests = friendRequests.filter(r => 
-    r.status === 'pending' && r.senderId === currentUser?.id
+  const sentRequests = friendRequests.filter(
+    req => req.senderId === currentUser?.id && req.status === 'pending'
   );
 
-  const handleAccept = async (requestId: string) => {
+  const handleAccept = async (requestId: string, senderId: string) => {
     if (!currentUser) return;
     
-    const request = friendRequests.find(r => r.id === requestId);
-    if (!request) return;
-
-    setLoading(true);
+    setIsLoading(true);
     try {
-      // Update request status on the backend
+      console.log('Accepting friend request:', requestId);
+      
+      // Update the friend request status
       const success = await updateFriendRequestStatus(requestId, 'accepted');
       
       if (success) {
-        // Update request status in local state
-        setFriendRequests(
-          friendRequests.map(r => 
-            r.id === requestId ? { ...r, status: 'accepted' } : r
-          )
-        );
-
-        // Check if we already have a chat with this user
-        const existingChat = chats.find(chat => 
-          chat.participantId === request.senderId || 
-          chat.participants.includes(request.senderId)
-        );
-
-        if (!existingChat) {
-          // Create a chat with this user if one doesn't exist
-          const newChat = {
-            id: `chat-${Date.now()}`,
-            participantId: request.senderId || '',
-            participantName: request.senderName || request.sender_name || 'User',
-            profilePic: request.senderProfilePic || '',
-            lastMessage: "Say hello!",
-            lastMessageTime: Date.now(),
-            messages: [],
-            name: request.senderName || request.sender_name || 'User',
-            participants: [currentUser.id || '', request.senderId || ''],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            unreadCount: 0
-          };
-
-          setChats([...chats, newChat]);
-        }
-
-        toast.success("Request Accepted", {
-          description: `You've accepted ${request.senderName || request.sender_name}'s request.`,
-        });
+        // Create friendship record
+        await createFriendship(senderId);
         
-        // Refresh friend requests to get the latest data
+        // Remove from local state
+        setFriendRequests(prev => 
+          prev.filter(req => req.id !== requestId)
+        );
+        
+        toast.success('Friend request accepted!');
+        
+        // Refresh the friend requests list
         await refreshFriendRequests();
       } else {
-        throw new Error("Failed to update request status");
+        toast.error('Failed to accept friend request');
       }
     } catch (error) {
       console.error('Error accepting friend request:', error);
-      toast.error("Error", {
-        description: "Failed to accept request. Please try again.",
-      });
+      toast.error('Failed to accept friend request');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleReject = async (requestId: string) => {
-    const request = friendRequests.find(r => r.id === requestId);
-    if (!request) return;
-
-    setLoading(true);
+    setIsLoading(true);
     try {
-      // Update request status on the backend
+      console.log('Rejecting friend request:', requestId);
+      
       const success = await updateFriendRequestStatus(requestId, 'rejected');
       
       if (success) {
-        // Update request status in local state
-        setFriendRequests(
-          friendRequests.map(r => 
-            r.id === requestId ? { ...r, status: 'rejected' } : r
-          )
+        // Remove from local state
+        setFriendRequests(prev => 
+          prev.filter(req => req.id !== requestId)
         );
-
-        toast.success("Request Rejected", {
-          description: `You've declined ${request.senderName || request.sender_name}'s request.`,
-        });
         
-        // Refresh friend requests to get the latest data
+        toast.success('Friend request rejected');
+        
+        // Refresh the friend requests list
         await refreshFriendRequests();
       } else {
-        throw new Error("Failed to update request status");
+        toast.error('Failed to reject friend request');
       }
     } catch (error) {
       console.error('Error rejecting friend request:', error);
-      toast.error("Error", {
-        description: "Failed to reject request. Please try again.",
-      });
+      toast.error('Failed to reject friend request');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   const handleCancel = async (requestId: string) => {
-    setLoading(true);
+    setIsLoading(true);
     try {
+      console.log('Canceling friend request:', requestId);
+      
       const success = await cancelFriendRequest(requestId);
       
       if (success) {
-        // Remove the request from state
-        setFriendRequests(friendRequests.filter(r => r.id !== requestId));
+        // Remove from local state
+        setFriendRequests(prev => 
+          prev.filter(req => req.id !== requestId)
+        );
         
-        toast.success("Request Cancelled", {
-          description: "Your catch-up request has been cancelled.",
-        });
+        toast.success('Friend request canceled');
         
-        // Refresh friend requests to get the latest data
+        // Refresh the friend requests list
         await refreshFriendRequests();
       } else {
-        throw new Error("Failed to cancel request");
+        toast.error('Failed to cancel friend request');
       }
     } catch (error) {
-      console.error('Error cancelling friend request:', error);
-      toast.error("Error", {
-        description: "Failed to cancel request. Please try again.",
-      });
+      console.error('Error canceling friend request:', error);
+      toast.error('Failed to cancel friend request');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return {
     pendingRequests,
     sentRequests,
+    isLoading,
     handleAccept,
     handleReject,
-    handleCancel,
-    loading
+    handleCancel
   };
-};
+}
