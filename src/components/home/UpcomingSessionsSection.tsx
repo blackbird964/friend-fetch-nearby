@@ -2,12 +2,13 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Clock, Calendar, Check } from 'lucide-react';
+import { Clock, Calendar, MoreHorizontal, Check, X } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { useUpcomingSessions } from '@/hooks/useUpcomingSessions';
 import UserAvatar from '@/components/users/cards/UserAvatar';
 
 const UpcomingSessionsSection: React.FC = () => {
-  const { upcomingSessions, isLoading, handleCompleteSession } = useUpcomingSessions();
+  const { upcomingSessions, isLoading, handleCompleteSession, handleCancelSession } = useUpcomingSessions();
 
   if (isLoading) {
     return (
@@ -80,14 +81,39 @@ const UpcomingSessionsSection: React.FC = () => {
                   </div>
                 </div>
                 
-                <Button 
-                  onClick={() => handleCompleteSession(session.id)}
-                  size="sm"
-                  className="bg-green-500 hover:bg-green-600"
-                >
-                  <Check className="h-4 w-4 mr-1" />
-                  Done
-                </Button>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button 
+                      variant="ghost" 
+                      size="sm"
+                      className="h-8 w-8 p-0 hover:bg-gray-100"
+                    >
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-48 p-2" align="end">
+                    <div className="space-y-1">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-green-600 hover:text-green-700 hover:bg-green-50"
+                        onClick={() => handleCompleteSession(session.id)}
+                      >
+                        <Check className="h-4 w-4 mr-2" />
+                        Mark as Completed
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                        onClick={() => handleCancelSession(session.id)}
+                      >
+                        <X className="h-4 w-4 mr-2" />
+                        Cancel Meetup
+                      </Button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           ))}

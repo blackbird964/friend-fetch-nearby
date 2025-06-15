@@ -1,5 +1,6 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { sendMessage } from '@/lib/supabase/messages';
 
 export interface UpcomingSession {
   id: string;
@@ -151,9 +152,58 @@ export async function completeSession(sessionId: string): Promise<boolean> {
       return false;
     }
 
+    // Notify the friend that the meetup was completed
+    await sendMessage((session as any).friend_id, `Your meetup has been marked as completed! Hope you had a great time.`);
+
     return true;
   } catch (error) {
     console.error('Error completing session:', error);
+    return false;
+  }
+}
+
+/**
+ * Cancel a session and notify the friend
+ */
+export async function cancelSession(sessionId: string): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    console.error('No authenticated user found');
+    return false;
+  }
+
+  try {
+    // Get the session details first
+    const { data: session, error: fetchError } = await supabase
+      .from('upcoming_sessions' as any)
+      .select('*')
+      .eq('id', sessionId)
+      .eq('user_id', user.id)
+      .single();
+
+    if (fetchError || !session) {
+      console.error('Error fetching session:', fetchError);
+      return false;
+    }
+
+    // Mark session as cancelled
+    const { error: updateError } = await supabase
+      .from('upcoming_sessions' as any)
+      .update({ status: 'cancelled' })
+      .eq('id', sessionId);
+
+    if (updateError) {
+      console.error('Error updating session status:', updateError);
+      return false;
+    }
+
+    // Notify the friend that the meetup was cancelled
+    await sendMessage((session as any).friend_id, `Your scheduled meetup for ${(session as any).activity} has been cancelled.`);
+
+    return true;
+  } catch (error) {
+    console.error('Error cancelling session:', error);
     return false;
   }
 }

@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import { getUpcomingSessions, completeSession, UpcomingSession } from '@/services/upcoming-sessions';
+import { getUpcomingSessions, completeSession, cancelSession, UpcomingSession } from '@/services/upcoming-sessions';
 import { toast } from 'sonner';
 
 export function useUpcomingSessions() {
@@ -47,10 +47,28 @@ export function useUpcomingSessions() {
     }
   };
 
+  const handleCancelSession = async (sessionId: string) => {
+    try {
+      const success = await cancelSession(sessionId);
+      
+      if (success) {
+        // Remove from local state
+        setUpcomingSessions(prev => prev.filter(session => session.id !== sessionId));
+        toast.success('Meetup cancelled successfully.');
+      } else {
+        toast.error('Failed to cancel meetup. Please try again.');
+      }
+    } catch (error) {
+      console.error('Error cancelling session:', error);
+      toast.error('Failed to cancel meetup. Please try again.');
+    }
+  };
+
   return {
     upcomingSessions,
     isLoading,
     handleCompleteSession,
+    handleCancelSession,
     refetch: () => {
       if (currentUser) {
         setIsLoading(true);
