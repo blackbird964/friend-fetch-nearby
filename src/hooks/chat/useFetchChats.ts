@@ -27,7 +27,7 @@ export function useFetchChats() {
         .from('messages')
         .select('*')
         .or(`sender_id.eq.${currentUser.id},receiver_id.eq.${currentUser.id}`)
-        .order('created_at', { ascending: true }); // Changed to ascending to get proper chronological order
+        .order('created_at', { ascending: true });
       
       if (error) {
         console.error('Error fetching messages:', error);
@@ -40,6 +40,7 @@ export function useFetchChats() {
       
       if (!messages || messages.length === 0) {
         setChats([]);
+        setUnreadCount(0);
         setIsLoading(false);
         return;
       }
@@ -76,7 +77,7 @@ export function useFetchChats() {
           // Sort messages chronologically to get the actual latest message
           participantMessages.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
           
-          // Count unread messages
+          // Count unread messages (messages sent by the participant to current user that are unread)
           const unreadMessages = participantMessages.filter(msg => 
             msg.sender_id === participantId && 
             msg.receiver_id === currentUser.id && 
@@ -90,7 +91,7 @@ export function useFetchChats() {
           const latestMessage = participantMessages[participantMessages.length - 1];
           
           if (latestMessage) {
-            console.log(`Latest message for ${profile.name}:`, latestMessage.content, "at", latestMessage.created_at);
+            console.log(`Latest message for ${profile.name}:`, latestMessage.content, "at", latestMessage.created_at, `(${unreadCount} unread)`);
             
             chatsList.push({
               id: `chat-${participantId}`,
@@ -110,7 +111,7 @@ export function useFetchChats() {
         }
       }
       
-      console.log(`Created ${chatsList.length} chat objects`);
+      console.log(`Created ${chatsList.length} chat objects with total ${totalUnread} unread messages`);
       
       // Sort chats by latest message time (most recent first)
       chatsList.sort((a, b) => (b.lastMessageTime || 0) - (a.lastMessageTime || 0));
@@ -133,7 +134,7 @@ export function useFetchChats() {
     fetchChats();
   }, [fetchChats]);
 
-  // Set up real-time subscription for new messages
+  // Set up real-time subscription for new messages and read status updates
   useEffect(() => {
     if (!currentUser) return;
 
@@ -149,6 +150,19 @@ export function useFetchChats() {
         (payload) => {
           console.log('New message received in chat list:', payload);
           // Refresh chats when a new message is received
+          fetchChats();
+        }
+      )
+      .on('postgres_changes', 
+        { 
+          event: 'UPDATE', 
+          schema: 'public', 
+          table: 'messages', 
+          filter: `sender_id=eq.${currentUser.id}` 
+        },
+        (payload) => {
+          console.log('Message read status updated:', payload);
+          // Refresh chats when message read status changes
           fetchChats();
         }
       )

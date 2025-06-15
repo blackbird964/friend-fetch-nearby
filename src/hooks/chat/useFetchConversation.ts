@@ -3,9 +3,10 @@ import { useEffect } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { supabase } from '@/integrations/supabase/client';
 import { formatMessages } from './utils/messageFormatters';
+import { markMessagesAsRead } from '@/lib/supabase/messages';
 
 export function useFetchConversation(selectedChatId: string | null) {
-  const { selectedChat, setSelectedChat, currentUser } = useAppContext();
+  const { selectedChat, setSelectedChat, currentUser, setChats } = useAppContext();
 
   useEffect(() => {
     if (!selectedChatId || !currentUser || !selectedChat) return;
@@ -35,6 +36,26 @@ export function useFetchConversation(selectedChatId: string | null) {
         console.log(`[useFetchConversation] Fetched ${messages?.length || 0} messages`);
         
         if (messages) {
+          // Mark unread messages from the other user as read
+          const unreadMessages = messages.filter(msg => 
+            msg.sender_id === participantId && 
+            msg.receiver_id === currentUser.id && 
+            !msg.read
+          );
+          
+          if (unreadMessages.length > 0) {
+            console.log(`[useFetchConversation] Marking ${unreadMessages.length} messages as read`);
+            const messageIds = unreadMessages.map(msg => msg.id);
+            await markMessagesAsRead(messageIds);
+            
+            // Update the chat list to reflect the read status
+            setChats(prev => prev.map(chat => 
+              chat.id === selectedChatId 
+                ? { ...chat, unreadCount: 0 }
+                : chat
+            ));
+          }
+          
           // Format messages and filter out meetup requests
           const formattedMessages = formatMessages(messages);
           console.log(`[useFetchConversation] Displaying ${formattedMessages.length} messages (filtered out meetup requests)`);
@@ -44,7 +65,8 @@ export function useFetchConversation(selectedChatId: string | null) {
             if (!prev || prev.id !== selectedChatId) return prev;
             return {
               ...prev,
-              messages: formattedMessages
+              messages: formattedMessages,
+              unreadCount: 0 // Reset unread count when chat is opened
             };
           });
         }
@@ -54,7 +76,7 @@ export function useFetchConversation(selectedChatId: string | null) {
     };
 
     fetchConversation();
-  }, [selectedChatId, currentUser, selectedChat?.participantId, setSelectedChat]);
+  }, [selectedChatId, currentUser, selectedChat?.participantId, setSelectedChat, setChats]);
 
   return {
     isLoading: false,
