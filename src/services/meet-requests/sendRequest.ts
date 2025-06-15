@@ -2,6 +2,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { MeetupRequest } from './types';
 import { generateRequestId, createMeetupRequestMessageContent } from './utils';
+import { sendMeetupRequestEmail } from '@/services/notifications/meetupNotifications';
 
 /**
  * Send a meetup request from one user to another
@@ -66,6 +67,28 @@ export async function sendMeetupRequest(
       return null;
     } else {
       console.log('Meetup request saved to database:', data);
+    }
+
+    // Get receiver's email to send notification
+    const { data: receiverProfile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', receiverId)
+      .single();
+
+    if (!profileError && receiverProfile) {
+      // For now, we'll use a placeholder email since we can't access auth.users directly
+      // In a real implementation, you might store email in the profiles table
+      // or use a different approach to get the user's email
+      console.log('Would send email notification to receiver if email was available');
+      
+      // If you have the receiver's email stored somewhere accessible, uncomment this:
+      // await sendMeetupRequestEmail(
+      //   receiverEmail,
+      //   senderName,
+      //   duration,
+      //   meetLocation || 'a location'
+      // );
     }
 
     return newRequest;
