@@ -86,7 +86,7 @@ const UpcomingSessionsSection: React.FC = () => {
                   className="bg-green-500 hover:bg-green-600"
                 >
                   <Check className="h-4 w-4 mr-1" />
-                  Complete
+                  Done
                 </Button>
               </div>
             </div>
