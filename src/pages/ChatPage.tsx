@@ -9,13 +9,17 @@ import ChatPlaceholder from '@/components/chat/ChatPlaceholder';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { useViewportConfig } from '@/hooks/useViewportConfig';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useFriendActions } from '@/components/users/hooks/useFriendActions';
+import { AppUser } from '@/context/types';
 
 const ChatPage: React.FC = () => {
   const { 
     selectedChat, 
     setSelectedChat, 
     loading, 
-    chats
+    chats,
+    currentUser,
+    friendRequests
   } = useAppContext();
   
   const [activeTab, setActiveTab] = useState('chats');
@@ -23,9 +27,47 @@ const ChatPage: React.FC = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
   const location = useLocation();
+  const { handleAddFriend } = useFriendActions();
   
   // Configure viewport for mobile devices
   useViewportConfig(isMobile);
+
+  // Check if the current chat participant is already a friend
+  const isFriend = selectedChat ? friendRequests.some(req => 
+    req.status === 'accepted' && 
+    ((req.receiverId === selectedChat.participantId && req.senderId === currentUser?.id) ||
+     (req.senderId === selectedChat.participantId && req.receiverId === currentUser?.id))
+  ) : false;
+
+  const handleSendFriendRequest = () => {
+    if (selectedChat && currentUser) {
+      // Create a user object for the friend request
+      const participant: AppUser = {
+        id: selectedChat.participantId,
+        name: selectedChat.participantName,
+        profile_pic: selectedChat.profilePic,
+        // Add default values for required fields
+        bio: null,
+        gender: null,
+        age: null,
+        interests: [],
+        location: null,
+        preferred_hangout_duration: '30',
+        today_activities: [],
+        is_online: selectedChat.isOnline || false,
+        last_seen: new Date().toISOString(),
+        is_over_18: false,
+        blocked_users: [],
+        blockedUsers: [],
+        total_catchup_time: 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+        active_priorities: []
+      };
+      
+      handleAddFriend(participant);
+    }
+  };
 
   // Log when component mounts or chats change
   useEffect(() => {
@@ -79,6 +121,9 @@ const ChatPage: React.FC = () => {
                   onBack={() => setSelectedChat(null)}
                   showBackButton={isMobile}
                   isOnline={selectedChat.isOnline}
+                  participantId={selectedChat.participantId}
+                  isFriend={isFriend}
+                  onSendFriendRequest={handleSendFriendRequest}
                 />
                 <ChatWindow />
               </div>
