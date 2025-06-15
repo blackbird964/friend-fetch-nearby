@@ -5,6 +5,7 @@ import { formatMessageTime } from '@/utils/dateFormatters';
 import { CircleDot, Circle } from 'lucide-react';
 import UserAvatar from '@/components/users/cards/UserAvatar';
 import { Badge } from '@/components/ui/badge';
+import { formatMessageContent } from '@/hooks/chat/utils/messageFormatters';
 
 interface ChatItemProps {
   chat: Chat;
@@ -14,6 +15,9 @@ interface ChatItemProps {
 
 const ChatItem: React.FC<ChatItemProps> = ({ chat, isSelected, onSelect }) => {
   const hasUnreadMessages = (chat.unreadCount || 0) > 0;
+  
+  // Format the last message content to show user-friendly text
+  const displayMessage = formatMessageContent(chat.lastMessage);
   
   return (
     <button
@@ -48,7 +52,7 @@ const ChatItem: React.FC<ChatItemProps> = ({ chat, isSelected, onSelect }) => {
           </span>
         </div>
         <p className={`text-sm text-gray-600 truncate ${hasUnreadMessages ? 'font-semibold' : ''}`}>
-          {chat.lastMessage}
+          {displayMessage}
         </p>
       </div>
     </button>
