@@ -1,6 +1,7 @@
 
 import { AppUser } from '@/context/types';
 import { calculateDistance } from '@/utils/locationUtils';
+import { Vector as VectorSource } from 'ol/source';
 
 /**
  * Check if a user is within the specified radius of the current user
@@ -37,7 +38,7 @@ export const filterOnlineAndUnblockedUsers = (
     if (user.id === currentUser.id) return false;
     
     // CRITICAL: Only show users who are actually online (logged into platform)
-    if (!user.isOnline) {
+    if (user.isOnline !== true) {
       console.log(`Filtering out offline user: ${user.name} (isOnline: ${user.isOnline})`);
       return false;
     }
@@ -67,4 +68,22 @@ export const getDistanceBetweenUsers = (
     user2.location.lat,
     user2.location.lng
   );
+};
+
+/**
+ * Clear existing user markers from the vector source
+ * This removes user markers but keeps circle/radius markers
+ */
+export const clearExistingUserMarkers = (source: VectorSource) => {
+  if (!source) return;
+  
+  const features = source.getFeatures();
+  const markersToRemove = features.filter(feature => {
+    const isUserMarker = feature.get('userId') || feature.get('isCurrentUser') || feature.get('isCluster');
+    const isNotCircle = !feature.get('isCircle');
+    return isUserMarker && isNotCircle;
+  });
+  
+  // Remove in batch for better performance
+  markersToRemove.forEach(feature => source.removeFeature(feature));
 };
