@@ -5,6 +5,7 @@ import { MeetupRequest } from '@/context/types';
 import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 import { sendMessage } from '@/lib/supabase/messages';
+import { createUpcomingSession } from '@/services/upcoming-sessions';
 
 export const useMeetupRequests = () => {
   const { currentUser, meetupRequests, setMeetupRequests, chats, setChats } = useAppContext();
@@ -80,6 +81,15 @@ export const useMeetupRequests = () => {
       const success = await updateMeetupRequestStatus(requestId, 'accepted');
       
       if (success) {
+        // Create upcoming session
+        await createUpcomingSession(
+          request.senderId,
+          request.senderName,
+          request.senderProfilePic || null,
+          request.meetLocation || 'Meetup',
+          parseInt(request.duration)
+        );
+
         // Update request status in local state
         setMeetupRequests(
           meetupRequests.map(r => 
@@ -91,7 +101,7 @@ export const useMeetupRequests = () => {
         await sendMessage(request.senderId, `Your meetup request for ${request.duration} minutes at ${request.meetLocation || 'a location'} has been accepted!`);
 
         toast.success("Request Accepted", {
-          description: `You've accepted ${request.senderName}'s meetup request.`,
+          description: `You've accepted ${request.senderName}'s meetup request. It's now scheduled in your upcoming catch-ups.`,
         });
       } else {
         throw new Error("Failed to update request status");

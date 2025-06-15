@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { MapPin, Users, Info } from 'lucide-react';
 import UserList from '@/components/users/UserList';
 import TodayActivitiesSection from '@/components/home/TodayActivitiesSection';
+import UpcomingSessionsSection from '@/components/home/UpcomingSessionsSection';
 import { useNavigate } from 'react-router-dom';
 
 const Home: React.FC = () => {
@@ -39,6 +40,9 @@ const Home: React.FC = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Upcoming Sessions Section */}
+        <UpcomingSessionsSection />
 
         {/* Today's Activities Section */}
         <TodayActivitiesSection />

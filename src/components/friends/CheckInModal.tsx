@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Star, MessageSquare, Calendar, Clock } from 'lucide-react';
 import UserAvatar from '@/components/users/cards/UserAvatar';
+import { useMeetupRequests } from '@/components/users/hooks/useMeetupRequests';
 
 interface CheckIn {
   id: string;
@@ -38,16 +38,31 @@ const CheckInModal: React.FC<CheckInModalProps> = ({
   const [rating, setRating] = useState<number>(0);
   const [connectionPreference, setConnectionPreference] = useState<string>('');
   const [feedback, setFeedback] = useState<string>('');
+  
+  const { handleAccept, handleReject, loading } = useMeetupRequests();
 
-  const handleSubmit = () => {
-    const feedbackData = {
-      didMeet: didMeet === 'yes',
-      rating: didMeet === 'yes' ? rating : null,
-      connectionPreference,
-      feedback
-    };
+  const handleSubmit = async () => {
+    if (checkIn.interactionType === 'meetup_request') {
+      // Handle meetup request response
+      if (connectionPreference === 'accept') {
+        await handleAccept(checkIn.id);
+      } else if (connectionPreference === 'decline') {
+        await handleReject(checkIn.id);
+      }
+      
+      onComplete(checkIn.id, { response: connectionPreference, feedback });
+    } else {
+      // Handle regular check-in
+      const feedbackData = {
+        didMeet: didMeet === 'yes',
+        rating: didMeet === 'yes' ? rating : null,
+        connectionPreference,
+        feedback
+      };
+      
+      onComplete(checkIn.id, feedbackData);
+    }
     
-    onComplete(checkIn.id, feedbackData);
     onClose();
     
     // Reset form
@@ -156,9 +171,9 @@ const CheckInModal: React.FC<CheckInModalProps> = ({
               </Button>
               <Button 
                 onClick={handleSubmit}
-                disabled={!connectionPreference}
+                disabled={!connectionPreference || loading}
               >
-                {getSubmitButtonText()}
+                {loading ? 'Processing...' : getSubmitButtonText()}
               </Button>
             </div>
           </div>
