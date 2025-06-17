@@ -37,7 +37,12 @@ export function useFriendRequests() {
       console.log('Accepting friend request:', requestId);
       
       // Update the friend request status
-      const success = await updateFriendRequestStatus(requestId, 'accepted');
+      const success = await updateFriendRequestStatus(
+        requestId, 
+        'accepted', 
+        currentUser.id, 
+        currentUser.name
+      );
       
       if (success) {
         // Create friendship record
@@ -63,11 +68,18 @@ export function useFriendRequests() {
   };
 
   const handleReject = async (requestId: string) => {
+    if (!currentUser) return;
+    
     setIsLoading(true);
     try {
       console.log('Rejecting friend request:', requestId);
       
-      const success = await updateFriendRequestStatus(requestId, 'rejected');
+      const success = await updateFriendRequestStatus(
+        requestId, 
+        'rejected', 
+        currentUser.id, 
+        currentUser.name
+      );
       
       if (success) {
         // Remove from local state with proper typing

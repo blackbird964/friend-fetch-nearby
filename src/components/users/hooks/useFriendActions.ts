@@ -42,8 +42,7 @@ export const useFriendActions = () => {
         currentUser.profile_pic || null,
         friend.id,
         friend.name,
-        friend.profile_pic || null,
-        duration
+        friend.profile_pic || null
       );
 
       if (result) {
