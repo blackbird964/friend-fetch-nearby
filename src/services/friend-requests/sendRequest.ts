@@ -35,8 +35,9 @@ export async function sendFriendRequest(
 
     console.log("Sending friend request:", newRequest);
 
-    // Create message content
+    // Create message content - fix the function call to match the expected 5 arguments
     const content = createFriendRequestMessageContent(
+      30, // duration
       senderName,
       senderProfilePic,
       receiverName,
