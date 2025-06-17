@@ -91,18 +91,25 @@ export const useMeetupRequests = () => {
           request.duration
         );
 
-        // Get sender's email to send notification
-        const { data: senderProfile, error: profileError } = await supabase
-          .from('profiles')
-          .select('id')
-          .eq('id', request.senderId)
-          .single();
+        // Send email notification to the original sender using edge function
+        try {
+          const { data, error: emailError } = await supabase.functions.invoke('send-meetup-notification', {
+            body: {
+              email: 'aaron.stathi@gmail.com', // For testing - in production this should be fetched from the user
+              senderName: currentUser.name || 'Someone',
+              duration: request.duration,
+              activity: request.meetLocation || 'a location',
+              loginUrl: `${window.location.origin}/auth`
+            }
+          });
 
-        if (!profileError && senderProfile) {
-          // Get sender's email from auth.users (we need to use a different approach since we can't query auth.users directly)
-          // For now, we'll skip the email notification if we can't get the email
-          // In a real implementation, you might store email in the profiles table
-          console.log('Would send email notification to sender if email was available');
+          if (emailError) {
+            console.error('Error sending acceptance email:', emailError);
+          } else {
+            console.log('Acceptance email sent successfully:', data);
+          }
+        } catch (emailError) {
+          console.error('Failed to send acceptance email:', emailError);
         }
 
         // Update request status in local state

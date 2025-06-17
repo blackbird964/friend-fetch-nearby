@@ -1,12 +1,15 @@
 
 import { supabase } from '@/integrations/supabase/client';
+import { sendFriendRequestAcceptanceEmail } from '@/services/notifications/friendRequestNotifications';
 
 /**
- * Update the status of a friend request
+ * Update a friend request status (accept or reject)
  */
 export async function updateFriendRequestStatus(
   requestId: string,
-  status: 'accepted' | 'rejected'
+  status: 'accepted' | 'rejected',
+  currentUserId: string,
+  currentUserName: string
 ): Promise<boolean> {
   try {
     console.log(`Updating friend request ${requestId} status to ${status}`);
@@ -14,7 +17,7 @@ export async function updateFriendRequestStatus(
     // Get the current message content first
     const { data: currentMessage, error: fetchError } = await supabase
       .from('messages')
-      .select('content')
+      .select('content, sender_id')
       .eq('id', requestId)
       .single();
       
@@ -40,7 +43,6 @@ export async function updateFriendRequestStatus(
     console.log("Updated content:", content);
     
     // Update the message with the new status
-    // Ensure the content is properly serialized as a string
     const { error } = await supabase
       .from('messages')
       .update({
@@ -52,6 +54,20 @@ export async function updateFriendRequestStatus(
     if (error) {
       console.error('Error updating friend request status in database:', error);
       return false;
+    }
+
+    // If the request was accepted, send acceptance email to the original sender
+    if (status === 'accepted') {
+      try {
+        console.log('Sending friend request acceptance email notification to aaron.stathi@gmail.com');
+        
+        await sendFriendRequestAcceptanceEmail(
+          'aaron.stathi@gmail.com', // For testing - in production this should be fetched from the sender
+          currentUserName
+        );
+      } catch (emailError) {
+        console.log('Friend request acceptance email notification failed, but continuing:', emailError);
+      }
     }
     
     console.log(`Friend request ${requestId} updated successfully to ${status}`);

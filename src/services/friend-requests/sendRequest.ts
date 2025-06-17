@@ -1,7 +1,8 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { FriendRequest } from '@/context/types';
+import { FriendRequest } from './types';
 import { generateRequestId, createFriendRequestMessageContent } from './utils';
+import { sendFriendRequestEmail } from '@/services/notifications/friendRequestNotifications';
 
 /**
  * Send a friend request from one user to another
@@ -12,8 +13,7 @@ export async function sendFriendRequest(
   senderProfilePic: string | null,
   receiverId: string,
   receiverName: string,
-  receiverProfilePic: string | null,
-  duration: number
+  receiverProfilePic: string | null
 ): Promise<FriendRequest | null> {
   try {
     // Create a proper UUID for the request
@@ -30,15 +30,13 @@ export async function sendFriendRequest(
       receiverProfilePic,
       timestamp: Date.now(),
       status: 'pending',
-      duration,
-      sender_name: senderName // For backwards compatibility
+      duration: 30 // Default duration for friend requests
     };
 
     console.log("Sending friend request:", newRequest);
 
     // Create message content
     const content = createFriendRequestMessageContent(
-      duration,
       senderName,
       senderProfilePic,
       receiverName,
@@ -63,6 +61,19 @@ export async function sendFriendRequest(
       return null;
     } else {
       console.log('Friend request saved to database:', data);
+    }
+
+    // Send email notification to the receiver
+    try {
+      console.log('Sending friend request email notification to aaron.stathi@gmail.com');
+      
+      await sendFriendRequestEmail(
+        'aaron.stathi@gmail.com', // For testing - in production this should be fetched from the user
+        senderName,
+        senderProfilePic
+      );
+    } catch (emailError) {
+      console.log('Friend request email notification failed, but continuing:', emailError);
     }
 
     return newRequest;
