@@ -15,12 +15,26 @@ import { Info } from 'lucide-react';
 const Auth: React.FC = () => {
   const [formState, setFormState] = useState<'login' | 'signup' | 'business-signup' | 'profile-setup'>('login');
   const [isBusinessUser, setIsBusinessUser] = useState<boolean | null>(null);
-  const { isAuthenticated, loading, setIsAuthenticated, setSupabaseUser, currentUser } = useAppContext();
   const [searchParams] = useSearchParams();
   const { toast } = useToast();
   
   // Check for password reset parameter
   const showReset = searchParams.get('reset') === 'true';
+  
+  // Use a try-catch to handle context availability
+  let contextData;
+  try {
+    contextData = useAppContext();
+  } catch (error) {
+    // Context not available yet, show loading
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4 bg-gray-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+  
+  const { isAuthenticated, loading, setIsAuthenticated, setSupabaseUser, currentUser } = contextData;
   
   // Debug authentication state
   useEffect(() => {
