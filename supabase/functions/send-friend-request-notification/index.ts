@@ -10,56 +10,82 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface FriendRequestNotificationRequest {
+interface FriendRequestEmailRequest {
   email: string;
   senderName: string;
-  senderProfilePic?: string | null;
+  senderProfilePic?: string;
   loginUrl: string;
 }
 
-serve(async (req) => {
-  // Handle CORS preflight requests
+const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
-    return new Response(null, {
-      headers: corsHeaders,
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, senderName, senderProfilePic, loginUrl }: FriendRequestNotificationRequest = await req.json();
-    
+    const { email, senderName, senderProfilePic, loginUrl }: FriendRequestEmailRequest = await req.json();
+
+    const unsubscribeUrl = `${loginUrl.replace('/auth', '')}/unsubscribe?email=${encodeURIComponent(email)}`;
+
     const emailResponse = await resend.emails.send({
       from: "meetkairo <onboarding@resend.dev>",
       to: [email],
-      subject: "New friend request! - meetkairo",
+      subject: `New friend request from ${senderName} - meetkairo`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #1E40AF;">You have a new friend request!</h2>
-          <p style="font-size: 16px; margin: 20px 0;">
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #4F46E5; margin-bottom: 30px;">You have a new friend request!</h1>
+          
+          ${senderProfilePic ? `
+            <div style="text-align: center; margin-bottom: 20px;">
+              <img src="${senderProfilePic}" alt="${senderName}" style="width: 80px; height: 80px; border-radius: 50%; object-fit: cover;">
+            </div>
+          ` : ''}
+          
+          <p style="font-size: 18px; margin-bottom: 20px; text-align: center;">
             <strong>${senderName}</strong> wants to be your friend on meetkairo!
           </p>
-          <p style="margin: 20px 0;">
-            Log in to your meetkairo account to accept or decline this friend request.
+          
+          <p style="margin-bottom: 30px; text-align: center;">
+            Log in to your meetkairo account to accept or decline this request.
           </p>
-          <a href="${loginUrl}" style="display: inline-block; background-color: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold;">
-            Log in to Respond
-          </a>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${loginUrl}" 
+               style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              Log in to Respond
+            </a>
+          </div>
+          
           <p style="color: #666; font-size: 14px; margin-top: 30px;">
             If you can't click the button above, copy and paste this link into your browser:<br>
-            <a href="${loginUrl}" style="color: #2563EB;">${loginUrl}</a>
+            <a href="${loginUrl}" style="color: #4F46E5;">${loginUrl}</a>
           </p>
-          <p style="color: #666; font-size: 14px; margin-top: 20px;">
-            Best regards,<br>The meetkairo Team
+          
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 12px;">
+            Best regards,<br>
+            The meetkairo Team
+          </p>
+          
+          <p style="color: #999; font-size: 11px; margin-top: 20px;">
+            Don't want to receive these emails? 
+            <a href="${unsubscribeUrl}" style="color: #666;">Unsubscribe here</a>
           </p>
         </div>
       `,
     });
-    
+
     console.log("Friend request notification email sent via Resend:", emailResponse);
+
     return new Response(JSON.stringify(emailResponse), {
-      headers: { "Content-Type": "application/json", ...corsHeaders },
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders,
+      },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in send-friend-request-notification function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
@@ -69,4 +95,6 @@ serve(async (req) => {
       }
     );
   }
-});
+};
+
+serve(handler);

@@ -10,7 +10,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-interface MeetupRequestNotificationRequest {
+interface MeetupRequestEmailRequest {
   email: string;
   senderName: string;
   duration: number;
@@ -18,49 +18,69 @@ interface MeetupRequestNotificationRequest {
   loginUrl: string;
 }
 
-serve(async (req) => {
-  // Handle CORS preflight requests
+const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
-    return new Response(null, {
-      headers: corsHeaders,
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { email, senderName, duration, activity, loginUrl }: MeetupRequestNotificationRequest = await req.json();
-    
+    const { email, senderName, duration, activity, loginUrl }: MeetupRequestEmailRequest = await req.json();
+
+    const unsubscribeUrl = `${loginUrl.replace('/auth', '')}/unsubscribe?email=${encodeURIComponent(email)}`;
+
     const emailResponse = await resend.emails.send({
       from: "meetkairo <onboarding@resend.dev>",
       to: [email],
-      subject: "New meetup request! - meetkairo",
+      subject: `New meetup request! - meetkairo`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #1E40AF;">You have a new meetup request!</h2>
-          <p style="font-size: 16px; margin: 20px 0;">
-            <strong>${senderName}</strong> wants to meet up with you for <strong>${duration} minutes at ${activity}</strong>!
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <h1 style="color: #4F46E5; margin-bottom: 30px;">You have a new meetup request!</h1>
+          
+          <p style="font-size: 18px; margin-bottom: 20px;">
+            <strong>${senderName}</strong> wants to meet up with you for <strong>${duration} minutes</strong> at <strong>${activity}</strong>!
           </p>
-          <p style="margin: 20px 0;">
+          
+          <p style="margin-bottom: 30px;">
             Log in to your meetkairo account to accept or decline this request.
           </p>
-          <a href="${loginUrl}" style="display: inline-block; background-color: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; margin: 20px 0; font-weight: bold;">
-            Log in to Respond
-          </a>
+          
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${loginUrl}" 
+               style="background-color: #4F46E5; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold;">
+              Log in to Respond
+            </a>
+          </div>
+          
           <p style="color: #666; font-size: 14px; margin-top: 30px;">
             If you can't click the button above, copy and paste this link into your browser:<br>
-            <a href="${loginUrl}" style="color: #2563EB;">${loginUrl}</a>
+            <a href="${loginUrl}" style="color: #4F46E5;">${loginUrl}</a>
           </p>
-          <p style="color: #666; font-size: 14px; margin-top: 20px;">
-            Best regards,<br>The meetkairo Team
+          
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          
+          <p style="color: #999; font-size: 12px;">
+            Best regards,<br>
+            The meetkairo Team
+          </p>
+          
+          <p style="color: #999; font-size: 11px; margin-top: 20px;">
+            Don't want to receive these emails? 
+            <a href="${unsubscribeUrl}" style="color: #666;">Unsubscribe here</a>
           </p>
         </div>
       `,
     });
-    
+
     console.log("Meetup request notification email sent via Resend:", emailResponse);
+
     return new Response(JSON.stringify(emailResponse), {
-      headers: { "Content-Type": "application/json", ...corsHeaders },
+      status: 200,
+      headers: {
+        "Content-Type": "application/json",
+        ...corsHeaders,
+      },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error in send-meetup-request-notification function:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
@@ -70,4 +90,6 @@ serve(async (req) => {
       }
     );
   }
-});
+};
+
+serve(handler);
