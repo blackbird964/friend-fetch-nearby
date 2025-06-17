@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { supabase } from '@/integrations/supabase/client';
 import { sendMessage } from '@/lib/supabase/messages';
 import { createUpcomingSession } from '@/services/upcoming-sessions';
-import { sendMeetupAcceptanceEmail } from '@/services/notifications/meetupNotifications';
 
 export const useMeetupRequests = () => {
   const { currentUser, meetupRequests, setMeetupRequests, chats, setChats } = useAppContext();
@@ -93,20 +92,35 @@ export const useMeetupRequests = () => {
 
         // Send email notification to the original sender using edge function
         try {
-          const { data, error: emailError } = await supabase.functions.invoke('send-meetup-notification', {
-            body: {
-              email: 'aaron.stathi@gmail.com', // For testing - in production this should be fetched from the user
-              senderName: currentUser.name || 'Someone',
-              duration: request.duration,
-              activity: request.meetLocation || 'a location',
-              loginUrl: `${window.location.origin}/auth`
-            }
-          });
+          // Get sender's email from profiles table
+          const { data: senderProfile, error: profileError } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('id', request.senderId)
+            .single();
 
-          if (emailError) {
-            console.error('Error sending acceptance email:', emailError);
+          if (profileError) {
+            console.error('Error fetching sender email:', profileError);
+          } else if (senderProfile?.email) {
+            console.log('Sending meetup acceptance email notification to:', senderProfile.email);
+
+            const { data, error: emailError } = await supabase.functions.invoke('send-meetup-notification', {
+              body: {
+                email: senderProfile.email,
+                senderName: currentUser.name || 'Someone',
+                duration: request.duration,
+                activity: request.meetLocation || 'a location',
+                loginUrl: `${window.location.origin}/auth`
+              }
+            });
+
+            if (emailError) {
+              console.error('Error sending acceptance email:', emailError);
+            } else {
+              console.log('Acceptance email sent successfully:', data);
+            }
           } else {
-            console.log('Acceptance email sent successfully:', data);
+            console.log('Sender email not found, skipping email notification');
           }
         } catch (emailError) {
           console.error('Failed to send acceptance email:', emailError);
