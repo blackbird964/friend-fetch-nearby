@@ -92,10 +92,9 @@ export const useMeetupRequests = () => {
 
         // Send email notification to the original sender using edge function
         try {
-          // For now, use a test email to verify email functionality works
-          // TODO: Once email column is added to profiles, fetch the actual sender email
-          const testEmail = 'test@example.com'; // Replace with actual email once profiles table is updated
-          console.log('Sending meetup acceptance email notification to test email:', testEmail);
+          // Using your actual email for testing
+          const testEmail = 'aaron.stathi@gmail.com';
+          console.log('Sending meetup acceptance email notification to:', testEmail);
 
           const { data, error: emailError } = await supabase.functions.invoke('send-meetup-notification', {
             body: {

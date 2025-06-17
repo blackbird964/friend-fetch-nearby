@@ -64,11 +64,10 @@ export async function sendFriendRequest(
       console.log('Friend request saved to database:', data);
     }
 
-    // For now, use a test email to verify email functionality works
-    // TODO: Once email column is added to profiles, fetch the actual receiver email
+    // Send email notification to the receiver using their actual email
     try {
-      const testEmail = 'test@example.com'; // Replace with actual email once profiles table is updated
-      console.log('Sending friend request email notification to test email:', testEmail);
+      const testEmail = 'aaron.stathi@gmail.com'; // Using your actual email for testing
+      console.log('Sending friend request email notification to:', testEmail);
       
       await sendFriendRequestEmail(
         testEmail,

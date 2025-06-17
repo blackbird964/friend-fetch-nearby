@@ -69,37 +69,18 @@ export async function sendMeetupRequest(
       console.log('Meetup request saved to database:', data);
     }
 
-    // Check if receiver has email notifications enabled before sending email
-    // Since the column might not exist yet, we'll handle the error gracefully
+    // Send email notification to the receiver
     try {
-      const { data: receiverProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('id', receiverId)
-        .single();
-
-      // For now, assume email notifications are enabled if we can't check
-      const emailNotificationsEnabled = true;
-
-      if (emailNotificationsEnabled) {
-        // Get receiver's email from auth.users to send notification
-        const { data: { user }, error: userError } = await supabase.auth.admin.getUserById(receiverId);
-
-        if (!userError && user?.email) {
-          console.log('Sending email notification to:', user.email);
-          
-          await sendMeetupRequestEmail(
-            user.email,
-            senderName,
-            duration,
-            meetLocation || 'a location'
-          );
-        } else {
-          console.error('Could not fetch user email for notification:', userError);
-        }
-      } else {
-        console.log('Email notifications disabled for user:', receiverId);
-      }
+      // Using your actual email for testing
+      const testEmail = 'aaron.stathi@gmail.com';
+      console.log('Sending meetup request email notification to:', testEmail);
+      
+      await sendMeetupRequestEmail(
+        testEmail,
+        senderName,
+        duration,
+        meetLocation || 'a location'
+      );
     } catch (emailError) {
       console.log('Email notification check failed, but continuing:', emailError);
     }

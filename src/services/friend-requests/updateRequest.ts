@@ -59,10 +59,9 @@ export async function updateFriendRequestStatus(
     // If the request was accepted, send acceptance email to the original sender
     if (status === 'accepted') {
       try {
-        // For now, use a test email to verify email functionality works
-        // TODO: Once email column is added to profiles, fetch the actual sender email
-        const testEmail = 'test@example.com'; // Replace with actual email once profiles table is updated
-        console.log('Sending friend request acceptance email notification to test email:', testEmail);
+        // Using your actual email for testing
+        const testEmail = 'aaron.stathi@gmail.com';
+        console.log('Sending friend request acceptance email notification to:', testEmail);
         
         await sendFriendRequestAcceptanceEmail(
           testEmail,
