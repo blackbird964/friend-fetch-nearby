@@ -64,27 +64,17 @@ export async function sendFriendRequest(
       console.log('Friend request saved to database:', data);
     }
 
-    // Get receiver's email from profiles table
+    // For now, use a test email to verify email functionality works
+    // TODO: Once email column is added to profiles, fetch the actual receiver email
     try {
-      const { data: receiverProfile, error: profileError } = await supabase
-        .from('profiles')
-        .select('email')
-        .eq('id', receiverId)
-        .single();
-
-      if (profileError) {
-        console.error('Error fetching receiver email:', profileError);
-      } else if (receiverProfile?.email) {
-        console.log('Sending friend request email notification to:', receiverProfile.email);
-        
-        await sendFriendRequestEmail(
-          receiverProfile.email,
-          senderName,
-          senderProfilePic
-        );
-      } else {
-        console.log('Receiver email not found, skipping email notification');
-      }
+      const testEmail = 'test@example.com'; // Replace with actual email once profiles table is updated
+      console.log('Sending friend request email notification to test email:', testEmail);
+      
+      await sendFriendRequestEmail(
+        testEmail,
+        senderName,
+        senderProfilePic
+      );
     } catch (emailError) {
       console.log('Friend request email notification failed, but continuing:', emailError);
     }

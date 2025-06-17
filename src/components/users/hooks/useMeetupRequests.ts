@@ -92,35 +92,25 @@ export const useMeetupRequests = () => {
 
         // Send email notification to the original sender using edge function
         try {
-          // Get sender's email from profiles table
-          const { data: senderProfile, error: profileError } = await supabase
-            .from('profiles')
-            .select('email')
-            .eq('id', request.senderId)
-            .single();
+          // For now, use a test email to verify email functionality works
+          // TODO: Once email column is added to profiles, fetch the actual sender email
+          const testEmail = 'test@example.com'; // Replace with actual email once profiles table is updated
+          console.log('Sending meetup acceptance email notification to test email:', testEmail);
 
-          if (profileError) {
-            console.error('Error fetching sender email:', profileError);
-          } else if (senderProfile?.email) {
-            console.log('Sending meetup acceptance email notification to:', senderProfile.email);
-
-            const { data, error: emailError } = await supabase.functions.invoke('send-meetup-notification', {
-              body: {
-                email: senderProfile.email,
-                senderName: currentUser.name || 'Someone',
-                duration: request.duration,
-                activity: request.meetLocation || 'a location',
-                loginUrl: `${window.location.origin}/auth`
-              }
-            });
-
-            if (emailError) {
-              console.error('Error sending acceptance email:', emailError);
-            } else {
-              console.log('Acceptance email sent successfully:', data);
+          const { data, error: emailError } = await supabase.functions.invoke('send-meetup-notification', {
+            body: {
+              email: testEmail,
+              senderName: currentUser.name || 'Someone',
+              duration: request.duration,
+              activity: request.meetLocation || 'a location',
+              loginUrl: `${window.location.origin}/auth`
             }
+          });
+
+          if (emailError) {
+            console.error('Error sending acceptance email:', emailError);
           } else {
-            console.log('Sender email not found, skipping email notification');
+            console.log('Acceptance email sent successfully:', data);
           }
         } catch (emailError) {
           console.error('Failed to send acceptance email:', emailError);
