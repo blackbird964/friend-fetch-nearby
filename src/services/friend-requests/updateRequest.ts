@@ -59,14 +59,25 @@ export async function updateFriendRequestStatus(
     // If the request was accepted, send acceptance email to the original sender
     if (status === 'accepted') {
       try {
-        // Using your actual email for testing
-        const testEmail = 'aaron.stathi@gmail.com';
-        console.log('Sending friend request acceptance email notification to:', testEmail);
-        
-        await sendFriendRequestAcceptanceEmail(
-          testEmail,
-          currentUserName
-        );
+        // Fetch the original sender's email from profiles table
+        const { data: senderProfile, error: profileError } = await supabase
+          .from('profiles')
+          .select('email')
+          .eq('id', currentMessage.sender_id)
+          .single();
+
+        if (profileError) {
+          console.error('Error fetching sender profile:', profileError);
+        } else if (senderProfile?.email) {
+          console.log('Sending friend request acceptance email notification to:', senderProfile.email);
+          
+          await sendFriendRequestAcceptanceEmail(
+            senderProfile.email,
+            currentUserName
+          );
+        } else {
+          console.log('No email found for sender:', currentMessage.sender_id);
+        }
       } catch (emailError) {
         console.log('Friend request acceptance email notification failed, but continuing:', emailError);
       }

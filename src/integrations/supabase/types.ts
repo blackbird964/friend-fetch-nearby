@@ -142,6 +142,7 @@ export type Database = {
           bio: string | null
           blocked_users: string[] | null
           created_at: string | null
+          email: string | null
           gender: string | null
           id: string
           interests: string[] | null
@@ -162,6 +163,7 @@ export type Database = {
           bio?: string | null
           blocked_users?: string[] | null
           created_at?: string | null
+          email?: string | null
           gender?: string | null
           id: string
           interests?: string[] | null
@@ -182,6 +184,7 @@ export type Database = {
           bio?: string | null
           blocked_users?: string[] | null
           created_at?: string | null
+          email?: string | null
           gender?: string | null
           id?: string
           interests?: string[] | null

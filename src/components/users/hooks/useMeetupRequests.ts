@@ -90,26 +90,37 @@ export const useMeetupRequests = () => {
           request.duration
         );
 
-        // Send email notification to the original sender using edge function
+        // Send email notification to the original sender
         try {
-          // Using your actual email for testing
-          const testEmail = 'aaron.stathi@gmail.com';
-          console.log('Sending meetup acceptance email notification to:', testEmail);
+          // Fetch the original sender's email from profiles table
+          const { data: senderProfile, error: profileError } = await supabase
+            .from('profiles')
+            .select('email')
+            .eq('id', request.senderId)
+            .single();
 
-          const { data, error: emailError } = await supabase.functions.invoke('send-meetup-notification', {
-            body: {
-              email: testEmail,
-              senderName: currentUser.name || 'Someone',
-              duration: request.duration,
-              activity: request.meetLocation || 'a location',
-              loginUrl: `${window.location.origin}/auth`
+          if (profileError) {
+            console.error('Error fetching sender profile:', profileError);
+          } else if (senderProfile?.email) {
+            console.log('Sending meetup acceptance email notification to:', senderProfile.email);
+
+            const { data, error: emailError } = await supabase.functions.invoke('send-meetup-notification', {
+              body: {
+                email: senderProfile.email,
+                senderName: currentUser.name || 'Someone',
+                duration: request.duration,
+                activity: request.meetLocation || 'a location',
+                loginUrl: `${window.location.origin}/auth`
+              }
+            });
+
+            if (emailError) {
+              console.error('Error sending acceptance email:', emailError);
+            } else {
+              console.log('Acceptance email sent successfully:', data);
             }
-          });
-
-          if (emailError) {
-            console.error('Error sending acceptance email:', emailError);
           } else {
-            console.log('Acceptance email sent successfully:', data);
+            console.log('No email found for sender:', request.senderId);
           }
         } catch (emailError) {
           console.error('Failed to send acceptance email:', emailError);

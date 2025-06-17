@@ -71,16 +71,30 @@ export async function sendMeetupRequest(
 
     // Send email notification to the receiver
     try {
-      // Using your actual email for testing
-      const testEmail = 'aaron.stathi@gmail.com';
-      console.log('Sending meetup request email notification to:', testEmail);
-      
-      await sendMeetupRequestEmail(
-        testEmail,
-        senderName,
-        duration,
-        meetLocation || 'a location'
-      );
+      // Fetch receiver's email from profiles table
+      const { data: receiverProfile, error: profileError } = await supabase
+        .from('profiles')
+        .select('email')
+        .eq('id', receiverId)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching receiver profile:', profileError);
+        return newRequest;
+      }
+
+      if (receiverProfile?.email) {
+        console.log('Sending meetup request email notification to:', receiverProfile.email);
+        
+        await sendMeetupRequestEmail(
+          receiverProfile.email,
+          senderName,
+          duration,
+          meetLocation || 'a location'
+        );
+      } else {
+        console.log('No email found for receiver:', receiverId);
+      }
     } catch (emailError) {
       console.log('Email notification check failed, but continuing:', emailError);
     }
