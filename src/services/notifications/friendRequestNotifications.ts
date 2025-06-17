@@ -20,7 +20,7 @@ export async function sendFriendRequestEmail(
     }
 
     // If notifications are disabled, don't send email
-    if (profile.email_notifications_enabled === false) {
+    if (!profile.email_notifications_enabled) {
       console.log('Email notifications disabled for user:', recipientEmail);
       return true; // Return true so the request still goes through
     }
@@ -67,7 +67,7 @@ export async function sendFriendRequestAcceptanceEmail(
     }
 
     // If notifications are disabled, don't send email
-    if (profile.email_notifications_enabled === false) {
+    if (!profile.email_notifications_enabled) {
       console.log('Email notifications disabled for user:', recipientEmail);
       return true; // Return true so the request still goes through
     }

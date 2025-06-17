@@ -37,7 +37,8 @@ export interface Profile {
   interests: string[] | null;
   active_priorities: ActivePriority[] | null;
   preferred_hangout_duration: string | null;
-  email_notifications_enabled?: boolean | null;
+  email: string | null;
+  email_notifications_enabled: boolean;
   location_settings?: {
     is_manual_mode?: boolean;
     hide_exact_location?: boolean;

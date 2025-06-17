@@ -143,6 +143,7 @@ export type Database = {
           blocked_users: string[] | null
           created_at: string | null
           email: string | null
+          email_notifications_enabled: boolean
           gender: string | null
           id: string
           interests: string[] | null
@@ -164,6 +165,7 @@ export type Database = {
           blocked_users?: string[] | null
           created_at?: string | null
           email?: string | null
+          email_notifications_enabled?: boolean
           gender?: string | null
           id: string
           interests?: string[] | null
@@ -185,6 +187,7 @@ export type Database = {
           blocked_users?: string[] | null
           created_at?: string | null
           email?: string | null
+          email_notifications_enabled?: boolean
           gender?: string | null
           id?: string
           interests?: string[] | null
