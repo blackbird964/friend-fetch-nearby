@@ -1,41 +1,15 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { UserPlus } from 'lucide-react';
 import { useAppContext } from '@/context/AppContext';
 import { addFriendByName } from '@/services/friendships/directFriendship';
-import { toast } from 'sonner';
 
 const AddFriendByNameButton: React.FC = () => {
   const { currentUser, refreshFriendRequests } = useAppContext();
   const [friendName, setFriendName] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [hasAddedHarpreet, setHasAddedHarpreet] = useState(false);
-
-  // Automatically add Harpreet when component mounts
-  useEffect(() => {
-    const addHarpreet = async () => {
-      if (!currentUser || hasAddedHarpreet) return;
-      
-      setIsLoading(true);
-      try {
-        const success = await addFriendByName(currentUser.id, 'Harpreet');
-        if (success) {
-          setHasAddedHarpreet(true);
-          toast.success('Harpreet has been added to your friends list!');
-          await refreshFriendRequests();
-        }
-      } catch (error) {
-        console.error('Error adding Harpreet:', error);
-        toast.error('Failed to add Harpreet as friend');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    addHarpreet();
-  }, [currentUser, hasAddedHarpreet, refreshFriendRequests]);
 
   const handleAddFriend = async () => {
     if (!currentUser || !friendName.trim()) return;
