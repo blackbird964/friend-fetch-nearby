@@ -29,6 +29,21 @@ export function useFriendRequests() {
     req => req.senderId === currentUser?.id && req.status === 'pending'
   );
 
+  // Clear all sent requests on component mount to clean up duplicates
+  useEffect(() => {
+    const clearAllSentRequests = async () => {
+      if (sentRequests.length > 0) {
+        console.log('Clearing all sent requests to clean up duplicates');
+        for (const request of sentRequests) {
+          await cancelFriendRequest(request.id);
+        }
+        await refreshFriendRequests();
+      }
+    };
+    
+    clearAllSentRequests();
+  }, []);
+
   const handleAccept = async (requestId: string, senderId: string) => {
     if (!currentUser) return;
     
