@@ -11,6 +11,8 @@ import {
 import FriendMap from '@/components/map/FriendMap';
 
 const MapPage: React.FC = () => {
+  console.log("MapPage component rendering");
+  
   const { refreshNearbyUsers, currentUser, nearbyUsers } = useAppContext();
   
   // Use our location settings hook
@@ -23,9 +25,18 @@ const MapPage: React.FC = () => {
     togglePrivacyMode
   } = useLocationSettings();
   
+  console.log("MapPage state:", { 
+    currentUser: !!currentUser, 
+    nearbyUsersCount: nearbyUsers.length,
+    isManualMode,
+    isTracking,
+    isPrivacyModeEnabled
+  });
+  
   // Fetch nearby users on initial load
   useEffect(() => {
     if (currentUser?.location) {
+      console.log("Refreshing nearby users");
       refreshNearbyUsers(false);
     }
   }, [currentUser?.location, refreshNearbyUsers]);

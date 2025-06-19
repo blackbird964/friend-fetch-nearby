@@ -6,11 +6,21 @@ import { useAppContext } from '@/context/AppContext';
 import { getBusinessProfile } from '@/lib/supabase/businessProfiles';
 
 const MainLayout: React.FC = () => {
+  console.log("MainLayout component rendering");
+  
   const { isAuthenticated, currentUser } = useAppContext();
   const [isBusinessUser, setIsBusinessUser] = useState<boolean | null>(null);
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
+
+  console.log("[MainLayout] Current state:", {
+    isAuthenticated,
+    currentPath: location.pathname,
+    isBusinessUser,
+    isInitialLoad,
+    hasCurrentUser: !!currentUser
+  });
 
   // Check if user is a business user
   useEffect(() => {
@@ -32,6 +42,7 @@ const MainLayout: React.FC = () => {
   // Handle initial authentication redirect only
   useEffect(() => {
     if (!isAuthenticated) {
+      console.log("User not authenticated, redirecting to /");
       navigate('/');
       return;
     }
@@ -57,13 +68,10 @@ const MainLayout: React.FC = () => {
     }
   }, [isAuthenticated, isBusinessUser, location.pathname, navigate]);
 
-  console.log("[MainLayout] Current state:", {
-    isAuthenticated,
-    currentPath: location.pathname,
-    isBusinessUser,
-    isInitialLoad,
-    hasCurrentUser: !!currentUser
-  });
+  if (!isAuthenticated) {
+    console.log("MainLayout: User not authenticated, showing nothing");
+    return null;
+  }
 
   return (
     <>
