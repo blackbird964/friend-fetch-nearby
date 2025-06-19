@@ -1,147 +1,125 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
-import ChatWindow from '@/components/chat/ChatWindow';
-import ChatHeader from '@/components/chat/ChatHeader';
 import ChatSidebar from '@/components/chat/ChatSidebar';
-import ChatPageLoading from '@/components/chat/ChatPageLoading';
-import ChatPlaceholder from '@/components/chat/ChatPlaceholder';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { useViewportConfig } from '@/hooks/useViewportConfig';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useFriendActions } from '@/components/users/hooks/useFriendActions';
-import { useFriendships } from '@/hooks/useFriendships';
-import { AppUser } from '@/context/types';
+import ChatWindow from '@/components/chat/ChatWindow';
+import RequestsTabs from '@/components/chat/RequestsTabs';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { MessageCircle, UserPlus } from 'lucide-react';
 
 const ChatPage: React.FC = () => {
   const { 
     selectedChat, 
-    setSelectedChat, 
-    loading, 
-    chats,
-    currentUser,
-    friendRequests
+    friendRequests, 
+    meetupRequests 
   } = useAppContext();
   
-  const { friends } = useFriendships();
   const [activeTab, setActiveTab] = useState('chats');
   const [activeRequestsTab, setActiveRequestsTab] = useState('friends');
-  const isMobile = useIsMobile();
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { handleAddFriend } = useFriendActions();
-  
-  // Configure viewport for mobile devices
-  useViewportConfig(isMobile);
 
-  // Check if the current chat participant is already a friend
-  // Check both friend requests (accepted) and the friendships table
-  const isFriend = selectedChat ? (
-    // Check friend requests with accepted status
-    friendRequests.some(req => 
-      req.status === 'accepted' && 
-      ((req.receiverId === selectedChat.participantId && req.senderId === currentUser?.id) ||
-       (req.senderId === selectedChat.participantId && req.receiverId === currentUser?.id))
-    ) ||
-    // Check actual friendships table
-    friends.some(friend => friend.id === selectedChat.participantId)
-  ) : false;
-
-  const handleSendFriendRequest = () => {
-    if (selectedChat && currentUser) {
-      // Create a user object for the friend request
-      const participant: AppUser = {
-        id: selectedChat.participantId,
-        name: selectedChat.participantName,
-        profile_pic: selectedChat.profilePic,
-        email: '', // Required field - using empty string as default
-        bio: null,
-        gender: null,
-        age: null,
-        interests: [],
-        location: null,
-        preferredHangoutDuration: 30, // Changed to number
-        todayActivities: [],
-        isOnline: selectedChat.isOnline || false,
-        blockedUsers: [],
-        blocked_users: [] // Database field name
-      };
-      
-      handleAddFriend(participant);
-    }
-  };
-
-  // Log when component mounts or chats change
-  useEffect(() => {
-    console.log("[ChatPage] Mounted or chats changed. Available chats:", chats.length);
-    console.log("[ChatPage] Selected chat:", selectedChat?.id);
-    console.log("[ChatPage] Route:", location.pathname);
-    console.log("[ChatPage] Is mobile:", isMobile);
-    console.log("[ChatPage] Is friend:", isFriend);
-    console.log("[ChatPage] Friends count:", friends.length);
-  }, [chats, selectedChat, location, isMobile, isFriend, friends]);
-  
-  // Reset selected chat when navigating away on mobile
-  useEffect(() => {
-    return () => {
-      if (isMobile) {
-        setSelectedChat(null);
-      }
-    };
-  }, [isMobile, setSelectedChat]);
+  // Calculate pending requests
+  const pendingFriendRequests = friendRequests.filter(req => req.status === 'pending').length;
+  const pendingMeetupRequests = meetupRequests.filter(req => req.status === 'pending').length;
 
   return (
-    <div className="container mx-auto px-4 py-6 max-w-3xl flex flex-col h-[calc(100vh-130px)]">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-bold">Messages</h1>
-      </div>
-      
-      {loading ? (
-        <ChatPageLoading />
-      ) : (
-        <div className="flex flex-col md:flex-row gap-6 flex-grow overflow-hidden">
-          {/* Mobile: Show chat list when no chat is selected, show chat when one is selected */}
-          {/* Desktop: Always show both sidebar and chat area */}
-          {(!selectedChat || !isMobile) && (
-            <div className={`${isMobile ? 'h-full w-full' : 'md:w-1/3'} overflow-hidden flex-shrink-0`}>
-              <ChatSidebar 
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
+    <div className="h-screen flex flex-col bg-gray-50">
+      <div className="flex-1 flex overflow-hidden">
+        {/* Mobile View */}
+        <div className="flex-1 flex flex-col md:hidden">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+            <TabsList className="grid w-full grid-cols-2 mx-4 mt-4">
+              <TabsTrigger value="chats" className="flex items-center gap-2">
+                <MessageCircle className="h-4 w-4" />
+                <span>Chats</span>
+              </TabsTrigger>
+              <TabsTrigger value="requests" className="relative flex items-center gap-2">
+                <UserPlus className="h-4 w-4" />
+                <span>Requests</span>
+                {(pendingFriendRequests + pendingMeetupRequests) > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {pendingFriendRequests + pendingMeetupRequests}
+                  </span>
+                )}
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="chats" className="flex-1 flex flex-col mt-4">
+              {selectedChat ? (
+                <ChatWindow />
+              ) : (
+                <div className="flex-1 p-4">
+                  <ChatSidebar 
+                    activeTab={activeTab}
+                    setActiveTab={setActiveTab}
+                    activeRequestsTab={activeRequestsTab}
+                    setActiveRequestsTab={setActiveRequestsTab}
+                    pendingFriendRequests={pendingFriendRequests}
+                    pendingMeetupRequests={pendingMeetupRequests}
+                  />
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="requests" className="flex-1 mt-4 p-4">
+              <RequestsTabs
                 activeRequestsTab={activeRequestsTab}
                 setActiveRequestsTab={setActiveRequestsTab}
-                pendingFriendRequests={0}
-                pendingMeetupRequests={0}
+                pendingFriendRequests={pendingFriendRequests}
+                pendingMeetupRequests={pendingMeetupRequests}
               />
-            </div>
-          )}
-          
-          {/* Show the chat window if a chat is selected */}
-          {selectedChat && (
-            <div className={`${isMobile ? 'fixed inset-0 z-20 bg-background' : 'md:w-2/3 relative'} flex-grow overflow-hidden`}>
-              <div className={`${isMobile ? 'h-full' : 'border rounded-lg shadow-sm h-full'} bg-background flex flex-col`}>
-                <ChatHeader 
-                  participantName={selectedChat.participantName}
-                  profilePic={selectedChat.profilePic}
-                  onBack={() => setSelectedChat(null)}
-                  showBackButton={isMobile}
-                  isOnline={selectedChat.isOnline}
-                  participantId={selectedChat.participantId}
-                  isFriend={isFriend}
-                  onSendFriendRequest={handleSendFriendRequest}
-                />
-                <ChatWindow />
-              </div>
-            </div>
-          )}
-          
-          {/* Show a placeholder if no chat is selected (desktop only) */}
-          {!selectedChat && !isMobile && (
-            <div className="hidden md:flex md:w-2/3 md:items-center md:justify-center h-full">
-              <ChatPlaceholder />
-            </div>
-          )}
+            </TabsContent>
+          </Tabs>
         </div>
-      )}
+
+        {/* Desktop View */}
+        <div className="hidden md:flex flex-1">
+          {/* Left Sidebar */}
+          <div className="w-80 border-r bg-white flex flex-col">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+              <TabsList className="grid w-full grid-cols-2 m-4">
+                <TabsTrigger value="chats" className="flex items-center gap-2">
+                  <MessageCircle className="h-4 w-4" />
+                  <span>Chats</span>
+                </TabsTrigger>
+                <TabsTrigger value="requests" className="relative flex items-center gap-2">
+                  <UserPlus className="h-4 w-4" />
+                  <span>Requests</span>
+                  {(pendingFriendRequests + pendingMeetupRequests) > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-primary text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {pendingFriendRequests + pendingMeetupRequests}
+                    </span>
+                  )}
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="chats" className="flex-1 p-4">
+                <ChatSidebar 
+                  activeTab={activeTab}
+                  setActiveTab={setActiveTab}
+                  activeRequestsTab={activeRequestsTab}
+                  setActiveRequestsTab={setActiveRequestsTab}
+                  pendingFriendRequests={pendingFriendRequests}
+                  pendingMeetupRequests={pendingMeetupRequests}
+                />
+              </TabsContent>
+
+              <TabsContent value="requests" className="flex-1 p-4 overflow-y-auto">
+                <RequestsTabs
+                  activeRequestsTab={activeRequestsTab}
+                  setActiveRequestsTab={setActiveRequestsTab}
+                  pendingFriendRequests={pendingFriendRequests}
+                  pendingMeetupRequests={pendingMeetupRequests}
+                />
+              </TabsContent>
+            </Tabs>
+          </div>
+
+          {/* Main Chat Area */}
+          <div className="flex-1">
+            <ChatWindow />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
