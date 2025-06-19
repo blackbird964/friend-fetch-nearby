@@ -3,10 +3,11 @@ import React, { useEffect, useState } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Users, Clock } from 'lucide-react';
+import { ArrowLeft, Users, MessageSquare } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CheckInsList from '@/components/friends/CheckInsList';
 import FriendsList from '@/components/friends/FriendsList';
+import FriendRequestList from '@/components/users/FriendRequestList';
 import { Chat } from '@/context/types';
 import { useChatList } from '@/hooks/useChatList';
 import { useFriendships } from '@/hooks/useFriendships';
@@ -41,6 +42,9 @@ const FriendsPage: React.FC = () => {
       console.log('FriendsPage: No chat found for friend:', friend.name);
     }
   };
+
+  // Calculate pending requests count
+  const pendingFriendRequests = friendRequests.filter(req => req.status === 'pending').length;
 
   // Show loading state while friendships are being fetched
   if (friendshipsLoading) {
@@ -91,9 +95,14 @@ const FriendsPage: React.FC = () => {
             <Users className="h-4 w-4" />
             My Friends
           </TabsTrigger>
-          <TabsTrigger value="checkins" className="flex items-center gap-2">
-            <Clock className="h-4 w-4" />
-            Check-ins
+          <TabsTrigger value="requests" className="relative flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" />
+            Requests
+            {pendingFriendRequests > 0 && (
+              <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                {pendingFriendRequests}
+              </span>
+            )}
           </TabsTrigger>
         </TabsList>
 
@@ -105,8 +114,21 @@ const FriendsPage: React.FC = () => {
           />
         </TabsContent>
 
-        <TabsContent value="checkins" className="mt-6">
-          <CheckInsList />
+        <TabsContent value="requests" className="mt-6">
+          <div className="space-y-6">
+            <div>
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-blue-600" />
+                Friend Requests
+              </h3>
+              <FriendRequestList />
+            </div>
+            
+            <div>
+              <h3 className="text-lg font-semibold mb-4">Check-ins</h3>
+              <CheckInsList />
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
