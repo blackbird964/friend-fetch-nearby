@@ -24,7 +24,7 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <div className="h-1 w-1 bg-blue-500 rounded-full"></div>
-        <h3 className="text-sm font-semibold text-gray-900">Pending Requests</h3>
+        <h3 className="text-sm font-semibold text-gray-900">Incoming Requests</h3>
         <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
           {requests.length}
         </span>
@@ -32,8 +32,8 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
       
       <div className="space-y-3">
         {requests.map((request) => (
-          <Card key={request.id} className="p-4 bg-blue-50/50 border-blue-100 hover:shadow-md transition-all duration-200">
-            <div className="flex items-center justify-between">
+          <Card key={request.id} className="p-3 bg-blue-50/50 border-blue-100 hover:shadow-md transition-all duration-200">
+            <div className="flex items-center justify-between gap-3">
               <div className="flex items-center space-x-3 flex-1 min-w-0">
                 <UserAvatar
                   src={request.senderProfilePic}
@@ -52,18 +52,18 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
                 </div>
               </div>
               
-              <div className="flex space-x-2 ml-3">
+              <div className="flex space-x-2 flex-shrink-0">
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="h-9 w-9 rounded-full p-0 border-red-200 hover:border-red-300 hover:bg-red-50" 
+                  className="h-8 w-8 rounded-full p-0 border-red-200 hover:border-red-300 hover:bg-red-50" 
                   onClick={() => onReject(request.id)}
                 >
                   <XCircle className="h-4 w-4 text-red-500" />
                 </Button>
                 <Button 
                   size="sm" 
-                  className="h-9 w-9 rounded-full p-0 bg-green-500 hover:bg-green-600 border-0" 
+                  className="h-8 w-8 rounded-full p-0 bg-green-500 hover:bg-green-600 border-0" 
                   onClick={() => onAccept(request.id)}
                 >
                   <CheckCircle className="h-4 w-4 text-white" />

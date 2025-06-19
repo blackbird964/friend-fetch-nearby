@@ -27,7 +27,7 @@ const ChatPage: React.FC = () => {
         {/* Mobile View */}
         <div className="flex-1 flex flex-col md:hidden">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
-            <TabsList className="grid w-full grid-cols-2 mx-2 mt-2 mb-1">
+            <TabsList className="grid w-full grid-cols-2 mx-2 mt-2 mb-2 bg-white shadow-sm">
               <TabsTrigger value="chats" className="flex items-center gap-2">
                 <MessageCircle className="h-4 w-4" />
                 <span>Chats</span>
@@ -60,7 +60,7 @@ const ChatPage: React.FC = () => {
               )}
             </TabsContent>
 
-            <TabsContent value="requests" className="flex-1 mt-0 p-2 overflow-y-auto">
+            <TabsContent value="requests" className="flex-1 mt-0 overflow-hidden">
               <RequestsTabs
                 activeRequestsTab={activeRequestsTab}
                 setActiveRequestsTab={setActiveRequestsTab}
