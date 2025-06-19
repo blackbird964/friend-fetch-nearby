@@ -29,7 +29,7 @@ const handler = async (req: Request): Promise<Response> => {
     const unsubscribeUrl = `${loginUrl.replace('/auth', '')}/unsubscribe?email=${encodeURIComponent(email)}`;
 
     const emailResponse = await resend.emails.send({
-      from: "meetkairo <noreply@yourdomain.com>", // Replace yourdomain.com with your verified domain
+      from: "meetkairo <noreply@meetkairo.com>",
       to: [email],
       subject: `Your meetup request was accepted! - meetkairo`,
       html: `
@@ -86,7 +86,6 @@ const handler = async (req: Request): Promise<Response> => {
       JSON.stringify({ error: error.message }),
       {
         status: 500,
-        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
   }
