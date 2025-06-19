@@ -27,7 +27,7 @@ const handler = async (req: Request): Promise<Response> => {
     const unsubscribeUrl = `${loginUrl.replace('/auth', '')}/unsubscribe?email=${encodeURIComponent(email)}`;
 
     const emailResponse = await resend.emails.send({
-      from: "meetkairo <onboarding@resend.dev>",
+      from: "meetkairo <noreply@yourdomain.com>", // Replace yourdomain.com with your verified domain
       to: [email],
       subject: `${accepterName} accepted your friend request! - meetkairo`,
       html: `
