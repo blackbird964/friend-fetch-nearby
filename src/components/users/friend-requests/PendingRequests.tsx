@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { FriendRequest } from '@/context/types';
-import { Clock, Check, X } from 'lucide-react';
+import { Clock, CheckCircle, XCircle } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import UserAvatar from '../cards/UserAvatar';
@@ -21,11 +21,18 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
   if (requests.length === 0) return null;
   
   return (
-    <div className="space-y-3">
-      <h3 className="text-sm font-semibold text-gray-700 px-1">Pending Requests</h3>
-      <div className="space-y-2">
+    <div className="space-y-4">
+      <div className="flex items-center gap-2">
+        <div className="h-1 w-1 bg-blue-500 rounded-full"></div>
+        <h3 className="text-sm font-semibold text-gray-900">Pending Requests</h3>
+        <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded-full">
+          {requests.length}
+        </span>
+      </div>
+      
+      <div className="space-y-3">
         {requests.map((request) => (
-          <Card key={request.id} className="p-4 bg-white shadow-sm border hover:shadow-md transition-shadow">
+          <Card key={request.id} className="p-4 bg-blue-50/50 border-blue-100 hover:shadow-md transition-all duration-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3 flex-1 min-w-0">
                 <UserAvatar
@@ -34,7 +41,7 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
                   size="md"
                 />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-gray-900 truncate">
+                  <h4 className="font-semibold text-gray-900 truncate text-sm">
                     {request.senderName || 'User'}
                   </h4>
                   <div className="flex items-center text-xs text-gray-500 mt-1">
@@ -49,17 +56,17 @@ const PendingRequests: React.FC<PendingRequestsProps> = ({
                 <Button 
                   variant="outline" 
                   size="sm" 
-                  className="h-8 w-8 rounded-full p-0 border-gray-300 hover:border-red-300 hover:bg-red-50" 
+                  className="h-9 w-9 rounded-full p-0 border-red-200 hover:border-red-300 hover:bg-red-50" 
                   onClick={() => onReject(request.id)}
                 >
-                  <X className="h-4 w-4 text-gray-500 hover:text-red-600" />
+                  <XCircle className="h-4 w-4 text-red-500" />
                 </Button>
                 <Button 
                   size="sm" 
-                  className="h-8 w-8 rounded-full p-0 bg-green-600 hover:bg-green-700" 
+                  className="h-9 w-9 rounded-full p-0 bg-green-500 hover:bg-green-600 border-0" 
                   onClick={() => onAccept(request.id)}
                 >
-                  <Check className="h-4 w-4" />
+                  <CheckCircle className="h-4 w-4 text-white" />
                 </Button>
               </div>
             </div>
