@@ -14,6 +14,7 @@ interface ChatHeaderProps {
   onSendFriendRequest?: () => void;
   isFriend?: boolean;
   participantId?: string;
+  hasPendingRequest?: boolean;
 }
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({ 
@@ -24,7 +25,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
   isOnline = false,
   onSendFriendRequest,
   isFriend = false,
-  participantId
+  participantId,
+  hasPendingRequest = false
 }) => {
   return (
     <div className="flex items-center p-3 border-b bg-background sticky top-0 z-10 shadow-sm">
@@ -52,8 +54,8 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         </p>
       </div>
       
-      {/* Friend Request Button - only show if not already friends and we have a participant ID */}
-      {!isFriend && participantId && onSendFriendRequest && (
+      {/* Friend Request Button - only show if not already friends, no pending request, and we have a participant ID */}
+      {!isFriend && !hasPendingRequest && participantId && onSendFriendRequest && (
         <Button 
           variant="ghost" 
           size="icon" 
@@ -63,6 +65,13 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({
         >
           <UserPlus className="h-4 w-4" />
         </Button>
+      )}
+      
+      {/* Show pending status if request was sent */}
+      {!isFriend && hasPendingRequest && (
+        <div className="ml-2 text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
+          Request Sent
+        </div>
       )}
     </div>
   );
