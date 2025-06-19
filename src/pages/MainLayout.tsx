@@ -10,7 +10,6 @@ const MainLayout: React.FC = () => {
   
   const { isAuthenticated, currentUser } = useAppContext();
   const [isBusinessUser, setIsBusinessUser] = useState<boolean | null>(null);
-  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -18,7 +17,6 @@ const MainLayout: React.FC = () => {
     isAuthenticated,
     currentPath: location.pathname,
     isBusinessUser,
-    isInitialLoad,
     hasCurrentUser: !!currentUser
   });
 
@@ -39,32 +37,20 @@ const MainLayout: React.FC = () => {
     checkBusinessUser();
   }, [isAuthenticated, currentUser]);
 
-  // Handle initial authentication redirect only
+  // Redirect if not authenticated
   useEffect(() => {
     if (!isAuthenticated) {
       console.log("User not authenticated, redirecting to /");
-      navigate('/');
+      navigate('/', { replace: true });
       return;
     }
-
-    // Only handle initial redirects, not ongoing navigation
-    if (isInitialLoad && isAuthenticated && currentUser && isBusinessUser !== null) {
-      if (!currentUser.bio && isBusinessUser === false) {
-        // User needs to complete profile
-        console.log("User needs to complete profile:", currentUser);
-        navigate('/');
-      } else if (location.pathname === '/') {
-        // User is authenticated and has complete profile, redirect to default page
-        navigate(isBusinessUser ? '/map' : '/home');
-      }
-      setIsInitialLoad(false);
-    }
-  }, [isAuthenticated, currentUser, isBusinessUser, location.pathname, navigate, isInitialLoad]);
+  }, [isAuthenticated, navigate]);
 
   // Only prevent business users from accessing home page
   useEffect(() => {
     if (isAuthenticated && isBusinessUser === true && location.pathname === '/home') {
-      navigate('/map');
+      console.log("Business user trying to access home, redirecting to map");
+      navigate('/map', { replace: true });
     }
   }, [isAuthenticated, isBusinessUser, location.pathname, navigate]);
 
