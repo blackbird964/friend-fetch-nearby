@@ -13,8 +13,8 @@ export async function fetchNearbyUsers(
     console.log('User location:', userLocation);
     console.log('Radius:', radiusInKm);
 
-    // Fetch users within radius using ST_DWithin (distance in meters)
-    const radiusInMeters = radiusInKm * 1000;
+    // Fetch users within radius - include both online users and recently active users (within 24 hours)
+    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     
     const { data: users, error } = await supabase
       .from('profiles')
@@ -37,7 +37,9 @@ export async function fetchNearbyUsers(
       `)
       .neq('id', currentUserId)
       .not('location', 'is', null)
-      .eq('is_online', true);
+      .or(`is_online.eq.true,last_seen.gte.${twentyFourHoursAgo}`);
+
+    console.log('Database query result:', { users: users?.length, error });
 
     if (error) {
       console.error('Error fetching nearby users:', error);
@@ -45,9 +47,18 @@ export async function fetchNearbyUsers(
     }
 
     if (!users || users.length === 0) {
-      console.log('No users found');
+      console.log('No users found in database');
       return [];
     }
+
+    console.log('Raw users from database:', users.map(u => ({
+      id: u.id,
+      name: u.name,
+      interests: u.interests,
+      todayActivities: u.today_activities,
+      isOnline: u.is_online,
+      lastSeen: u.last_seen
+    })));
 
     // Calculate distances and filter by radius
     const usersWithDistance = users
@@ -92,6 +103,9 @@ export async function fetchNearbyUsers(
           }
         }
 
+        // Determine if user should be considered "online" - either truly online or recently active
+        const isConsideredOnline = user.is_online || (user.last_seen && new Date(user.last_seen) > new Date(twentyFourHoursAgo));
+
         const appUser: AppUser = {
           id: user.id,
           name: user.name || '',
@@ -105,7 +119,7 @@ export async function fetchNearbyUsers(
           distance,
           last_seen: user.last_seen,
           is_online: user.is_online,
-          isOnline: user.is_online, // For backwards compatibility
+          isOnline: isConsideredOnline, // Use our calculated "considered online" status
           is_over_18: user.is_over_18,
           active_priorities: activePriorities,
           preferredHangoutDuration: user.preferred_hangout_duration ? parseInt(user.preferred_hangout_duration) : null,
@@ -114,12 +128,14 @@ export async function fetchNearbyUsers(
           blocked_users: user.blocked_users || [] // For backwards compatibility
         };
 
+        console.log(`Processed user ${user.name}: isOnline=${isConsideredOnline}, interests=${user.interests}, activities=${user.today_activities}`);
+
         return appUser;
       })
       .filter((user): user is AppUser => user !== null)
       .sort((a, b) => (a.distance || 0) - (b.distance || 0));
 
-    console.log(`Found ${usersWithDistance.length} nearby users within ${radiusInKm}km`);
+    console.log(`Found ${usersWithDistance.length} nearby users within ${radiusInKm}km (including recently active)`);
     return usersWithDistance;
   } catch (error) {
     console.error('Error in fetchNearbyUsers:', error);
