@@ -9,22 +9,29 @@ import { useUserActions } from '@/hooks/useUserActions';
 // Create a combined context
 const AppContext = React.createContext<AppContextType | undefined>(undefined);
 
-// Combined provider component
+// Combined provider component with proper nesting
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   return (
     <AuthProvider>
-      <UsersProvider>
-        <SocialProvider>
-          <CombinedContextProvider>{children}</CombinedContextProvider>
-        </SocialProvider>
-      </UsersProvider>
+      <AuthProvidedWrapper>{children}</AuthProvidedWrapper>
     </AuthProvider>
+  );
+};
+
+// This wrapper ensures AuthProvider is available before other providers
+const AuthProvidedWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  return (
+    <UsersProvider>
+      <SocialProvider>
+        <CombinedContextProvider>{children}</CombinedContextProvider>
+      </SocialProvider>
+    </UsersProvider>
   );
 };
 
 // This component combines all context values
 const CombinedContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // Get values from individual contexts
+  // Get values from individual contexts - these should now be available
   const authContext = useAuthContext();
   const usersContext = useUsersContext();
   const socialContext = useSocialContext();
