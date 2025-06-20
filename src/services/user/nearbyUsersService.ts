@@ -36,8 +36,7 @@ export async function fetchNearbyUsers(
         blocked_users
       `)
       .neq('id', currentUserId)
-      .not('location', 'is', null)
-      .or(`is_online.eq.true,last_seen.gte.${twentyFourHoursAgo}`);
+      .not('location', 'is', null);
 
     console.log('Database query result:', { users: users?.length, error });
 
@@ -104,7 +103,8 @@ export async function fetchNearbyUsers(
         }
 
         // Determine if user should be considered "online" - either truly online or recently active
-        const isConsideredOnline = user.is_online || (user.last_seen && new Date(user.last_seen) > new Date(twentyFourHoursAgo));
+        const isRecentlyActive = user.last_seen && new Date(user.last_seen) > new Date(twentyFourHoursAgo);
+        const isConsideredOnline = user.is_online || isRecentlyActive;
 
         const appUser: AppUser = {
           id: user.id,
@@ -119,7 +119,7 @@ export async function fetchNearbyUsers(
           distance,
           last_seen: user.last_seen,
           is_online: user.is_online,
-          isOnline: isConsideredOnline, // Use our calculated "considered online" status
+          isOnline: isConsideredOnline, // IMPORTANT: Set to true for both online AND recently active users
           is_over_18: user.is_over_18,
           active_priorities: activePriorities,
           preferredHangoutDuration: user.preferred_hangout_duration ? parseInt(user.preferred_hangout_duration) : null,
@@ -128,7 +128,7 @@ export async function fetchNearbyUsers(
           blocked_users: user.blocked_users || [] // For backwards compatibility
         };
 
-        console.log(`Processed user ${user.name}: isOnline=${isConsideredOnline}, interests=${user.interests}, activities=${user.today_activities}`);
+        console.log(`Processed user ${user.name}: isOnline=${isConsideredOnline}, isRecentlyActive=${isRecentlyActive}, actuallyOnline=${user.is_online}, interests=${user.interests}, activities=${user.today_activities}`);
 
         return appUser;
       })
