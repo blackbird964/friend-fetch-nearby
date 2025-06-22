@@ -83,9 +83,16 @@ export const useMapEvents = (
       if (clickedFeature) {
         const userId = clickedFeature.get('userId');
         const isCircle = clickedFeature.get('isCircle');
+        const isCluster = clickedFeature.get('isCluster');
         
-        // Only process clicks on user markers, not circles
-        if (userId && !isCircle) {
+        // Ignore clicks on circles and clusters (including single user clusters)
+        if (isCircle || isCluster) {
+          console.log("Clicked on circle or cluster - ignoring");
+          return;
+        }
+        
+        // Only process clicks on individual user markers (which shouldn't exist anymore)
+        if (userId && !isCircle && !isCluster) {
           console.log("Clicked on user feature:", userId);
           
           // Don't select your own marker for meeting requests

@@ -52,8 +52,9 @@ const MapEventListeners: React.FC<MapEventListenersProps> = ({
         const isCurrentUser = feature.get('isCurrentUser');
         const isCircle = feature.get('isCircle');
         
-        // Don't select circles, current user, or clusters
+        // Don't select circles, current user, or clusters (including single user clusters)
         if (isCircle || isCurrentUser || isCluster) {
+          console.log('Clicked on non-selectable feature (circle, current user, or cluster)');
           selectInteraction.getFeatures().clear();
           return;
         }

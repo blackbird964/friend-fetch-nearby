@@ -163,33 +163,18 @@ export const createClusterMarkers = (
   for (const cluster of clusters) {
     const userCount = cluster.users.length;
     
-    if (userCount === 1) {
-      // Single user - create normal marker
-      const user = cluster.users[0];
-      
-      if (!user.location) continue;
-      
-      const feature = new Feature({
-        geometry: new Point(fromLonLat([user.location.lng, user.location.lat])),
-        userId: user.id,
-        name: user.name || `User-${user.id.substring(0, 4)}`,
-        isCluster: false,
-        clusterSize: 1,
-        isBusiness: false // Default to false since we don't have business type info
-      });
-      features.push(feature);
-    } else {
-      // Multiple users - create cluster marker
-      const feature = new Feature({
-        geometry: new Point(fromLonLat([cluster.center.lng, cluster.center.lat])),
-        isCluster: true,
-        clusterSize: userCount,
-        clusterUsers: cluster.users,
-        name: `${userCount} users nearby`,
-        isBusiness: false // Default to false since we don't have business type info
-      });
-      features.push(feature);
-    }
+    // Always create cluster markers now, even for single users
+    const feature = new Feature({
+      geometry: new Point(fromLonLat([cluster.center.lng, cluster.center.lat])),
+      isCluster: true,
+      clusterSize: userCount,
+      clusterUsers: cluster.users,
+      name: userCount === 1 ? `1 user nearby` : `${userCount} users nearby`,
+      isBusiness: false, // Default to false since we don't have business type info
+      // Don't set userId for any clusters to make them non-clickable
+      isClickable: false
+    });
+    features.push(feature);
   }
   
   return features;
