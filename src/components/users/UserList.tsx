@@ -49,66 +49,17 @@ const UserList: React.FC = () => {
   );
 
   console.log("UserList component - All nearby users:", nearbyUsers.length);
-  console.log("UserList component - Online users:", onlineUsers.length);
+  console.log("UserList component - Online users (before filtering):", onlineUsers.length);
   console.log("UserList component - Online user details:", onlineUsers.map(u => ({ 
     id: u.id, 
     name: u.name, 
-    isOnline: u.isOnline 
+    isOnline: u.isOnline,
+    activities: u.todayActivities,
+    interests: u.interests
   })));
 
-  // Filter users based on matching activities OR interests
-  if (currentUser) {
-    const beforeFilter = onlineUsers.length;
-    
-    // First try to match by activities if current user has them
-    if (currentUser.todayActivities && currentUser.todayActivities.length > 0) {
-      const activityMatches = onlineUsers.filter(user => {
-        // If the user has today's activities, check for matches
-        if (user.todayActivities && user.todayActivities.length > 0) {
-          return user.todayActivities.some(activity => 
-            currentUser.todayActivities!.includes(activity)
-          );
-        }
-        return false;
-      });
-      
-      console.log(`UserList component - Activity matches: ${activityMatches.length}`);
-      
-      if (activityMatches.length > 0) {
-        onlineUsers = activityMatches;
-      } else {
-        // If no activity matches, fall back to interest matching
-        if (currentUser.interests && currentUser.interests.length > 0) {
-          onlineUsers = onlineUsers.filter(user => {
-            if (!user.interests || user.interests.length === 0) {
-              return false;
-            }
-            return user.interests.some(interest => 
-              currentUser.interests!.includes(interest)
-            );
-          });
-          console.log(`UserList component - Interest matches (fallback): ${onlineUsers.length}`);
-        }
-      }
-    } else {
-      // If current user has no activities, match by interests
-      if (currentUser.interests && currentUser.interests.length > 0) {
-        onlineUsers = onlineUsers.filter(user => {
-          if (!user.interests || user.interests.length === 0) {
-            return false;
-          }
-          return user.interests.some(interest => 
-            currentUser.interests!.includes(interest)
-          );
-        });
-        console.log(`UserList component - Interest matches (primary): ${onlineUsers.length}`);
-      }
-    }
-    
-    console.log(`UserList component - After filtering: ${onlineUsers.length} (was ${beforeFilter})`);
-  }
-
-  console.log("UserList component - Current user ID:", currentUser?.id);
+  // TEMPORARILY SHOW ALL ONLINE USERS - Remove strict filtering for debugging
+  // TODO: Re-enable filtering once we confirm users are showing up
   console.log("UserList component - Current user activities:", currentUser?.todayActivities);
   console.log("UserList component - Current user interests:", currentUser?.interests);
   console.log("UserList component - Final displaying users:", onlineUsers.length);
