@@ -1,4 +1,3 @@
-
 import { useCallback } from 'react';
 import { throttle } from 'lodash';
 import { Vector as VectorSource } from 'ol/source';
@@ -35,8 +34,16 @@ export const useMarkerUpdateLogic = () => {
       
       console.log("updateMarkers: tracking=", tracking, "users=", users.length, "isBusiness=", isBusiness);
       
-      // Clear existing user markers (but keep circle markers)
-      clearExistingUserMarkers(source);
+      // Clear existing user markers (but keep circle markers) without affecting visibility
+      const features = source.getFeatures();
+      const markersToRemove = features.filter(feature => {
+        const isUserMarker = feature.get('userId') || feature.get('isCurrentUser') || feature.get('isCluster');
+        const isNotCircle = !feature.get('isCircle');
+        return isUserMarker && isNotCircle;
+      });
+      
+      // Remove markers but preserve their intended visibility state
+      markersToRemove.forEach(feature => source.removeFeature(feature));
       
       // For business users, only add their own marker - no other user markers
       if (isBusiness) {
@@ -57,8 +64,7 @@ export const useMarkerUpdateLogic = () => {
       const onlineUsers = filterOnlineAndUnblockedUsers(users, user);
       console.log(`Filtered to ${onlineUsers.length} online users out of ${users.length} total`);
       
-      // ALWAYS add markers for nearby users, regardless of tracking state
-      // This ensures users are clickable even when tracking is off
+      // ALWAYS add markers for nearby users - markers should always be visible
       await addNearbyUserMarkers(onlineUsers, user, radius, source);
       
       // Check if privacy is enabled for current user
@@ -69,7 +75,7 @@ export const useMarkerUpdateLogic = () => {
         await addCurrentUserMarker(user, source);
       }
       
-    }, 100, { leading: true, trailing: true }),
+    }, 150, { leading: true, trailing: true }), // Reduced throttle time for better responsiveness
     []
   ) as ThrottledUpdateFunction;
   
