@@ -5,14 +5,10 @@ import { useChatList } from '@/hooks/useChatList';
 import ChatItem from './ChatItem';
 import ChatListLoader from './ChatListLoader';
 import EmptyChatList from './EmptyChatList';
-import { useUserPresence } from '@/hooks/useUserPresence';
 
 const ChatList: React.FC = () => {
   const { chats, selectedChat, setSelectedChat } = useAppContext();
   const { isLoading } = useChatList();
-  
-  // Use the user presence hook to subscribe to real-time status updates
-  useUserPresence();
 
   if (isLoading) {
     return <ChatListLoader />;
