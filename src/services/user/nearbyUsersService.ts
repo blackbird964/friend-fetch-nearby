@@ -1,4 +1,3 @@
-
 import { supabase } from '@/integrations/supabase/client';
 import { AppUser, ActivePriority } from '@/context/types';
 import { Json } from '@/integrations/supabase/types';
@@ -9,13 +8,46 @@ export async function fetchNearbyUsers(
   radiusInKm: number = 5
 ): Promise<AppUser[]> {
   try {
+    console.log('=== DEBUGGING NEARBY USERS FETCH ===');
     console.log('Fetching nearby users for user:', currentUserId);
     console.log('User location:', userLocation);
     console.log('Radius:', radiusInKm);
 
-    // Fetch users within radius - include both online users and recently active users (within 24 hours)
-    const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-    
+    // Fetch ALL users first to see what's in the database
+    const { data: allUsers, error: allUsersError } = await supabase
+      .from('profiles')
+      .select(`
+        id,
+        name,
+        bio,
+        age,
+        gender,
+        interests,
+        profile_pic,
+        location,
+        last_seen,
+        is_online,
+        is_over_18,
+        active_priorities,
+        preferred_hangout_duration,
+        today_activities,
+        blocked_users
+      `);
+
+    console.log('=== ALL USERS IN DATABASE ===');
+    console.log('Total users in database:', allUsers?.length || 0);
+    console.log('All users error:', allUsersError);
+    if (allUsers) {
+      console.log('All users sample:', allUsers.map(u => ({
+        id: u.id,
+        name: u.name,
+        location: u.location,
+        isOnline: u.is_online,
+        lastSeen: u.last_seen
+      })));
+    }
+
+    // Now fetch users excluding current user
     const { data: users, error } = await supabase
       .from('profiles')
       .select(`
@@ -38,7 +70,9 @@ export async function fetchNearbyUsers(
       .neq('id', currentUserId)
       .not('location', 'is', null);
 
-    console.log('Database query result:', { users: users?.length, error });
+    console.log('=== FILTERED USERS QUERY ===');
+    console.log('Query result - users count:', users?.length || 0);
+    console.log('Query error:', error);
 
     if (error) {
       console.error('Error fetching nearby users:', error);
@@ -46,99 +80,104 @@ export async function fetchNearbyUsers(
     }
 
     if (!users || users.length === 0) {
-      console.log('No users found in database');
+      console.log('❌ No users found in database (excluding current user and null locations)');
       return [];
     }
 
-    console.log('Raw users from database:', users.map(u => ({
+    console.log('✅ Found users from database:', users.map(u => ({
       id: u.id,
       name: u.name,
-      interests: u.interests,
-      todayActivities: u.today_activities,
+      location: u.location,
       isOnline: u.is_online,
-      lastSeen: u.last_seen
+      lastSeen: u.last_seen,
+      interests: u.interests,
+      todayActivities: u.today_activities
     })));
 
-    // Calculate distances and filter by radius
-    const usersWithDistance = users
-      .map(user => {
-        if (!user.location) return null;
+    // For debugging, let's temporarily return ALL users without distance filtering
+    const usersWithDistance = users.map(user => {
+      if (!user.location) {
+        console.log(`User ${user.name} has no location, skipping`);
+        return null;
+      }
 
-        const userLat = (user.location as any).x || (user.location as any).lat;
-        const userLng = (user.location as any).y || (user.location as any).lng;
+      const userLat = (user.location as any).x || (user.location as any).lat;
+      const userLng = (user.location as any).y || (user.location as any).lng;
 
-        if (!userLat || !userLng) return null;
+      if (!userLat || !userLng) {
+        console.log(`User ${user.name} has invalid location coordinates:`, user.location);
+        return null;
+      }
 
-        // Calculate distance using Haversine formula
-        const distance = calculateDistance(
-          userLocation.lat,
-          userLocation.lng,
-          userLat,
-          userLng
-        );
+      // Calculate distance using Haversine formula
+      const distance = calculateDistance(
+        userLocation.lat,
+        userLocation.lng,
+        userLat,
+        userLng
+      );
 
-        if (distance > radiusInKm) return null;
+      console.log(`User ${user.name} is ${distance.toFixed(2)}km away`);
 
-        // Handle active_priorities type conversion
-        let activePriorities: ActivePriority[] = [];
-        if (user.active_priorities) {
-          try {
-            // Convert Json to ActivePriority with proper type checking
-            const priorities = Array.isArray(user.active_priorities) ? user.active_priorities : [];
-            activePriorities = priorities
-              .filter((p: Json) => {
-                if (typeof p !== 'object' || p === null) return false;
-                const priority = p as Record<string, any>;
-                return (
-                  typeof priority.id === 'string' &&
-                  typeof priority.category === 'string' &&
-                  typeof priority.activity === 'string'
-                );
-              })
-              .map((p: Json) => p as unknown as ActivePriority);
-          } catch (e) {
-            console.warn('Failed to parse active_priorities:', e);
-            activePriorities = [];
-          }
+      // Handle active_priorities type conversion
+      let activePriorities: ActivePriority[] = [];
+      if (user.active_priorities) {
+        try {
+          const priorities = Array.isArray(user.active_priorities) ? user.active_priorities : [];
+          activePriorities = priorities
+            .filter((p: Json) => {
+              if (typeof p !== 'object' || p === null) return false;
+              const priority = p as Record<string, any>;
+              return (
+                typeof priority.id === 'string' &&
+                typeof priority.category === 'string' &&
+                typeof priority.activity === 'string'
+              );
+            })
+            .map((p: Json) => p as unknown as ActivePriority);
+        } catch (e) {
+          console.warn('Failed to parse active_priorities:', e);
+          activePriorities = [];
         }
+      }
 
-        // Determine if user should be considered "online" - either truly online or recently active
-        const isRecentlyActive = user.last_seen && new Date(user.last_seen) > new Date(twentyFourHoursAgo);
-        const isConsideredOnline = user.is_online || isRecentlyActive;
+      // TEMPORARILY: Mark ALL users as online for debugging
+      const isConsideredOnline = true; // Force all users to show as online
 
-        const appUser: AppUser = {
-          id: user.id,
-          name: user.name || '',
-          bio: user.bio,
-          age: user.age,
-          gender: user.gender,
-          interests: user.interests || [],
-          profile_pic: user.profile_pic,
-          email: '', // Email not available in profiles table
-          location: { lat: userLat, lng: userLng },
-          distance,
-          last_seen: user.last_seen,
-          is_online: user.is_online,
-          isOnline: isConsideredOnline, // IMPORTANT: Set to true for both online AND recently active users
-          is_over_18: user.is_over_18,
-          active_priorities: activePriorities,
-          preferredHangoutDuration: user.preferred_hangout_duration ? parseInt(user.preferred_hangout_duration) : null,
-          todayActivities: user.today_activities || [],
-          blockedUsers: user.blocked_users || [],
-          blocked_users: user.blocked_users || [] // For backwards compatibility
-        };
+      const appUser: AppUser = {
+        id: user.id,
+        name: user.name || '',
+        bio: user.bio,
+        age: user.age,
+        gender: user.gender,
+        interests: user.interests || [],
+        profile_pic: user.profile_pic,
+        email: '',
+        location: { lat: userLat, lng: userLng },
+        distance,
+        last_seen: user.last_seen,
+        is_online: user.is_online,
+        isOnline: isConsideredOnline, // FORCE TRUE FOR DEBUGGING
+        is_over_18: user.is_over_18,
+        active_priorities: activePriorities,
+        preferredHangoutDuration: user.preferred_hangout_duration ? parseInt(user.preferred_hangout_duration) : null,
+        todayActivities: user.today_activities || [],
+        blockedUsers: user.blocked_users || [],
+        blocked_users: user.blocked_users || []
+      };
 
-        console.log(`Processed user ${user.name}: isOnline=${isConsideredOnline}, isRecentlyActive=${isRecentlyActive}, actuallyOnline=${user.is_online}, interests=${user.interests}, activities=${user.today_activities}`);
+      console.log(`✅ Processed user ${user.name}: distance=${distance.toFixed(2)}km, forcedOnline=true`);
+      return appUser;
+    })
+    .filter((user): user is AppUser => user !== null)
+    .sort((a, b) => (a.distance || 0) - (b.distance || 0));
 
-        return appUser;
-      })
-      .filter((user): user is AppUser => user !== null)
-      .sort((a, b) => (a.distance || 0) - (b.distance || 0));
-
-    console.log(`Found ${usersWithDistance.length} nearby users within ${radiusInKm}km (including recently active)`);
+    console.log(`🎯 FINAL RESULT: ${usersWithDistance.length} users processed and ready to display`);
+    console.log('Final users:', usersWithDistance.map(u => ({ name: u.name, distance: u.distance, isOnline: u.isOnline })));
+    
     return usersWithDistance;
   } catch (error) {
-    console.error('Error in fetchNearbyUsers:', error);
+    console.error('❌ Error in fetchNearbyUsers:', error);
     return [];
   }
 }
