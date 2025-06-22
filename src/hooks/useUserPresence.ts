@@ -1,11 +1,24 @@
 
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { useAppContext } from '@/context/AppContext';
 import { debounce } from 'lodash';
+import { AppUser, Chat } from '@/context/types';
 
-export function useUserPresence() {
-  const { currentUser, nearbyUsers, setNearbyUsers, chats, setChats } = useAppContext();
+interface UseUserPresenceProps {
+  currentUser: AppUser | null;
+  nearbyUsers: AppUser[];
+  setNearbyUsers: (users: AppUser[]) => void;
+  chats: Chat[];
+  setChats: (chats: Chat[] | ((prev: Chat[]) => Chat[])) => void;
+}
+
+export function useUserPresence({ 
+  currentUser, 
+  nearbyUsers, 
+  setNearbyUsers, 
+  chats, 
+  setChats 
+}: UseUserPresenceProps) {
   const updateStatusRef = useRef<any>(null);
   const heartbeatIntervalRef = useRef<any>(null);
   const isInitializedRef = useRef(false);

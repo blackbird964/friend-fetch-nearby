@@ -37,8 +37,14 @@ const CombinedContextProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const usersContext = useUsersContext();
   const socialContext = useSocialContext();
   
-  // Initialize user presence tracking for the entire app
-  useUserPresence();
+  // Initialize user presence tracking for the entire app with required parameters
+  useUserPresence({
+    currentUser: authContext.currentUser,
+    nearbyUsers: usersContext.nearbyUsers,
+    setNearbyUsers: usersContext.setNearbyUsers,
+    chats: socialContext.chats,
+    setChats: socialContext.setChats
+  });
   
   // Add user actions
   const { blockUser, unblockUser, reportUser, loading: userActionsLoading } = 
