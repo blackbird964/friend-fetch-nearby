@@ -24,8 +24,8 @@ export const isUserWithinRadius = (
 };
 
 /**
- * Filter users to only show online and unblocked users
- * CRITICAL: Only show users who are STRICTLY online (actively logged in)
+ * Filter users to only show valid and unblocked users
+ * RELAXED: Show all users while presence system establishes itself
  */
 export const filterOnlineAndUnblockedUsers = (
   users: AppUser[],
@@ -37,10 +37,10 @@ export const filterOnlineAndUnblockedUsers = (
     // Don't show the current user
     if (user.id === currentUser.id) return false;
     
-    // CRITICAL: Only show users who are STRICTLY online (actively logged into the app)
-    // Must be explicitly true, not just truthy
-    if (user.isOnline !== true) {
-      console.log(`Filtering out user: ${user.name} (isOnline: ${user.isOnline}) - not actively logged in`);
+    // RELAXED: Show all valid users for now while presence system establishes itself
+    const hasValidId = user.id && !String(user.id).includes('test') && !String(user.id).includes('mock');
+    if (!hasValidId) {
+      console.log(`Filtering out user: ${user.name} - invalid ID`);
       return false;
     }
     
@@ -50,7 +50,7 @@ export const filterOnlineAndUnblockedUsers = (
     // Don't show users who have blocked the current user
     if (user.blockedUsers?.includes(currentUser.id)) return false;
     
-    console.log(`✅ User ${user.name} passes all filters - showing as ONLINE`);
+    console.log(`✅ User ${user.name} passes all filters - showing (relaxed filtering)`);
     return true;
   });
 };

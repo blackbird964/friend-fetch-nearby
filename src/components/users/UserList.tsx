@@ -38,19 +38,17 @@ const UserList: React.FC = () => {
     }
   };
 
-  // Get only online and real users, excluding the current user
-  let onlineUsers = nearbyUsers.filter(user => 
+  // RELAXED filtering: Show all valid users while presence system establishes itself
+  let displayUsers = nearbyUsers.filter(user => 
     // Exclude the current user first
     user.id !== currentUser?.id &&
-    // CRITICAL: Only include users who are actually online (logged into platform)
-    user.isOnline === true &&
     // Filter out users that don't have a valid ID or have test/mock in their ID
     user.id && !String(user.id).includes('test') && !String(user.id).includes('mock')
   );
 
   console.log("UserList component - All nearby users:", nearbyUsers.length);
-  console.log("UserList component - Online users (before filtering):", onlineUsers.length);
-  console.log("UserList component - Online user details:", onlineUsers.map(u => ({ 
+  console.log("UserList component - Display users (relaxed filtering):", displayUsers.length);
+  console.log("UserList component - Display user details:", displayUsers.map(u => ({ 
     id: u.id, 
     name: u.name, 
     isOnline: u.isOnline,
@@ -58,11 +56,8 @@ const UserList: React.FC = () => {
     interests: u.interests
   })));
 
-  // TEMPORARILY SHOW ALL ONLINE USERS - Remove strict filtering for debugging
-  // TODO: Re-enable filtering once we confirm users are showing up
   console.log("UserList component - Current user activities:", currentUser?.todayActivities);
   console.log("UserList component - Current user interests:", currentUser?.interests);
-  console.log("UserList component - Final displaying users:", onlineUsers.length);
   console.log("UserList component - Is business user:", isBusinessUser);
 
   const handleStartChat = (user: any) => {
@@ -75,7 +70,7 @@ const UserList: React.FC = () => {
     return (
       <div className="space-y-6">
         <UserListHeader 
-          userCount={onlineUsers.length}
+          userCount={displayUsers.length}
           radiusInKm={radiusInKm}
           loading={loading || chatLoading}
           onRefresh={handleRefresh}
@@ -83,10 +78,10 @@ const UserList: React.FC = () => {
         
         <div className="bg-white rounded-lg shadow-md p-8 text-center">
           <div className="text-4xl font-bold text-primary mb-2">
-            {onlineUsers.length}
+            {displayUsers.length}
           </div>
           <p className="text-gray-600">
-            {onlineUsers.length === 1 ? 'user' : 'users'} online within {radiusInKm}km radius
+            {displayUsers.length === 1 ? 'user' : 'users'} within {radiusInKm}km radius
           </p>
           <p className="text-sm text-gray-500 mt-2">
             Business accounts can see user count only
@@ -100,17 +95,17 @@ const UserList: React.FC = () => {
   return (
     <div className="space-y-6">
       <UserListHeader 
-        userCount={onlineUsers.length}
+        userCount={displayUsers.length}
         radiusInKm={radiusInKm}
         loading={loading || chatLoading}
         onRefresh={handleRefresh}
       />
       
-      {onlineUsers.length === 0 ? (
+      {displayUsers.length === 0 ? (
         <EmptyUserList hasLocation={!!currentUser?.location} />
       ) : (
         <UsersList 
-          users={onlineUsers}
+          users={displayUsers}
           onStartChat={handleStartChat}
         />
       )}

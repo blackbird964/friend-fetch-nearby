@@ -26,19 +26,20 @@ const UsersList: React.FC<UsersListProps> = ({ users, onStartChat }) => {
     onStartChat(user);
   };
 
-  // STRICT filtering: Only show users who are explicitly online (actively logged in)
-  const onlineUsers = users.filter(user => {
-    const isStrictlyOnline = user.isOnline === true;
-    console.log(`UsersList: User ${user.name} isOnline: ${user.isOnline} (strictly online: ${isStrictlyOnline})`);
-    return isStrictlyOnline;
+  // RELAXED filtering: Show all users for now while presence system establishes itself
+  const displayUsers = users.filter(user => {
+    // Basic filtering - just exclude invalid users
+    const hasValidId = user.id && !String(user.id).includes('test') && !String(user.id).includes('mock');
+    console.log(`UsersList: User ${user.name} - hasValidId: ${hasValidId}, isOnline: ${user.isOnline}`);
+    return hasValidId;
   });
 
-  console.log(`UsersList: Showing ${onlineUsers.length} ACTIVELY ONLINE users out of ${users.length} total users`);
+  console.log(`UsersList: Showing ${displayUsers.length} users out of ${users.length} total users (relaxed filtering)`);
 
   return (
     <>
       <div className="grid grid-cols-1 gap-4">
-        {onlineUsers.map((user) => (
+        {displayUsers.map((user) => (
           <UserItem 
             key={user.id} 
             user={user} 

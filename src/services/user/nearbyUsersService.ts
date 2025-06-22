@@ -1,3 +1,4 @@
+
 import { supabase } from '@/integrations/supabase/client';
 import { AppUser, ActivePriority } from '@/context/types';
 import { Json } from '@/integrations/supabase/types';
@@ -13,7 +14,7 @@ export async function fetchNearbyUsers(
     console.log('User location:', userLocation);
     console.log('Radius:', radiusInKm);
 
-    // Fetch users excluding current user - ONLY get users who are actually online
+    // RELAXED: Fetch all users excluding current user (don't filter by online status for now)
     const { data: users, error } = await supabase
       .from('profiles')
       .select(`
@@ -34,10 +35,10 @@ export async function fetchNearbyUsers(
         blocked_users
       `)
       .neq('id', currentUserId)
-      .not('location', 'is', null)
-      .eq('is_online', true); // CRITICAL: Only get users who are marked as online
+      .not('location', 'is', null);
+    // Removed .eq('is_online', true) to show all users temporarily
 
-    console.log('=== FILTERED USERS QUERY (ONLINE ONLY) ===');
+    console.log('=== RELAXED USERS QUERY (ALL USERS) ===');
     console.log('Query result - users count:', users?.length || 0);
     console.log('Query error:', error);
 
@@ -47,11 +48,11 @@ export async function fetchNearbyUsers(
     }
 
     if (!users || users.length === 0) {
-      console.log('❌ No ONLINE users found in database (excluding current user and null locations)');
+      console.log('❌ No users found in database (excluding current user and null locations)');
       return [];
     }
 
-    console.log('✅ Found ONLINE users from database:', users.map(u => ({
+    console.log('✅ Found users from database:', users.map(u => ({
       id: u.id,
       name: u.name,
       location: u.location,
@@ -133,7 +134,7 @@ export async function fetchNearbyUsers(
         }
       }
 
-      // STRICT: Only mark as online if is_online is explicitly true
+      // RELAXED: Don't strictly require online status for now
       const isOnline = Boolean(user.is_online);
 
       const appUser: AppUser = {
@@ -149,7 +150,7 @@ export async function fetchNearbyUsers(
         distance,
         last_seen: user.last_seen,
         is_online: user.is_online,
-        isOnline: isOnline, // Strict boolean conversion
+        isOnline: isOnline,
         is_over_18: user.is_over_18,
         active_priorities: activePriorities,
         preferredHangoutDuration: user.preferred_hangout_duration ? parseInt(user.preferred_hangout_duration) : null,
@@ -158,14 +159,14 @@ export async function fetchNearbyUsers(
         blocked_users: user.blocked_users || []
       };
 
-      console.log(`✅ Processed ONLINE user ${user.name}: distance=${distance.toFixed(2)}km, coordinates=(${userLat}, ${userLng}), isOnline=${isOnline}`);
+      console.log(`✅ Processed user ${user.name}: distance=${distance.toFixed(2)}km, coordinates=(${userLat}, ${userLng}), isOnline=${isOnline}`);
       return appUser;
     })
     .filter((user): user is AppUser => user !== null)
     .sort((a, b) => (a.distance || 0) - (b.distance || 0));
 
-    console.log(`🎯 FINAL RESULT: ${usersWithDistance.length} ONLINE users processed and ready to display`);
-    console.log('Final ONLINE users:', usersWithDistance.map(u => ({ name: u.name, distance: u.distance, isOnline: u.isOnline })));
+    console.log(`🎯 FINAL RESULT: ${usersWithDistance.length} users processed and ready to display (relaxed filtering)`);
+    console.log('Final users:', usersWithDistance.map(u => ({ name: u.name, distance: u.distance, isOnline: u.isOnline })));
     
     return usersWithDistance;
   } catch (error) {
