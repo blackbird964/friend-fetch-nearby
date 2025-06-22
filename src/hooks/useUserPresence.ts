@@ -8,6 +8,7 @@ export function useUserPresence() {
   const { currentUser, nearbyUsers, setNearbyUsers, chats, setChats } = useAppContext();
   const updateStatusRef = useRef<any>(null);
   const heartbeatIntervalRef = useRef<any>(null);
+  const isInitializedRef = useRef(false);
   
   // Update the user's online status when they connect/disconnect
   useEffect(() => {
@@ -31,16 +32,30 @@ export function useUserPresence() {
       }, 300);
     }
 
-    // Mark user as online when they load the app
-    updateStatusRef.current(true);
+    // Mark user as online immediately when they load any page
+    const markUserOnline = async () => {
+      if (!isInitializedRef.current) {
+        console.log('Initializing user presence - marking user as ONLINE');
+        updateStatusRef.current(true);
+        isInitializedRef.current = true;
+      }
+    };
 
-    // Set up heartbeat to maintain online status every 30 seconds
-    // This ensures only actively logged in users stay marked as online
+    markUserOnline();
+
+    // Set up aggressive heartbeat to maintain online status every 15 seconds
+    // This ensures users stay marked as online while actively using the app
+    if (heartbeatIntervalRef.current) {
+      clearInterval(heartbeatIntervalRef.current);
+    }
+    
     heartbeatIntervalRef.current = setInterval(() => {
+      // Only send heartbeat if page is visible and user is active
       if (document.visibilityState === 'visible') {
+        console.log('Heartbeat: Keeping user online');
         updateStatusRef.current(true);
       }
-    }, 30000); // 30 seconds heartbeat
+    }, 15000); // More frequent heartbeat (15 seconds)
 
     // Set up event listeners to handle page visibility changes and before unload
     const handleVisibilityChange = () => {
@@ -48,48 +63,82 @@ export function useUserPresence() {
       console.log(`Visibility change: ${isVisible ? 'visible' : 'hidden'}`);
       
       if (isVisible) {
-        // User came back to the app - mark as online
+        // User came back to the app - immediately mark as online
+        console.log('User returned to app - marking ONLINE');
         updateStatusRef.current(true);
       } else {
         // User left the app - mark as offline after a short delay
+        console.log('User left app - will mark OFFLINE in 10 seconds');
         setTimeout(() => {
           if (document.visibilityState === 'hidden') {
+            console.log('User still away - marking OFFLINE');
             updateStatusRef.current(false);
           }
-        }, 5000); // 5 second grace period
+        }, 10000); // 10 second grace period
       }
     };
 
     const handleBeforeUnload = () => {
       console.log('User leaving page, updating status to offline');
-      // Use the REST API URL instead of accessing the protected supabaseUrl property
-      navigator.sendBeacon(
-        `https://sqrlsxmwvmgmbmcyaxcq.supabase.co/rest/v1/profiles?id=eq.${currentUser.id}`,
-        JSON.stringify({ 
+      // Use synchronous approach for immediate offline status
+      try {
+        // Use sendBeacon for reliable delivery when page is unloading
+        const payload = JSON.stringify({ 
           is_online: false,
           last_seen: new Date().toISOString() 
-        })
-      );
+        });
+        
+        const url = `https://sqrlsxmwvmgmbmcyaxcq.supabase.co/rest/v1/profiles?id=eq.${currentUser.id}`;
+        const headers = {
+          'Content-Type': 'application/json',
+          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxcmxzeG13dm1nbWJtY3lheGNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0NTcyMTAsImV4cCI6MjA2MDAzMzIxMH0.xZQ0SGg82QG_TdYtxQU7ccy0mvb_3HvyQj8xbT8FUYA',
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNxcmxzeG13dm1nbWJtY3lheGNxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0NTcyMTAsImV4cCI6MjA2MDAzMzIxMH0.xZQ0SGg82QG_TdYtxQU7ccy0mvb_3HvyQj8xbT8FUYA`
+        };
+        
+        // Try sendBeacon first (more reliable for page unload)
+        if (navigator.sendBeacon) {
+          const blob = new Blob([payload], { type: 'application/json' });
+          navigator.sendBeacon(url, blob);
+        }
+      } catch (error) {
+        console.error('Error setting offline status on unload:', error);
+      }
     };
 
     // Add focus/blur listeners for additional accuracy
     const handleFocus = () => {
+      console.log('Window focused - marking user ONLINE');
       updateStatusRef.current(true);
     };
 
     const handleBlur = () => {
+      console.log('Window blurred - will check if user should be marked offline');
       // Don't immediately mark as offline on blur, wait for visibility change
       setTimeout(() => {
         if (document.visibilityState === 'hidden') {
+          console.log('Window still hidden after blur - marking OFFLINE');
           updateStatusRef.current(false);
         }
-      }, 10000); // 10 second delay before marking offline
+      }, 5000); // 5 second delay before marking offline on blur
+    };
+
+    // Add page load/unload listeners
+    const handlePageShow = () => {
+      console.log('Page shown - marking user ONLINE');
+      updateStatusRef.current(true);
+    };
+
+    const handlePageHide = () => {
+      console.log('Page hidden - marking user OFFLINE');
+      updateStatusRef.current(false);
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('focus', handleFocus);
     window.addEventListener('blur', handleBlur);
+    window.addEventListener('pageshow', handlePageShow);
+    window.addEventListener('pagehide', handlePageHide);
 
     // Subscribe to real-time changes in the profiles table
     const channel = supabase
@@ -169,18 +218,26 @@ export function useUserPresence() {
 
     // Clean up function
     return () => {
+      console.log('Cleaning up user presence hook - marking user OFFLINE');
+      
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('focus', handleFocus);
       window.removeEventListener('blur', handleBlur);
+      window.removeEventListener('pageshow', handlePageShow);
+      window.removeEventListener('pagehide', handlePageHide);
       
       if (heartbeatIntervalRef.current) {
         clearInterval(heartbeatIntervalRef.current);
       }
       
-      updateStatusRef.current.cancel(); // Cancel any pending debounced calls
-      updateStatusRef.current(false); // Set status to offline
+      if (updateStatusRef.current) {
+        updateStatusRef.current.cancel(); // Cancel any pending debounced calls
+        updateStatusRef.current(false); // Set status to offline immediately
+      }
+      
       supabase.removeChannel(channel);
+      isInitializedRef.current = false;
     };
   }, [currentUser?.id, nearbyUsers, setNearbyUsers, chats, setChats]);
 }

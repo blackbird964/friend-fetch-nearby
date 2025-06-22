@@ -5,6 +5,7 @@ import { UsersProvider, useUsersContext } from './UsersContext';
 import { SocialProvider, useSocialContext } from './SocialContext';
 import { AppContextType } from './AppContextTypes';
 import { useUserActions } from '@/hooks/useUserActions';
+import { useUserPresence } from '@/hooks/useUserPresence';
 
 // Create a combined context
 const AppContext = React.createContext<AppContextType | undefined>(undefined);
@@ -35,6 +36,9 @@ const CombinedContextProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const authContext = useAuthContext();
   const usersContext = useUsersContext();
   const socialContext = useSocialContext();
+  
+  // Initialize user presence tracking for the entire app
+  useUserPresence();
   
   // Add user actions
   const { blockUser, unblockUser, reportUser, loading: userActionsLoading } = 
