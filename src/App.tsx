@@ -29,25 +29,23 @@ const App = () => {
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/unsubscribe" element={<UnsubscribePage />} />
-            <Route path="/*" element={
-              <AppProvider>
-                <MainLayout />
-              </AppProvider>
-            }>
-              <Route path="home" element={<Home />} />
-              <Route path="map" element={<MapPage />} />
-              <Route path="chat" element={<ChatPage />} />
-              <Route path="friends" element={<FriendsPage />} />
-              <Route path="profile" element={<ProfilePage />} />
-              <Route path="admin" element={<AdminPage />} />
-              <Route path="test-email" element={<TestEmail />} />
-              <Route path="*" element={<NotFound />} />
-            </Route>
-          </Routes>
+          <AppProvider>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/unsubscribe" element={<UnsubscribePage />} />
+              <Route path="/*" element={<MainLayout />}>
+                <Route path="home" element={<Home />} />
+                <Route path="map" element={<MapPage />} />
+                <Route path="chat" element={<ChatPage />} />
+                <Route path="friends" element={<FriendsPage />} />
+                <Route path="profile" element={<ProfilePage />} />
+                <Route path="admin" element={<AdminPage />} />
+                <Route path="test-email" element={<TestEmail />} />
+                <Route path="*" element={<NotFound />} />
+              </Route>
+            </Routes>
+          </AppProvider>
         </BrowserRouter>
       </TooltipProvider>
     </QueryClientProvider>
