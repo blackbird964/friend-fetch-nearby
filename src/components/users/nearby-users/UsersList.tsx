@@ -26,13 +26,14 @@ const UsersList: React.FC<UsersListProps> = ({ users, onStartChat }) => {
     onStartChat(user);
   };
 
-  // Filter to only show truly online users
+  // STRICT filtering: Only show users who are explicitly online (actively logged in)
   const onlineUsers = users.filter(user => {
-    console.log(`UsersList: User ${user.name} isOnline: ${user.isOnline}`);
-    return user.isOnline === true;
+    const isStrictlyOnline = user.isOnline === true;
+    console.log(`UsersList: User ${user.name} isOnline: ${user.isOnline} (strictly online: ${isStrictlyOnline})`);
+    return isStrictlyOnline;
   });
 
-  console.log(`UsersList: Showing ${onlineUsers.length} online users out of ${users.length} total users`);
+  console.log(`UsersList: Showing ${onlineUsers.length} ACTIVELY ONLINE users out of ${users.length} total users`);
 
   return (
     <>

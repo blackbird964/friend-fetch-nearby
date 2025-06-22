@@ -7,6 +7,7 @@ import { debounce } from 'lodash';
 export function useUserPresence() {
   const { currentUser, nearbyUsers, setNearbyUsers, chats, setChats } = useAppContext();
   const updateStatusRef = useRef<any>(null);
+  const heartbeatIntervalRef = useRef<any>(null);
   
   // Update the user's online status when they connect/disconnect
   useEffect(() => {
@@ -27,17 +28,36 @@ export function useUserPresence() {
         } catch (error) {
           console.error('Error updating online status:', error);
         }
-      }, 300); // 300ms debounce to reduce flicker
+      }, 300);
     }
 
     // Mark user as online when they load the app
     updateStatusRef.current(true);
 
+    // Set up heartbeat to maintain online status every 30 seconds
+    // This ensures only actively logged in users stay marked as online
+    heartbeatIntervalRef.current = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        updateStatusRef.current(true);
+      }
+    }, 30000); // 30 seconds heartbeat
+
     // Set up event listeners to handle page visibility changes and before unload
     const handleVisibilityChange = () => {
       const isVisible = document.visibilityState === 'visible';
       console.log(`Visibility change: ${isVisible ? 'visible' : 'hidden'}`);
-      updateStatusRef.current(isVisible);
+      
+      if (isVisible) {
+        // User came back to the app - mark as online
+        updateStatusRef.current(true);
+      } else {
+        // User left the app - mark as offline after a short delay
+        setTimeout(() => {
+          if (document.visibilityState === 'hidden') {
+            updateStatusRef.current(false);
+          }
+        }, 5000); // 5 second grace period
+      }
     };
 
     const handleBeforeUnload = () => {
@@ -52,8 +72,24 @@ export function useUserPresence() {
       );
     };
 
+    // Add focus/blur listeners for additional accuracy
+    const handleFocus = () => {
+      updateStatusRef.current(true);
+    };
+
+    const handleBlur = () => {
+      // Don't immediately mark as offline on blur, wait for visibility change
+      setTimeout(() => {
+        if (document.visibilityState === 'hidden') {
+          updateStatusRef.current(false);
+        }
+      }, 10000); // 10 second delay before marking offline
+    };
+
     document.addEventListener('visibilitychange', handleVisibilityChange);
     window.addEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('focus', handleFocus);
+    window.addEventListener('blur', handleBlur);
 
     // Subscribe to real-time changes in the profiles table
     const channel = supabase
@@ -77,7 +113,7 @@ export function useUserPresence() {
                 user.id === updatedProfile.id 
                   ? { 
                       ...user, 
-                      isOnline: updatedProfile.is_online, 
+                      isOnline: Boolean(updatedProfile.is_online), // Strict boolean conversion
                       location: updatedProfile.location ? parseLocationFromPostgres(updatedProfile.location) : user.location 
                     } 
                   : user
@@ -91,7 +127,7 @@ export function useUserPresence() {
             setChats(
               chats.map(chat => 
                 chat.participantId === updatedProfile.id 
-                  ? { ...chat, isOnline: updatedProfile.is_online } 
+                  ? { ...chat, isOnline: Boolean(updatedProfile.is_online) } 
                   : chat
               )
             );
@@ -135,6 +171,13 @@ export function useUserPresence() {
     return () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener('blur', handleBlur);
+      
+      if (heartbeatIntervalRef.current) {
+        clearInterval(heartbeatIntervalRef.current);
+      }
+      
       updateStatusRef.current.cancel(); // Cancel any pending debounced calls
       updateStatusRef.current(false); // Set status to offline
       supabase.removeChannel(channel);

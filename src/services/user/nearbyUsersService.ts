@@ -13,7 +13,7 @@ export async function fetchNearbyUsers(
     console.log('User location:', userLocation);
     console.log('Radius:', radiusInKm);
 
-    // Now fetch users excluding current user
+    // Fetch users excluding current user - ONLY get users who are actually online
     const { data: users, error } = await supabase
       .from('profiles')
       .select(`
@@ -34,9 +34,10 @@ export async function fetchNearbyUsers(
         blocked_users
       `)
       .neq('id', currentUserId)
-      .not('location', 'is', null);
+      .not('location', 'is', null)
+      .eq('is_online', true); // CRITICAL: Only get users who are marked as online
 
-    console.log('=== FILTERED USERS QUERY ===');
+    console.log('=== FILTERED USERS QUERY (ONLINE ONLY) ===');
     console.log('Query result - users count:', users?.length || 0);
     console.log('Query error:', error);
 
@@ -46,11 +47,11 @@ export async function fetchNearbyUsers(
     }
 
     if (!users || users.length === 0) {
-      console.log('❌ No users found in database (excluding current user and null locations)');
+      console.log('❌ No ONLINE users found in database (excluding current user and null locations)');
       return [];
     }
 
-    console.log('✅ Found users from database:', users.map(u => ({
+    console.log('✅ Found ONLINE users from database:', users.map(u => ({
       id: u.id,
       name: u.name,
       location: u.location,
@@ -97,10 +98,7 @@ export async function fetchNearbyUsers(
       // Final validation
       if (!userLat || !userLng || isNaN(userLat) || isNaN(userLng)) {
         console.log(`User ${user.name} - Final coordinates invalid: lat=${userLat}, lng=${userLng}`);
-        // FOR DEBUGGING: Let's use a default location near Sydney to show some users
-        userLat = -33.8688;
-        userLng = 151.2093;
-        console.log(`User ${user.name} - Using default Sydney coordinates for debugging`);
+        return null; // Don't show users with invalid locations
       }
 
       // Calculate distance using Haversine formula
@@ -135,8 +133,8 @@ export async function fetchNearbyUsers(
         }
       }
 
-      // Mark all users as online for debugging
-      const isConsideredOnline = true;
+      // STRICT: Only mark as online if is_online is explicitly true
+      const isOnline = Boolean(user.is_online);
 
       const appUser: AppUser = {
         id: user.id,
@@ -151,7 +149,7 @@ export async function fetchNearbyUsers(
         distance,
         last_seen: user.last_seen,
         is_online: user.is_online,
-        isOnline: isConsideredOnline,
+        isOnline: isOnline, // Strict boolean conversion
         is_over_18: user.is_over_18,
         active_priorities: activePriorities,
         preferredHangoutDuration: user.preferred_hangout_duration ? parseInt(user.preferred_hangout_duration) : null,
@@ -160,14 +158,14 @@ export async function fetchNearbyUsers(
         blocked_users: user.blocked_users || []
       };
 
-      console.log(`✅ Processed user ${user.name}: distance=${distance.toFixed(2)}km, coordinates=(${userLat}, ${userLng})`);
+      console.log(`✅ Processed ONLINE user ${user.name}: distance=${distance.toFixed(2)}km, coordinates=(${userLat}, ${userLng}), isOnline=${isOnline}`);
       return appUser;
     })
     .filter((user): user is AppUser => user !== null)
     .sort((a, b) => (a.distance || 0) - (b.distance || 0));
 
-    console.log(`🎯 FINAL RESULT: ${usersWithDistance.length} users processed and ready to display`);
-    console.log('Final users:', usersWithDistance.map(u => ({ name: u.name, distance: u.distance, isOnline: u.isOnline })));
+    console.log(`🎯 FINAL RESULT: ${usersWithDistance.length} ONLINE users processed and ready to display`);
+    console.log('Final ONLINE users:', usersWithDistance.map(u => ({ name: u.name, distance: u.distance, isOnline: u.isOnline })));
     
     return usersWithDistance;
   } catch (error) {
