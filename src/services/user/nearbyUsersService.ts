@@ -72,28 +72,27 @@ export async function fetchNearbyUsers(
       let userLat: number | null = null;
       let userLng: number | null = null;
 
-      // Try multiple ways to extract coordinates
-      if (typeof user.location === 'object' && user.location !== null) {
+      // Handle PostgreSQL point format: "(longitude,latitude)" or POINT(longitude latitude)
+      if (typeof user.location === 'string') {
+        console.log(`User ${user.name} location string:`, user.location);
+        
+        // Try to parse PostgreSQL point format: "(lng,lat)" or "POINT(lng lat)"
+        const pointMatch = user.location.match(/\(([^,\s]+)[,\s]\s*([^)]+)\)/);
+        if (pointMatch) {
+          const [, lngStr, latStr] = pointMatch;
+          userLng = parseFloat(lngStr);
+          userLat = parseFloat(latStr);
+          console.log(`User ${user.name} parsed coordinates: lng=${userLng}, lat=${userLat}`);
+        }
+      } else if (typeof user.location === 'object' && user.location !== null) {
         const location = user.location as any;
         
         // Try different possible property names
-        userLat = location.lat || location.x || location.latitude;
-        userLng = location.lng || location.y || location.longitude;
+        userLat = location.lat || location.x || location.latitude || location.y;
+        userLng = location.lng || location.lon || location.longitude || location.x;
         
         console.log(`User ${user.name} location object:`, location);
         console.log(`Extracted coordinates: lat=${userLat}, lng=${userLng}`);
-      }
-
-      // If we still don't have coordinates, try parsing as string
-      if ((userLat === null || userLng === null) && typeof user.location === 'string') {
-        try {
-          const parsed = JSON.parse(user.location);
-          userLat = parsed.lat || parsed.x || parsed.latitude;
-          userLng = parsed.lng || parsed.y || parsed.longitude;
-          console.log(`User ${user.name} parsed from string:`, parsed);
-        } catch (e) {
-          console.log(`Failed to parse location string for ${user.name}:`, user.location);
-        }
       }
 
       // Final validation
