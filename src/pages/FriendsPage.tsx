@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CheckInsList from '@/components/friends/CheckInsList';
 import FriendsList from '@/components/friends/FriendsList';
 import FriendRequestList from '@/components/users/FriendRequestList';
+import ClearDuplicateRequestsButton from '@/components/friends/ClearDuplicateRequestsButton';
 import { Chat } from '@/context/types';
 import { useChatList } from '@/hooks/useChatList';
 import { useFriendships } from '@/hooks/useFriendships';
@@ -117,10 +118,13 @@ const FriendsPage: React.FC = () => {
         <TabsContent value="requests" className="mt-6">
           <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2">
-                <MessageSquare className="h-5 w-5 text-blue-600" />
-                Friend Requests
-              </h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-blue-600" />
+                  Friend Requests
+                </h3>
+                <ClearDuplicateRequestsButton />
+              </div>
               <FriendRequestList />
             </div>
             

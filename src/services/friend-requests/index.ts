@@ -5,3 +5,4 @@ export { fetchFriendRequests } from './fetchRequests';
 export { updateFriendRequestStatus } from './updateRequest';
 export { cancelFriendRequest } from './cancelRequest';
 export { clearOldFriendRequests } from './clearOldRequests';
+export { clearDuplicateRequests } from './clearDuplicateRequests';
