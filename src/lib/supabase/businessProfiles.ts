@@ -33,7 +33,7 @@ export async function createBusinessProfile(profile: {
 }
 
 export async function getBusinessProfile(userId: string): Promise<BusinessProfile | null> {
-  console.log("Fetching business profile for user:", userId);
+  console.log("🔍 Fetching business profile for user:", userId);
   
   try {
     const { data, error } = await supabase
@@ -43,14 +43,18 @@ export async function getBusinessProfile(userId: string): Promise<BusinessProfil
       .maybeSingle();
     
     if (error) {
-      console.error('Error fetching business profile:', error);
+      console.error('❌ Error fetching business profile:', error);
       return null;
     }
     
-    console.log(`Business profile result for ${userId}:`, data);
+    if (data) {
+      console.log(`✅ Business profile found for ${userId}:`, data.business_name);
+    } else {
+      console.log(`ℹ️  No business profile for ${userId}`);
+    }
     return data;
   } catch (err) {
-    console.error('Exception fetching business profile:', err);
+    console.error('❌ Exception fetching business profile:', err);
     return null;
   }
 }
@@ -73,9 +77,16 @@ export function isLikelyBusinessName(userName: string): boolean {
   const businessIndicators = [
     'coffee', 'cafe', 'restaurant', 'shop', 'store', 'company', 'corp', 
     'ltd', 'llc', 'inc', 'bakery', 'bar', 'grill', 'pizza', 'market',
-    'cookies', 'handover', 'kiki\'s', 'kitchen', 'bistro', 'deli'
+    'cookies', 'handover', 'kiki\'s', 'kiki', 'kitchen', 'bistro', 'deli',
+    'brewery', 'pub', 'hotel', 'motel', 'salon', 'spa', 'gym', 'fitness'
   ];
   
   const lowerName = userName.toLowerCase();
-  return businessIndicators.some(indicator => lowerName.includes(indicator));
+  const isBusinessName = businessIndicators.some(indicator => lowerName.includes(indicator));
+  
+  if (isBusinessName) {
+    console.log(`🏢 Identified business by name: "${userName}"`);
+  }
+  
+  return isBusinessName;
 }

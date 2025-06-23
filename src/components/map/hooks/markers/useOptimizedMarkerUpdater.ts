@@ -36,7 +36,7 @@ export const useOptimizedMarkerUpdater = () => {
       updateInProgressRef.current = true;
       
       try {
-        console.log("Updating markers: tracking=", tracking, "users=", users.length, "isBusiness=", isBusiness);
+        console.log("🗺️  Updating markers: tracking=", tracking, "users=", users.length, "isBusiness=", isBusiness);
         
         // Clear only user markers efficiently
         const features = source.getFeatures();
@@ -48,6 +48,8 @@ export const useOptimizedMarkerUpdater = () => {
         
         // Remove in batch
         markersToRemove.forEach(feature => source.removeFeature(feature));
+        
+        console.log(`🧹 Removed ${markersToRemove.length} existing markers`);
         
         // Filter users - show ALL valid users
         const validUsers = users.filter(u => {
@@ -67,26 +69,12 @@ export const useOptimizedMarkerUpdater = () => {
           return true;
         });
         
-        console.log(`Showing ${validUsers.length} valid users out of ${users.length} total`);
+        console.log(`📍 Processing ${validUsers.length} valid users out of ${users.length} total`);
         
-        // Use clustering for larger groups
-        if (useHeatmap && validUsers.length >= 3) {
-          console.log("Using cluster mode for", validUsers.length, "users");
-          
-          const clusters = clusterNearbyUsers(validUsers, 0.5); // Fixed radius
-          const clusterFeatures = createClusterMarkers(clusters, source, user);
-          
-          // Ensure all cluster features are visible
-          clusterFeatures.forEach(feature => {
-            feature.set('visible', true);
-          });
-          
-          source.addFeatures(clusterFeatures);
-        } else {
-          // Use individual markers
-          const { addNearbyUserMarkers } = await import('./utils/userMarkers');
-          await addNearbyUserMarkers(validUsers, user, radius, source);
-        }
+        // Always use individual markers to ensure businesses show as stars
+        // Don't use clustering for now to ensure business stars are visible
+        const { addNearbyUserMarkers } = await import('./utils/userMarkers');
+        await addNearbyUserMarkers(validUsers, user, radius, source);
         
         // Add current user marker if tracking and not privacy enabled
         const isPrivacyEnabled = shouldObfuscateLocation(user);
@@ -94,10 +82,10 @@ export const useOptimizedMarkerUpdater = () => {
           await addCurrentUserMarker(user, source);
         }
         
-        console.log("Marker update completed successfully");
+        console.log("✅ Marker update completed successfully");
         
       } catch (error) {
-        console.error("Error in debouncedUpdateMarkers:", error);
+        console.error("❌ Error in debouncedUpdateMarkers:", error);
       } finally {
         updateInProgressRef.current = false;
       }
@@ -109,11 +97,11 @@ export const useOptimizedMarkerUpdater = () => {
   // Simplified zoom handlers
   const handleZoomStart = useCallback(() => {
     // Don't prevent updates during zoom - just log
-    console.log("Zoom started");
+    console.log("🔍 Zoom started");
   }, []);
 
   const handleZoomEnd = useCallback(() => {
-    console.log("Zoom ended");
+    console.log("🔍 Zoom ended");
   }, []);
   
   return { 

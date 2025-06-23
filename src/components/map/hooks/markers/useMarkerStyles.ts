@@ -21,24 +21,12 @@ export const useMarkerStyles = (
     const isHeatMap = feature.get('isHeatMap');
     const isBusiness = feature.get('isBusiness');
     const businessName = feature.get('businessName') || feature.get('name');
-    
-    // Log business detection for debugging
-    if (isBusiness) {
-      console.log(`Detected business marker: ${businessName} (userId: ${userId})`);
-    }
-    
-    // Handle cluster markers FIRST, but check if it's a business user cluster
     const isCluster = feature.get('isCluster');
     const clusterSize = feature.get('clusterSize') || 1;
     
-    // For business users, ALWAYS use star icon regardless of cluster
+    // Log business detection for debugging
     if (isBusiness) {
-      console.log(`Applying business star style for: ${businessName}`);
-      return createBusinessMarkerStyle(feature, selectedUser, movingUsers, completedMoves);
-    }
-    
-    if (isCluster && clusterSize > 1) {
-      return createClusterMarkerStyle(feature);
+      console.log(`🌟 Applying business star style for: ${businessName} (userId: ${userId})`);
     }
     
     // Special style for heatmap marker (privacy mode)
@@ -49,6 +37,17 @@ export const useMarkerStyles = (
     // Special styles for radius or privacy circles
     if (isCircle) {
       return createCircleMarkerStyles(feature);
+    }
+    
+    // For business users, ALWAYS use star icon - this takes priority over clustering
+    if (isBusiness) {
+      console.log(`⭐ Creating business star marker for: ${businessName}`);
+      return createBusinessMarkerStyle(feature, selectedUser, movingUsers, completedMoves);
+    }
+    
+    // Handle cluster markers for non-business users
+    if (isCluster && clusterSize > 1) {
+      return createClusterMarkerStyle(feature);
     }
     
     // Regular user markers
