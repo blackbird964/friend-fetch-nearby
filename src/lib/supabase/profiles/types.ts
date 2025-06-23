@@ -39,6 +39,7 @@ export interface Profile {
   preferred_hangout_duration: string | null;
   email: string | null;
   email_notifications_enabled: boolean;
+  today_activities: string[] | null;
   location_settings?: {
     is_manual_mode?: boolean;
     hide_exact_location?: boolean;
