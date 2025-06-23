@@ -24,33 +24,35 @@ export const useMarkerStyles = (
     const isCluster = feature.get('isCluster');
     const clusterSize = feature.get('clusterSize') || 1;
     
-    // Log business detection for debugging
-    if (isBusiness) {
-      console.log(`🌟 Applying business star style for: ${businessName} (userId: ${userId})`);
-    }
+    // Debug logging for business detection
+    console.log(`[MarkerStyle] Processing feature: userId=${userId}, isBusiness=${isBusiness}, businessName=${businessName}, isCluster=${isCluster}`);
     
     // Special style for heatmap marker (privacy mode)
     if (isHeatMap) {
+      console.log(`[MarkerStyle] Creating heatmap style for userId: ${userId}`);
       return createHeatmapMarkerStyle();
     }
     
     // Special styles for radius or privacy circles
     if (isCircle) {
+      console.log(`[MarkerStyle] Creating circle style for userId: ${userId}`);
       return createCircleMarkerStyles(feature);
     }
     
-    // For business users, ALWAYS use star icon - this takes priority over clustering
-    if (isBusiness) {
-      console.log(`⭐ Creating business star marker for: ${businessName}`);
+    // CRITICAL: Business users get star icons - this MUST take absolute priority
+    if (isBusiness === true) {
+      console.log(`⭐ [MarkerStyle] Creating BUSINESS STAR for: ${businessName} (userId: ${userId})`);
       return createBusinessMarkerStyle(feature, selectedUser, movingUsers, completedMoves);
     }
     
-    // Handle cluster markers for non-business users
-    if (isCluster && clusterSize > 1) {
+    // Handle cluster markers (only for non-business users)
+    if (isCluster && clusterSize > 1 && !isBusiness) {
+      console.log(`[MarkerStyle] Creating cluster style for ${clusterSize} users`);
       return createClusterMarkerStyle(feature);
     }
     
-    // Regular user markers
+    // Regular user markers (non-business, non-cluster)
+    console.log(`[MarkerStyle] Creating regular user style for userId: ${userId}`);
     return createUserMarkerStyle(feature, selectedUser, movingUsers, completedMoves, friendRequests);
   };
 

@@ -16,10 +16,10 @@ export const createBusinessMarkerStyle = (
   const hasMoved = completedMoves.has(userId);
   const businessName = feature.get('businessName') || feature.get('name');
   
-  console.log(`Creating business marker style for: ${businessName} (userId: ${userId})`);
+  console.log(`⭐ [BusinessMarker] Creating business star for: ${businessName} (userId: ${userId})`);
   
   // Determine marker color based on status
-  let markerColor = '#f59e0b'; // Golden/orange color for businesses to make them stand out
+  let markerColor = '#f59e0b'; // Golden/orange color for businesses
   
   if (isUser) {
     markerColor = '#0ea5e9'; // Blue for current user business
@@ -29,11 +29,18 @@ export const createBusinessMarkerStyle = (
     markerColor = '#8b5cf6'; // Purple for selected business users
   }
   
-  return new Style({
+  console.log(`⭐ [BusinessMarker] Using color ${markerColor} for business: ${businessName}`);
+  
+  const style = new Style({
     image: new Icon({
       src: createStarIcon(markerColor),
-      scale: 1.3, // Make business markers even more prominent
-      anchor: [0.5, 0.5]
+      scale: 1.4, // Make business markers very prominent
+      anchor: [0.5, 0.5],
+      anchorXUnits: 'fraction',
+      anchorYUnits: 'fraction'
     })
   });
+  
+  console.log(`⭐ [BusinessMarker] Created star style for: ${businessName}`);
+  return style;
 };
