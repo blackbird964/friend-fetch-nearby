@@ -12,7 +12,7 @@ type LocationHandlingProps = {
   map: React.MutableRefObject<Map | null>;
   mapLoaded: boolean;
   currentUser: AppUser | null;
-  updateUserLocation: (userId: string, location: Location) => Promise<void>;
+  updateUserLocation: (userId: string, location: Location) => void;
   setCurrentUser: (user: AppUser) => void;
   radiusInKm: number;
   setRadiusInKm: (radius: number) => void;
