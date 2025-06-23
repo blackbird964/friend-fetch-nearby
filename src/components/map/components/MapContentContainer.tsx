@@ -66,7 +66,7 @@ const MapContentContainer: React.FC<MapContentContainerProps> = ({
       <div
         id="map"
         className="w-full h-full"
-        style={{ background: '#f8f9fa' }}
+        style={{ background: '#f8f9fa', minHeight: '400px' }}
       />
       
       {/* Map Features */}

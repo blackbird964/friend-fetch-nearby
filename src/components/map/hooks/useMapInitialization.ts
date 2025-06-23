@@ -13,13 +13,16 @@ export const useMapInitialization = () => {
   const { createMapView } = useMapConfig();
 
   useEffect(() => {
-    // Find the map container either by ref or by ID
-    const container = mapContainer.current || document.getElementById('map-container');
+    // Find the map container by ID since ref might not be available
+    const container = document.getElementById('map');
     
     if (!container) {
-      console.error("Map container not found");
+      console.error("Map container with id 'map' not found");
       return;
     }
+
+    // Clear any existing map content
+    container.innerHTML = '';
 
     // Create layers
     const { baseLayer, vectorLayer: vLayer, routeLayer: rLayer } = createLayers();
@@ -35,7 +38,7 @@ export const useMapInitialization = () => {
       view: createMapView()
     });
 
-    console.log("Map initialized");
+    console.log("Map initialized with container:", container.id);
     setMapLoaded(true);
 
     return () => {
@@ -43,6 +46,7 @@ export const useMapInitialization = () => {
         map.current.setTarget(undefined);
         map.current = null;
         console.log("Map destroyed");
+        setMapLoaded(false);
       }
     };
   }, []);
