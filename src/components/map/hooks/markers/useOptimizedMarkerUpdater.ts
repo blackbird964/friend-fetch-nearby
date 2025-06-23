@@ -11,7 +11,7 @@ import { shouldObfuscateLocation } from '@/utils/privacyUtils';
 export const useOptimizedMarkerUpdater = () => {
   const updateInProgressRef = useRef(false);
 
-  // Simplified debounced update function
+  // Re-enabled clustering with debounced update function
   const debouncedUpdateMarkers = useCallback(
     debounce(async (
       source: VectorSource,
@@ -71,10 +71,61 @@ export const useOptimizedMarkerUpdater = () => {
         
         console.log(`📍 Processing ${validUsers.length} valid users out of ${users.length} total`);
         
-        // Always use individual markers to ensure businesses show as stars
-        // Don't use clustering for now to ensure business stars are visible
-        const { addNearbyUserMarkers } = await import('./utils/userMarkers');
-        await addNearbyUserMarkers(validUsers, user, radius, source);
+        // Use clustering for better organization - but handle businesses specially
+        if (validUsers.length > 2 && useHeatmap) {
+          // Separate business users from regular users
+          const businessUsers: AppUser[] = [];
+          const regularUsers: AppUser[] = [];
+          
+          // Import business detection functions
+          const { getBusinessProfile, isLikelyBusinessName } = await import('@/lib/supabase/businessProfiles');
+          
+          // Classify users as business or regular
+          for (const validUser of validUsers) {
+            let isBusiness = false;
+            
+            try {
+              const businessProfile = await getBusinessProfile(validUser.id);
+              isBusiness = !!businessProfile;
+            } catch (error) {
+              console.warn(`Error checking business profile for ${validUser.id}:`, error);
+            }
+            
+            // Fallback: check if name suggests business
+            if (!isBusiness && validUser.name) {
+              isBusiness = isLikelyBusinessName(validUser.name);
+            }
+            
+            if (isBusiness) {
+              businessUsers.push(validUser);
+            } else {
+              regularUsers.push(validUser);
+            }
+          }
+          
+          console.log(`Found ${businessUsers.length} business users and ${regularUsers.length} regular users`);
+          
+          // Add business users as individual star markers (never cluster them)
+          const { addNearbyUserMarkers } = await import('./utils/userMarkers');
+          if (businessUsers.length > 0) {
+            await addNearbyUserMarkers(businessUsers, user, radius, source);
+          }
+          
+          // Cluster regular users only
+          if (regularUsers.length > 0) {
+            const clusters = clusterNearbyUsers(regularUsers, 0.8); // Slightly larger radius for better clustering
+            const clusterFeatures = createClusterMarkers(clusters, source, user);
+            
+            if (clusterFeatures.length > 0) {
+              source.addFeatures(clusterFeatures);
+              console.log(`✅ Added ${clusterFeatures.length} cluster markers for ${regularUsers.length} regular users`);
+            }
+          }
+        } else {
+          // For small numbers or when clustering is disabled, use individual markers
+          const { addNearbyUserMarkers } = await import('./utils/userMarkers');
+          await addNearbyUserMarkers(validUsers, user, radius, source);
+        }
         
         // Add current user marker if tracking and not privacy enabled
         const isPrivacyEnabled = shouldObfuscateLocation(user);
@@ -90,13 +141,12 @@ export const useOptimizedMarkerUpdater = () => {
         updateInProgressRef.current = false;
       }
       
-    }, 150, { leading: false, trailing: true }), // Reduced debounce time
+    }, 150, { leading: false, trailing: true }),
     []
   );
   
   // Simplified zoom handlers
   const handleZoomStart = useCallback(() => {
-    // Don't prevent updates during zoom - just log
     console.log("🔍 Zoom started");
   }, []);
 
