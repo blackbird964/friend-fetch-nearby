@@ -10,6 +10,7 @@ import { formatMessageTime } from '@/utils/dateFormatters';
 interface UserEmail {
   id: string;
   email: string;
+  name: string | null;
   created_at: string;
   last_sign_in_at: string | null;
   email_confirmed_at: string | null;
@@ -29,13 +30,39 @@ const UserEmailList: React.FC = () => {
   const fetchUserEmails = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase.functions.invoke('get-user-emails');
+      // Fetch user emails with profile names from auth.users and profiles tables
+      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
       
-      if (error) {
-        throw error;
+      if (authError) {
+        throw authError;
       }
 
-      const response: UserEmailResponse = data;
+      // Get profile data for all users
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, name');
+      
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+      }
+
+      // Create a map of user IDs to names
+      const profileMap = new Map(profiles?.map(profile => [profile.id, profile.name]) || []);
+
+      const users: UserEmail[] = authUsers.users.map(user => ({
+        id: user.id,
+        email: user.email || '',
+        name: profileMap.get(user.id) || null,
+        created_at: user.created_at,
+        last_sign_in_at: user.last_sign_in_at,
+        email_confirmed_at: user.email_confirmed_at
+      }));
+
+      const response: UserEmailResponse = {
+        total_users: authUsers.users.length,
+        users: users
+      };
+
       setEmails(response.users);
       setTotalUsers(response.total_users);
       
@@ -65,9 +92,9 @@ const UserEmailList: React.FC = () => {
   };
 
   const exportToCSV = () => {
-    const csvHeader = 'Email,User ID,Created At,Last Sign In,Email Confirmed\n';
+    const csvHeader = 'First Name,Email,User ID,Created At,Last Sign In,Email Confirmed\n';
     const csvRows = emails.map(user => 
-      `${user.email},${user.id},${user.created_at},${user.last_sign_in_at || 'Never'},${user.email_confirmed_at || 'Not confirmed'}`
+      `${user.name || 'N/A'},${user.email},${user.id},${user.created_at},${user.last_sign_in_at || 'Never'},${user.email_confirmed_at || 'Not confirmed'}`
     ).join('\n');
     
     const csvContent = csvHeader + csvRows;
@@ -123,6 +150,7 @@ const UserEmailList: React.FC = () => {
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>First Name</TableHead>
                   <TableHead>Email</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
@@ -132,6 +160,9 @@ const UserEmailList: React.FC = () => {
               <TableBody>
                 {emails.map((user) => (
                   <TableRow key={user.id}>
+                    <TableCell className="font-medium">
+                      {user.name || <span className="text-gray-400 italic">No name</span>}
+                    </TableCell>
                     <TableCell className="font-medium">{user.email}</TableCell>
                     <TableCell>
                       {user.email_confirmed_at ? (
