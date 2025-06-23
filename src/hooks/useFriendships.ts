@@ -33,8 +33,7 @@ export function useFriendships() {
       if (userFriendships.length === 0) {
         console.log("useFriendships: No friendships found");
         setFriends([]);
-        setIsLoading(false);
-        return;
+        return; // Don't return early without setting isLoading to false
       }
 
       // Fetch profile data for each friend
@@ -87,13 +86,14 @@ export function useFriendships() {
       console.error('useFriendships: Error fetching friendships:', error);
       setFriends([]);
     } finally {
+      // Always set loading to false in finally block
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
     fetchFriendships();
-  }, [currentUser]);
+  }, [currentUser?.id]); // Only depend on currentUser.id to prevent infinite loops
 
   console.log("useFriendships: Returning - friends count:", friends.length, "isLoading:", isLoading);
 
