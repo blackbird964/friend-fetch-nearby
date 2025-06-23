@@ -8,7 +8,7 @@ import { FriendRequest } from '@/context/types';
 export const useMapStyles = (
   vectorLayer: React.MutableRefObject<VectorLayer<VectorSource> | null>,
   routeLayer: React.MutableRefObject<VectorLayer<VectorSource> | null>,
-  getMarkerStyle: (feature: any) => Style,
+  getMarkerStyle: (feature: any, resolution?: number) => Style,
   selectedUser: string | null,
   movingUsers: Set<string>,
   completedMoves: Set<string>,
@@ -17,8 +17,8 @@ export const useMapStyles = (
   // Set up marker styles
   useEffect(() => {
     if (vectorLayer.current) {
-      vectorLayer.current.setStyle((feature: any) => {
-        return getMarkerStyle(feature);
+      vectorLayer.current.setStyle((feature: any, resolution: number) => {
+        return getMarkerStyle(feature, resolution);
       });
     }
     

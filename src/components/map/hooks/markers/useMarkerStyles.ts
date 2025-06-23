@@ -15,7 +15,7 @@ export const useMarkerStyles = (
   friendRequests: FriendRequest[]
 ) => {
   // Create marker style based on feature properties
-  const getMarkerStyle = (feature: Feature<Geometry>) => {
+  const getMarkerStyle = (feature: Feature<Geometry>, resolution?: number) => {
     const userId = feature.get('userId');
     const isCircle = feature.get('isCircle');
     const isHeatMap = feature.get('isHeatMap');
@@ -45,10 +45,10 @@ export const useMarkerStyles = (
       return createBusinessMarkerStyle(feature, selectedUser, movingUsers, completedMoves);
     }
     
-    // Handle cluster markers (only for non-business users)
+    // Handle cluster markers (only for non-business users) - pass resolution
     if (isCluster && clusterSize > 1 && !isBusiness) {
       console.log(`[MarkerStyle] Creating cluster style for ${clusterSize} users`);
-      return createClusterMarkerStyle(feature);
+      return createClusterMarkerStyle(feature, resolution);
     }
     
     // Regular user markers (non-business, non-cluster)
