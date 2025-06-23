@@ -32,7 +32,7 @@ export const createBusinessMarkerStyle = (
   return new Style({
     image: new Icon({
       src: createStarIcon(markerColor),
-      scale: 1.2, // Make business markers slightly larger
+      scale: 1.3, // Make business markers even more prominent
       anchor: [0.5, 0.5]
     })
   });

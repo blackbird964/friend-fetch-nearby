@@ -6,7 +6,7 @@ import { Vector as VectorSource } from 'ol/source';
 import { AppUser } from '@/context/types';
 import { getDisplayLocation, shouldObfuscateLocation } from '@/utils/privacyUtils';
 import { isUserWithinRadius } from './markerUtils';
-import { getBusinessProfile } from '@/lib/supabase/businessProfiles';
+import { getBusinessProfile, isLikelyBusinessName } from '@/lib/supabase/businessProfiles';
 
 /**
  * Add markers for nearby users to the map
@@ -50,19 +50,34 @@ export const addNearbyUserMarkers = async (
     
     try {
       // Check if this user is a business - this is critical for star icons
-      const businessProfile = await getBusinessProfile(user.id);
-      const isBusiness = !!businessProfile;
+      let businessProfile = null;
+      let isBusiness = false;
       
-      console.log(`User ${user.name} is business:`, isBusiness, businessProfile?.business_name);
+      try {
+        businessProfile = await getBusinessProfile(user.id);
+        isBusiness = !!businessProfile;
+      } catch (error) {
+        console.warn(`Error checking business profile for ${user.id}:`, error);
+      }
+      
+      // Fallback: check if name suggests business
+      if (!isBusiness && user.name) {
+        isBusiness = isLikelyBusinessName(user.name);
+        if (isBusiness) {
+          console.log(`Detected likely business by name: ${user.name}`);
+        }
+      }
+      
+      console.log(`User ${user.name} is business:`, isBusiness, businessProfile?.business_name || 'name-based detection');
       
       // Create the standard marker with business info
       const userFeature = new Feature({
         geometry: new Point(fromLonLat([displayLocation.lng, displayLocation.lat])),
         userId: user.id,
-        name: isBusiness ? businessProfile?.business_name || user.name : (user.name || `User-${user.id.substring(0, 4)}`),
+        name: businessProfile?.business_name || user.name || `User-${user.id.substring(0, 4)}`,
         isPrivacyEnabled: isPrivacyEnabled,
         isBusiness: isBusiness, // This is crucial for star icon rendering
-        businessName: businessProfile?.business_name,
+        businessName: businessProfile?.business_name || (isBusiness ? user.name : undefined),
         businessDescription: businessProfile?.description
       });
       
@@ -115,20 +130,35 @@ export const addCurrentUserMarker = async (currentUser: AppUser | null, vectorSo
     });
     
     // Check if current user is a business
-    const businessProfile = await getBusinessProfile(currentUser.id);
-    const isBusiness = !!businessProfile;
+    let businessProfile = null;
+    let isBusiness = false;
     
-    console.log(`Current user ${currentUser.name} is business:`, isBusiness, businessProfile?.business_name);
+    try {
+      businessProfile = await getBusinessProfile(currentUser.id);
+      isBusiness = !!businessProfile;
+    } catch (error) {
+      console.warn(`Error checking business profile for current user:`, error);
+    }
+    
+    // Fallback: check if name suggests business
+    if (!isBusiness && currentUser.name) {
+      isBusiness = isLikelyBusinessName(currentUser.name);
+      if (isBusiness) {
+        console.log(`Current user detected as likely business by name: ${currentUser.name}`);
+      }
+    }
+    
+    console.log(`Current user ${currentUser.name} is business:`, isBusiness, businessProfile?.business_name || 'name-based detection');
     
     // Only add marker if privacy mode is disabled
     const userFeature = new Feature({
       geometry: new Point(fromLonLat([currentUser.location.lng, currentUser.location.lat])),
       isCurrentUser: true,
       userId: currentUser.id,
-      name: isBusiness ? businessProfile?.business_name || 'You' : 'You',
+      name: businessProfile?.business_name || (isBusiness ? currentUser.name : 'You'),
       isPrivacyEnabled: false,
       isBusiness: isBusiness, // This ensures current user business gets star icon too
-      businessName: businessProfile?.business_name,
+      businessName: businessProfile?.business_name || (isBusiness ? currentUser.name : undefined),
       businessDescription: businessProfile?.description
     });
     
