@@ -13,6 +13,35 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [nearbyUsers, setNearbyUsers] = useState<AppUser[]>([]);
   const [radiusInKm, setRadiusInKm] = useState<number>(60); // Updated default radius to 60km
 
+  // Filter users based on shared today activities
+  const filterUsersBySharedActivities = useCallback((users: AppUser[]): AppUser[] => {
+    if (!currentUser || !currentUser.todayActivities || currentUser.todayActivities.length === 0) {
+      console.log('No current user activities to filter by, showing all users');
+      return users;
+    }
+
+    const currentUserActivities = currentUser.todayActivities;
+    console.log('Current user activities:', currentUserActivities);
+
+    const filteredUsers = users.filter(user => {
+      if (!user.todayActivities || user.todayActivities.length === 0) {
+        return false; // Don't show users with no activities
+      }
+
+      // Check if user has at least one shared activity with current user
+      const hasSharedActivity = user.todayActivities.some(activity => 
+        currentUserActivities.includes(activity)
+      );
+
+      console.log(`User ${user.name}: activities=${user.todayActivities}, hasSharedActivity=${hasSharedActivity}`);
+      
+      return hasSharedActivity;
+    });
+
+    console.log(`Filtered ${filteredUsers.length} users with shared activities out of ${users.length} total`);
+    return filteredUsers;
+  }, [currentUser]);
+
   // Filter out blocked users from nearby users
   const filterBlockedUsers = useCallback((users: AppUser[]): AppUser[] => {
     if (!currentUser || !currentUser.blockedUsers || currentUser.blockedUsers.length === 0) {
@@ -39,29 +68,31 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         radiusInKm
       );
       
-      // Filter out the current user FIRST, then filter blocked users
+      // Filter out the current user FIRST, then filter blocked users, then filter by shared activities
       const otherUsers = allUsers.filter(user => user.id !== currentUser.id);
-      const filteredUsers = filterBlockedUsers(otherUsers);
+      const unblockedUsers = filterBlockedUsers(otherUsers);
+      const usersWithSharedActivities = filterUsersBySharedActivities(unblockedUsers);
       
       console.log('UsersContext - All users fetched:', allUsers.length);
       console.log('UsersContext - After removing current user:', otherUsers.length);
-      console.log('UsersContext - After filtering blocked users:', filteredUsers.length);
+      console.log('UsersContext - After filtering blocked users:', unblockedUsers.length);
+      console.log('UsersContext - After filtering by shared activities:', usersWithSharedActivities.length);
       console.log('UsersContext - Current user ID:', currentUser.id);
-      console.log('UsersContext - Users with activities:', filteredUsers.map(u => ({
-        id: u.id,
-        name: u.name,
-        activities: u.todayActivities,
-        interests: u.interests,
-        duration: u.preferredHangoutDuration
-      })));
+      console.log('UsersContext - Current user activities:', currentUser.todayActivities);
       
-      setNearbyUsers(filteredUsers);
+      setNearbyUsers(usersWithSharedActivities);
       
       if (showToast) {
-        const hiddenCount = otherUsers.length - filteredUsers.length;
-        const message = hiddenCount > 0 
-          ? `Found ${filteredUsers.length} nearby users (${hiddenCount} blocked users hidden)`
-          : `Found ${filteredUsers.length} nearby users with updated preferences`;
+        const hiddenByBlocking = otherUsers.length - unblockedUsers.length;
+        const hiddenByActivities = unblockedUsers.length - usersWithSharedActivities.length;
+        
+        let message = `Found ${usersWithSharedActivities.length} nearby users with shared activities`;
+        if (hiddenByBlocking > 0) {
+          message += ` (${hiddenByBlocking} blocked users hidden)`;
+        }
+        if (hiddenByActivities > 0) {
+          message += ` (${hiddenByActivities} users with no shared activities hidden)`;
+        }
           
         toast.success("Updated", {
           description: message
@@ -76,7 +107,7 @@ export const UsersProvider: React.FC<{ children: React.ReactNode }> = ({ childre
         });
       }
     }
-  }, [currentUser, radiusInKm, filterBlockedUsers]);
+  }, [currentUser, radiusInKm, filterBlockedUsers, filterUsersBySharedActivities]);
 
   useEffect(() => {
     if (currentUser && currentUser.location) {

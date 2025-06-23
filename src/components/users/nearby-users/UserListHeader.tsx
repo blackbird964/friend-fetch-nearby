@@ -1,13 +1,15 @@
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { RefreshCw } from 'lucide-react';
+import { useAppContext } from '@/context/AppContext';
 
 interface UserListHeaderProps {
   userCount: number;
   radiusInKm: number;
   loading: boolean;
-  onRefresh: () => Promise<void>;
+  onRefresh: () => void;
 }
 
 const UserListHeader: React.FC<UserListHeaderProps> = ({
@@ -16,22 +18,46 @@ const UserListHeader: React.FC<UserListHeaderProps> = ({
   loading,
   onRefresh
 }) => {
+  const { currentUser } = useAppContext();
+  
+  // Check if user has selected activities
+  const hasSelectedActivities = currentUser?.todayActivities && currentUser.todayActivities.length > 0;
+  
+  const getHeaderText = () => {
+    if (!hasSelectedActivities) {
+      return `People nearby (${userCount})`;
+    }
+    return `People nearby with same activities as you (${userCount})`;
+  };
+
+  const getSubText = () => {
+    if (!hasSelectedActivities) {
+      return `Select activities above to find people with shared interests within ${radiusInKm}km radius`;
+    }
+    return `Within ${radiusInKm}km radius • Sharing: ${currentUser?.todayActivities?.join(', ')}`;
+  };
+
   return (
-    <div className="flex justify-between items-center">
-      <h2 className="text-xl font-semibold">People nearby with same interests as you ({userCount})</h2>
-      <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-500">Radius: {radiusInKm} km</span>
-        <Button 
-          variant="outline" 
-          size="sm"
-          onClick={onRefresh}
-          disabled={loading}
-          className="flex items-center gap-1"
-        >
-          <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
-        </Button>
-      </div>
-    </div>
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <CardTitle className="text-lg">{getHeaderText()}</CardTitle>
+            <p className="text-sm text-gray-600 mt-1">{getSubText()}</p>
+          </div>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={onRefresh}
+            disabled={loading}
+            className="flex items-center gap-2 ml-4"
+          >
+            <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Updating...' : 'Refresh'}
+          </Button>
+        </div>
+      </CardHeader>
+    </Card>
   );
 };
 
