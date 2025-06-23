@@ -9,10 +9,10 @@ export const createClusterMarkerStyle = (feature: Feature<Geometry>) => {
   
   // For single users that got put in a cluster (edge case)
   if (clusterSize === 1) {
-    // Use a simple circle for single users
+    // Use a fixed size circle for single users - represents ~2km radius
     return new Style({
       image: new CircleStyle({
-        radius: 12,
+        radius: 20, // Fixed size regardless of zoom
         fill: new Fill({ 
           color: isBusiness ? '#10b981' : '#6366f1' // Green for business, purple for regular
         }),
@@ -24,8 +24,9 @@ export const createClusterMarkerStyle = (feature: Feature<Geometry>) => {
     });
   }
   
-  // Calculate cluster appearance based on size
-  const radius = Math.min(25, 15 + Math.sqrt(clusterSize) * 2);
+  // Fixed radius that represents approximately 2km on the map
+  // This size stays constant regardless of zoom level
+  const radius = 30; // Fixed 30px radius for all cluster markers
   const color = isBusiness ? '#10b981' : '#6366f1'; // Green for business, purple for regular
   
   return new Style({
@@ -42,7 +43,7 @@ export const createClusterMarkerStyle = (feature: Feature<Geometry>) => {
     text: new Text({
       text: clusterSize.toString(),
       fill: new Fill({ color: 'white' }),
-      font: 'bold 14px Arial',
+      font: 'bold 16px Arial', // Slightly larger font for better visibility
       stroke: new Stroke({ 
         color: color, 
         width: 2 
