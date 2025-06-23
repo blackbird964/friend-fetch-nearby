@@ -4,7 +4,6 @@ import { AppUser } from '@/context/types';
 import { Vector as VectorSource } from 'ol/source';
 import { useBusinessUserMarkers } from './useBusinessUserMarkers';
 import { useOptimizedMarkerUpdater } from './useOptimizedMarkerUpdater';
-import { useMarkerEventListeners } from './useMarkerEventListeners';
 
 export const useMarkerUpdater = (
   vectorSource: React.MutableRefObject<VectorSource | null>,
@@ -14,60 +13,36 @@ export const useMarkerUpdater = (
   radiusInKm: number,
   isTracking: boolean = true
 ) => {
-  // Use refs to track previous state and avoid unnecessary updates
-  const prevTrackingRef = useRef(isTracking);
-  const prevRadiusRef = useRef(radiusInKm);
   const updateTimeoutRef = useRef<number | null>(null);
-  const nearbyUsersRef = useRef(nearbyUsers);
-  const currentUserRef = useRef(currentUser);
   
   // Get business user status
   const { isBusinessUser } = useBusinessUserMarkers(currentUser);
   
-  // Get optimized marker update logic with zoom handling
-  const { debouncedUpdateMarkers, handleZoomStart, handleZoomEnd } = useOptimizedMarkerUpdater();
+  // Get optimized marker update logic
+  const { debouncedUpdateMarkers } = useOptimizedMarkerUpdater();
   
-  // Update refs when props change to use in cleanup functions
+  // Main effect to update map markers
   useEffect(() => {
-    nearbyUsersRef.current = nearbyUsers;
-    currentUserRef.current = currentUser;
-    prevRadiusRef.current = radiusInKm;
-    prevTrackingRef.current = isTracking;
-  }, [nearbyUsers, currentUser, radiusInKm, isTracking]);
-
-  // Set up zoom event listeners to prevent updates during zoom
-  useEffect(() => {
-    const handleZoomChangeStart = () => {
-      handleZoomStart();
-    };
-
-    const handleZoomChangeEnd = () => {
-      handleZoomEnd();
-    };
-
-    // Listen for zoom events
-    window.addEventListener('map-zoom-start', handleZoomChangeStart);
-    window.addEventListener('map-zoom-end', handleZoomChangeEnd);
-
-    return () => {
-      window.removeEventListener('map-zoom-start', handleZoomChangeStart);
-      window.removeEventListener('map-zoom-end', handleZoomChangeEnd);
-    };
-  }, [handleZoomStart, handleZoomEnd]);
-  
-  // Main effect to update map markers with reduced frequency
-  useEffect(() => {
-    if (!mapLoaded || !vectorSource.current || isBusinessUser === null) return;
+    if (!mapLoaded || !vectorSource.current || isBusinessUser === null) {
+      console.log("Skipping marker update - map not ready:", { mapLoaded, hasSource: !!vectorSource.current, isBusinessUser });
+      return;
+    }
     
-    console.log("useMarkerUpdater effect triggered, isTracking:", isTracking, "isBusinessUser:", isBusinessUser);
+    console.log("Triggering marker update:", { 
+      userCount: nearbyUsers.length, 
+      isTracking, 
+      currentUserId: currentUser?.id,
+      isBusinessUser 
+    });
     
-    // Use longer delay to prevent rapid updates
+    // Clear any pending updates
     if (updateTimeoutRef.current) {
       window.clearTimeout(updateTimeoutRef.current);
     }
     
+    // Update markers with a small delay to ensure DOM is ready
     updateTimeoutRef.current = window.setTimeout(() => {
-      const useHeatmap = nearbyUsers.length > 10; // Enable clustering for large groups
+      const useHeatmap = nearbyUsers.length > 5; // Lower threshold for better clustering
       
       debouncedUpdateMarkers(
         vectorSource.current!, 
@@ -79,7 +54,7 @@ export const useMarkerUpdater = (
         useHeatmap
       );
       updateTimeoutRef.current = null;
-    }, 250); // Increased delay to 250ms
+    }, 100); // Reduced delay
     
     // Cleanup function
     return () => {
@@ -89,30 +64,23 @@ export const useMarkerUpdater = (
       }
     };
   }, [
-    nearbyUsers.length, // Only trigger on count change, not full array
+    nearbyUsers, // Watch full array changes
     mapLoaded, 
-    currentUser?.id, // Only trigger on user ID change
+    currentUser?.id,
     currentUser?.location?.lat, 
     currentUser?.location?.lng,
     vectorSource, 
     radiusInKm, 
-    currentUser?.locationSettings?.hideExactLocation, 
-    currentUser?.location_settings?.hide_exact_location, 
     isTracking,
     isBusinessUser,
     debouncedUpdateMarkers
   ]);
 
-  // Set up event listeners with optimized function
-  useMarkerEventListeners(
-    vectorSource,
-    mapLoaded,
-    isBusinessUser,
-    debouncedUpdateMarkers as any, // Type assertion for compatibility
-    nearbyUsersRef,
-    currentUserRef,
-    prevRadiusRef,
-    prevTrackingRef,
-    updateTimeoutRef
-  );
+  // Force update when tracking state changes
+  useEffect(() => {
+    if (mapLoaded && vectorSource.current) {
+      console.log("Tracking state changed, forcing marker update");
+      window.dispatchEvent(new CustomEvent('markers-need-update'));
+    }
+  }, [isTracking, mapLoaded]);
 };

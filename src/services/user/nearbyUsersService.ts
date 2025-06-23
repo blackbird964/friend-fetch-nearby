@@ -9,12 +9,12 @@ export async function fetchNearbyUsers(
   radiusInKm: number = 5
 ): Promise<AppUser[]> {
   try {
-    console.log('=== DEBUGGING NEARBY USERS FETCH ===');
-    console.log('Fetching nearby users for user:', currentUserId);
+    console.log('=== FETCHING NEARBY USERS ===');
+    console.log('Current user ID:', currentUserId);
     console.log('User location:', userLocation);
     console.log('Radius:', radiusInKm);
 
-    // RELAXED: Fetch all users excluding current user (don't filter by online status for now)
+    // Fetch all users excluding current user
     const { data: users, error } = await supabase
       .from('profiles')
       .select(`
@@ -36,10 +36,8 @@ export async function fetchNearbyUsers(
       `)
       .neq('id', currentUserId)
       .not('location', 'is', null);
-    // Removed .eq('is_online', true) to show all users temporarily
 
-    console.log('=== RELAXED USERS QUERY (ALL USERS) ===');
-    console.log('Query result - users count:', users?.length || 0);
+    console.log('Raw query result - users count:', users?.length || 0);
     console.log('Query error:', error);
 
     if (error) {
@@ -48,22 +46,14 @@ export async function fetchNearbyUsers(
     }
 
     if (!users || users.length === 0) {
-      console.log('❌ No users found in database (excluding current user and null locations)');
+      console.log('No users found in database');
       return [];
     }
 
-    console.log('✅ Found users from database:', users.map(u => ({
-      id: u.id,
-      name: u.name,
-      location: u.location,
-      isOnline: u.is_online,
-      lastSeen: u.last_seen,
-      interests: u.interests,
-      todayActivities: u.today_activities
-    })));
+    console.log('Processing users with locations...');
 
     // Process users with improved location parsing
-    const usersWithDistance = users.map(user => {
+    const processedUsers = users.map(user => {
       if (!user.location) {
         console.log(`User ${user.name} has no location, skipping`);
         return null;
@@ -74,31 +64,22 @@ export async function fetchNearbyUsers(
 
       // Handle PostgreSQL point format: "(longitude,latitude)" or POINT(longitude latitude)
       if (typeof user.location === 'string') {
-        console.log(`User ${user.name} location string:`, user.location);
-        
-        // Try to parse PostgreSQL point format: "(lng,lat)" or "POINT(lng lat)"
         const pointMatch = user.location.match(/\(([^,\s]+)[,\s]\s*([^)]+)\)/);
         if (pointMatch) {
           const [, lngStr, latStr] = pointMatch;
           userLng = parseFloat(lngStr);
           userLat = parseFloat(latStr);
-          console.log(`User ${user.name} parsed coordinates: lng=${userLng}, lat=${userLat}`);
         }
       } else if (typeof user.location === 'object' && user.location !== null) {
         const location = user.location as any;
-        
-        // Try different possible property names
         userLat = location.lat || location.x || location.latitude || location.y;
         userLng = location.lng || location.lon || location.longitude || location.x;
-        
-        console.log(`User ${user.name} location object:`, location);
-        console.log(`Extracted coordinates: lat=${userLat}, lng=${userLng}`);
       }
 
-      // Final validation
+      // Validate coordinates
       if (!userLat || !userLng || isNaN(userLat) || isNaN(userLng)) {
-        console.log(`User ${user.name} - Final coordinates invalid: lat=${userLat}, lng=${userLng}`);
-        return null; // Don't show users with invalid locations
+        console.log(`User ${user.name} - Invalid coordinates: lat=${userLat}, lng=${userLng}`);
+        return null;
       }
 
       // Calculate distance using Haversine formula
@@ -108,8 +89,6 @@ export async function fetchNearbyUsers(
         userLat,
         userLng
       );
-
-      console.log(`User ${user.name} is ${distance.toFixed(2)}km away`);
 
       // Handle active_priorities type conversion
       let activePriorities: ActivePriority[] = [];
@@ -133,9 +112,6 @@ export async function fetchNearbyUsers(
         }
       }
 
-      // RELAXED: Don't strictly require online status for now
-      const isOnline = Boolean(user.is_online);
-
       const appUser: AppUser = {
         id: user.id,
         name: user.name || '',
@@ -149,7 +125,7 @@ export async function fetchNearbyUsers(
         distance,
         last_seen: user.last_seen,
         is_online: user.is_online,
-        isOnline: isOnline,
+        isOnline: Boolean(user.is_online), // Simplified - show all users
         is_over_18: user.is_over_18,
         active_priorities: activePriorities,
         preferredHangoutDuration: user.preferred_hangout_duration ? parseInt(user.preferred_hangout_duration) : null,
@@ -158,16 +134,15 @@ export async function fetchNearbyUsers(
         blocked_users: user.blocked_users || []
       };
 
-      console.log(`✅ Processed user ${user.name}: distance=${distance.toFixed(2)}km, coordinates=(${userLat}, ${userLng}), isOnline=${isOnline}`);
+      console.log(`✅ Processed user ${user.name}: distance=${distance.toFixed(2)}km`);
       return appUser;
     })
     .filter((user): user is AppUser => user !== null)
     .sort((a, b) => (a.distance || 0) - (b.distance || 0));
 
-    console.log(`🎯 FINAL RESULT: ${usersWithDistance.length} users processed and ready to display (relaxed filtering)`);
-    console.log('Final users:', usersWithDistance.map(u => ({ name: u.name, distance: u.distance, isOnline: u.isOnline })));
+    console.log(`🎯 FINAL RESULT: ${processedUsers.length} users ready to display`);
     
-    return usersWithDistance;
+    return processedUsers;
   } catch (error) {
     console.error('❌ Error in fetchNearbyUsers:', error);
     return [];
