@@ -13,7 +13,7 @@ import LocationHandling from './LocationHandling';
 interface MapContentContainerProps {
   map: React.MutableRefObject<Map | null>;
   vectorSource: React.MutableRefObject<VectorSource | null>;
-  vectorLayer: React.MutableRefRef<VectorLayer<VectorSource> | null>;
+  vectorLayer: React.MutableRefObject<VectorLayer<VectorSource> | null>;
   routeLayer: React.MutableRefObject<VectorLayer<VectorSource> | null>;
   mapLoaded: boolean;
   WYNYARD_COORDS: [number, number];
@@ -21,7 +21,6 @@ interface MapContentContainerProps {
   nearbyUsers: AppUser[];
   friendRequests: FriendRequest[];
   radiusInKm: number;
-  // Remove setRadiusInKm since we're removing radius controls
   isManualMode: boolean;
   isTracking: boolean;
   isPrivacyModeEnabled: boolean;
@@ -75,6 +74,7 @@ const MapContentContainer: React.FC<MapContentContainerProps> = ({
         map={map}
         vectorSource={vectorSource}
         vectorLayer={vectorLayer}
+        routeLayer={routeLayer}
         mapLoaded={mapLoaded}
         currentUser={currentUser}
         nearbyUsers={nearbyUsers}
@@ -84,41 +84,40 @@ const MapContentContainer: React.FC<MapContentContainerProps> = ({
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
         movingUsers={movingUsers}
+        setMovingUsers={setMovingUsers}
         completedMoves={completedMoves}
+        setCompletedMoves={setCompletedMoves}
       />
 
       {/* Meeting Handler */}
       <MeetingHandler
-        map={map}
+        vectorSource={vectorSource}
         routeLayer={routeLayer}
-        mapLoaded={mapLoaded}
         selectedUser={selectedUser}
+        setSelectedUser={setSelectedUser}
         selectedDuration={selectedDuration}
         setSelectedDuration={setSelectedDuration}
         movingUsers={movingUsers}
         setMovingUsers={setMovingUsers}
         completedMoves={completedMoves}
         setCompletedMoves={setCompletedMoves}
-        currentUser={currentUser}
         nearbyUsers={nearbyUsers}
-        friendRequests={friendRequests}
         WYNYARD_COORDS={WYNYARD_COORDS}
-        updateUserLocation={updateUserLocation}
       />
 
       {/* Location Handling */}
       <LocationHandling
         map={map}
         mapLoaded={mapLoaded}
+        currentUser={currentUser}
+        updateUserLocation={updateUserLocation}
+        setCurrentUser={setCurrentUser}
+        radiusInKm={radiusInKm}
+        setRadiusInKm={() => {}} // No-op function since radius controls are removed
         isManualMode={isManualMode}
         isTracking={isTracking}
         isPrivacyModeEnabled={isPrivacyModeEnabled}
-        currentUser={currentUser}
-        setCurrentUser={setCurrentUser}
-        WYNYARD_COORDS={WYNYARD_COORDS}
       />
-
-      {/* Remove MapControlPanel since it only contained radius controls */}
     </div>
   );
 };
