@@ -32,7 +32,7 @@ interface MapContentContainerProps {
   setMovingUsers: React.Dispatch<React.SetStateAction<Set<string>>>;
   completedMoves: Set<string>;
   setCompletedMoves: React.Dispatch<React.SetStateAction<Set<string>>>;
-  updateUserLocation: (userId: string, location: { lng: number; lat: number }) => void;
+  updateUserLocation: (userId: string, location: { lng: number; lat: number }) => Promise<void>;
   setCurrentUser: React.Dispatch<React.SetStateAction<AppUser | null>>;
 }
 
