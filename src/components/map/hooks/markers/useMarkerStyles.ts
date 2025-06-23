@@ -20,6 +20,12 @@ export const useMarkerStyles = (
     const isCircle = feature.get('isCircle');
     const isHeatMap = feature.get('isHeatMap');
     const isBusiness = feature.get('isBusiness');
+    const businessName = feature.get('businessName') || feature.get('name');
+    
+    // Log business detection for debugging
+    if (isBusiness) {
+      console.log(`Detected business marker: ${businessName} (userId: ${userId})`);
+    }
     
     // Handle cluster markers FIRST, but check if it's a business user cluster
     const isCluster = feature.get('isCluster');
@@ -27,6 +33,7 @@ export const useMarkerStyles = (
     
     // For business users, ALWAYS use star icon regardless of cluster
     if (isBusiness) {
+      console.log(`Applying business star style for: ${businessName}`);
       return createBusinessMarkerStyle(feature, selectedUser, movingUsers, completedMoves);
     }
     
