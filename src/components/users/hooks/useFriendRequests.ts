@@ -46,7 +46,8 @@ export function useFriendRequests() {
       
       if (success) {
         // Create friendship record
-        await createFriendship(senderId);
+        const friendship = await createFriendship(senderId);
+        console.log('Friendship created:', friendship);
         
         // Remove from local state with proper typing
         const updatedRequests = friendRequests.filter(req => req.id !== requestId);
@@ -56,6 +57,9 @@ export function useFriendRequests() {
         
         // Refresh the friend requests list
         await refreshFriendRequests();
+        
+        // Force a page reload to refresh all friendship data
+        window.location.reload();
       } else {
         toast.error('Failed to accept friend request');
       }

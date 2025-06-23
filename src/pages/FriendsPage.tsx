@@ -15,7 +15,7 @@ import { useFriendships } from '@/hooks/useFriendships';
 const FriendsPage: React.FC = () => {
   const { setSelectedChat, friendRequests, refreshFriendRequests } = useAppContext();
   const { chats } = useChatList();
-  const { friends, isLoading: friendshipsLoading } = useFriendships();
+  const { friends, isLoading: friendshipsLoading, refetch: refetchFriendships } = useFriendships();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('friends');
 
@@ -26,7 +26,8 @@ const FriendsPage: React.FC = () => {
 
   useEffect(() => {
     refreshFriendRequests();
-  }, [refreshFriendRequests]);
+    refetchFriendships(); // Also refresh friendships when component mounts
+  }, [refreshFriendRequests, refetchFriendships]);
 
   const handleFriendClick = (friend: any) => {
     console.log("FriendsPage: handleFriendClick called with:", friend);
@@ -43,8 +44,8 @@ const FriendsPage: React.FC = () => {
     }
   };
 
-  // Calculate pending requests count - but return 0 to hide all requests
-  const pendingFriendRequests = 0;
+  // Calculate pending requests count properly
+  const pendingFriendRequests = friendRequests.filter(req => req.status === 'pending').length;
 
   // Show loading state while friendships are being fetched
   if (friendshipsLoading) {
@@ -93,11 +94,16 @@ const FriendsPage: React.FC = () => {
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="friends" className="flex items-center gap-2">
             <Users className="h-4 w-4" />
-            My Friends
+            My Friends ({friends.length})
           </TabsTrigger>
           <TabsTrigger value="requests" className="relative flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
             Requests
+            {pendingFriendRequests > 0 && (
+              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                {pendingFriendRequests}
+              </span>
+            )}
           </TabsTrigger>
         </TabsList>
 
