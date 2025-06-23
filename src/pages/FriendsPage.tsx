@@ -8,7 +8,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CheckInsList from '@/components/friends/CheckInsList';
 import FriendsList from '@/components/friends/FriendsList';
 import FriendRequestList from '@/components/users/FriendRequestList';
-import ClearDuplicateRequestsButton from '@/components/friends/ClearDuplicateRequestsButton';
 import { Chat } from '@/context/types';
 import { useChatList } from '@/hooks/useChatList';
 import { useFriendships } from '@/hooks/useFriendships';
@@ -44,8 +43,8 @@ const FriendsPage: React.FC = () => {
     }
   };
 
-  // Calculate pending requests count
-  const pendingFriendRequests = friendRequests.filter(req => req.status === 'pending').length;
+  // Calculate pending requests count - but return 0 to hide all requests
+  const pendingFriendRequests = 0;
 
   // Show loading state while friendships are being fetched
   if (friendshipsLoading) {
@@ -99,11 +98,6 @@ const FriendsPage: React.FC = () => {
           <TabsTrigger value="requests" className="relative flex items-center gap-2">
             <MessageSquare className="h-4 w-4" />
             Requests
-            {pendingFriendRequests > 0 && (
-              <span className="absolute -top-1 -right-1 bg-blue-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                {pendingFriendRequests}
-              </span>
-            )}
           </TabsTrigger>
         </TabsList>
 
@@ -123,7 +117,6 @@ const FriendsPage: React.FC = () => {
                   <MessageSquare className="h-5 w-5 text-blue-600" />
                   Friend Requests
                 </h3>
-                <ClearDuplicateRequestsButton />
               </div>
               <FriendRequestList />
             </div>
