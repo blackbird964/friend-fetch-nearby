@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useFriendMapContainer } from './hooks/useFriendMapContainer';
 import MapContainer from './components/MapContainer';
@@ -24,7 +25,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
     currentUser,
     nearbyUsers,
     radiusInKm,
-    setRadiusInKm,
+    // Remove setRadiusInKm since we're removing radius controls
     setCurrentUser,
     updateUserLocation,
     friendRequests,
@@ -118,7 +119,7 @@ const FriendMapContainer: React.FC<FriendMapContainerProps> = ({
           nearbyUsers={nearbyUsers}
           friendRequests={friendRequests}
           radiusInKm={radiusInKm}
-          setRadiusInKm={setRadiusInKm}
+          // Remove setRadiusInKm prop
           isManualMode={isManualMode}
           isTracking={isTracking}
           isPrivacyModeEnabled={currentPrivacyMode}

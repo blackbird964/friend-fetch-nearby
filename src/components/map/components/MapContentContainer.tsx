@@ -1,37 +1,30 @@
 
 import React from 'react';
-import { AppUser, FriendRequest } from '@/context/types';
 import Map from 'ol/Map';
-import { Vector as VectorSource } from 'ol/source';
 import { Vector as VectorLayer } from 'ol/layer';
+import { Vector as VectorSource } from 'ol/source';
+import { AppUser, FriendRequest } from '@/context/types';
+
+// Import map components
 import MapFeatures from './MapFeatures';
-import LocationHandling from './LocationHandling';
-import MapControls from './MapControls';
 import MeetingHandler from './MeetingHandler';
-import MapControlPanel from './MapControlPanel';
+import LocationHandling from './LocationHandling';
 
 interface MapContentContainerProps {
-  // Map refs
   map: React.MutableRefObject<Map | null>;
   vectorSource: React.MutableRefObject<VectorSource | null>;
-  vectorLayer: React.MutableRefObject<VectorLayer<VectorSource> | null>;
+  vectorLayer: React.MutableRefRef<VectorLayer<VectorSource> | null>;
   routeLayer: React.MutableRefObject<VectorLayer<VectorSource> | null>;
   mapLoaded: boolean;
   WYNYARD_COORDS: [number, number];
-  
-  // User data
   currentUser: AppUser | null;
   nearbyUsers: AppUser[];
   friendRequests: FriendRequest[];
-  
-  // Settings
   radiusInKm: number;
-  setRadiusInKm: (radius: number) => void;
+  // Remove setRadiusInKm since we're removing radius controls
   isManualMode: boolean;
   isTracking: boolean;
   isPrivacyModeEnabled: boolean;
-  
-  // UI state
   selectedUser: string | null;
   setSelectedUser: (userId: string | null) => void;
   selectedDuration: number;
@@ -40,10 +33,8 @@ interface MapContentContainerProps {
   setMovingUsers: React.Dispatch<React.SetStateAction<Set<string>>>;
   completedMoves: Set<string>;
   setCompletedMoves: React.Dispatch<React.SetStateAction<Set<string>>>;
-  
-  // Functions
-  updateUserLocation: (userId: string, location: { lat: number; lng: number }) => Promise<void>;
-  setCurrentUser: (user: AppUser) => void;
+  updateUserLocation: (userId: string, location: { lng: number; lat: number }) => void;
+  setCurrentUser: React.Dispatch<React.SetStateAction<AppUser | null>>;
 }
 
 const MapContentContainer: React.FC<MapContentContainerProps> = ({
@@ -57,7 +48,6 @@ const MapContentContainer: React.FC<MapContentContainerProps> = ({
   nearbyUsers,
   friendRequests,
   radiusInKm,
-  setRadiusInKm,
   isManualMode,
   isTracking,
   isPrivacyModeEnabled,
@@ -72,80 +62,64 @@ const MapContentContainer: React.FC<MapContentContainerProps> = ({
   updateUserLocation,
   setCurrentUser
 }) => {
-  // Debug state on render
-  console.log("[MapContentContainer] Current state:");
-  console.log("- selectedUser:", selectedUser);
-  console.log("- movingUsers:", Array.from(movingUsers));
-  console.log("- completedMoves:", Array.from(completedMoves));
-
   return (
-    <>
-      <MapFeatures 
+    <div className="relative w-full h-full">
+      <div
+        id="map"
+        className="w-full h-full"
+        style={{ background: '#f8f9fa' }}
+      />
+      
+      {/* Map Features */}
+      <MapFeatures
         map={map}
         vectorSource={vectorSource}
         vectorLayer={vectorLayer}
-        routeLayer={routeLayer}
         mapLoaded={mapLoaded}
         currentUser={currentUser}
         nearbyUsers={nearbyUsers}
+        friendRequests={friendRequests}
         radiusInKm={radiusInKm}
+        isTracking={isTracking}
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
         movingUsers={movingUsers}
         completedMoves={completedMoves}
-        friendRequests={friendRequests}
-        isTracking={isTracking}
-        setMovingUsers={setMovingUsers}
-        setCompletedMoves={setCompletedMoves}
       />
-      
-      <LocationHandling 
+
+      {/* Meeting Handler */}
+      <MeetingHandler
         map={map}
-        mapLoaded={mapLoaded}
-        currentUser={currentUser}
-        updateUserLocation={updateUserLocation}
-        setCurrentUser={setCurrentUser}
-        radiusInKm={radiusInKm}
-        setRadiusInKm={setRadiusInKm}
-        isManualMode={isManualMode}
-        isTracking={isTracking}
-        isPrivacyModeEnabled={isPrivacyModeEnabled}
-      />
-      
-      <MapControls
-        map={map}
-        mapLoaded={mapLoaded}
-        currentUser={currentUser}
-        isManualMode={isManualMode}
-        isTracking={isTracking}
-        isPrivacyModeEnabled={isPrivacyModeEnabled}
-        radiusInKm={radiusInKm}
-        setRadiusInKm={setRadiusInKm}
-        updateUserLocation={updateUserLocation}
-        setCurrentUser={setCurrentUser}
-      />
-      
-      {/* Modified to ONLY handle route visualization */}
-      <MeetingHandler 
-        vectorSource={vectorSource}
         routeLayer={routeLayer}
+        mapLoaded={mapLoaded}
         selectedUser={selectedUser}
-        setSelectedUser={setSelectedUser}
         selectedDuration={selectedDuration}
         setSelectedDuration={setSelectedDuration}
-        movingUsers={new Set()} // IMPORTANT: Pass empty sets to prevent state changes
-        setMovingUsers={(prev) => prev} // No-op function to prevent state changes
-        completedMoves={new Set()} // IMPORTANT: Pass empty sets to prevent state changes
-        setCompletedMoves={(prev) => prev} // No-op function to prevent state changes
+        movingUsers={movingUsers}
+        setMovingUsers={setMovingUsers}
+        completedMoves={completedMoves}
+        setCompletedMoves={setCompletedMoves}
+        currentUser={currentUser}
         nearbyUsers={nearbyUsers}
+        friendRequests={friendRequests}
+        WYNYARD_COORDS={WYNYARD_COORDS}
+        updateUserLocation={updateUserLocation}
+      />
+
+      {/* Location Handling */}
+      <LocationHandling
+        map={map}
+        mapLoaded={mapLoaded}
+        isManualMode={isManualMode}
+        isTracking={isTracking}
+        isPrivacyModeEnabled={isPrivacyModeEnabled}
+        currentUser={currentUser}
+        setCurrentUser={setCurrentUser}
         WYNYARD_COORDS={WYNYARD_COORDS}
       />
 
-      <MapControlPanel
-        radiusInKm={radiusInKm}
-        setRadiusInKm={setRadiusInKm}
-      />
-    </>
+      {/* Remove MapControlPanel since it only contained radius controls */}
+    </div>
   );
 };
 
