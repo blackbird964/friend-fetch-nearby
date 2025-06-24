@@ -117,22 +117,28 @@ export function useFriendRequests() {
     try {
       console.log('Canceling friend request:', requestId);
       
+      // First remove from local state immediately for instant UI feedback
+      const updatedRequests = friendRequests.filter(req => req.id !== requestId);
+      setFriendRequests(updatedRequests);
+      
       const success = await cancelFriendRequest(requestId);
       
       if (success) {
-        // Remove from local state with proper typing
-        const updatedRequests = friendRequests.filter(req => req.id !== requestId);
-        setFriendRequests(updatedRequests);
-        
         toast.success('Friend request canceled');
+        console.log('Friend request canceled successfully');
         
-        // Refresh the friend requests list
-        await refreshFriendRequests();
+        // Don't refresh - we already updated the local state
+        // This prevents the race condition where the request reappears
       } else {
+        console.error('Failed to cancel friend request - reverting local state');
+        // If cancellation failed, revert the local state
+        setFriendRequests(friendRequests);
         toast.error('Failed to cancel friend request');
       }
     } catch (error) {
       console.error('Error canceling friend request:', error);
+      // Revert local state on error
+      setFriendRequests(friendRequests);
       toast.error('Failed to cancel friend request');
     } finally {
       setIsLoading(false);
