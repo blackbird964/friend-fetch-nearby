@@ -33,7 +33,8 @@ export function useFriendships() {
       if (userFriendships.length === 0) {
         console.log("useFriendships: No friendships found");
         setFriends([]);
-        return; // Don't return early without setting isLoading to false
+        setIsLoading(false); // Fix: Ensure loading is set to false when no friendships
+        return;
       }
 
       // Fetch profile data for each friend
@@ -49,7 +50,7 @@ export function useFriendships() {
               const friendUser: AppUser = {
                 id: friendship.friend_id,
                 name: profile.name || 'Friend',
-                email: profile.email || '', // Use email from profile if available
+                email: profile.email || '',
                 interests: profile.interests || [],
                 profile_pic: profile.profile_pic,
                 isOnline: profile.is_online || false,
@@ -92,6 +93,7 @@ export function useFriendships() {
   };
 
   useEffect(() => {
+    console.log("useFriendships: useEffect triggered, currentUser:", currentUser?.id);
     fetchFriendships();
   }, [currentUser?.id]); // Only depend on currentUser.id to prevent infinite loops
 
@@ -101,6 +103,6 @@ export function useFriendships() {
     friendships,
     friends,
     isLoading,
-    refetch: fetchFriendships // Return the function so it can be called manually
+    refetch: fetchFriendships
   };
 }
