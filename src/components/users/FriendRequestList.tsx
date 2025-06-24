@@ -18,6 +18,7 @@ const FriendRequestList: React.FC = () => {
   // Refresh friend requests when component mounts
   useEffect(() => {
     if (currentUser) {
+      console.log("FriendRequestList: Refreshing friend requests for user:", currentUser.id);
       refreshFriendRequests();
     }
   }, [currentUser, refreshFriendRequests]);
@@ -25,6 +26,7 @@ const FriendRequestList: React.FC = () => {
   const handleAcceptRequest = (requestId: string) => {
     const request = pendingRequests.find(req => req.id === requestId);
     if (request) {
+      console.log("FriendRequestList: Accepting request from:", request.senderName);
       handleAccept(requestId, request.senderId);
     }
   };
@@ -33,9 +35,11 @@ const FriendRequestList: React.FC = () => {
   console.log("FriendRequestList: Sent requests:", sentRequests);
 
   // Show requests if there are any, otherwise show empty state
-  const hasRequests = pendingRequests.length > 0 || sentRequests.length > 0;
+  const hasPendingRequests = pendingRequests.length > 0;
+  const hasSentRequests = sentRequests.length > 0;
+  const hasAnyRequests = hasPendingRequests || hasSentRequests;
 
-  if (!hasRequests) {
+  if (!hasAnyRequests) {
     return (
       <div className="text-center py-12">
         <div className="text-gray-400 mb-3">
@@ -51,16 +55,20 @@ const FriendRequestList: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <PendingRequests
-        requests={pendingRequests}
-        onAccept={handleAcceptRequest}
-        onReject={handleReject}
-      />
+      {hasPendingRequests && (
+        <PendingRequests
+          requests={pendingRequests}
+          onAccept={handleAcceptRequest}
+          onReject={handleReject}
+        />
+      )}
       
-      <SentRequests
-        requests={sentRequests}
-        onCancel={handleCancel}
-      />
+      {hasSentRequests && (
+        <SentRequests
+          requests={sentRequests}
+          onCancel={handleCancel}
+        />
+      )}
     </div>
   );
 };

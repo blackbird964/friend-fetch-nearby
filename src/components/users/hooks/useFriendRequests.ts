@@ -18,16 +18,23 @@ export function useFriendRequests() {
     refreshFriendRequests 
   } = useAppContext();
 
+  console.log("useFriendRequests: All friend requests:", friendRequests);
+  console.log("useFriendRequests: Current user ID:", currentUser?.id);
+
   const [isLoading, setIsLoading] = useState(false);
 
-  // Filter requests
+  // Filter requests - incoming requests where current user is the receiver
   const pendingRequests = friendRequests.filter(
     req => req.receiverId === currentUser?.id && req.status === 'pending'
   );
   
+  // Sent requests where current user is the sender
   const sentRequests = friendRequests.filter(
     req => req.senderId === currentUser?.id && req.status === 'pending'
   );
+
+  console.log("useFriendRequests: Pending requests (incoming):", pendingRequests);
+  console.log("useFriendRequests: Sent requests (outgoing):", sentRequests);
 
   const handleAccept = async (requestId: string, senderId: string) => {
     if (!currentUser) return;
