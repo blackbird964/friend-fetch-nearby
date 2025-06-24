@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAppContext } from '@/context/AppContext';
 import { getUserFriendships, type Friendship } from '@/services/friendships';
 import { getProfile } from '@/lib/supabase';
@@ -11,7 +11,7 @@ export function useFriendships() {
   const [friends, setFriends] = useState<AppUser[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchFriendships = async () => {
+  const fetchFriendships = useCallback(async () => {
     if (!currentUser) {
       console.log("useFriendships: No current user, setting loading to false");
       setFriendships([]);
@@ -21,9 +21,8 @@ export function useFriendships() {
     }
 
     try {
+      console.log("useFriendships: Starting to fetch friendships for user:", currentUser.id);
       setIsLoading(true);
-      
-      console.log("useFriendships: Fetching friendships for user:", currentUser.id);
       
       // Get all friendships for the current user
       const userFriendships = await getUserFriendships();
@@ -33,7 +32,7 @@ export function useFriendships() {
       if (userFriendships.length === 0) {
         console.log("useFriendships: No friendships found");
         setFriends([]);
-        setIsLoading(false); // Fix: Ensure loading is set to false when no friendships
+        setIsLoading(false);
         return;
       }
 
@@ -83,19 +82,18 @@ export function useFriendships() {
       console.log("useFriendships: Valid friends found:", validFriends.length);
       console.log("useFriendships: Friends data:", validFriends);
       setFriends(validFriends);
+      setIsLoading(false);
     } catch (error) {
       console.error('useFriendships: Error fetching friendships:', error);
       setFriends([]);
-    } finally {
-      // Always set loading to false in finally block
       setIsLoading(false);
     }
-  };
+  }, [currentUser?.id]);
 
   useEffect(() => {
     console.log("useFriendships: useEffect triggered, currentUser:", currentUser?.id);
     fetchFriendships();
-  }, [currentUser?.id]); // Only depend on currentUser.id to prevent infinite loops
+  }, [fetchFriendships]);
 
   console.log("useFriendships: Returning - friends count:", friends.length, "isLoading:", isLoading);
 

@@ -25,9 +25,9 @@ const FriendsPage: React.FC = () => {
   console.log("FriendsPage: Is loading:", friendshipsLoading);
 
   useEffect(() => {
+    // Only refresh friend requests, let useFriendships handle its own data
     refreshFriendRequests();
-    refetchFriendships(); // Also refresh friendships when component mounts
-  }, [refreshFriendRequests, refetchFriendships]);
+  }, [refreshFriendRequests]);
 
   const handleFriendClick = (friend: any) => {
     console.log("FriendsPage: handleFriendClick called with:", friend);
