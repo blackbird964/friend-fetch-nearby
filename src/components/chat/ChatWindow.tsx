@@ -13,6 +13,7 @@ const ChatWindow: React.FC = () => {
   const { currentUser } = useAuthContext();
   const { handleAddFriend, loading: addingFriend } = useFriendActions();
   const { friends } = useFriendships();
+  const [message, setMessage] = useState('');
 
   if (!selectedChat) {
     return (
@@ -62,6 +63,17 @@ const ChatWindow: React.FC = () => {
     setSelectedChat(null);
   };
 
+  const handleMessageChange = (value: string) => {
+    setMessage(value);
+  };
+
+  const handleSendMessage = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Implement actual message sending logic
+    console.log('Sending message:', message);
+    setMessage('');
+  };
+
   return (
     <div className="flex flex-col h-full">
       <ChatHeader
@@ -77,10 +89,18 @@ const ChatWindow: React.FC = () => {
       />
       
       <div className="flex-1 overflow-hidden">
-        <MessageList chatId={selectedChat.id} />
+        <MessageList 
+          messages={selectedChat.messages || []} 
+          isLoading={false}
+        />
       </div>
       
-      <MessageInput chatId={selectedChat.id} />
+      <MessageInput 
+        message={message}
+        isLoading={false}
+        onMessageChange={handleMessageChange}
+        onSendMessage={handleSendMessage}
+      />
     </div>
   );
 };
