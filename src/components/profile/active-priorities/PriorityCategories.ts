@@ -12,7 +12,6 @@ const PriorityCategories = [
       "beach",
       "co-working space catchup",
       "new to area - show me around!",
-      "pokemon go",
       "Drinks after work",
       "Discovering family-friendly venues",
       "Organizing children's activities",
