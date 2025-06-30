@@ -33,6 +33,16 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
       .substring(0, 2);
   };
 
+  const formatAge = (age: number | null | undefined) => {
+    if (!age || isNaN(age)) return null;
+    return age;
+  };
+
+  const formatDuration = (duration: string | undefined) => {
+    if (!duration || duration === 'NaN') return null;
+    return duration;
+  };
+
   console.log("[UserRequestCard] Rendering card for user:", user.name);
 
   return (
@@ -48,8 +58,10 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
             </Avatar>
             <div>
               <h3 className="font-semibold text-lg">{user.name}</h3>
-              {user.age && user.gender && (
-                <p className="text-sm text-muted-foreground">{user.age} • {user.gender}</p>
+              {(formatAge(user.age) || user.gender) && (
+                <p className="text-sm text-muted-foreground">
+                  {[formatAge(user.age), user.gender].filter(Boolean).join(' • ')}
+                </p>
               )}
             </div>
           </div>
@@ -79,14 +91,14 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
             </div>
           )}
           
-          {user.preferredHangoutDuration && (
+          {formatDuration(user.preferredHangoutDuration) && (
             <div className="bg-green-50 p-3 rounded-lg border border-green-200">
               <h4 className="text-sm font-medium mb-1 text-green-800">Preferred duration:</h4>
-              <p className="text-sm text-green-700 font-medium">{user.preferredHangoutDuration} minutes</p>
+              <p className="text-sm text-green-700 font-medium">{formatDuration(user.preferredHangoutDuration)} minutes</p>
             </div>
           )}
           
-          {(!user.active_priorities || user.active_priorities.length === 0) && !user.preferredHangoutDuration && (
+          {(!user.active_priorities || user.active_priorities.length === 0) && !formatDuration(user.preferredHangoutDuration) && (
             <div className="bg-gray-50 p-3 rounded-lg border border-gray-200 text-center">
               <p className="text-sm text-gray-500">Ready to hang out!</p>
             </div>

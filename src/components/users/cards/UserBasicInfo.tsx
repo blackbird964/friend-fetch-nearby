@@ -23,14 +23,24 @@ const UserBasicInfo: React.FC<UserBasicInfoProps> = ({
   preferredHangoutDuration,
   interests
 }) => {
+  const formatAge = (age: number | null | undefined) => {
+    if (!age || isNaN(age)) return null;
+    return age;
+  };
+
+  const formatDuration = (duration: string | undefined) => {
+    if (!duration || duration === 'NaN') return null;
+    return duration;
+  };
+
   return (
     <div>
       <h3 className={`${minimal ? 'text-sm' : 'text-base'} font-medium`}>{name}</h3>
       
-      {(age || gender) && (
+      {(formatAge(age) || gender) && (
         <div className="flex items-center mt-1">
           <span className="text-xs text-gray-500 mr-2">
-            {age && gender ? `${age} • ${gender}` : age || gender}
+            {[formatAge(age), gender].filter(Boolean).join(' • ')}
           </span>
         </div>
       )}
@@ -55,10 +65,10 @@ const UserBasicInfo: React.FC<UserBasicInfoProps> = ({
         </div>
       )}
 
-      {!minimal && preferredHangoutDuration && (
+      {!minimal && formatDuration(preferredHangoutDuration) && (
         <div className="mt-1">
           <span className="text-xs text-gray-500">
-            Duration: {preferredHangoutDuration} min
+            Duration: {formatDuration(preferredHangoutDuration)} min
           </span>
         </div>
       )}

@@ -24,6 +24,16 @@ const UserCard: React.FC<UserCardProps> = ({ user, onClick, className = "", mini
       .substring(0, 2);
   };
 
+  const formatAge = (age: number | null | undefined) => {
+    if (!age || isNaN(age)) return null;
+    return age;
+  };
+
+  const formatDistance = (distance: number | null | undefined) => {
+    if (!distance || isNaN(distance)) return null;
+    return distance.toFixed(1);
+  };
+
   return (
     <Card 
       className={`cursor-pointer hover:shadow-md transition-shadow ${className}`}
@@ -41,16 +51,18 @@ const UserCard: React.FC<UserCardProps> = ({ user, onClick, className = "", mini
           <div className="flex-1 min-w-0">
             <div className="flex items-center justify-between mb-1">
               <h3 className={`font-semibold ${minimal ? "text-base" : "text-lg"} truncate`}>{user.name}</h3>
-              {user.distance && (
+              {formatDistance(user.distance) && (
                 <div className="flex items-center text-sm text-muted-foreground">
                   <MapPin className="h-3 w-3 mr-1" />
-                  {user.distance.toFixed(1)}km
+                  {formatDistance(user.distance)}km
                 </div>
               )}
             </div>
             
-            {user.age && user.gender && (
-              <p className="text-sm text-muted-foreground mb-2">{user.age} • {user.gender}</p>
+            {(formatAge(user.age) || user.gender) && (
+              <p className="text-sm text-muted-foreground mb-2">
+                {[formatAge(user.age), user.gender].filter(Boolean).join(' • ')}
+              </p>
             )}
             
             {!minimal && user.bio && (
