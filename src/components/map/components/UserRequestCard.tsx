@@ -38,9 +38,9 @@ const UserRequestCard: React.FC<UserRequestCardProps> = ({
     return age;
   };
 
-  const formatDuration = (duration: string | undefined) => {
-    if (!duration || duration === 'NaN') return null;
-    return duration;
+  const formatDuration = (duration: string | number | undefined) => {
+    if (!duration || duration === 'NaN' || (typeof duration === 'string' && duration === 'NaN')) return null;
+    return duration.toString();
   };
 
   console.log("[UserRequestCard] Rendering card for user:", user.name);
