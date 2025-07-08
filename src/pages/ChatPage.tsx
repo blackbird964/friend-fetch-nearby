@@ -15,7 +15,7 @@ const ChatPage: React.FC = () => {
           {selectedChat ? (
             <ChatWindow />
           ) : (
-            <div className="flex-1 p-2">
+            <div className="flex-1 flex flex-col p-2 overflow-hidden">
               <ChatSidebar />
             </div>
           )}
