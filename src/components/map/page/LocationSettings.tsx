@@ -25,8 +25,8 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
 
   return (
     <>
-      <div className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-md">
-        <div className="flex items-center space-x-2">
+      <div className="py-2 px-3 bg-gray-50 rounded-md space-y-2">
+        <div className="flex items-center space-x-3">
           <Switch
             id="tracking-mode"
             checked={isTracking}
@@ -42,7 +42,7 @@ const LocationSettings: React.FC<LocationSettingsProps> = ({
           </Label>
         </div>
         
-        <div className="text-xs text-gray-600 max-w-xs">
+        <div className="text-xs text-gray-600 pl-8">
           When tracking is off, you won't appear on the map but can still see others nearby
         </div>
       </div>
