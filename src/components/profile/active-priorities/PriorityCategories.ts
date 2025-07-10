@@ -13,8 +13,6 @@ const PriorityCategories = [
       "co-working space catchup",
       "new to area - show me around!",
       "Drinks after work",
-      "Discovering family-friendly venues",
-      "Organizing children's activities",
       "Someone to study with",
       "Looking for yoga buddies",
       "Starting group workouts",
