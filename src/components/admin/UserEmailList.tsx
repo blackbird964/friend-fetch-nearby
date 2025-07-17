@@ -30,11 +30,15 @@ const UserEmailList: React.FC = () => {
   const fetchUserEmails = async () => {
     setLoading(true);
     try {
-      // Fetch user emails with profile names from auth.users and profiles tables
-      const { data: authUsers, error: authError } = await supabase.auth.admin.listUsers();
+      // Call the edge function to get user emails (which uses service role)
+      const { data, error } = await supabase.functions.invoke('get-user-emails');
       
-      if (authError) {
-        throw authError;
+      if (error) {
+        throw error;
+      }
+
+      if (!data || !data.users) {
+        throw new Error('Invalid response from server');
       }
 
       // Get profile data for all users
@@ -49,7 +53,7 @@ const UserEmailList: React.FC = () => {
       // Create a map of user IDs to names
       const profileMap = new Map(profiles?.map(profile => [profile.id, profile.name]) || []);
 
-      const users: UserEmail[] = authUsers.users.map(user => ({
+      const users: UserEmail[] = data.users.map((user: any) => ({
         id: user.id,
         email: user.email || '',
         name: profileMap.get(user.id) || null,
@@ -59,7 +63,7 @@ const UserEmailList: React.FC = () => {
       }));
 
       const response: UserEmailResponse = {
-        total_users: authUsers.users.length,
+        total_users: data.total_users,
         users: users
       };
 
@@ -74,7 +78,7 @@ const UserEmailList: React.FC = () => {
       console.error('Error fetching user emails:', error);
       toast({
         title: "Error",
-        description: "Failed to fetch user emails",
+        description: `Failed to fetch user emails: ${error.message}`,
         variant: "destructive",
       });
     } finally {
