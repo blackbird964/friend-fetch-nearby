@@ -3,6 +3,7 @@ import React, { useEffect } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAppContext } from '@/context/AppContext';
 import { getBusinessProfile } from '@/lib/supabase/businessProfiles';
+import Landing from './Landing';
 
 const Index: React.FC = () => {
   console.log("Index component rendering");
@@ -19,13 +20,8 @@ const Index: React.FC = () => {
         return;
       }
 
-      if (!isAuthenticated) {
-        console.log("Not authenticated, redirecting to auth");
-        navigate('/auth', { replace: true });
-        return;
-      }
-
-      if (currentUser) {
+      // Only redirect authenticated users
+      if (isAuthenticated && currentUser) {
         try {
           const businessProfile = await getBusinessProfile(currentUser.id);
           const isBusinessUser = !!businessProfile;
@@ -37,7 +33,7 @@ const Index: React.FC = () => {
             console.log("Regular user with complete profile, redirecting to home");
             navigate('/home', { replace: true });
           } else {
-            console.log("User needs to complete profile, staying on auth");
+            console.log("User needs to complete profile, redirecting to auth");
             navigate('/auth', { replace: true });
           }
         } catch (error) {
@@ -59,7 +55,12 @@ const Index: React.FC = () => {
     );
   }
 
-  // Default fallback - should not normally be reached due to useEffect redirects
+  // Show landing page for non-authenticated users
+  if (!isAuthenticated) {
+    return <Landing />;
+  }
+
+  // Default fallback for authenticated users (should not be reached due to useEffect redirects)
   return null;
 };
 
